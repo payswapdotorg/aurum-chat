@@ -79,7 +79,7 @@ describe('infra db (embedded PGlite, :memory:)', () => {
   });
 
   it('runs migrations with an empty/absent modules dir (creates only _migrations, idempotent)', async () => {
-    // W001+ ships real modules under src/modules, so the empty/absent-dir
+    // W002+ ships real modules under src/modules, so the empty/absent-dir
     // behavior is pinned on an isolated empty dir instead of the repo default.
     const emptyModules = await mkdtemp(path.join(tmpdir(), 'aurum-empty-modules-'));
     try {
