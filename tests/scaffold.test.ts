@@ -79,19 +79,26 @@ describe('infra db (embedded PGlite, :memory:)', () => {
   });
 
   it('runs migrations with an empty/absent modules dir (creates only _migrations, idempotent)', async () => {
-    const first = await runMigrations(db);
-    const second = await runMigrations(db);
-    expect(first.applied).toEqual([]);
-    expect(second.applied).toEqual([]);
-    const recorded = await db.query<{ name: string }>(`SELECT name FROM _migrations`);
-    expect(recorded.rows).toEqual([]);
-    const tables = (
-      await db.query<{ table_name: string }>(
-        `SELECT table_name FROM information_schema.tables
-          WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
-      )
-    ).rows.map((t) => t.table_name);
-    expect(tables.sort()).toEqual(['_migrations', 't']);
+    // W002+ ships real modules under src/modules, so the empty/absent-dir
+    // behavior is pinned on an isolated empty dir instead of the repo default.
+    const emptyModules = await mkdtemp(path.join(tmpdir(), 'aurum-empty-modules-'));
+    try {
+      const first = await runMigrations(db, emptyModules);
+      const second = await runMigrations(db, emptyModules);
+      expect(first.applied).toEqual([]);
+      expect(second.applied).toEqual([]);
+      const recorded = await db.query<{ name: string }>(`SELECT name FROM _migrations`);
+      expect(recorded.rows).toEqual([]);
+      const tables = (
+        await db.query<{ table_name: string }>(
+          `SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
+        )
+      ).rows.map((t) => t.table_name);
+      expect(tables.sort()).toEqual(['_migrations', 't']);
+    } finally {
+      await rm(emptyModules, { recursive: true, force: true });
+    }
   });
 
   it('commits transactions atomically and rolls back on failure', async () => {
