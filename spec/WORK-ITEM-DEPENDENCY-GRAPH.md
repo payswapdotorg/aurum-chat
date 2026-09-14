@@ -87,3 +87,15 @@ After W001–W009 contracts stabilize, these tracks can proceed in parallel:
 - audit/security.
 
 Every work item must have exact acceptance evidence and must not redefine frozen architecture.
+
+## Learning moat (addenda)
+
+```text
+LEARNING MOAT (per ADR-0016/0017/0018/0019)
+  W007 + W008 + W011 + W013 → W051 Unprompted Unknown Discovery
+  W010 + W012 + W051 → W052 Knowledge Source Ranking
+  W040 + W041 + W042 → W053 CompanyModel Learning
+  W018 + W022 + W023 + W027 + W040 → W054 Capability Outcome Learning
+  W013 + W041 + W051 + W052 + W054 → W055 Quality Measurement
+  W053 + W054 + W055 → W056 Longitudinal Company Simulator (per LONGITUDINAL-BENCHMARK.md)
+```

@@ -44,3 +44,15 @@ The canonical loop is observe → remember → understand → goals → unknowns
 
 ## ADR-0015 — Provider independence
 AI/LLM providers, channel providers, sources, destinations and agent runtimes are hidden behind application-owned contracts. Swapping an implementation cannot require semantic migration.
+
+## ADR-0016 — Company learning model
+Aurum maintains a versioned CompanyModel of learned, provider-independent company knowledge. Every learned assertion has provenance, confidence and validity; explicit policy outranks learned preference; learned state survives provider replacement.
+
+## ADR-0017 — Goal gap discovery
+Aurum derives consequential unknowns from goals, desired state, temporal state and evidence without a stated question. Candidate unknowns carry impact, urgency, confidence gap and expected information value; only material unknowns become policy-gated missions.
+
+## ADR-0018 — Knowledge source ranking
+Source selection ranks provider-independent signals (relevance, reliability, freshness, authority, access scope, cost, prior contribution value) with persisted rationale; employees, managers, systems, documents, external sources, agents and analyses compete on the same dimensions.
+
+## ADR-0019 — Capability outcome learning
+Every material intervention records baseline, expected, observed, realized value and variance, linked to the originating goal/authorization. Future recommendations improve only through explicit evidence-linked learning updates; hidden outcome labels never leak into recommendations.

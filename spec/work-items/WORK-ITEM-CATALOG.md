@@ -167,3 +167,23 @@ Prove: observation → goal relevance → unknown → learning mission → emplo
 
 ### W050 — Platform Surface End-to-End Fixture
 Prove: employee identity across channels → conversation → cognition → management finding → API/MCP read → approval → notification → audit.
+
+## Learning moat (addenda promoted from FINAL-HARDENING.txt)
+
+### W051 — Unprompted Unknown Discovery
+Implement goal-gap discovery per ADR-0017: material goal/evidence gaps create candidate unknowns without a user question; candidate unknowns contain impact, urgency, confidence gap and information value; only material unknowns become missions; discovery is evidence-linked and auditable; end-to-end synthetic proof exists. Dependencies: W007, W008, W011, W013.
+
+### W052 — Knowledge Source Ranking
+Implement source ranking per ADR-0018: ranking is deterministic at the policy/workflow level; relevance, reliability, freshness, authority and cost are separately represented; ranking rationale is retained; employee and system candidates can be compared; synthetic tests prove routing changes when source evidence changes. Dependencies: W010, W012, W051.
+
+### W053 — CompanyModel Learning
+Implement the versioned CompanyModel per ADR-0016: durable company-specific learning stores vocabulary, organization, process exceptions, source reliability, employee expertise, capability patterns, investigation preferences and intervention priors; every learned assertion has provenance, confidence, validity and version; learned preference never overrides policy; provider/model replacement preserves learned state; longitudinal testing shows measurable improvement. Dependencies: W041, W042, W040, ADR-0016.
+
+### W054 — Capability Outcome Learning
+Implement intervention outcome learning per ADR-0019: interventions establish baseline/expected/observed/realized outcome; realized value and variance are recorded; failed interventions are retained as negative evidence; later similar recommendations use learned intervention priors; no hidden outcome labels may leak into recommendations. Dependencies: W018, W022, W023, W027, W040.
+
+### W055 — Aurum Quality Measurement
+Implement quality metrics: unknown-discovery precision/recall, source-selection quality, mission resolution efficiency, evidence quality, recommendation calibration, intervention success, realized value, investigation cost and time-to-useful-understanding. Metrics are tenant-aware, versioned and auditable and do not become business truth. Dependencies: W013, W041, W051, W052, W054.
+
+### W056 — Longitudinal Company Simulator
+Implement the synthetic company simulator: employees, teams, CRM/ERP-like systems, messages, projects, suppliers, goals, processes, external events and hidden consequential facts; run month 1/3/6/12/24 scenarios per LONGITUDINAL-BENCHMARK.md; prove repeated work improves source routing, unknown resolution efficiency or recommendation quality; prove no cross-tenant or hidden-ground-truth leakage. Dependencies: W053, W054, W055.
