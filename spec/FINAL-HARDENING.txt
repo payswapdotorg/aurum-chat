@@ -1,0 +1,1 @@
+Final hardening artifacts are defined by the tech-lead handoff and issue #1. Apply ADR-0017 through ADR-0019 and W051 through W056 before implementation begins.
