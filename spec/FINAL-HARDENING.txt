@@ -1,1 +1,66 @@
-Final hardening artifacts are defined by the tech-lead handoff and issue #1. Apply ADR-0017 through ADR-0019 and W051 through W056 before implementation begins.
+# Aurum Final Hardening Pack
+
+This consolidated artifact freezes the final learning-moat contracts required before implementation.
+
+## ADR-0017 — Goal Gap Discovery
+Aurum derives consequential unknowns from active goals, desired state, temporal state and evidence without requiring management to state the exact question. Candidate unknowns carry affected goals/decisions, missing knowledge, evidence basis, decision impact, urgency, confidence gap, expected information value and candidate acquisition paths. Mission creation is application-owned, policy-gated and auditable. Verification must show a synthetic company where a hidden consequential variable causes an unprompted mission.
+
+## ADR-0018 — Knowledge Source Ranking
+Aurum ranks possible knowledge sources using provider-independent signals including semantic relevance, historical reliability, recency/freshness, authority, access scope, expected answer/evidence quality, investigation cost and prior contribution value. Ranking rationale is persisted. The planner may choose employees, managers, systems, documents, external sources, agents or analyses. Verification must show source selection changes when reliability, freshness, relevance or cost changes.
+
+## ADR-0019 — Capability Outcome Learning
+Every material intervention has a baseline, expected outcome, intervention record, observed outcome, variance/realized value and learning update. Outcomes are linked to the originating goal, recommendation, authorization and execution. Future recommendations may improve only through explicit, evidence-linked learning updates. Verification must show a successful and failed intervention changing future recommendation quality without changing policy.
+
+## W051 — Unprompted Unknown Discovery
+Dependency: W007, W008, W011, W013.
+Acceptance: material goal/evidence gaps can create candidate unknowns without a user question; candidate unknowns contain impact, urgency, confidence gap and information value; only material unknowns become missions; discovery is evidence-linked and auditable; end-to-end synthetic proof exists.
+
+## W052 — Knowledge Source Ranking
+Dependency: W010, W012, W051.
+Acceptance: source ranking is deterministic at the policy/workflow level; relevance, reliability, freshness, authority and cost are separately represented; ranking rationale is retained; employee and system candidates can be compared; synthetic tests prove routing changes when source evidence changes.
+
+## W053 — CompanyModel Learning
+Dependency: W041, W042, W040, ADR-0016.
+Acceptance: durable company-specific learning stores vocabulary, organization, process exceptions, source reliability, employee expertise, capability patterns, investigation preferences and intervention priors; every learned assertion has provenance, confidence, validity and version; learned preference never overrides policy; provider/model replacement preserves learned state; longitudinal testing shows measurable improvement.
+
+## W054 — Capability Outcome Learning
+Dependency: W018, W022, W023, W027, W040.
+Acceptance: interventions establish baseline/expected/observed/realized outcome; realized value and variance are recorded; failed interventions are retained as negative evidence; later similar recommendations use learned intervention priors; no hidden outcome labels may leak into recommendations.
+
+## W055 — Aurum Quality Measurement
+Dependency: W013, W041, W051, W052, W054.
+Acceptance metrics include unknown-discovery precision/recall, source-selection quality, mission resolution efficiency, evidence quality, recommendation calibration, intervention success, realized value, investigation cost and time-to-useful-understanding. Metrics are tenant-aware, versioned and auditable and do not become business truth.
+
+## W056 — Longitudinal Company Simulator
+Dependency: W053, W054, W055.
+Acceptance: simulate a synthetic company with employees, teams, CRM/ERP-like systems, messages, projects, suppliers, goals, processes, external events and hidden consequential facts; run month 1/3/6/12/24 scenarios; prove repeated work improves source routing, unknown resolution efficiency or recommendation quality; prove no cross-tenant or hidden-ground-truth leakage.
+
+## AURUM-LONGITUDINAL-LEARNING-BENCHMARK
+Run identical seeded companies with equivalent goals and information environments. Measure at months 1, 3, 6, 12 and 24:
+
+1. consequential unknown discovery precision/recall;
+2. median investigation steps per resolved mission;
+3. first-choice source quality;
+4. employee routing accuracy;
+5. mission completion time and cost;
+6. recommendation calibration;
+7. intervention realized value versus expected value;
+8. repeated-task performance improvement;
+9. stale/contradictory evidence handling;
+10. policy compliance and tenant isolation.
+
+The benchmark must compare an experienced Aurum instance against a cold-start Aurum instance on the same company. Improvement must arise from recorded CompanyModel updates only. The benchmark must fail if policy is relaxed, hidden facts are directly exposed, or provider-specific hidden state becomes authoritative.
+
+## Three-worker orchestration rule
+Never run two workers that modify the same architectural primitive in parallel. Preferred waves are:
+
+Foundation: W001-W003; W004-W006; W007-W009.
+Cognition: W010-W012; then W013 alone.
+Intelligence: W014-W016; W017-W019; W020-W021-W025.
+Capability workforce: W022-W023-W026; W024-W027-W028.
+Experience: W029-W030-W031; W032-W033.
+Platform: W034-W035-W036; W037-W038-W039.
+Learning moat: W040-W042; then W043-W051-W052; then W053-W054-W055; W056 alone.
+Proof: W044-W046; W047-W048; W049-W050.
+
+Each worker must inspect repository state, verify dependencies, implement only its bounded scope, add tests, run architecture checks and provide reproducible evidence.
