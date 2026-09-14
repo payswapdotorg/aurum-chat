@@ -1,3 +1,3 @@
 {
-  "tables": ["_migrations"]
+  "tables": ["_migrations", "tenants"]
 }
