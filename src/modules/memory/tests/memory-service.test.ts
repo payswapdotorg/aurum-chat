@@ -643,7 +643,8 @@ describe('evidence resolution (partial view, never a leak)', () => {
     // another member of the SAME tenant sees a partial view: the entry and
     // its full evidence id set, but only the evidence they may read
     const asOther = await getKnowledgeEntryEvidence(member(tenantA), recorded.id);
-    expect(asOther.entry.evidenceObservationIds).toEqual([visible.id, restricted.id]);
+    // canonical contract: the service returns the evidence id set sorted
+    expect(asOther.entry.evidenceObservationIds).toEqual([visible.id, restricted.id].sort());
     expect(asOther.evidence.map((o) => o.id)).toEqual([visible.id]);
   });
 
