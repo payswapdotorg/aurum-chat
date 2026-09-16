@@ -105,6 +105,27 @@ export {
   EXTENSION_AUTHORITY_LEVEL,
 } from './service';
 
+// W026 — General-Purpose Extension Runtime: deployment/rollback and
+// every capability operation.
+export {
+  deployExtensionVersion,
+  dispatchExtensionEvent,
+  emitExtensionTelemetry,
+  executeExtensionExternalCall,
+  getCurrentDeployment,
+  getExtensionUi,
+  listExtensionDeployments,
+  listExtensionEventDeliveries,
+  listExtensionExternalCalls,
+  listExtensionScheduleRuns,
+  listExtensionTelemetryEvents,
+  publishExtensionUi,
+  readExtensionState,
+  rollbackExtensionDeployment,
+  triggerExtensionSchedule,
+  writeExtensionState,
+} from './service';
+
 export { ExtensionsError } from './errors';
 export type { ExtensionsErrorCode } from './errors';
 
@@ -152,6 +173,56 @@ export {
 } from './semver';
 export { checkHostRuntimeCompatibility } from './semver';
 
+// W026 — the runtime's pure vocabularies, bounds and rule sets (usable
+// without a database; the same rules validation and the service run,
+// and the ones W027/W028 will reuse for builder verification and
+// marketplace review).
+export {
+  DEFAULT_INSTALL_KEY,
+  EXTENSION_HTTP_METHODS,
+  EXTENSION_RUNTIME_HOST_PARTS,
+  EXTENSION_RUNTIME_HOST_VERSION,
+  EXTENSION_UI_BLOCK_TYPES,
+  EXTERNAL_PATH_PATTERN,
+  INSTALL_KEY_PATTERN,
+  MAX_EVENT_PAYLOAD_BYTES,
+  MAX_EXTERNAL_BODY_BYTES,
+  MAX_EXTERNAL_HEADER_COUNT,
+  MAX_EXTERNAL_HEADER_NAME_CHARS,
+  MAX_EXTERNAL_HEADER_VALUE_CHARS,
+  MAX_EXTERNAL_PATH_CHARS,
+  MAX_STATE_VALUE_BYTES,
+  MAX_TELEMETRY_PAYLOAD_BYTES,
+  MAX_UI_BLOCKS,
+  MAX_UI_LIST_ITEMS,
+  MAX_UI_TABLE_COLUMNS,
+  MAX_UI_TABLE_ROWS,
+  MAX_UI_TEXT_CHARS,
+  STATE_KEY_PATTERN,
+  TELEMETRY_NAME_PATTERN,
+  byteLength,
+  isExtensionHttpMethod,
+  isExtensionUiBlockType,
+  isExternalPath,
+  isInstallKey,
+  isStateKey,
+  isTelemetryName,
+  jsonByteLength,
+  participantForOrigin,
+  uiDocumentProblems,
+  utcDayStart,
+} from './runtime';
+
+// The runtime's injectable egress port (scoped external participation).
+export {
+  EXTENSION_HTTP_TIMEOUT_MS,
+  MAX_RESPONSE_BODY_CHARS,
+  extensionHttpPort,
+  setExtensionHttpPort,
+} from './http';
+export type { ExtensionHttpCall, ExtensionHttpResponse } from './http';
+export type { ExtensionHttpPort } from './http';
+
 export {
   EXTENSION_VERIFICATION_CHECKS,
   EXTENSION_VERIFICATION_STATES,
@@ -182,10 +253,27 @@ export type {
 } from './validation';
 
 export type {
+  ValidatedDeployInput,
+  ValidatedDeploymentQuery,
+  ValidatedRollbackInput,
+} from './validation';
+
+export type {
   CheckManifestCompatibilityQuery,
   CompatibilityReport,
+  DeployExtensionVersionInput,
+  DeployExtensionVersionResult,
+  DeploymentQuery,
+  DispatchExtensionEventInput,
+  DispatchExtensionEventResult,
+  EmitExtensionTelemetryInput,
+  ExecuteExtensionExternalCallInput,
   Extension,
   ExtensionCapabilities,
+  ExtensionDeployment,
+  ExtensionDeploymentOperation,
+  ExtensionEventDelivery,
+  ExtensionExternalCall,
   ExtensionExternalParticipant,
   ExtensionLifecycleEvent,
   ExtensionLifecycleState,
@@ -196,25 +284,43 @@ export type {
   ExtensionPermission,
   ExtensionQuotas,
   ExtensionScheduleDeclaration,
+  ExtensionScheduleRun,
+  ExtensionStateEntry,
   ExtensionStateScope,
+  ExtensionTelemetryEvent,
   ExtensionTransition,
+  ExtensionUiBlock,
+  ExtensionUiDeclaration,
+  ExtensionUiDocument,
   ExtensionUiSurface,
   ExtensionVerificationCheckResult,
   ExtensionVerificationRunOutcome,
   ExtensionVerificationState,
   GetExtensionQuery,
+  GetExtensionUiQuery,
   GetManifestQuery,
+  ListExtensionDeploymentsQuery,
+  ListExtensionEventDeliveriesQuery,
+  ListExtensionExternalCallsQuery,
   ListExtensionLifecycleEventsQuery,
+  ListExtensionScheduleRunsQuery,
+  ListExtensionTelemetryEventsQuery,
   ListExtensionsQuery,
   ListManifestsQuery,
   ListManifestVerificationsQuery,
   ManifestSchemaVersion,
   ManifestVerificationInfo,
+  PublishExtensionUiInput,
+  ReadExtensionStateQuery,
   RegisterExtensionManifestInput,
   RegisterExtensionManifestResult,
+  RollbackExtensionDeploymentInput,
+  RollbackExtensionDeploymentResult,
   RunManifestVerificationQuery,
   RunManifestVerificationResult,
   SemverParts,
   TransitionExtensionInput,
   TransitionExtensionResult,
+  TriggerExtensionScheduleInput,
+  WriteExtensionStateInput,
 } from './types';

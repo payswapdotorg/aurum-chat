@@ -39,6 +39,10 @@ import type {
 } from './manifest-rules';
 import type { SemverParts } from './semver';
 import type {
+  ExtensionHttpMethod,
+  ExtensionUiDocument,
+} from './runtime';
+import type {
   ExtensionVerificationCheckResult,
   ExtensionVerificationRunOutcome,
   ExtensionVerificationState,
@@ -61,6 +65,14 @@ export type {
 } from './manifest-rules';
 
 export type { SemverParts } from './semver';
+
+export type {
+  ExtensionHttpMethod,
+  ExtensionUiBlock,
+  ExtensionUiDocument,
+} from './runtime';
+
+export type { ExtensionHttpCall, ExtensionHttpResponse } from './http';
 
 export type {
   ExtensionVerificationCheckResult,
@@ -341,6 +353,383 @@ export interface ListExtensionLifecycleEventsQuery {
   /** Exactly one of extensionId / extensionKey must be given. */
   extensionId?: string;
   extensionKey?: string;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// W026 — General-Purpose Extension Runtime
+//
+// The runtime makes W025's contracts operational. Its nouns:
+// deployments (version + grant, matrix-gated, append-only history),
+// installs (a stable key deployments group under — 'default' when the
+// caller does not distinguish), persistent scoped state (tenant or
+// install namespace, quota-bounded), host-rendered declarative UI
+// documents, schedule runs, event deliveries, external calls and
+// extension telemetry — every activity record append-only evidence.
+// ---------------------------------------------------------------------------
+
+/** Which operation appended a deployment record. */
+export type ExtensionDeploymentOperation = 'deploy' | 'rollback';
+
+/**
+ * One deployment of one manifest version into one install of an
+ * extension — append-only history (triggers forbid UPDATE/DELETE).
+ *
+ * `grantedPermissions` is the effective grant of the deployment: a
+ * subset of the deployed manifest's requestedPermissions ceiling (W025's
+ * "install-time grant"). Every runtime operation checks the CURRENT
+ * deployment's grant, so narrowing a grant is a redeploy, never a
+ * mutation of history. `replacesDeploymentId` links the deployment the
+ * apply-time current one superseded; `actionRequestId` links the
+ * actions-module authority decision that authorized it.
+ */
+export interface ExtensionDeployment {
+  id: string;
+  tenantId: string;
+  extensionId: string;
+  extensionKey: string;
+  /** The install this deployment belongs to (default: 'default'). */
+  installKey: string;
+  manifestId: string;
+  /** The deployed release semver (denormalized from the manifest). */
+  version: string;
+  operation: ExtensionDeploymentOperation;
+  /** The deployment this one superseded at apply time, or null. */
+  replacesDeploymentId: string | null;
+  /** Effective permissions, in canonical order. */
+  grantedPermissions: ExtensionPermission[];
+  /** The principal whose deployment call was applied. */
+  deployedBy: string;
+  deployedAt: string;
+  /** Monotonic append order (identity column; the current fold's key). */
+  seq: number;
+}
+
+/** Input shape of `deployExtensionVersion`. */
+export interface DeployExtensionVersionInput {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  /** Exactly one of manifestId / version must be given. */
+  manifestId?: string;
+  version?: string;
+  /** Install to deploy into; defaults to 'default'. */
+  installKey?: string;
+  /**
+   * Effective grant — subset of the manifest's requestedPermissions
+   * (canonical order). Defaults to the full requested set.
+   */
+  grantedPermissions?: ExtensionPermission[];
+  idempotencyKey?: string | null;
+}
+
+/** What `deployExtensionVersion` returns (the W025 gate-result shape). */
+export interface DeployExtensionVersionResult {
+  /** Null exactly while the authority gate holds the deployment pending. */
+  deployment: ExtensionDeployment | null;
+  applied: boolean;
+  gate: {
+    actionRequestId: string;
+    status: 'pending' | 'approved' | 'rejected';
+  };
+}
+
+/** Input shape of `rollbackExtensionDeployment`. */
+export interface RollbackExtensionDeploymentInput {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  /** The recorded deployment to roll back TO (same extension + install). */
+  targetDeploymentId: string;
+  /** Install being rolled back; defaults to 'default'. */
+  installKey?: string;
+  idempotencyKey?: string | null;
+}
+
+/** What `rollbackExtensionDeployment` returns. */
+export interface RollbackExtensionDeploymentResult {
+  deployment: ExtensionDeployment | null;
+  applied: boolean;
+  gate: {
+    actionRequestId: string;
+    status: 'pending' | 'approved' | 'rejected';
+  };
+}
+
+/** Query shape of `getCurrentDeployment` / `listExtensionDeployments`. */
+export interface DeploymentQuery {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+}
+
+/** Query shape of `listExtensionDeployments`. */
+export interface ListExtensionDeploymentsQuery extends DeploymentQuery {
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Persistent scoped state
+// ---------------------------------------------------------------------------
+
+/**
+ * One stored state entry of an extension namespace. `revision` counts
+ * the writes of the key (1 on creation); `installKey` is null exactly
+ * when the deployed manifest's stateScope is 'tenant' (the namespace
+ * shared across installs and deployments).
+ */
+export interface ExtensionStateEntry {
+  key: string;
+  /** The stored JSON value (null is a legal stored value). */
+  value: unknown;
+  bytes: number;
+  revision: number;
+  updatedBy: string;
+  updatedAt: string;
+}
+
+/** Query shape of `readExtensionState`. */
+export interface ReadExtensionStateQuery {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  /** Required when the deployed manifest's stateScope is 'install'. */
+  installKey?: string;
+  key: string;
+}
+
+/** Input shape of `writeExtensionState`. */
+export interface WriteExtensionStateInput {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+  key: string;
+  /** Any JSON value (bounded; null clears while keeping the key). */
+  value: unknown;
+}
+
+// ---------------------------------------------------------------------------
+// Declarative UI (host-rendered)
+// ---------------------------------------------------------------------------
+
+/** Input shape of `publishExtensionUi`. */
+export interface PublishExtensionUiInput {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  surface: ExtensionUiSurface;
+  document: ExtensionUiDocument;
+}
+
+/** Query shape of `getExtensionUi`. */
+export interface GetExtensionUiQuery {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  surface: ExtensionUiSurface;
+}
+
+/**
+ * The current declarative UI document of one (extension, surface) — the
+ * host's render read. Replaceable (a declaration of what to render,
+ * like a policy); identity immutable; never deleted through the runtime.
+ */
+export interface ExtensionUiDeclaration {
+  extensionId: string;
+  extensionKey: string;
+  surface: ExtensionUiSurface;
+  document: ExtensionUiDocument;
+  updatedBy: string;
+  updatedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Schedules
+// ---------------------------------------------------------------------------
+
+/** Input shape of `triggerExtensionSchedule`. */
+export interface TriggerExtensionScheduleInput {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+  /** Must be declared by the current deployment's manifest. */
+  scheduleName: string;
+}
+
+/**
+ * One schedule invocation — append-only evidence. The cron is recorded
+ * from the manifest at invocation time (what fired, not what would fire
+ * today). The extension's handler runs in the host's execution
+ * environment; this record is the runtime's half.
+ */
+export interface ExtensionScheduleRun {
+  id: string;
+  tenantId: string;
+  extensionId: string;
+  extensionKey: string;
+  installKey: string;
+  scheduleName: string;
+  cron: string;
+  invokedBy: string;
+  invokedAt: string;
+}
+
+/** Query shape of `listExtensionScheduleRuns`. */
+export interface ListExtensionScheduleRunsQuery {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Event subscriptions
+// ---------------------------------------------------------------------------
+
+/** Input shape of `dispatchExtensionEvent`. */
+export interface DispatchExtensionEventInput {
+  /** Canonical topic slug (the manifest eventSubscriptions vocabulary). */
+  topic: string;
+  /** Bounded opaque JSON payload handed to every delivery. */
+  payload?: unknown;
+}
+
+/**
+ * One delivery of one dispatched topic to one subscribed install —
+ * append-only evidence. `outcome` is 'not_granted' when the install's
+ * current deployment grant omits events:subscribe: a grant downgrade
+ * is visible as evidence, never silent.
+ */
+export interface ExtensionEventDelivery {
+  id: string;
+  tenantId: string;
+  extensionId: string;
+  extensionKey: string;
+  installKey: string;
+  topic: string;
+  payload: unknown;
+  outcome: 'delivered' | 'not_granted';
+  deliveredAt: string;
+}
+
+/** What `dispatchExtensionEvent` returns. */
+export interface DispatchExtensionEventResult {
+  topic: string;
+  delivered: number;
+  notGranted: number;
+  deliveries: ExtensionEventDelivery[];
+}
+
+/** Query shape of `listExtensionEventDeliveries`. */
+export interface ListExtensionEventDeliveriesQuery {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Scoped external participation
+// ---------------------------------------------------------------------------
+
+/** Input shape of `executeExtensionExternalCall`. */
+export interface ExecuteExtensionExternalCallInput {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+  /** Must EXACTLY match a declared participant origin of the current deployment. */
+  origin: string;
+  method: ExtensionHttpMethod;
+  /** Request path (starts with '/', bounded, no fragment). */
+  path: string;
+  /** JSON body for POST/PUT/PATCH (bounded; null for GET/DELETE). */
+  body?: unknown;
+  /**
+   * Bounded plain string headers for the call — passed to the egress
+   * port, NEVER recorded in call evidence (secrets do not become data).
+   */
+  headers?: Record<string, string>;
+}
+
+/**
+ * One external participation call — append-only evidence. The outcome
+ * vocabulary: 'succeeded' (2xx), 'http_error' (non-2xx, status
+ * recorded), 'failed' (the egress port threw — network, timeout,
+ * DNS). Response bodies are never stored; `detail` is a bounded
+ * diagnostic.
+ */
+export interface ExtensionExternalCall {
+  id: string;
+  tenantId: string;
+  extensionId: string;
+  extensionKey: string;
+  installKey: string;
+  origin: string;
+  method: ExtensionHttpMethod;
+  path: string;
+  requestBodyBytes: number;
+  outcome: 'succeeded' | 'http_error' | 'failed';
+  responseStatus: number | null;
+  detail: string | null;
+  requestedBy: string;
+  requestedAt: string;
+}
+
+/** Query shape of `listExtensionExternalCalls`. */
+export interface ListExtensionExternalCallsQuery {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Telemetry
+// ---------------------------------------------------------------------------
+
+/** Input shape of `emitExtensionTelemetry`. */
+export interface EmitExtensionTelemetryInput {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
+  /** Telemetry event name (slug). */
+  name: string;
+  /** Bounded opaque JSON payload. */
+  payload?: unknown;
+}
+
+/** One extension-emitted telemetry event — append-only evidence. */
+export interface ExtensionTelemetryEvent {
+  id: string;
+  tenantId: string;
+  extensionId: string;
+  extensionKey: string;
+  installKey: string;
+  name: string;
+  payload: unknown;
+  emittedBy: string;
+  emittedAt: string;
+}
+
+/** Query shape of `listExtensionTelemetryEvents`. */
+export interface ListExtensionTelemetryEventsQuery {
+  /** Exactly one of extensionId / extensionKey must be given. */
+  extensionId?: string;
+  extensionKey?: string;
+  installKey?: string;
   /** 1..500, default 50. */
   limit?: number;
 }
