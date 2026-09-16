@@ -20,6 +20,8 @@
 // guards are the quota/accounting prelude of the service.
 
 import type { TenantContext } from '@/infra/tenant';
+import { EXTENSION_BUILD_PHASES, isExtensionBuildPhase } from './builder';
+import type { ExtensionBuildPhase } from './builder';
 import { ExtensionsError } from './errors';
 import {
   isExtensionTransition,
@@ -84,15 +86,19 @@ import {
 import { compareSemver, isSemver, parseSemver, type SemverParts } from './semver';
 import { isSupportedManifestSchemaVersion } from './verification';
 import type {
+  CancelExtensionBuildInput,
   CheckManifestCompatibilityQuery,
   DeployExtensionVersionInput,
   DeploymentQuery,
   DispatchExtensionEventInput,
   EmitExtensionTelemetryInput,
   ExecuteExtensionExternalCallInput,
+  GetExtensionBuildQuery,
   GetExtensionQuery,
   GetExtensionUiQuery,
   GetManifestQuery,
+  ListExtensionBuildArtifactsQuery,
+  ListExtensionBuildsQuery,
   ListExtensionDeploymentsQuery,
   ListExtensionEventDeliveriesQuery,
   ListExtensionExternalCallsQuery,
@@ -105,7 +111,9 @@ import type {
   PublishExtensionUiInput,
   ReadExtensionStateQuery,
   RegisterExtensionManifestInput,
+  RequestExtensionBuildInput,
   RollbackExtensionDeploymentInput,
+  RunExtensionBuildInput,
   RunManifestVerificationQuery,
   TransitionExtensionInput,
   TriggerExtensionScheduleInput,
@@ -1337,4 +1345,141 @@ export function validateEmitExtensionTelemetryInput(
       payload,
     };
   }, 'invalid_input');
+}
+
+// ---------------------------------------------------------------------------
+// W027 — Extension Builder inputs and queries
+//
+// The house discipline carried over once more: unknown keys are rejected
+// (a caller can never smuggle identity, provenance or timestamps), the
+// brief carries its own bound, and the target version is a release
+// semver — the registry's monotonicity rule is re-checked at request
+// time against the tenant's current registry state by the service.
+// ---------------------------------------------------------------------------
+
+/** Maximum length of the free-form build brief. */
+export const MAX_BRIEF_CHARS = 4_000;
+/** Maximum length of a cancellation reason (the agents module's bound). */
+export const MAX_CANCEL_REASON_CHARS = 512;
+
+const REQUEST_BUILD_INPUT_KEYS = [
+  'extensionKey',
+  'version',
+  'brief',
+  'agentId',
+  'idempotencyKey',
+] as const;
+const RUN_BUILD_INPUT_KEYS = ['buildId'] as const;
+const CANCEL_BUILD_INPUT_KEYS = ['buildId', 'reason'] as const;
+const GET_BUILD_QUERY_KEYS = ['buildId'] as const;
+const LIST_BUILDS_QUERY_KEYS = ['extensionKey', 'phase', 'limit'] as const;
+const LIST_BUILD_ARTIFACTS_QUERY_KEYS = ['buildId'] as const;
+
+/** Fully validated form of `RequestExtensionBuildInput`. */
+export interface ValidatedRequestBuildInput {
+  extensionKey: string;
+  version: string;
+  brief: string;
+  agentId: string;
+  idempotencyKey: string | null;
+}
+
+export function validateRequestExtensionBuildInput(
+  input: RequestExtensionBuildInput,
+): ValidatedRequestBuildInput {
+  if (!isPlainObject(input)) throw inputError('build request input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, REQUEST_BUILD_INPUT_KEYS, 'the build request input');
+    const extensionKey = requireExtensionKey(input['extensionKey']);
+    const version = requireString(input['version'], 'version');
+    if (!isSemver(version)) {
+      throw inputError(`version must be a release semver (got '${version}')`);
+    }
+    const brief = requireString(input['brief'], 'brief');
+    if (brief.length > MAX_BRIEF_CHARS) {
+      throw inputError(`brief must be at most ${MAX_BRIEF_CHARS} characters (got ${brief.length})`);
+    }
+    return {
+      extensionKey,
+      version,
+      brief,
+      agentId: requireUuid(input['agentId'], 'agentId'),
+      idempotencyKey: optionalIdempotencyKey(input['idempotencyKey']),
+    };
+  }, 'invalid_input');
+}
+
+export function validateRunExtensionBuildInput(
+  input: RunExtensionBuildInput,
+): { buildId: string } {
+  if (!isPlainObject(input)) throw inputError('build pump input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, RUN_BUILD_INPUT_KEYS, 'the build pump input');
+    return { buildId: requireUuid(input['buildId'], 'buildId') };
+  }, 'invalid_input');
+}
+
+export function validateCancelExtensionBuildInput(
+  input: CancelExtensionBuildInput,
+): { buildId: string; reason: string } {
+  if (!isPlainObject(input)) throw inputError('build cancel input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, CANCEL_BUILD_INPUT_KEYS, 'the build cancel input');
+    const reason = requireString(input['reason'], 'reason');
+    if (reason.length > MAX_CANCEL_REASON_CHARS) {
+      throw inputError(
+        `reason must be at most ${MAX_CANCEL_REASON_CHARS} characters (got ${reason.length})`,
+      );
+    }
+    return { buildId: requireUuid(input['buildId'], 'buildId'), reason };
+  }, 'invalid_input');
+}
+
+export function validateGetExtensionBuildQuery(query: GetExtensionBuildQuery): { buildId: string } {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, GET_BUILD_QUERY_KEYS, 'the query');
+    return { buildId: requireUuid(query['buildId'], 'query.buildId') };
+  });
+}
+
+/** Fully validated form of `ListExtensionBuildsQuery`. */
+export interface ValidatedListBuildsQuery {
+  extensionKey: string | null;
+  phase: ExtensionBuildPhase | null;
+  limit: number;
+}
+
+export function validateListExtensionBuildsQuery(
+  query: ListExtensionBuildsQuery,
+): ValidatedListBuildsQuery {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, LIST_BUILDS_QUERY_KEYS, 'the query');
+    const extensionKey =
+      query['extensionKey'] === undefined || query['extensionKey'] === null
+        ? null
+        : requireExtensionKey(query['extensionKey'], 'query.extensionKey');
+    const phase = query['phase'];
+    if (phase !== undefined && phase !== null && !isExtensionBuildPhase(phase)) {
+      throw queryError(
+        `query.phase must be one of ${EXTENSION_BUILD_PHASES.join(', ')} (got '${String(phase)}')`,
+      );
+    }
+    return {
+      extensionKey,
+      phase: (phase ?? null) as ExtensionBuildPhase | null,
+      limit: requireLimit(query['limit']),
+    };
+  });
+}
+
+export function validateListExtensionBuildArtifactsQuery(
+  query: ListExtensionBuildArtifactsQuery,
+): { buildId: string } {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, LIST_BUILD_ARTIFACTS_QUERY_KEYS, 'the query');
+    return { buildId: requireUuid(query['buildId'], 'query.buildId') };
+  });
 }

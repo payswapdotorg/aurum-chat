@@ -45,6 +45,19 @@
 // `external_quota_exceeded`). Cross-tenant access stays uniform
 // not-found (`extension_not_found`, `manifest_not_found`,
 // `deployment_not_found`) — no existence leak, exactly like W025.
+//
+// W027 — Extension Builder — adds the workflow codes. `forbidden` (the
+// existing claim code) gates request/pump/cancel: driving a workflow
+// that attaches manifest versions and verification evidence to the
+// tenant is a management action, so the builder surface requires the
+// same 'extensions:administer' claim as the registry it writes.
+// `agent_not_found` / `agent_disabled` / `agent_scope_insufficient`
+// reject the chosen builder agent (missing, disabled, or granted scopes
+// that do not cover the builder's fixed 'analyze' + 'propose' request —
+// the isolated agent execution environment never runs at 'execute').
+// `not_runnable` / `not_cancellable` guard the terminal phases (history
+// cannot be re-pumped or re-cancelled), and `build_not_found` keeps the
+// uniform cross-tenant not-found discipline over the new tables.
 
 export type ExtensionsErrorCode =
   | 'invalid_context'
@@ -77,7 +90,16 @@ export type ExtensionsErrorCode =
   // W026 — runtime: quotas
   | 'state_quota_exceeded'
   | 'schedule_quota_exceeded'
-  | 'external_quota_exceeded';
+  | 'external_quota_exceeded'
+  // W027 — builder: the workflow surface (request/pump/cancel are
+  // claim-gated like every registry write; the agent-execution and
+  // phase codes below are the builder's own vocabulary)
+  | 'build_not_found'
+  | 'agent_not_found'
+  | 'agent_disabled'
+  | 'agent_scope_insufficient'
+  | 'not_runnable'
+  | 'not_cancellable';
 
 export class ExtensionsError extends Error {
   constructor(
