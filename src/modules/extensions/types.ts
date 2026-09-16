@@ -25,6 +25,10 @@
 // extension deployment among the consequential actions).
 
 import type {
+  ExtensionBuildFailureCode,
+  ExtensionBuildPhase,
+} from './builder';
+import type {
   ExtensionLifecycleState,
   ExtensionTransition,
 } from './lifecycle';
@@ -53,6 +57,12 @@ export type {
   ExtensionLifecycleState,
   ExtensionTransition,
 } from './lifecycle';
+
+export type {
+  ExtensionBuildFailureCode,
+  ExtensionBuildPhase,
+  DesignArtifact,
+} from './builder';
 
 export type {
   ExtensionCapabilities,
@@ -732,4 +742,121 @@ export interface ListExtensionTelemetryEventsQuery {
   installKey?: string;
   /** 1..500, default 50. */
   limit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// W027 — Extension Builder
+//
+// The design/build/verify/deploy workflow over one build session: the
+// design and build phases run through the agents module's isolated
+// execution environment (an agent studies the brief and produces
+// artifacts that are DATA pending deterministic domain validation —
+// lock 10), the verify phase appends the same verification-run evidence
+// W025 records, and the deploy phase goes through the general runtime's
+// matrix-gated deployment. Artifact custody (what the agent actually
+// produced, accepted or rejected) is retained append-only.
+// ---------------------------------------------------------------------------
+
+/**
+ * One extension build session — the resumable workflow record. The
+ * target (extensionKey + version) and the brief are frozen at request
+ * time; the phase, the forward links and the failure fields are the
+ * live state (storage triggers enforce exactly that split).
+ *
+ * `designExecutionId` / `buildExecutionId` are OPAQUE references into
+ * the agents module's execution evidence; `manifestId` / `deploymentId`
+ * reference this module's registry history once the corresponding phase
+ * has landed.
+ */
+export interface ExtensionBuild {
+  id: string;
+  tenantId: string;
+  /** The target extension's stable key (the requester's declared scope). */
+  extensionKey: string;
+  /** The target release semver. */
+  version: string;
+  /** The free-form build brief (what the extension should be). */
+  brief: string;
+  /** The tenant-registered agent that performs the design and build phases. */
+  agentId: string;
+  phase: ExtensionBuildPhase;
+  designExecutionId: string | null;
+  buildExecutionId: string | null;
+  manifestId: string | null;
+  deploymentId: string | null;
+  /** How the build ended, when it ended (evidence, not control flow). */
+  failureCode: ExtensionBuildFailureCode | null;
+  failureDetail: string | null;
+  requestedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Which workflow phase an artifact row is the custody of. */
+export type ExtensionBuildArtifactPhase = 'design' | 'build';
+
+/**
+ * One recorded build artifact — append-only custody of what the agent
+ * actually produced for one phase: the RAW canonical output (bounded;
+ * a stub replaces an oversized payload), linked to the agent execution
+ * that produced it. Accepted artifacts are additionally identifiable by
+ * the session's links (the registered manifest for 'build'); rejected
+ * ones by the session's failure evidence.
+ */
+export interface ExtensionBuildArtifact {
+  id: string;
+  tenantId: string;
+  buildId: string;
+  phase: ExtensionBuildArtifactPhase;
+  /** The recorded agent output (raw, bounded — custody, not truth). */
+  payload: unknown;
+  /** The agent execution that produced the payload (opaque ref). */
+  executionId: string;
+  /** The principal whose pump recorded the artifact. */
+  recordedBy: string;
+  recordedAt: string;
+}
+
+/** Input shape of `requestExtensionBuild`. */
+export interface RequestExtensionBuildInput {
+  /** The target extension key — an existing key builds a new version. */
+  extensionKey: string;
+  /** The target release semver (must strictly follow any registered version). */
+  version: string;
+  /** What the extension should be (the design brief). */
+  brief: string;
+  /** The tenant-registered agent that designs and builds. */
+  agentId: string;
+  /** Emitter-supplied dedupe key; a recorded key replays the original session. */
+  idempotencyKey?: string | null;
+}
+
+/** Input shape of `runExtensionBuild` — the worker pump. */
+export interface RunExtensionBuildInput {
+  buildId: string;
+}
+
+/** Input shape of `cancelExtensionBuild` (live builds only). */
+export interface CancelExtensionBuildInput {
+  buildId: string;
+  /** Required reason (1..512 chars) — recorded on the terminal state. */
+  reason: string;
+}
+
+/** Query shape of `getExtensionBuild`. */
+export interface GetExtensionBuildQuery {
+  buildId: string;
+}
+
+/** Query shape of `listExtensionBuilds`. */
+export interface ListExtensionBuildsQuery {
+  extensionKey?: string;
+  phase?: ExtensionBuildPhase;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+/** Query shape of `listExtensionBuildArtifacts`. */
+export interface ListExtensionBuildArtifactsQuery {
+  buildId: string;
 }

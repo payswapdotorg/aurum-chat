@@ -94,8 +94,38 @@
 
 import { now } from '@/infra/clock';
 import { getDb, type DbRow, type Queryable } from '@/infra/db';
+import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import { ActionsError, authorizeAction, type ActionRequest } from '@/modules/actions/contract';
+import {
+  AgentsError,
+  cancelAgentExecution,
+  getAgent,
+  getAgentExecution,
+  missingPermissionScope,
+  runAgentExecution,
+  submitAgentExecution,
+} from '@/modules/agents/contract';
+import type { AgentDefinition, AgentExecution } from '@/modules/agents/contract';
+import {
+  BUILDER_AGENT_SCOPES,
+  buildArtifactToRegistration,
+  buildExecutionKey,
+  buildTaskFor,
+  activationKey,
+  deploymentKey,
+  designExecutionKey,
+  designTaskFor,
+  failureCodeForExecution,
+  isExtensionBuildTerminalPhase,
+  MAX_ARTIFACT_BYTES,
+  MAX_FAILURE_DETAIL_CHARS,
+  parseAgentArtifactOutput,
+  validateDesignArtifact,
+  type DesignArtifact,
+  type ExtensionBuildFailureCode,
+  type ExtensionBuildPhase,
+} from './builder';
 import { ExtensionsError } from './errors';
 import { canTransitionExtension, type ExtensionLifecycleState } from './lifecycle';
 import type { ExtensionPermission } from './manifest-rules';
@@ -111,6 +141,7 @@ import { checkHostRuntimeCompatibility, compareSemver, parseSemver, type SemverP
 import {
   DEFAULT_INSTALL_KEY,
   EXTENSION_RUNTIME_HOST_VERSION,
+  jsonByteLength,
   participantForOrigin,
   utcDayStart,
   type ExtensionHttpMethod,
@@ -118,15 +149,19 @@ import {
 import { extensionHttpPort } from './http';
 import {
   assertExtensionsTenantContext,
+  validateCancelExtensionBuildInput,
   validateCheckManifestCompatibilityQuery,
   validateDeployExtensionVersionInput,
   validateDeploymentQuery,
   validateDispatchExtensionEventInput,
   validateEmitExtensionTelemetryInput,
   validateExecuteExtensionExternalCallInput,
+  validateGetExtensionBuildQuery,
   validateGetExtensionQuery,
   validateGetExtensionUiQuery,
   validateGetManifestQuery,
+  validateListExtensionBuildArtifactsQuery,
+  validateListExtensionBuildsQuery,
   validateListExtensionDeploymentsQuery,
   validateListExtensionLifecycleEventsQuery,
   validateListExtensionsQuery,
@@ -135,15 +170,19 @@ import {
   validatePublishExtensionUiInput,
   validateReadExtensionStateQuery,
   validateRegisterExtensionManifestInput,
+  validateRequestExtensionBuildInput,
   validateRollbackExtensionDeploymentInput,
+  validateRunExtensionBuildInput,
   validateRunManifestVerificationQuery,
   validateTransitionExtensionInput,
   validateTriggerExtensionScheduleInput,
   validateWriteExtensionStateInput,
   validateActivityListQuery,
   type ValidatedRegisterInput,
+  type ValidatedRequestBuildInput,
 } from './validation';
 import type {
+  CancelExtensionBuildInput,
   CompatibilityReport,
   DeployExtensionVersionInput,
   DeployExtensionVersionResult,
@@ -153,6 +192,8 @@ import type {
   EmitExtensionTelemetryInput,
   ExecuteExtensionExternalCallInput,
   Extension,
+  ExtensionBuild,
+  ExtensionBuildArtifact,
   ExtensionDeployment,
   ExtensionEventDelivery,
   ExtensionExternalCall,
@@ -168,6 +209,8 @@ import type {
   ExtensionTelemetryEvent,
   ExtensionUiDeclaration,
   ListExtensionDeploymentsQuery,
+  ListExtensionBuildArtifactsQuery,
+  ListExtensionBuildsQuery,
   ListExtensionEventDeliveriesQuery,
   ListExtensionExternalCallsQuery,
   ListExtensionLifecycleEventsQuery,
@@ -181,9 +224,12 @@ import type {
   ReadExtensionStateQuery,
   RegisterExtensionManifestInput,
   RegisterExtensionManifestResult,
+  RequestExtensionBuildInput,
   RollbackExtensionDeploymentInput,
   RollbackExtensionDeploymentResult,
+  RunExtensionBuildInput,
   RunManifestVerificationResult,
+  GetExtensionBuildQuery,
   TransitionExtensionInput,
   TransitionExtensionResult,
   TriggerExtensionScheduleInput,
@@ -2278,4 +2324,1036 @@ export async function listExtensionTelemetryEvents(
     [ctx.tenantId, extension.id, valid.installKey, valid.limit],
   );
   return rows.rows.map(mapTelemetry);
+}
+
+// ===========================================================================
+// W027 — Extension Builder
+//
+// The design/build/verify/deploy workflow over one resumable build
+// session, driven by an explicit worker pump (lock 36) and built from
+// exactly the two declared dependencies:
+//
+//   * THE ISOLATED AGENT EXECUTION ENVIRONMENT (W021 — the agents
+//     module's contract, this module's declared DAG edge W021 + W026 →
+//     W027): the design and build phases submit provider-neutral agent
+//     executions at the fixed BUILDER_AGENT_SCOPES ('analyze' +
+//     'propose' — the agent never operates at 'execute'); the pump
+//     dispatches ONE attempt per call through the agents module's own
+//     serialized pump. Agent output is untrusted data: the design
+//     artifact must pass the design contract's field rules and the
+//     build artifact must pass the SAME registration validation a human
+//     registration passes (lock 10), otherwise the build fails loudly
+//     with the recorded problems — never a silent substitute value.
+//     What the agent produced is retained as append-only artifact
+//     custody even when rejected.
+//
+//   * THE GENERAL RUNTIME (W026): the verify phase appends the same
+//     verification-run evidence W025 records (runManifestVerification);
+//     the deploy phase activates the extension if needed (the W025
+//     lifecycle transition) and deploys through the runtime's
+//     matrix-gated deployExtensionVersion. Every consequential step
+//     keeps its OWN existing authority gate — the builder adds none and
+//     bypasses none.
+//
+// Claim posture: request/pump/cancel require 'extensions:administer' —
+// the workflow's destination is a registry write (manifest registration
+// + verification evidence), and authorizing a member to drive one is a
+// management action (the registry's own discipline; failing at phase
+// three after spending agent budget would be worse). Reads
+// (get/list/artifacts) are tenant-member-readable evidence surfaces.
+//
+// Resumability and races: the workflow's side effects carry
+// deterministic idempotency keys (pure functions of the build id), so a
+// crashed pump re-derives them and replays recorded outcomes; phase
+// moves are guarded single-row UPDATEs where the first write wins — a
+// racing pump or cancellation that moved the phase first stands, and
+// the loser adopts the recorded state.
+// ===========================================================================
+
+interface BuildRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  extension_key: string;
+  version: string;
+  brief: string;
+  agent_id: string;
+  phase: ExtensionBuildPhase;
+  design_execution_id: string | null;
+  build_execution_id: string | null;
+  manifest_id: string | null;
+  deployment_id: string | null;
+  failure_code: string | null;
+  failure_detail: string | null;
+  idempotency_key: string | null;
+  requested_by: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+}
+
+interface BuildArtifactRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  build_id: string;
+  phase: 'design' | 'build';
+  payload: unknown;
+  execution_id: string;
+  recorded_by: string;
+  recorded_at: Date | string;
+}
+
+function mapBuild(row: BuildRow): ExtensionBuild {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    extensionKey: row.extension_key,
+    version: row.version,
+    brief: row.brief,
+    agentId: row.agent_id,
+    phase: row.phase,
+    designExecutionId: row.design_execution_id ?? null,
+    buildExecutionId: row.build_execution_id ?? null,
+    manifestId: row.manifest_id ?? null,
+    deploymentId: row.deployment_id ?? null,
+    failureCode: (row.failure_code ?? null) as ExtensionBuild['failureCode'],
+    failureDetail: row.failure_detail ?? null,
+    requestedBy: row.requested_by,
+    createdAt: toIso(row.created_at),
+    updatedAt: toIso(row.updated_at),
+  };
+}
+
+function mapBuildArtifact(row: BuildArtifactRow): ExtensionBuildArtifact {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    buildId: row.build_id,
+    phase: row.phase,
+    payload: row.payload,
+    executionId: row.execution_id,
+    recordedBy: row.recorded_by,
+    recordedAt: toIso(row.recorded_at),
+  };
+}
+
+async function findBuildRow(
+  db: Queryable,
+  ctx: TenantContext,
+  buildId: string,
+): Promise<BuildRow | null> {
+  const rows = await db.query<BuildRow>(
+    `SELECT * FROM extension_builds WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, buildId],
+  );
+  return rows.rows[0] ?? null;
+}
+
+async function findBuildRowByIdempotencyKey(
+  db: Queryable,
+  ctx: TenantContext,
+  idempotencyKey: string,
+): Promise<BuildRow | null> {
+  const rows = await db.query<BuildRow>(
+    `SELECT * FROM extension_builds WHERE tenant_id = $1 AND idempotency_key = $2`,
+    [ctx.tenantId, idempotencyKey],
+  );
+  return rows.rows[0] ?? null;
+}
+
+/** The live-state patch a phase move may carry. */
+interface BuildPhasePatch {
+  designExecutionId?: string;
+  buildExecutionId?: string;
+  manifestId?: string;
+  deploymentId?: string;
+  failureCode?: ExtensionBuildFailureCode;
+  failureDetail?: string;
+}
+
+/**
+ * Move a build's phase forward with a guarded single-row UPDATE (the
+ * phase the caller read must still be current). First write wins: when
+ * a racing pump or cancellation moved the phase first, their outcome
+ * stands and this call adopts the recorded state — the workflow's side
+ * effects are idempotent by key, so adoption is always safe.
+ */
+async function moveBuildPhase(
+  ctx: TenantContext,
+  row: BuildRow,
+  to: ExtensionBuildPhase,
+  patch: BuildPhasePatch,
+): Promise<BuildRow> {
+  const timestamp = now();
+  const sets: string[] = ['phase = $3', 'updated_at = $4'];
+  const params: unknown[] = [ctx.tenantId, row.id, to, timestamp];
+  const add = (fragment: string, value: unknown): void => {
+    params.push(value);
+    sets.push(fragment.replace('$#', `$${params.length}`));
+  };
+  if (patch.designExecutionId !== undefined) add('design_execution_id = $#', patch.designExecutionId);
+  if (patch.buildExecutionId !== undefined) add('build_execution_id = $#', patch.buildExecutionId);
+  if (patch.manifestId !== undefined) add('manifest_id = $#', patch.manifestId);
+  if (patch.deploymentId !== undefined) add('deployment_id = $#', patch.deploymentId);
+  add('failure_code = $#', patch.failureCode ?? null);
+  add('failure_detail = $#', boundedDetail(patch.failureDetail ?? null, MAX_FAILURE_DETAIL_CHARS));
+  params.push(row.phase);
+
+  const updated = await getDb().query<BuildRow>(
+    `UPDATE extension_builds SET ${sets.join(', ')}
+       WHERE tenant_id = $1 AND id = $2 AND phase = $${params.length}
+       RETURNING *`,
+    params,
+  );
+  if (updated.rows[0] !== undefined) return updated.rows[0];
+
+  // First write wins: whoever moved the phase while this caller worked
+  // owns the outcome; the recorded state stands.
+  const current = await findBuildRow(getDb(), ctx, row.id);
+  if (current === null) {
+    throw new Error(
+      `extension build '${row.id}' disappeared while moving ${row.phase} → ${to} (internal invariant violation)`,
+    );
+  }
+  return current;
+}
+
+/**
+ * Record one artifact — append-only custody of what the agent produced
+ * (raw output, bounded; an oversized payload becomes a stub that says
+ * so). UNIQUE (tenant, build, phase) makes racing pumps record one row;
+ * a duplicate is the twin's identical custody, not an error.
+ */
+async function recordBuildArtifact(
+  ctx: TenantContext,
+  row: BuildRow,
+  phase: 'design' | 'build',
+  output: unknown,
+  executionId: string,
+): Promise<void> {
+  let payload: unknown = output;
+  const bytes = jsonByteLength(output);
+  if (bytes === null || bytes > MAX_ARTIFACT_BYTES) {
+    payload = {
+      builderNote: 'the agent output exceeded the artifact custody bound and was not retained',
+      bytes: bytes ?? -1,
+    };
+  }
+  try {
+    await getDb().query(
+      `INSERT INTO extension_build_artifacts (
+         tenant_id, build_id, phase, payload, execution_id, recorded_by, recorded_at
+       ) VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7)`,
+      [ctx.tenantId, row.id, phase, JSON.stringify(payload), executionId, ctx.principalId, now()],
+    );
+  } catch (error) {
+    if (duplicateConstraint(error) === 'extension_build_artifacts_build_phase_unique') {
+      return; // the twin pump's identical custody stands
+    }
+    throw error;
+  }
+}
+
+/** Read one agent execution through the agents contract (tenant-scoped). */
+async function readAgentExecution(ctx: TenantContext, executionId: string): Promise<AgentExecution> {
+  try {
+    return await getAgentExecution(ctx, { executionId });
+  } catch (error) {
+    if (error instanceof AgentsError && error.code === 'execution_not_found') {
+      throw new Error(
+        `extension build references agent execution '${executionId}' that is not readable in this tenant (internal invariant violation)`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * Submit one of the workflow's agent executions through the agents
+ * contract with the deterministic per-build key. Caller-state failures
+ * (the agent vanished/disabled/narrowed between request and submit)
+ * surface as builder errors; pre-validated input failures are internal
+ * invariant violations.
+ */
+async function submitBuildExecution(
+  ctx: TenantContext,
+  agentId: string,
+  task: unknown,
+  idempotencyKey: string,
+  causationId: string | null,
+): Promise<AgentExecution> {
+  try {
+    return await submitAgentExecution(ctx, {
+      agentId,
+      task,
+      requestedPermissions: [...BUILDER_AGENT_SCOPES],
+      correlationId: idempotencyKey,
+      causationId,
+      idempotencyKey,
+    });
+  } catch (error) {
+    if (error instanceof AgentsError) {
+      if (error.code === 'agent_not_found') {
+        throw new ExtensionsError('agent_not_found', error.message);
+      }
+      if (error.code === 'agent_disabled') {
+        throw new ExtensionsError('agent_disabled', error.message);
+      }
+      if (error.code === 'permission_not_granted') {
+        throw new ExtensionsError(
+          'agent_scope_insufficient',
+          `the builder agent is no longer granted the scopes ${BUILDER_AGENT_SCOPES.join(', ')} — ${error.message}`,
+        );
+      }
+      if (error.code === 'invalid_context' || error.code === 'invalid_agent_input') {
+        throw new Error(
+          `the agent gateway rejected a pre-validated builder submission (internal invariant violation): ${error.message}`,
+          { cause: error },
+        );
+      }
+    }
+    throw error;
+  }
+}
+
+/**
+ * Pump the build's current agent execution ONE dispatch attempt
+ * (the agents module's own serialized pump), adopting the recorded
+ * state when a racing pump already moved it (not_runnable /
+ * execution_conflict are the twins' footprints, not caller errors).
+ */
+async function pumpBuildExecution(
+  ctx: TenantContext,
+  executionId: string,
+): Promise<AgentExecution> {
+  try {
+    return await runAgentExecution(ctx, { executionId });
+  } catch (error) {
+    if (error instanceof AgentsError && (error.code === 'not_runnable' || error.code === 'execution_conflict')) {
+      return readAgentExecution(ctx, executionId);
+    }
+    throw error;
+  }
+}
+
+/** Resolve (and if needed self-heal) the session's execution link for a phase. */
+async function ensureBuildExecution(
+  ctx: TenantContext,
+  row: BuildRow,
+  phase: 'design' | 'build',
+): Promise<AgentExecution> {
+  const linked = phase === 'design' ? row.design_execution_id : row.build_execution_id;
+  if (linked !== null) return readAgentExecution(ctx, linked);
+
+  const target = { extensionKey: row.extension_key, version: row.version };
+  // Crash gap between the session insert and the submission (design) or
+  // between the design landing and the submission (build): the
+  // deterministic key replays the original execution — first write wins.
+  const execution = await submitBuildExecution(
+    ctx,
+    row.agent_id,
+    phase === 'design'
+      ? designTaskFor(target, row.brief)
+      : buildTaskFor(target, row.brief, await designOfRecordedArtifact(ctx, row)),
+    phase === 'design' ? designExecutionKey(row.id) : buildExecutionKey(row.id),
+    phase === 'design' ? null : row.design_execution_id,
+  );
+  const column = phase === 'design' ? 'design_execution_id' : 'build_execution_id';
+  const updated = await getDb().query<BuildRow>(
+    `UPDATE extension_builds SET ${column} = $3, updated_at = $4
+       WHERE tenant_id = $1 AND id = $2 AND ${column} IS NULL
+       RETURNING *`,
+    [ctx.tenantId, row.id, execution.id, now()],
+  );
+  if (updated.rows[0] === undefined) {
+    // A twin linked it first — their link stands (same deterministic key,
+    // same execution).
+    const current = await findBuildRow(getDb(), ctx, row.id);
+    if (current === null) {
+      throw new Error(
+        `extension build '${row.id}' disappeared while linking its ${phase} execution (internal invariant violation)`,
+      );
+    }
+    const twinLink = phase === 'design' ? current.design_execution_id : current.build_execution_id;
+    if (twinLink === null) {
+      throw new Error(
+        `extension build '${row.id}' lost its ${phase} execution link without a twin (internal invariant violation)`,
+      );
+    }
+    return readAgentExecution(ctx, twinLink);
+  }
+  return execution;
+}
+
+/**
+ * The validated design of the recorded design artifact — the build
+ * task's input. Deterministic re-validation of the recorded raw output
+ * (the same pure rules that accepted it), never a stored "parsed" copy:
+ * history is the record, the present is a fold.
+ */
+async function designOfRecordedArtifact(
+  ctx: TenantContext,
+  row: BuildRow,
+): Promise<DesignArtifact> {
+  const executionId = row.design_execution_id;
+  if (executionId === null) {
+    throw new Error(
+      `extension build '${row.id}' reached the build phase without a design execution (internal invariant violation)`,
+    );
+  }
+  const execution = await readAgentExecution(ctx, executionId);
+  const parsed = parseAgentArtifactOutput(execution.result?.output ?? null);
+  if (!parsed.ok) {
+    throw new Error(
+      `extension build '${row.id}' recorded a design artifact that no longer parses (internal invariant violation): ${parsed.problems.join('; ')}`,
+    );
+  }
+  const design = validateDesignArtifact(parsed.value);
+  if (!design.ok) {
+    throw new Error(
+      `extension build '${row.id}' recorded a design artifact that no longer validates (internal invariant violation): ${design.problems.join('; ')}`,
+    );
+  }
+  return design.design;
+}
+
+// ---------------------------------------------------------------------------
+// Requesting a build
+// ---------------------------------------------------------------------------
+
+export async function requestExtensionBuild(
+  ctx: TenantContext,
+  input: RequestExtensionBuildInput,
+): Promise<ExtensionBuild> {
+  assertExtensionsTenantContext(ctx);
+  // The workflow's destination is a registry write (manifest
+  // registration + verification evidence): driving one is a management
+  // action, claim-gated before parsing (the registry's own discipline).
+  if (!canAdminister(ctx.authority)) {
+    throw new ExtensionsError(
+      'forbidden',
+      `this operation requires the '${EXTENSIONS_AUTHORITY_ADMINISTER}' authority claim`,
+    );
+  }
+  const valid: ValidatedRequestBuildInput = validateRequestExtensionBuildInput(input);
+
+  // Idempotent fast path: a recorded key replays the original session.
+  if (valid.idempotencyKey !== null) {
+    const existing = await findBuildRowByIdempotencyKey(getDb(), ctx, valid.idempotencyKey);
+    if (existing !== null) return mapBuild(existing);
+  }
+
+  // The isolated agent execution environment's precondition: the chosen
+  // agent exists, is enabled, and is granted the builder's fixed scopes.
+  let agent: AgentDefinition;
+  try {
+    agent = await getAgent(ctx, { agentId: valid.agentId });
+  } catch (error) {
+    if (error instanceof AgentsError && error.code === 'agent_not_found') {
+      throw new ExtensionsError(
+        'agent_not_found',
+        `no agent '${valid.agentId}' exists in this tenant — the builder needs a tenant-registered agent`,
+      );
+    }
+    throw error;
+  }
+  if (agent.status !== 'active') {
+    throw new ExtensionsError(
+      'agent_disabled',
+      `agent '${agent.slug}' (${agent.id}) is disabled — disabled agents cannot design or build extensions`,
+    );
+  }
+  const missing = missingPermissionScope(agent.permissions, BUILDER_AGENT_SCOPES);
+  if (missing !== null) {
+    throw new ExtensionsError(
+      'agent_scope_insufficient',
+      `agent '${agent.slug}' is not granted the '${missing}' permission scope — builder agents need ${BUILDER_AGENT_SCOPES.join(' and ')} (and never 'execute': the agent proposes, the application disposes)`,
+    );
+  }
+
+  // Fail fast on registry-impossible targets BEFORE spending agent
+  // budget (re-checked authoritatively at registration time): strictly
+  // increasing versions per key, no versions for retired extensions.
+  const existing = await findExtensionRow(getDb(), ctx, {
+    extensionId: null,
+    extensionKey: valid.extensionKey,
+  });
+  if (existing !== null) {
+    if (existing.lifecycle_state === 'DEPRECATED') {
+      throw new ExtensionsError(
+        'extension_deprecated',
+        `extension '${valid.extensionKey}' is DEPRECATED — a retired extension accepts no new versions, build a new extension instead`,
+      );
+    }
+    const latest = await findLatestManifestRow(getDb(), ctx, existing.id);
+    if (latest !== null && compareSemver(parseSemver(valid.version)!, versionPartsOf(latest)) <= 0) {
+      throw new ExtensionsError(
+        'version_not_monotonic',
+        `version ${valid.version} does not come after the latest registered version ${latest.version} of extension '${valid.extensionKey}' — build versions must strictly increase`,
+      );
+    }
+  }
+
+  // The id is minted here (not by the database): the workflow's
+  // idempotency keys derive from it deterministically.
+  const buildId = newId();
+  const timestamp = now();
+  try {
+    await getDb().query(
+      `INSERT INTO extension_builds (
+         id, tenant_id, extension_key, version, brief, agent_id, phase,
+         requested_by, created_at, updated_at, idempotency_key
+       ) VALUES ($1, $2, $3, $4, $5, $6, 'designing', $7, $8, $8, $9)`,
+      [
+        buildId,
+        ctx.tenantId,
+        valid.extensionKey,
+        valid.version,
+        valid.brief,
+        valid.agentId,
+        ctx.principalId,
+        timestamp,
+        valid.idempotencyKey,
+      ],
+    );
+  } catch (error) {
+    const constraint = duplicateConstraint(error);
+    if (constraint === 'extension_builds_idempotency_tenant_unique') {
+      // A concurrent request with the same key won the race: replay it.
+      const winner = await findBuildRowByIdempotencyKey(getDb(), ctx, valid.idempotencyKey!);
+      if (winner !== null) return mapBuild(winner);
+    }
+    throw error;
+  }
+
+  // Submit the design execution (deterministic key; a crash between
+  // here and the link update self-heals on the next pump).
+  const execution = await submitBuildExecution(
+    ctx,
+    valid.agentId,
+    designTaskFor(valid, valid.brief),
+    designExecutionKey(buildId),
+    null,
+  );
+  const linked = await getDb().query<BuildRow>(
+    `UPDATE extension_builds SET design_execution_id = $3, updated_at = $4
+       WHERE tenant_id = $1 AND id = $2 AND design_execution_id IS NULL
+       RETURNING *`,
+    [ctx.tenantId, buildId, execution.id, now()],
+  );
+  if (linked.rows[0] === undefined) {
+    const current = await findBuildRow(getDb(), ctx, buildId);
+    return mapBuild(current!);
+  }
+  return mapBuild(linked.rows[0]);
+}
+
+// ---------------------------------------------------------------------------
+// The worker pump (drives the workflow forward, one phase step per call)
+// ---------------------------------------------------------------------------
+
+export async function runExtensionBuild(
+  ctx: TenantContext,
+  input: RunExtensionBuildInput,
+): Promise<ExtensionBuild> {
+  assertExtensionsTenantContext(ctx);
+  // The pump performs the registry writes (registration, verification
+  // evidence) and brings deployments to the gate — the administer claim
+  // is the workflow's driving credential, checked up front.
+  if (!canAdminister(ctx.authority)) {
+    throw new ExtensionsError(
+      'forbidden',
+      `this operation requires the '${EXTENSIONS_AUTHORITY_ADMINISTER}' authority claim`,
+    );
+  }
+  const valid = validateRunExtensionBuildInput(input);
+
+  const row = await findBuildRow(getDb(), ctx, valid.buildId);
+  if (row === null) {
+    throw new ExtensionsError(
+      'build_not_found',
+      `no extension build '${valid.buildId}' exists in this tenant`,
+    );
+  }
+  if (isExtensionBuildTerminalPhase(row.phase)) {
+    throw new ExtensionsError(
+      'not_runnable',
+      `extension build '${row.id}' is ${row.phase} — terminal builds cannot be pumped; request a new build instead`,
+    );
+  }
+
+  switch (row.phase) {
+    case 'designing':
+      return pumpDesignPhase(ctx, row);
+    case 'building':
+      return pumpBuildPhase(ctx, row);
+    case 'built':
+      return pumpVerifyPhase(ctx, row);
+    case 'verified':
+    case 'deploying':
+      return pumpDeployPhase(ctx, row);
+    default:
+      throw new Error(
+        `extension build '${row.id}' is in unmapped phase '${row.phase}' (internal invariant violation)`,
+      );
+  }
+}
+
+/** `designing` — one dispatch attempt; a landed design spawns the build execution. */
+async function pumpDesignPhase(ctx: TenantContext, row: BuildRow): Promise<ExtensionBuild> {
+  let execution = await ensureBuildExecution(ctx, row, 'design');
+  if (execution.status === 'awaiting_approval' || execution.status === 'queued') {
+    execution = await pumpBuildExecution(ctx, execution.id);
+  }
+
+  if (execution.status === 'awaiting_approval' || execution.status === 'queued') {
+    // Still live (a retry is scheduled, or the W009 gate holds the
+    // submission) — the caller re-pumps.
+    return mapBuild(row);
+  }
+
+  if (execution.status !== 'succeeded') {
+    const code = failureCodeForExecution('design', execution.status);
+    const detail =
+      execution.errorDetail ?? execution.errorCode ?? `the design execution ended '${execution.status}'`;
+    return mapBuild(
+      await moveBuildPhase(ctx, row, 'failed', { failureCode: code ?? 'design_execution_failed', failureDetail: detail }),
+    );
+  }
+
+  // Custody first (what the agent produced, accepted or not), then the
+  // deterministic domain validation — lock 10: agent output is never
+  // authoritative merely because an agent produced it.
+  const output = execution.result?.output ?? null;
+  await recordBuildArtifact(ctx, row, 'design', output, execution.id);
+  const parsed = parseAgentArtifactOutput(output);
+  const design = parsed.ok ? validateDesignArtifact(parsed.value) : { ok: false as const, problems: parsed.problems };
+  if (!design.ok) {
+    return mapBuild(
+      await moveBuildPhase(ctx, row, 'failed', {
+        failureCode: 'design_artifact_invalid',
+        failureDetail: design.problems.join('; '),
+      }),
+    );
+  }
+
+  // The design landed: submit the build execution (the design is its
+  // causation — §25) and advance.
+  const buildExecution = await submitBuildExecution(
+    ctx,
+    row.agent_id,
+    buildTaskFor({ extensionKey: row.extension_key, version: row.version }, row.brief, design.design),
+    buildExecutionKey(row.id),
+    execution.id,
+  );
+  return mapBuild(
+    await moveBuildPhase(ctx, row, 'building', { buildExecutionId: buildExecution.id }),
+  );
+}
+
+/** `building` — one dispatch attempt; a landed build registers the manifest. */
+async function pumpBuildPhase(ctx: TenantContext, row: BuildRow): Promise<ExtensionBuild> {
+  let execution = await ensureBuildExecution(ctx, row, 'build');
+  if (execution.status === 'awaiting_approval' || execution.status === 'queued') {
+    execution = await pumpBuildExecution(ctx, execution.id);
+  }
+
+  if (execution.status === 'awaiting_approval' || execution.status === 'queued') {
+    return mapBuild(row);
+  }
+
+  if (execution.status !== 'succeeded') {
+    const code = failureCodeForExecution('build', execution.status);
+    const detail =
+      execution.errorDetail ?? execution.errorCode ?? `the build execution ended '${execution.status}'`;
+    return mapBuild(
+      await moveBuildPhase(ctx, row, 'failed', { failureCode: code ?? 'build_execution_failed', failureDetail: detail }),
+    );
+  }
+
+  const output = execution.result?.output ?? null;
+  await recordBuildArtifact(ctx, row, 'build', output, execution.id);
+  const parsed = parseAgentArtifactOutput(output);
+  const built = parsed.ok
+    ? buildArtifactToRegistration(parsed.value, { extensionKey: row.extension_key, version: row.version })
+    : { ok: false as const, problems: parsed.problems };
+  if (!built.ok) {
+    return mapBuild(
+      await moveBuildPhase(ctx, row, 'failed', {
+        failureCode: 'build_artifact_invalid',
+        failureDetail: built.problems.join('; '),
+      }),
+    );
+  }
+
+  // The declaration passed the SAME validation a human registration
+  // passes — register it as an immutable manifest version through the
+  // registry (claim-gated; the pump's caller holds the claim).
+  let manifestId: string;
+  try {
+    const registered = await registerExtensionManifest(ctx, built.input);
+    manifestId = registered.manifest.id;
+  } catch (error) {
+    if (error instanceof ExtensionsError) {
+      if (
+        error.code === 'version_conflict' ||
+        error.code === 'version_not_monotonic' ||
+        error.code === 'extension_deprecated'
+      ) {
+        // The registry's own rule set rejected the target (a concurrent
+        // registration, drift, or retirement) — re-recorded as build
+        // evidence, in the registry's vocabulary.
+        return mapBuild(
+          await moveBuildPhase(ctx, row, 'failed', {
+            failureCode: error.code,
+            failureDetail: error.message,
+          }),
+        );
+      }
+      if (error.code === 'invalid_input') {
+        throw new Error(
+          `the registry rejected a pre-validated builder declaration (internal invariant violation): ${error.message}`,
+          { cause: error },
+        );
+      }
+      if (error.code === 'forbidden' || error.code === 'invalid_context') {
+        throw new Error(
+          `the registry refused a claim-gated builder registration after the pump's own gate passed (internal invariant violation): ${error.message}`,
+          { cause: error },
+        );
+      }
+    }
+    throw error;
+  }
+  return mapBuild(await moveBuildPhase(ctx, row, 'built', { manifestId }));
+}
+
+/** `built` — append the verification run (the same evidence W025 records). */
+async function pumpVerifyPhase(ctx: TenantContext, row: BuildRow): Promise<ExtensionBuild> {
+  const manifestId = row.manifest_id;
+  if (manifestId === null) {
+    throw new Error(
+      `extension build '${row.id}' reached the built phase without a manifest (internal invariant violation)`,
+    );
+  }
+  let run: RunManifestVerificationResult;
+  try {
+    run = await runManifestVerification(ctx, { manifestId });
+  } catch (error) {
+    if (error instanceof ExtensionsError && (error.code === 'forbidden' || error.code === 'invalid_context')) {
+      throw new Error(
+        `the registry refused a claim-gated builder verification after the pump's own gate passed (internal invariant violation): ${error.message}`,
+        { cause: error },
+      );
+    }
+    if (error instanceof ExtensionsError && error.code === 'manifest_not_found') {
+      throw new Error(
+        `extension build '${row.id}' links manifest '${manifestId}' that is not readable in this tenant (internal invariant violation)`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+  if (run.state === 'VERIFIED') {
+    return mapBuild(await moveBuildPhase(ctx, row, 'verified', {}));
+  }
+  return mapBuild(
+    await moveBuildPhase(ctx, row, 'failed', {
+      failureCode: 'verification_failed',
+      failureDetail: run.run.summary,
+    }),
+  );
+}
+
+/**
+ * `verified` / `deploying` — bring the extension to ACTIVE if needed
+ * (the W025 lifecycle transition, matrix-gated), then deploy through
+ * the general runtime (matrix-gated). Both gates use deterministic
+ * per-build idempotency keys, so re-pumps replay approved requests and
+ * apply them.
+ */
+async function pumpDeployPhase(ctx: TenantContext, row: BuildRow): Promise<ExtensionBuild> {
+  if (row.phase === 'verified') {
+    const extension = await findExtensionRow(getDb(), ctx, {
+      extensionId: null,
+      extensionKey: row.extension_key,
+    });
+    if (extension === null) {
+      throw new Error(
+        `extension build '${row.id}' targets extension '${row.extension_key}' that does not exist after registration (internal invariant violation)`,
+      );
+    }
+    if (extension.lifecycle_state === 'REGISTERED') {
+      // A fresh extension must be activated before it can be deployed —
+      // through the SAME matrix-gated lifecycle transition a human
+      // activation uses (the builder adds no activation path of its own).
+      let activationPending = false;
+      try {
+        const activation = await transitionExtension(ctx, {
+          extensionKey: row.extension_key,
+          transition: 'activate',
+          idempotencyKey: activationKey(row.id),
+        });
+        if (!activation.applied) activationPending = true;
+      } catch (error) {
+        if (error instanceof ExtensionsError && error.code === 'forbidden_by_policy') {
+          return mapBuild(
+            await moveBuildPhase(ctx, row, 'failed', {
+              failureCode: 'activation_rejected',
+              failureDetail: error.message,
+            }),
+          );
+        }
+        if (error instanceof ExtensionsError && error.code === 'invalid_transition') {
+          // A twin or a concurrent human moved the lifecycle first:
+          // ACTIVE is exactly what this workflow needs; anything else
+          // is a genuine state failure.
+          const current = await findExtensionRow(getDb(), ctx, {
+            extensionId: null,
+            extensionKey: row.extension_key,
+          });
+          if (current === null || current.lifecycle_state !== 'ACTIVE') {
+            return mapBuild(
+              await moveBuildPhase(ctx, row, 'failed', {
+                failureCode: 'activation_failed',
+                failureDetail: `extension '${row.extension_key}' is ${current?.lifecycle_state ?? 'unavailable'} — deployable extensions must be ACTIVE`,
+              }),
+            );
+          }
+          // Already ACTIVE (a twin activated it) — fall through to deploy.
+        } else if (
+          error instanceof ExtensionsError &&
+          (error.code === 'verification_required' || error.code === 'extension_not_found')
+        ) {
+          return mapBuild(
+            await moveBuildPhase(ctx, row, 'failed', {
+              failureCode: 'activation_failed',
+              failureDetail: error.message,
+            }),
+          );
+        } else if (
+          error instanceof ExtensionsError &&
+          (error.code === 'forbidden' || error.code === 'invalid_context' || error.code === 'invalid_input')
+        ) {
+          throw new Error(
+            `the registry refused a pre-validated builder activation (internal invariant violation): ${error.message}`,
+            { cause: error },
+          );
+        } else {
+          throw error;
+        }
+      }
+      if (activationPending) {
+        // The activation gate holds the transition — the caller
+        // re-pumps after the human decision (the same key replays it).
+        return mapBuild(row);
+      }
+    } else if (extension.lifecycle_state === 'SUSPENDED') {
+      return mapBuild(
+        await moveBuildPhase(ctx, row, 'failed', {
+          failureCode: 'activation_failed',
+          failureDetail: `extension '${row.extension_key}' is SUSPENDED — resume it before deploying`,
+        }),
+      );
+    } else if (extension.lifecycle_state === 'DEPRECATED') {
+      return mapBuild(
+        await moveBuildPhase(ctx, row, 'failed', {
+          failureCode: 'extension_deprecated',
+          failureDetail: `extension '${row.extension_key}' is DEPRECATED — a retired extension cannot be deployed`,
+        }),
+      );
+    }
+  }
+
+  // Deploy through the general runtime — the default install, the
+  // manifest's full requested grant, the deterministic per-build key.
+  let deployment;
+  try {
+    deployment = await deployExtensionVersion(ctx, {
+      extensionKey: row.extension_key,
+      version: row.version,
+      idempotencyKey: deploymentKey(row.id),
+    });
+  } catch (error) {
+    if (error instanceof ExtensionsError && error.code === 'forbidden_by_policy') {
+      return mapBuild(
+        await moveBuildPhase(ctx, row, 'failed', {
+          failureCode: 'deployment_rejected',
+          failureDetail: error.message,
+        }),
+      );
+    }
+    if (
+      error instanceof ExtensionsError &&
+      (error.code === 'extension_not_active' ||
+        error.code === 'verification_required' ||
+        error.code === 'incompatible_host' ||
+        error.code === 'manifest_not_found' ||
+        error.code === 'extension_not_found')
+    ) {
+      // Genuine registry state the deploy-time re-checks found (drift,
+      // suspension, a declared host range the runtime left).
+      return mapBuild(
+        await moveBuildPhase(ctx, row, 'failed', {
+          failureCode: 'deployment_failed',
+          failureDetail: error.message,
+        }),
+      );
+    }
+    if (
+      error instanceof ExtensionsError &&
+      (error.code === 'invalid_input' || error.code === 'grant_exceeds_ceiling' || error.code === 'invalid_context')
+    ) {
+      throw new Error(
+        `the runtime rejected a pre-validated builder deployment (internal invariant violation): ${error.message}`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+
+  if (!deployment.applied) {
+    // The deployment sits at the 'extension-deployment' EXECUTE gate;
+    // a re-pump replays the approved request and applies it.
+    return mapBuild(await moveBuildPhase(ctx, row, 'deploying', {}));
+  }
+  return mapBuild(
+    await moveBuildPhase(ctx, row, 'deployed', { deploymentId: deployment.deployment!.id }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Cancellation (one-way, live builds only)
+// ---------------------------------------------------------------------------
+
+export async function cancelExtensionBuild(
+  ctx: TenantContext,
+  input: CancelExtensionBuildInput,
+): Promise<ExtensionBuild> {
+  assertExtensionsTenantContext(ctx);
+  if (!canAdminister(ctx.authority)) {
+    throw new ExtensionsError(
+      'forbidden',
+      `this operation requires the '${EXTENSIONS_AUTHORITY_ADMINISTER}' authority claim`,
+    );
+  }
+  const valid = validateCancelExtensionBuildInput(input);
+
+  const row = await findBuildRow(getDb(), ctx, valid.buildId);
+  if (row === null) {
+    throw new ExtensionsError(
+      'build_not_found',
+      `no extension build '${valid.buildId}' exists in this tenant`,
+    );
+  }
+  if (isExtensionBuildTerminalPhase(row.phase)) {
+    throw new ExtensionsError(
+      'not_cancellable',
+      `extension build '${row.id}' is ${row.phase} — only live builds can be cancelled`,
+    );
+  }
+
+  // Best-effort cancellation of the phase's live agent execution: an
+  // execution that already landed belongs to history (not_cancellable
+  // is adopted silently — the session-level guard below still decides).
+  const liveExecutionId =
+    row.phase === 'designing'
+      ? row.design_execution_id
+      : row.phase === 'building'
+        ? row.build_execution_id
+        : null;
+  if (liveExecutionId !== null) {
+    try {
+      await cancelAgentExecution(ctx, { executionId: liveExecutionId, reason: valid.reason });
+    } catch (error) {
+      if (error instanceof AgentsError && error.code === 'not_cancellable') {
+        // It landed while we were cancelling — the phase-move guard
+        // below reconciles whichever write wins.
+      } else if (error instanceof AgentsError && error.code === 'execution_not_found') {
+        throw new Error(
+          `extension build '${row.id}' references agent execution '${liveExecutionId}' that is not readable in this tenant (internal invariant violation)`,
+          { cause: error },
+        );
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  return mapBuild(
+    await moveBuildPhase(ctx, row, 'cancelled', {
+      failureCode: 'cancelled',
+      failureDetail: valid.reason,
+    }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Reads
+// ---------------------------------------------------------------------------
+
+export async function getExtensionBuild(
+  ctx: TenantContext,
+  query: GetExtensionBuildQuery,
+): Promise<ExtensionBuild> {
+  assertExtensionsTenantContext(ctx);
+  const valid = validateGetExtensionBuildQuery(query);
+  const row = await findBuildRow(getDb(), ctx, valid.buildId);
+  if (row === null) {
+    throw new ExtensionsError(
+      'build_not_found',
+      `no extension build '${valid.buildId}' exists in this tenant`,
+    );
+  }
+  return mapBuild(row);
+}
+
+export async function listExtensionBuilds(
+  ctx: TenantContext,
+  query: ListExtensionBuildsQuery,
+): Promise<ExtensionBuild[]> {
+  assertExtensionsTenantContext(ctx);
+  const valid = validateListExtensionBuildsQuery(query);
+
+  const conditions: string[] = ['tenant_id = $1'];
+  const params: unknown[] = [ctx.tenantId];
+  if (valid.extensionKey !== null) {
+    params.push(valid.extensionKey);
+    conditions.push(`extension_key = $${params.length}`);
+  }
+  if (valid.phase !== null) {
+    params.push(valid.phase);
+    conditions.push(`phase = $${params.length}`);
+  }
+  params.push(valid.limit);
+  const rows = await getDb().query<BuildRow>(
+    `SELECT * FROM extension_builds WHERE ${conditions.join(' AND ')}
+       ORDER BY created_at DESC, id DESC
+       LIMIT $${params.length}`,
+    params,
+  );
+  return rows.rows.map(mapBuild);
+}
+
+export async function listExtensionBuildArtifacts(
+  ctx: TenantContext,
+  query: ListExtensionBuildArtifactsQuery,
+): Promise<ExtensionBuildArtifact[]> {
+  assertExtensionsTenantContext(ctx);
+  const valid = validateListExtensionBuildArtifactsQuery(query);
+  // The build must exist in this tenant — its artifact custody is
+  // tenant-scoped with it (cross-tenant: uniform not_found, no leak).
+  const row = await findBuildRow(getDb(), ctx, valid.buildId);
+  if (row === null) {
+    throw new ExtensionsError(
+      'build_not_found',
+      `no extension build '${valid.buildId}' exists in this tenant`,
+    );
+  }
+  const rows = await getDb().query<BuildArtifactRow>(
+    `SELECT * FROM extension_build_artifacts
+       WHERE tenant_id = $1 AND build_id = $2
+       ORDER BY recorded_at ASC, id ASC`,
+    [ctx.tenantId, valid.buildId],
+  );
+  return rows.rows.map(mapBuildArtifact);
 }

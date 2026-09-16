@@ -223,6 +223,54 @@ export {
 export type { ExtensionHttpCall, ExtensionHttpResponse } from './http';
 export type { ExtensionHttpPort } from './http';
 
+// W027 — Extension Builder: the design/build/verify/deploy workflow over
+// the agents module's isolated execution environment and the runtime.
+export {
+  cancelExtensionBuild,
+  getExtensionBuild,
+  listExtensionBuildArtifacts,
+  listExtensionBuilds,
+  requestExtensionBuild,
+  runExtensionBuild,
+} from './service';
+
+// W027 — the builder's pure vocabularies, phase machine, artifact
+// contracts and deterministic derivations (usable without a database;
+// the same rules the service runs and W028's marketplace review will
+// reuse).
+export {
+  BUILDER_AGENT_SCOPES,
+  BUILDER_WORKFLOW_TAG,
+  EXTENSION_BUILD_FAILURE_CODES,
+  EXTENSION_BUILD_LIVE_PHASES,
+  EXTENSION_BUILD_PHASES,
+  EXTENSION_BUILD_TERMINAL_PHASES,
+  MAX_ARTIFACT_BYTES,
+  MAX_FAILURE_DETAIL_CHARS,
+  MAX_NOTES_CHARS,
+  activationKey,
+  buildArtifactToRegistration,
+  buildExecutionKey,
+  buildTaskFor,
+  deploymentKey,
+  designExecutionKey,
+  designTaskFor,
+  failureCodeForExecution,
+  isExtensionBuildFailureCode,
+  isExtensionBuildLivePhase,
+  isExtensionBuildPhase,
+  isExtensionBuildTerminalPhase,
+  parseAgentArtifactOutput,
+  validateDesignArtifact,
+} from './builder';
+export type {
+  ArtifactCandidate,
+  BuildValidation,
+  DesignValidation,
+  ExtensionBuildTask,
+  ExtensionDesignTask,
+} from './builder';
+
 export {
   EXTENSION_VERIFICATION_CHECKS,
   EXTENSION_VERIFICATION_STATES,
@@ -259,16 +307,31 @@ export type {
 } from './validation';
 
 export type {
+  ValidatedListBuildsQuery,
+  ValidatedRequestBuildInput,
+} from './validation';
+export {
+  MAX_BRIEF_CHARS,
+  MAX_CANCEL_REASON_CHARS,
+} from './validation';
+
+export type {
   CheckManifestCompatibilityQuery,
   CompatibilityReport,
   DeployExtensionVersionInput,
   DeployExtensionVersionResult,
   DeploymentQuery,
+  DesignArtifact,
   DispatchExtensionEventInput,
   DispatchExtensionEventResult,
   EmitExtensionTelemetryInput,
   ExecuteExtensionExternalCallInput,
   Extension,
+  ExtensionBuild,
+  ExtensionBuildArtifact,
+  ExtensionBuildArtifactPhase,
+  ExtensionBuildFailureCode,
+  ExtensionBuildPhase,
   ExtensionCapabilities,
   ExtensionDeployment,
   ExtensionDeploymentOperation,
@@ -296,9 +359,12 @@ export type {
   ExtensionVerificationCheckResult,
   ExtensionVerificationRunOutcome,
   ExtensionVerificationState,
+  GetExtensionBuildQuery,
   GetExtensionQuery,
   GetExtensionUiQuery,
   GetManifestQuery,
+  ListExtensionBuildArtifactsQuery,
+  ListExtensionBuildsQuery,
   ListExtensionDeploymentsQuery,
   ListExtensionEventDeliveriesQuery,
   ListExtensionExternalCallsQuery,
@@ -314,8 +380,10 @@ export type {
   ReadExtensionStateQuery,
   RegisterExtensionManifestInput,
   RegisterExtensionManifestResult,
+  RequestExtensionBuildInput,
   RollbackExtensionDeploymentInput,
   RollbackExtensionDeploymentResult,
+  RunExtensionBuildInput,
   RunManifestVerificationQuery,
   RunManifestVerificationResult,
   SemverParts,
