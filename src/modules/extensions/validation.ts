@@ -1,8 +1,9 @@
 // Pure validation/normalization logic of the extensions module (no
 // database). Everything a caller may put into a manifest registration,
-// a lifecycle transition or a query crosses these guards first; the SQL
-// CHECK constraints and the trigger in migrations/002 mirror the
-// load-bearing permission-consistency rule as defense in depth.
+// a lifecycle transition, a runtime input or a query crosses these
+// guards first; the SQL CHECK constraints and the triggers in
+// migrations/002 and migrations/005+ mirror the load-bearing rules as
+// defense in depth.
 //
 // Deliberately strict about unknown keys: a caller can never smuggle
 // `id`, `tenantId`, `registeredBy`, `registeredAt` or a manifest's
@@ -13,7 +14,10 @@
 //
 // The final consistency pass runs the SAME shared pure rule set
 // (manifest-rules.ts) that the storage trigger and the verification
-// checks enforce — one rule set, three enforcers, no drift.
+// checks enforce — one rule set, three enforcers, no drift. The W026
+// runtime inputs reuse that discipline: the UI document validator runs
+// the same shared uiDocumentProblems (runtime.ts), and the payload
+// guards are the quota/accounting prelude of the service.
 
 import type { TenantContext } from '@/infra/tenant';
 import { ExtensionsError } from './errors';
@@ -48,19 +52,64 @@ import {
   type ExtensionStateScope,
   type ExtensionUiSurface,
 } from './manifest-rules';
+import {
+  byteLength,
+  DEFAULT_INSTALL_KEY,
+  EXTENSION_HTTP_METHODS,
+  EXTENSION_UI_BLOCK_TYPES,
+  isExtensionHttpMethod,
+  isExtensionUiBlockType,
+  isExternalPath,
+  isInstallKey,
+  isStateKey,
+  isTelemetryName,
+  jsonByteLength,
+  MAX_EVENT_PAYLOAD_BYTES,
+  MAX_EXTERNAL_BODY_BYTES,
+  MAX_EXTERNAL_HEADER_COUNT,
+  MAX_EXTERNAL_HEADER_NAME_CHARS,
+  MAX_EXTERNAL_HEADER_VALUE_CHARS,
+  MAX_EXTERNAL_PATH_CHARS,
+  MAX_STATE_VALUE_BYTES,
+  MAX_TELEMETRY_PAYLOAD_BYTES,
+  MAX_UI_LIST_ITEMS,
+  MAX_UI_TABLE_COLUMNS,
+  MAX_UI_TABLE_ROWS,
+  MAX_UI_TEXT_CHARS,
+  uiDocumentProblems,
+  type ExtensionHttpMethod,
+  type ExtensionUiBlock,
+  type ExtensionUiDocument,
+} from './runtime';
 import { compareSemver, isSemver, parseSemver, type SemverParts } from './semver';
 import { isSupportedManifestSchemaVersion } from './verification';
 import type {
   CheckManifestCompatibilityQuery,
+  DeployExtensionVersionInput,
+  DeploymentQuery,
+  DispatchExtensionEventInput,
+  EmitExtensionTelemetryInput,
+  ExecuteExtensionExternalCallInput,
   GetExtensionQuery,
+  GetExtensionUiQuery,
   GetManifestQuery,
+  ListExtensionDeploymentsQuery,
+  ListExtensionEventDeliveriesQuery,
+  ListExtensionExternalCallsQuery,
   ListExtensionLifecycleEventsQuery,
+  ListExtensionScheduleRunsQuery,
+  ListExtensionTelemetryEventsQuery,
   ListExtensionsQuery,
   ListManifestsQuery,
   ListManifestVerificationsQuery,
+  PublishExtensionUiInput,
+  ReadExtensionStateQuery,
   RegisterExtensionManifestInput,
+  RollbackExtensionDeploymentInput,
   RunManifestVerificationQuery,
   TransitionExtensionInput,
+  TriggerExtensionScheduleInput,
+  WriteExtensionStateInput,
 } from './types';
 
 export const DEFAULT_LIST_LIMIT = 50;
@@ -705,4 +754,587 @@ function wrapError<T>(fn: () => T, code: 'invalid_query' | 'invalid_input'): T {
     }
     throw error;
   }
+}
+
+// ---------------------------------------------------------------------------
+// W026 — General-Purpose Extension Runtime inputs and queries
+//
+// The house discipline carried over: unknown keys are rejected (a
+// caller can never smuggle identity or timestamps), lists normalize to
+// canonical order (equal inputs serialize identically), and every
+// bounded vocabulary is checked here BEFORE the service touches state —
+// with the storage CHECKs/trigger (migrations 005+) as defense in depth
+// for writes that bypass the service.
+// ---------------------------------------------------------------------------
+
+const DEPLOY_INPUT_KEYS = [
+  'extensionId',
+  'extensionKey',
+  'manifestId',
+  'version',
+  'installKey',
+  'grantedPermissions',
+  'idempotencyKey',
+] as const;
+const ROLLBACK_INPUT_KEYS = [
+  'extensionId',
+  'extensionKey',
+  'targetDeploymentId',
+  'installKey',
+  'idempotencyKey',
+] as const;
+const DEPLOYMENT_QUERY_KEYS = ['extensionId', 'extensionKey', 'installKey'] as const;
+const LIST_DEPLOYMENTS_QUERY_KEYS = [...DEPLOYMENT_QUERY_KEYS, 'limit'] as const;
+const READ_STATE_QUERY_KEYS = [...DEPLOYMENT_QUERY_KEYS, 'key'] as const;
+const WRITE_STATE_INPUT_KEYS = [...READ_STATE_QUERY_KEYS, 'value'] as const;
+const PUBLISH_UI_INPUT_KEYS = ['extensionId', 'extensionKey', 'surface', 'document'] as const;
+const GET_UI_QUERY_KEYS = ['extensionId', 'extensionKey', 'surface'] as const;
+const TRIGGER_SCHEDULE_INPUT_KEYS = [...DEPLOYMENT_QUERY_KEYS, 'scheduleName'] as const;
+const LIST_ACTIVITY_QUERY_KEYS = [...DEPLOYMENT_QUERY_KEYS, 'limit'] as const;
+const DISPATCH_EVENT_INPUT_KEYS = ['topic', 'payload'] as const;
+const EXTERNAL_CALL_INPUT_KEYS = [
+  'extensionId',
+  'extensionKey',
+  'installKey',
+  'origin',
+  'method',
+  'path',
+  'body',
+  'headers',
+] as const;
+const EMIT_TELEMETRY_INPUT_KEYS = [...DEPLOYMENT_QUERY_KEYS, 'name', 'payload'] as const;
+
+/** The install key a query/input carries, defaulted to the primary install. */
+function resolveInstallKey(value: unknown): string {
+  if (value === undefined || value === null) return DEFAULT_INSTALL_KEY;
+  const text = requireString(value, 'installKey');
+  if (!isInstallKey(text)) {
+    throw inputError(
+      `installKey must be a slug of at most 64 characters ([A-Za-z0-9._:-]; got '${text}')`,
+    );
+  }
+  return text;
+}
+
+function requireExtensionUiSurface(value: unknown): ExtensionUiSurface {
+  const text = requireString(value, 'surface');
+  if (!isExtensionUiSurface(text)) {
+    throw inputError(
+      `surface must be one of ${EXTENSION_UI_SURFACES.join(', ')} (got '${text}')`,
+    );
+  }
+  return text;
+}
+
+/** Validate + normalize the declarative UI document (shared pure rules). */
+function requireUiDocument(value: unknown): ExtensionUiDocument {
+  const document = value === undefined || value === null ? {} : value;
+  if (!isPlainObject(document)) {
+    throw inputError('document must be an object with title and blocks');
+  }
+  rejectUnknownKeys(document, ['title', 'blocks'], 'the UI document');
+  const title =
+    document['title'] === undefined || document['title'] === null
+      ? null
+      : requireString(document['title'], 'document.title');
+  if (title !== null && title.length > MAX_UI_TEXT_CHARS) {
+    throw inputError(`document.title must be at most ${MAX_UI_TEXT_CHARS} characters`);
+  }
+  const rawBlocks = document['blocks'] === undefined || document['blocks'] === null ? [] : document['blocks'];
+  if (!Array.isArray(rawBlocks)) {
+    throw inputError('document.blocks must be an array of UI blocks');
+  }
+  const blocks: ExtensionUiBlock[] = rawBlocks.map((block: unknown, index: number) => {
+    if (!isPlainObject(block)) {
+      throw inputError(`document.blocks[${index}] must be an object`);
+    }
+    const type = block['type'];
+    if (!isExtensionUiBlockType(type)) {
+      throw inputError(
+        `document.blocks[${index}].type '${String(type)}' is not a known UI block type (${EXTENSION_UI_BLOCK_TYPES.join(', ')})`,
+      );
+    }
+    const text = (field: string): string => {
+      const value = block[field];
+      if (typeof value !== 'string' || value.length === 0) {
+        throw inputError(`document.blocks[${index}] (${type}) needs a non-empty ${field}`);
+      }
+      if (value.length > MAX_UI_TEXT_CHARS) {
+        throw inputError(
+          `document.blocks[${index}] (${type}) ${field} must be at most ${MAX_UI_TEXT_CHARS} characters`,
+        );
+      }
+      return value;
+    };
+    switch (type) {
+      case 'heading':
+        return { type, text: text('text') };
+      case 'text':
+        return { type, text: text('text') };
+      case 'metric':
+        return { type, label: text('label'), value: text('value') };
+      case 'divider':
+        return { type };
+      case 'list': {
+        const items = block['items'];
+        if (!Array.isArray(items)) {
+          throw inputError(`document.blocks[${index}] (list) needs an items array`);
+        }
+        if (items.length > MAX_UI_LIST_ITEMS) {
+          throw inputError(
+            `document.blocks[${index}] (list) must declare at most ${MAX_UI_LIST_ITEMS} items (got ${items.length})`,
+          );
+        }
+        return { type, items: items.map((item: unknown) => text2(item, `document.blocks[${index}].items[]`)) };
+      }
+      case 'table': {
+        const columns = block['columns'];
+        const rows = block['rows'];
+        if (!Array.isArray(columns) || columns.length === 0) {
+          throw inputError(`document.blocks[${index}] (table) needs a non-empty columns array`);
+        }
+        if (columns.length > MAX_UI_TABLE_COLUMNS) {
+          throw inputError(
+            `document.blocks[${index}] (table) must declare at most ${MAX_UI_TABLE_COLUMNS} columns (got ${columns.length})`,
+          );
+        }
+        if (!Array.isArray(rows)) {
+          throw inputError(`document.blocks[${index}] (table) needs a rows array`);
+        }
+        if (rows.length > MAX_UI_TABLE_ROWS) {
+          throw inputError(
+            `document.blocks[${index}] (table) must declare at most ${MAX_UI_TABLE_ROWS} rows (got ${rows.length})`,
+          );
+        }
+        const normalizedColumns = columns.map((column: unknown) =>
+          text2(column, `document.blocks[${index}].columns[]`),
+        );
+        const normalizedRows = rows.map((row: unknown) => {
+          if (!Array.isArray(row)) {
+            throw inputError(`document.blocks[${index}] (table) rows must be arrays`);
+          }
+          if (row.length !== normalizedColumns.length) {
+            throw inputError(
+              `document.blocks[${index}] (table) rows must have exactly ${normalizedColumns.length} cells`,
+            );
+          }
+          return row.map((cell: unknown) => text2(cell, `document.blocks[${index}] rows cells`));
+        });
+        return { type, columns: normalizedColumns, rows: normalizedRows };
+      }
+    }
+  });
+  const document2: ExtensionUiDocument = { title, blocks };
+  const problems = uiDocumentProblems(document2);
+  if (problems.length > 0) {
+    throw inputError(`the UI document is not renderable: ${problems.join('; ')}`);
+  }
+  return document2;
+}
+
+function text2(value: unknown, field: string): string {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw inputError(`${field} must be a non-empty string`);
+  }
+  if (value.length > MAX_UI_TEXT_CHARS) {
+    throw inputError(`${field} must be at most ${MAX_UI_TEXT_CHARS} characters`);
+  }
+  return value;
+}
+
+/** A bounded JSON payload (events, telemetry, state, external bodies). */
+function requireJsonPayload(value: unknown, field: string, maxBytes: number): unknown {
+  const size = jsonByteLength(value);
+  if (size === null) {
+    throw inputError(`${field} must be a JSON value (got a non-serializable ${typeof value})`);
+  }
+  if (size > maxBytes) {
+    throw inputError(`${field} must serialize to at most ${maxBytes} bytes (got ${size})`);
+  }
+  return value;
+}
+
+// ---------------------------------------------------------------------------
+// Deployment and rollback
+// ---------------------------------------------------------------------------
+
+/** Fully validated form of `DeployExtensionVersionInput`. */
+export interface ValidatedDeployInput {
+  extensionId: string | null;
+  extensionKey: string | null;
+  /** Exactly one of manifestId / version is set (the service resolves). */
+  manifestId: string | null;
+  version: string | null;
+  installKey: string;
+  /** Normalized grant, or null to deploy the manifest's full requested set. */
+  grantedPermissions: ExtensionPermission[] | null;
+  idempotencyKey: string | null;
+}
+
+export function validateDeployExtensionVersionInput(
+  input: DeployExtensionVersionInput,
+): ValidatedDeployInput {
+  if (!isPlainObject(input)) throw inputError('deploy input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, DEPLOY_INPUT_KEYS, 'the deploy input');
+    const { extensionId, extensionKey } = resolveSelector(input, 'exactly_one', 'invalid_input');
+    const hasManifestId = input['manifestId'] !== undefined;
+    const hasVersion = input['version'] !== undefined;
+    if (hasManifestId === hasVersion) {
+      throw inputError('exactly one of manifestId / version must be given');
+    }
+    const manifestId = hasManifestId ? requireUuid(input['manifestId'], 'manifestId') : null;
+    let version: string | null = null;
+    if (hasVersion) {
+      const text = requireString(input['version'], 'version');
+      if (!isSemver(text)) {
+        throw inputError(`version must be a release semver (got '${text}')`);
+      }
+      version = text;
+    }
+    const grantsRaw = input['grantedPermissions'];
+    const grantedPermissions =
+      grantsRaw === undefined || grantsRaw === null ? null : normalizePermissions(grantsRaw);
+    return {
+      extensionId,
+      extensionKey,
+      manifestId,
+      version,
+      installKey: resolveInstallKey(input['installKey']),
+      grantedPermissions,
+      idempotencyKey: optionalIdempotencyKey(input['idempotencyKey']),
+    };
+  }, 'invalid_input');
+}
+
+/** Fully validated form of `RollbackExtensionDeploymentInput`. */
+export interface ValidatedRollbackInput {
+  extensionId: string | null;
+  extensionKey: string | null;
+  targetDeploymentId: string;
+  installKey: string;
+  idempotencyKey: string | null;
+}
+
+export function validateRollbackExtensionDeploymentInput(
+  input: RollbackExtensionDeploymentInput,
+): ValidatedRollbackInput {
+  if (!isPlainObject(input)) throw inputError('rollback input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, ROLLBACK_INPUT_KEYS, 'the rollback input');
+    const { extensionId, extensionKey } = resolveSelector(input, 'exactly_one', 'invalid_input');
+    return {
+      extensionId,
+      extensionKey,
+      targetDeploymentId: requireUuid(input['targetDeploymentId'], 'targetDeploymentId'),
+      installKey: resolveInstallKey(input['installKey']),
+      idempotencyKey: optionalIdempotencyKey(input['idempotencyKey']),
+    };
+  }, 'invalid_input');
+}
+
+/** Fully validated form of the deployment queries. */
+export interface ValidatedDeploymentQuery {
+  extensionId: string | null;
+  extensionKey: string | null;
+  installKey: string;
+}
+
+export function validateDeploymentQuery(query: DeploymentQuery): ValidatedDeploymentQuery {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, DEPLOYMENT_QUERY_KEYS, 'the query');
+    const { extensionId, extensionKey } = resolveSelector(query, 'exactly_one', 'invalid_query');
+    return { extensionId, extensionKey, installKey: resolveInstallKey(query['installKey']) };
+  });
+}
+
+export function validateListExtensionDeploymentsQuery(
+  query: ListExtensionDeploymentsQuery,
+): ValidatedDeploymentQuery & { limit: number } {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, LIST_DEPLOYMENTS_QUERY_KEYS, 'the query');
+    const { extensionId, extensionKey } = resolveSelector(query, 'exactly_one', 'invalid_query');
+    return {
+      extensionId,
+      extensionKey,
+      installKey: resolveInstallKey(query['installKey']),
+      limit: requireLimit(query['limit']),
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Persistent scoped state
+// ---------------------------------------------------------------------------
+
+export function validateReadExtensionStateQuery(
+  query: ReadExtensionStateQuery,
+): ValidatedDeploymentQuery & { key: string; installKeyGiven: string | null } {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, READ_STATE_QUERY_KEYS, 'the query');
+    const { extensionId, extensionKey } = resolveSelector(query, 'exactly_one', 'invalid_query');
+    const key = requireString(query['key'], 'query.key');
+    if (!isStateKey(key)) {
+      throw queryError(`query.key must be a state key of at most 128 characters (got '${key}')`);
+    }
+    const installKeyGiven =
+      query['installKey'] === undefined || query['installKey'] === null
+        ? null
+        : resolveInstallKey(query['installKey']);
+    return {
+      extensionId,
+      extensionKey,
+      installKey: installKeyGiven ?? DEFAULT_INSTALL_KEY,
+      installKeyGiven,
+      key,
+    };
+  });
+}
+
+/** Fully validated form of `WriteExtensionStateInput`. */
+export interface ValidatedWriteStateInput extends ValidatedDeploymentQuery {
+  key: string;
+  value: unknown;
+  /** Serialized byte length of `value` (precomputed once). */
+  valueBytes: number;
+  /** Install key as given — null when the caller supplied none (scope check). */
+  installKeyGiven: string | null;
+}
+
+export function validateWriteExtensionStateInput(input: WriteExtensionStateInput): ValidatedWriteStateInput {
+  if (!isPlainObject(input)) throw inputError('state write input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, WRITE_STATE_INPUT_KEYS, 'the state write input');
+    const { extensionId, extensionKey } = resolveSelector(input, 'exactly_one', 'invalid_input');
+    const key = requireString(input['key'], 'key');
+    if (!isStateKey(key)) {
+      throw inputError(`key must be a state key of at most 128 characters (got '${key}')`);
+    }
+    if (!('value' in input)) {
+      throw inputError('value is required (use null to clear while keeping the key)');
+    }
+    const value = requireJsonPayload(input['value'], 'value', MAX_STATE_VALUE_BYTES);
+    const installKeyGiven =
+      input['installKey'] === undefined || input['installKey'] === null
+        ? null
+        : resolveInstallKey(input['installKey']);
+    return {
+      extensionId,
+      extensionKey,
+      installKey: installKeyGiven ?? DEFAULT_INSTALL_KEY,
+      installKeyGiven,
+      key,
+      value,
+      valueBytes: jsonByteLength(value)!,
+    };
+  }, 'invalid_input');
+}
+
+// ---------------------------------------------------------------------------
+// Declarative UI
+// ---------------------------------------------------------------------------
+
+/** Fully validated form of `PublishExtensionUiInput`. */
+export interface ValidatedPublishUiInput {
+  extensionId: string | null;
+  extensionKey: string | null;
+  surface: ExtensionUiSurface;
+  document: ExtensionUiDocument;
+}
+
+export function validatePublishExtensionUiInput(input: PublishExtensionUiInput): ValidatedPublishUiInput {
+  if (!isPlainObject(input)) throw inputError('UI publish input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, PUBLISH_UI_INPUT_KEYS, 'the UI publish input');
+    const { extensionId, extensionKey } = resolveSelector(input, 'exactly_one', 'invalid_input');
+    return {
+      extensionId,
+      extensionKey,
+      surface: requireExtensionUiSurface(input['surface']),
+      document: requireUiDocument(input['document']),
+    };
+  }, 'invalid_input');
+}
+
+export function validateGetExtensionUiQuery(
+  query: GetExtensionUiQuery,
+): Omit<ValidatedPublishUiInput, 'document'> {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, GET_UI_QUERY_KEYS, 'the query');
+    const { extensionId, extensionKey } = resolveSelector(query, 'exactly_one', 'invalid_query');
+    return { extensionId, extensionKey, surface: requireExtensionUiSurface(query['surface']) };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Schedules, event dispatch, external calls, telemetry
+// ---------------------------------------------------------------------------
+
+export function validateTriggerExtensionScheduleInput(
+  input: TriggerExtensionScheduleInput,
+): ValidatedDeploymentQuery & { scheduleName: string } {
+  if (!isPlainObject(input)) throw inputError('schedule trigger input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, TRIGGER_SCHEDULE_INPUT_KEYS, 'the schedule trigger input');
+    const { extensionId, extensionKey } = resolveSelector(input, 'exactly_one', 'invalid_input');
+    const scheduleName = requireString(input['scheduleName'], 'scheduleName');
+    if (!isNameSlug(scheduleName)) {
+      throw inputError(`scheduleName must be a slug of at most 64 characters (got '${scheduleName}')`);
+    }
+    return { extensionId, extensionKey, installKey: resolveInstallKey(input['installKey']), scheduleName };
+  }, 'invalid_input');
+}
+
+export function validateActivityListQuery(
+  query:
+    | ListExtensionScheduleRunsQuery
+    | ListExtensionEventDeliveriesQuery
+    | ListExtensionExternalCallsQuery
+    | ListExtensionTelemetryEventsQuery,
+): ValidatedDeploymentQuery & {
+  limit: number;
+} {
+  if (!isPlainObject(query)) throw queryError('query must be an object');
+  return wrapQueryError(() => {
+    rejectUnknownKeys(query, LIST_ACTIVITY_QUERY_KEYS, 'the query');
+    const { extensionId, extensionKey } = resolveSelector(query, 'exactly_one', 'invalid_query');
+    return {
+      extensionId,
+      extensionKey,
+      installKey: resolveInstallKey(query['installKey']),
+      limit: requireLimit(query['limit']),
+    };
+  });
+}
+
+/** Fully validated form of `DispatchExtensionEventInput`. */
+export interface ValidatedDispatchEventInput {
+  topic: string;
+  payload: unknown;
+}
+
+export function validateDispatchExtensionEventInput(
+  input: DispatchExtensionEventInput,
+): ValidatedDispatchEventInput {
+  if (!isPlainObject(input)) throw inputError('event dispatch input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, DISPATCH_EVENT_INPUT_KEYS, 'the event dispatch input');
+    const topic = requireString(input['topic'], 'topic');
+    if (!isEventTopic(topic)) {
+      throw inputError(`topic must be a canonical topic slug (got '${topic}')`);
+    }
+    // An omitted payload is a legal "no payload" dispatch (null); a
+    // PRESENT payload must be a bounded JSON value.
+    const payload =
+      input['payload'] === undefined ? null : requireJsonPayload(input['payload'], 'payload', MAX_EVENT_PAYLOAD_BYTES);
+    return { topic, payload };
+  }, 'invalid_input');
+}
+
+/** Fully validated form of `ExecuteExtensionExternalCallInput`. */
+export interface ValidatedExternalCallInput extends ValidatedDeploymentQuery {
+  origin: string;
+  method: ExtensionHttpMethod;
+  path: string;
+  bodyText: string | null;
+  bodyBytes: number;
+  headers: Record<string, string>;
+}
+
+export function validateExecuteExtensionExternalCallInput(
+  input: ExecuteExtensionExternalCallInput,
+): ValidatedExternalCallInput {
+  if (!isPlainObject(input)) throw inputError('external call input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, EXTERNAL_CALL_INPUT_KEYS, 'the external call input');
+    const { extensionId, extensionKey } = resolveSelector(input, 'exactly_one', 'invalid_input');
+    const origin = requireString(input['origin'], 'origin');
+    if (!isHttpsOrigin(origin)) {
+      throw inputError(`origin must be a plain https origin (https://host[:port]; got '${origin}')`);
+    }
+    const method = input['method'];
+    if (!isExtensionHttpMethod(method)) {
+      throw inputError(
+        `method must be one of ${EXTENSION_HTTP_METHODS.join(', ')} (got '${String(method)}')`,
+      );
+    }
+    const path = requireString(input['path'], 'path');
+    if (!isExternalPath(path)) {
+      throw inputError(`path must start with '/' and be at most ${MAX_EXTERNAL_PATH_CHARS} characters with no fragment (got '${path}')`);
+    }
+    let bodyText: string | null = null;
+    let bodyBytes = 0;
+    const body = input['body'];
+    if (body !== undefined && body !== null) {
+      if (method === 'GET' || method === 'DELETE') {
+        throw inputError(`method ${method} cannot carry a body`);
+      }
+      const payload = requireJsonPayload(body, 'body', MAX_EXTERNAL_BODY_BYTES);
+      bodyText = JSON.stringify(payload);
+      bodyBytes = byteLength(bodyText);
+    }
+    const headersRaw = input['headers'];
+    const headers: Record<string, string> = {};
+    if (headersRaw !== undefined && headersRaw !== null) {
+      if (!isPlainObject(headersRaw)) {
+        throw inputError('headers must be an object of string header names to string values');
+      }
+      const entries = Object.entries(headersRaw);
+      if (entries.length > MAX_EXTERNAL_HEADER_COUNT) {
+        throw inputError(`headers must declare at most ${MAX_EXTERNAL_HEADER_COUNT} entries (got ${entries.length})`);
+      }
+      for (const [name, value] of entries) {
+        if (name.length === 0 || name.length > MAX_EXTERNAL_HEADER_NAME_CHARS) {
+          throw inputError(`header names must be 1..${MAX_EXTERNAL_HEADER_NAME_CHARS} characters`);
+        }
+        if (typeof value !== 'string') {
+          throw inputError(`header '${name}' must have a string value`);
+        }
+        if (value.length > MAX_EXTERNAL_HEADER_VALUE_CHARS) {
+          throw inputError(`header '${name}' value must be at most ${MAX_EXTERNAL_HEADER_VALUE_CHARS} characters`);
+        }
+        headers[name] = value;
+      }
+    }
+    return {
+      extensionId,
+      extensionKey,
+      installKey: resolveInstallKey(input['installKey']),
+      origin,
+      method,
+      path,
+      bodyText,
+      bodyBytes,
+      headers,
+    };
+  }, 'invalid_input');
+}
+
+export function validateEmitExtensionTelemetryInput(
+  input: EmitExtensionTelemetryInput,
+): ValidatedDeploymentQuery & { name: string; payload: unknown } {
+  if (!isPlainObject(input)) throw inputError('telemetry input must be an object');
+  return wrapError(() => {
+    rejectUnknownKeys(input, EMIT_TELEMETRY_INPUT_KEYS, 'the telemetry input');
+    const { extensionId, extensionKey } = resolveSelector(input, 'exactly_one', 'invalid_input');
+    const name = requireString(input['name'], 'name');
+    if (!isTelemetryName(name)) {
+      throw inputError(`name must be a slug of at most 64 characters (got '${name}')`);
+    }
+    const payload =
+      input['payload'] === undefined
+        ? null
+        : requireJsonPayload(input['payload'], 'payload', MAX_TELEMETRY_PAYLOAD_BYTES);
+    return {
+      extensionId,
+      extensionKey,
+      installKey: resolveInstallKey(input['installKey']),
+      name,
+      payload,
+    };
+  }, 'invalid_input');
 }

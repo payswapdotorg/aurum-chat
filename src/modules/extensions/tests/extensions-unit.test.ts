@@ -59,13 +59,36 @@ import { ExtensionsError } from '../errors';
 import {
   assertExtensionsTenantContext,
   validateCheckManifestCompatibilityQuery,
+  validateDeployExtensionVersionInput,
+  validateDispatchExtensionEventInput,
+  validateEmitExtensionTelemetryInput,
+  validateExecuteExtensionExternalCallInput,
   validateGetExtensionQuery,
   validateListExtensionLifecycleEventsQuery,
   validateListExtensionsQuery,
   validateListManifestsQuery,
+  validatePublishExtensionUiInput,
+  validateReadExtensionStateQuery,
   validateRegisterExtensionManifestInput,
+  validateRollbackExtensionDeploymentInput,
   validateTransitionExtensionInput,
+  validateTriggerExtensionScheduleInput,
+  validateWriteExtensionStateInput,
 } from '../validation';
+import {
+  DEFAULT_INSTALL_KEY,
+  EXTENSION_RUNTIME_HOST_VERSION,
+  isExtensionHttpMethod,
+  isExternalPath,
+  isInstallKey,
+  isStateKey,
+  isTelemetryName,
+  jsonByteLength,
+  participantForOrigin,
+  uiDocumentProblems,
+  utcDayStart,
+  type ExtensionUiDocument,
+} from '../runtime';
 import type { RegisterExtensionManifestInput } from '../types';
 
 function expectCode(code: string, fn: () => void): void {
@@ -897,5 +920,395 @@ describe('transition and query validation', () => {
       assertExtensionsTenantContext({ tenantId: 't', principalId: 'p', authority: 'admin' } as never),
     );
     expect(() => assertExtensionsTenantContext(context())).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// W026 — General-Purpose Extension Runtime (pure rules + validation)
+// ---------------------------------------------------------------------------
+
+describe('runtime pure rules (W026)', () => {
+  it('pins the runtime host version and it parses as a release semver', () => {
+    expect(EXTENSION_RUNTIME_HOST_VERSION).toBe('2.1.0');
+    expect(parseSemver(EXTENSION_RUNTIME_HOST_VERSION)).toEqual({ major: 2, minor: 1, patch: 0 });
+  });
+
+  it('validates install keys, state keys and telemetry names', () => {
+    expect(DEFAULT_INSTALL_KEY).toBe('default');
+    expect(isInstallKey('default')).toBe(true);
+    expect(isInstallKey('workspace-emea')).toBe(true);
+    expect(isInstallKey('')).toBe(false);
+    expect(isInstallKey('-nope')).toBe(false);
+    expect(isInstallKey('a'.repeat(65))).toBe(false);
+
+    expect(isStateKey('user:prefs:theme')).toBe(true);
+    expect(isStateKey('0')).toBe(true);
+    expect(isStateKey('has space')).toBe(false);
+    expect(isStateKey('')).toBe(false);
+    expect(isStateKey('x'.repeat(129))).toBe(false);
+
+    expect(isTelemetryName('run.completed')).toBe(true);
+    expect(isTelemetryName('bad name')).toBe(false);
+  });
+
+  it('validates the external participation grammar: methods and paths', () => {
+    for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+      expect(isExtensionHttpMethod(method)).toBe(true);
+    }
+    expect(isExtensionHttpMethod('HEAD')).toBe(false);
+    expect(isExtensionHttpMethod('get')).toBe(false);
+
+    expect(isExternalPath('/')).toBe(true);
+    expect(isExternalPath('/invoices?status=paid')).toBe(true);
+    expect(isExternalPath('/a/b/c')).toBe(true);
+    expect(isExternalPath('no-slash')).toBe(false);
+    expect(isExternalPath('/frag#ment')).toBe(false);
+    expect(isExternalPath('/space here')).toBe(false);
+    expect(isExternalPath('/\x00')).toBe(false);
+    expect(isExternalPath(`/${'a'.repeat(512)}`)).toBe(false);
+  });
+
+  it('matches participant origins by EXACT equality — never prefix or suffix', () => {
+    const capabilities: ExtensionCapabilities = {
+      ...fullCapabilities(),
+      externalParticipants: [{ label: 'Invoices API', origin: 'https://api.invoices.example.com' }],
+    };
+    expect(participantForOrigin(capabilities, 'https://api.invoices.example.com')).toEqual({
+      label: 'Invoices API',
+      origin: 'https://api.invoices.example.com',
+    });
+    // none of these authorize, though they all "contain" the declared host
+    expect(participantForOrigin(capabilities, 'https://api.invoices.example.com.evil.io')).toBeNull();
+    expect(participantForOrigin(capabilities, 'https://api.invoices.example.com:8443')).toBeNull();
+    expect(participantForOrigin(capabilities, 'https://api.invoices.example.com/extra')).toBeNull();
+    expect(participantForOrigin(capabilities, 'https://evil.example.com')).toBeNull();
+  });
+
+  it('computes the UTC quota-day start deterministically', () => {
+    // 2026-09-14T23:30:00Z and 2026-09-15T00:30:00Z straddle the UTC day
+    const late = utcDayStart(new Date('2026-09-14T23:30:00Z'));
+    const early = utcDayStart(new Date('2026-09-15T00:30:00Z'));
+    expect(late.toISOString()).toBe('2026-09-14T00:00:00.000Z');
+    expect(early.toISOString()).toBe('2026-09-15T00:00:00.000Z');
+    // a UTC-midnight instant is its own day start
+    expect(utcDayStart(new Date('2026-01-01T00:00:00Z')).toISOString()).toBe(
+      '2026-01-01T00:00:00.000Z',
+    );
+  });
+
+  it('measures JSON payloads in UTF-8 bytes and rejects non-JSON values', () => {
+    expect(jsonByteLength(null)).toBe(4);
+    expect(jsonByteLength({ a: 1 })).toBe(JSON.stringify({ a: 1 }).length);
+    expect(jsonByteLength('héllo')).toBe(8); // JSON quotes + the 2-byte é
+    expect(jsonByteLength(undefined)).toBeNull();
+    expect(jsonByteLength(Symbol('nope'))).toBeNull();
+    expect(jsonByteLength(() => 1)).toBeNull();
+  });
+});
+
+describe('declarative UI document rules (W026)', () => {
+  it('accepts a document exercising every block type', () => {
+    const document: ExtensionUiDocument = {
+      title: 'Invoice OCR status',
+      blocks: [
+        { type: 'heading', text: 'Pipeline' },
+        { type: 'text', text: 'Nightly reconciliation summary' },
+        { type: 'metric', label: 'Invoices processed', value: '1,204' },
+        { type: 'list', items: ['Northwind', 'Contoso'] },
+        {
+          type: 'table',
+          columns: ['Bucket', 'Count'],
+          rows: [
+            ['paid', '800'],
+            ['open', '404'],
+          ],
+        },
+        { type: 'divider' },
+      ],
+    };
+    expect(uiDocumentProblems(document)).toEqual([]);
+  });
+
+  it('reports every malformed shape and bound violation with reasons', () => {
+    expect(uiDocumentProblems(null as never)).toEqual([
+      'the UI document must be an object with blocks',
+    ]);
+    expect(uiDocumentProblems({ title: 'x', blocks: 'nope' } as never)).toEqual([
+      'blocks must be an array',
+    ]);
+    expect(uiDocumentProblems({ blocks: [{ type: 'iframe', src: 'https://evil' }] } as never)).toEqual(
+      [`block #0 has type 'iframe' which is not a known UI block type`],
+    );
+    expect(
+      uiDocumentProblems({ blocks: [{ type: 'heading', text: '' }] } as never),
+    ).toEqual([`block #0 (heading) needs a non-empty text`]);
+    expect(
+      uiDocumentProblems({ blocks: [{ type: 'metric', label: 'L', value: '' }] } as never),
+    ).toEqual([`block #0 (metric) needs a non-empty value`]);
+    expect(uiDocumentProblems({ blocks: [{ type: 'list' }] } as never)).toEqual([
+      `block #0 (list) needs an items array`,
+    ]);
+    expect(uiDocumentProblems({ blocks: [{ type: 'list', items: ['a', 5] }] } as never)).toEqual([
+      `block #0 (list) items must be non-empty strings of at most 500 characters`,
+    ]);
+    expect(
+      uiDocumentProblems({
+        blocks: [{ type: 'table', columns: ['A'], rows: [['1', '2']] }],
+      } as never),
+    ).toEqual([`block #0 (table) rows must have exactly 1 cells`]);
+    // bounds
+    expect(
+      uiDocumentProblems({ title: 't'.repeat(501), blocks: [] } as never),
+    ).toEqual([`title must be at most 500 characters`]);
+    expect(
+      uiDocumentProblems({
+        blocks: Array.from({ length: 33 }, () => ({ type: 'divider' })),
+      } as never),
+    ).toEqual([`blocks must declare at most 32 blocks (got 33)`]);
+    expect(
+      uiDocumentProblems({ blocks: [{ type: 'heading', text: 'x'.repeat(501) }] } as never),
+    ).toEqual([`block #0 (heading) text must be at most 500 characters`]);
+  });
+});
+
+describe('runtime input validation (W026)', () => {
+  const extensionId = '0b2f8e2a-1c4b-4d8a-9f3e-7a2b6c5d4e8f';
+  const manifestId = '1c2f8e2a-1c4b-4d8a-9f3e-7a2b6c5d4e8f';
+  const deploymentId = '2d3f8e2a-1c4b-4d8a-9f3e-7a2b6c5d4e8f';
+
+  it('validates deploy inputs: selectors, manifest/version, grants, install keys', () => {
+    const byVersion = validateDeployExtensionVersionInput({
+      extensionKey: 'invoice-ocr',
+      version: '1.2.3',
+    });
+    expect(byVersion).toMatchObject({
+      extensionKey: 'invoice-ocr',
+      manifestId: null,
+      version: '1.2.3',
+      installKey: 'default',
+      grantedPermissions: null,
+      idempotencyKey: null,
+    });
+    const byId = validateDeployExtensionVersionInput({
+      extensionId,
+      manifestId,
+      installKey: 'workspace-emea',
+      grantedPermissions: ['state:write', 'state:read', 'state:write'],
+      idempotencyKey: 'deploy:1',
+    });
+    expect(byId).toMatchObject({ extensionId, manifestId, version: null, installKey: 'workspace-emea' });
+    // normalized canonical order + dedupe
+    expect(byId.grantedPermissions).toEqual(['state:read', 'state:write']);
+    expect(byId.idempotencyKey).toBe('deploy:1');
+
+    expectCode('invalid_input', () => validateDeployExtensionVersionInput({} as never));
+    expectCode('invalid_input', () =>
+      validateDeployExtensionVersionInput({ extensionKey: 'invoice-ocr' } as never),
+    );
+    expectCode('invalid_input', () =>
+      validateDeployExtensionVersionInput({
+        extensionKey: 'invoice-ocr',
+        manifestId,
+        version: '1.2.3',
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validateDeployExtensionVersionInput({ extensionKey: 'invoice-ocr', version: '1.2' }),
+    );
+    expectCode('invalid_input', () =>
+      validateDeployExtensionVersionInput({
+        extensionKey: 'invoice-ocr',
+        version: '1.2.3',
+        installKey: 'not a key!',
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validateDeployExtensionVersionInput({
+        extensionKey: 'invoice-ocr',
+        version: '1.2.3',
+        grantedPermissions: ['root:system' as never],
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validateDeployExtensionVersionInput({ extensionId, version: '1.2.3', extra: 1 } as never),
+    );
+  });
+
+  it('validates rollback inputs', () => {
+    const valid = validateRollbackExtensionDeploymentInput({
+      extensionKey: 'invoice-ocr',
+      targetDeploymentId: deploymentId,
+    });
+    expect(valid).toMatchObject({
+      extensionKey: 'invoice-ocr',
+      targetDeploymentId: deploymentId,
+      installKey: 'default',
+    });
+    expectCode('invalid_input', () =>
+      validateRollbackExtensionDeploymentInput({ targetDeploymentId: deploymentId } as never),
+    );
+    expectCode('invalid_input', () =>
+      validateRollbackExtensionDeploymentInput({
+        extensionKey: 'invoice-ocr',
+        targetDeploymentId: 'not-a-uuid',
+      }),
+    );
+  });
+
+  it('validates state reads and writes, tracking whether an install key was supplied', () => {
+    const read = validateReadExtensionStateQuery({ extensionKey: 'invoice-ocr', key: 'prefs' });
+    expect(read).toMatchObject({ key: 'prefs', installKey: 'default', installKeyGiven: null });
+    const readInstall = validateReadExtensionStateQuery({
+      extensionKey: 'invoice-ocr',
+      installKey: 'emea',
+      key: 'prefs',
+    });
+    expect(readInstall).toMatchObject({ installKey: 'emea', installKeyGiven: 'emea' });
+    expectCode('invalid_query', () =>
+      validateReadExtensionStateQuery({ extensionKey: 'invoice-ocr', key: 'has space' }),
+    );
+
+    const write = validateWriteExtensionStateInput({
+      extensionKey: 'invoice-ocr',
+      key: 'prefs',
+      value: { theme: 'dark' },
+    });
+    expect(write.value).toEqual({ theme: 'dark' });
+    expect(write.valueBytes).toBe(JSON.stringify({ theme: 'dark' }).length);
+    expect(write.installKeyGiven).toBeNull();
+    // a JSON value of null is a legal CLEAR; a missing value is an error
+    expect(validateWriteExtensionStateInput({ extensionKey: 'e', key: 'k', value: null }).value).toBeNull();
+    expectCode('invalid_input', () =>
+      validateWriteExtensionStateInput({ extensionKey: 'e', key: 'k' } as never),
+    );
+    expectCode('invalid_input', () =>
+      validateWriteExtensionStateInput({ extensionKey: 'e', key: 'k', value: undefined }),
+    );
+    expectCode('invalid_input', () =>
+      validateWriteExtensionStateInput({ extensionKey: 'e', key: 'k', value: 'x'.repeat(262_145) }),
+    );
+  });
+
+  it('validates UI publish inputs against the shared document rules', () => {
+    const valid = validatePublishExtensionUiInput({
+      extensionKey: 'invoice-ocr',
+      surface: 'control-tower-panel',
+      document: { title: 'Status', blocks: [{ type: 'text', text: 'All good' }] },
+    });
+    expect(valid).toMatchObject({ extensionKey: 'invoice-ocr', surface: 'control-tower-panel' });
+    expect(valid.document).toEqual({ title: 'Status', blocks: [{ type: 'text', text: 'All good' }] });
+
+    expectCode('invalid_input', () =>
+      validatePublishExtensionUiInput({
+        extensionKey: 'invoice-ocr',
+        surface: 'admin-dashboard' as never,
+        document: { title: null, blocks: [] },
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validatePublishExtensionUiInput({
+        extensionKey: 'invoice-ocr',
+        surface: 'chat-panel',
+        document: { blocks: [{ type: 'script' as never, code: 'alert(1)' }] } as never,
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validatePublishExtensionUiInput({
+        extensionKey: 'invoice-ocr',
+        surface: 'chat-panel',
+        document: { title: null, blocks: [], extra: true } as never,
+      }),
+    );
+  });
+
+  it('validates schedule triggers, telemetry and event dispatch', () => {
+    expect(
+      validateTriggerExtensionScheduleInput({ extensionKey: 'e', scheduleName: 'nightly-sync' }),
+    ).toMatchObject({ installKey: 'default', scheduleName: 'nightly-sync' });
+    expectCode('invalid_input', () =>
+      validateTriggerExtensionScheduleInput({ extensionKey: 'e', scheduleName: 'not a slug!' }),
+    );
+
+    const dispatch = validateDispatchExtensionEventInput({ topic: 'invoice.paid', payload: { n: 1 } });
+    expect(dispatch).toEqual({ topic: 'invoice.paid', payload: { n: 1 } });
+    // omitted payload is null; a non-slug topic is rejected
+    expect(validateDispatchExtensionEventInput({ topic: 'invoice.paid' })).toEqual({
+      topic: 'invoice.paid',
+      payload: null,
+    });
+    expectCode('invalid_input', () => validateDispatchExtensionEventInput({ topic: 'nope!' }));
+    expectCode('invalid_input', () =>
+      validateDispatchExtensionEventInput({ topic: 'invoice.paid', payload: 'x'.repeat(65_537) }),
+    );
+
+    expect(
+      validateEmitExtensionTelemetryInput({ extensionKey: 'e', name: 'run.completed', payload: [1] }),
+    ).toMatchObject({ installKey: 'default', name: 'run.completed', payload: [1] });
+    expectCode('invalid_input', () =>
+      validateEmitExtensionTelemetryInput({ extensionKey: 'e', name: 'bad name' }),
+    );
+  });
+
+  it('validates external participation calls: origins, methods, paths, bodies, headers', () => {
+    const valid = validateExecuteExtensionExternalCallInput({
+      extensionKey: 'invoice-ocr',
+      origin: 'https://api.invoices.example.com',
+      method: 'POST',
+      path: '/v1/invoices',
+      body: { number: 'INV-1' },
+      headers: { Authorization: 'Bearer tok' },
+    });
+    expect(valid).toMatchObject({
+      installKey: 'default',
+      origin: 'https://api.invoices.example.com',
+      method: 'POST',
+      path: '/v1/invoices',
+    });
+    expect(valid.bodyText).toBe(JSON.stringify({ number: 'INV-1' }));
+    expect(valid.bodyBytes).toBe(JSON.stringify({ number: 'INV-1' }).length);
+    expect(valid.headers).toEqual({ Authorization: 'Bearer tok' });
+
+    expectCode('invalid_input', () =>
+      validateExecuteExtensionExternalCallInput({
+        extensionKey: 'e',
+        origin: 'http://insecure.example.com',
+        method: 'GET',
+        path: '/',
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validateExecuteExtensionExternalCallInput({
+        extensionKey: 'e',
+        origin: 'https://api.example.com',
+        method: 'HEAD' as never,
+        path: '/',
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validateExecuteExtensionExternalCallInput({
+        extensionKey: 'e',
+        origin: 'https://api.example.com',
+        method: 'GET',
+        path: 'no-leading-slash',
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validateExecuteExtensionExternalCallInput({
+        extensionKey: 'e',
+        origin: 'https://api.example.com',
+        method: 'GET',
+        path: '/',
+        body: { nope: true }, // GET cannot carry a body
+      }),
+    );
+    expectCode('invalid_input', () =>
+      validateExecuteExtensionExternalCallInput({
+        extensionKey: 'e',
+        origin: 'https://api.example.com',
+        method: 'POST',
+        path: '/',
+        headers: { 'X-Over': 'x'.repeat(257) },
+      }),
+    );
   });
 });

@@ -27,6 +27,24 @@
 // `verification_required` is the coupling the work item's title
 // declares ("lifecycle AND verification states"): an extension cannot
 // become ACTIVE while its latest manifest version is not VERIFIED.
+//
+// W026 — General-Purpose Extension Runtime — adds the runtime codes.
+// The authorization model has two layers, and the codes mirror them:
+// deployment/rollback are matrix-gated (like the W025 lifecycle codes:
+// `forbidden_by_policy`, plus `extension_not_active` /
+// `verification_required` / `incompatible_host` / `grant_exceeds_ceiling`
+// / `invalid_rollback` for the deploy-time preconditions); every runtime
+// operation is grant-gated against the CURRENT deployment
+// (`no_deployment` when none exists, `state_not_declared` /
+// `surface_not_declared` / `schedule_not_declared` /
+// `origin_not_declared` / `telemetry_not_declared` when the deployed
+// manifest declares no such capability, `permission_not_granted` when
+// the deployment's grant omits the permission, `scope_mismatch` when
+// the state scope and the install key disagree). Quotas are enforced,
+// not advisory (`state_quota_exceeded`, `schedule_quota_exceeded`,
+// `external_quota_exceeded`). Cross-tenant access stays uniform
+// not-found (`extension_not_found`, `manifest_not_found`,
+// `deployment_not_found`) — no existence leak, exactly like W025.
 
 export type ExtensionsErrorCode =
   | 'invalid_context'
@@ -40,7 +58,26 @@ export type ExtensionsErrorCode =
   | 'extension_deprecated'
   | 'invalid_transition'
   | 'verification_required'
-  | 'forbidden_by_policy';
+  | 'forbidden_by_policy'
+  // W026 — runtime: deployment preconditions and the authority gate
+  | 'extension_not_active'
+  | 'incompatible_host'
+  | 'grant_exceeds_ceiling'
+  | 'invalid_rollback'
+  | 'deployment_not_found'
+  // W026 — runtime: capability and grant enforcement
+  | 'no_deployment'
+  | 'state_not_declared'
+  | 'surface_not_declared'
+  | 'schedule_not_declared'
+  | 'origin_not_declared'
+  | 'telemetry_not_declared'
+  | 'permission_not_granted'
+  | 'scope_mismatch'
+  // W026 — runtime: quotas
+  | 'state_quota_exceeded'
+  | 'schedule_quota_exceeded'
+  | 'external_quota_exceeded';
 
 export class ExtensionsError extends Error {
   constructor(
