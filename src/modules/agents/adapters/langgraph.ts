@@ -13,11 +13,7 @@
 import type { AgentRuntimeProvider } from '../policy';
 import { invalidRuntimeConfig, type AgentRuntimeAdapter, type WireTaskInput, type WireTaskResult, type WireUsage } from './types';
 import { asObject, boundedId, boundedSummary, optionalCount, optionalString } from './shared';
-
-/** Interim list prices (USD): $2.50 / 1M input tokens, $10.00 / 1M output tokens, $0.20 / 1k steps. */
-const INPUT_CENTS_PER_MILLION = 250;
-const OUTPUT_CENTS_PER_MILLION = 1_000;
-const STEP_CENTS_PER_THOUSAND = 20;
+import { agentRuntimeCostMinor, findAgentRuntime } from '../registry';
 
 function resolveRuntimeAgentRef(runtimeConfig: unknown): string {
   if (typeof runtimeConfig !== 'object' || runtimeConfig === null || Array.isArray(runtimeConfig)) {
@@ -68,13 +64,12 @@ function parseTaskResult(payload: unknown): WireTaskResult {
 }
 
 function costForUsage(usage: WireUsage): number {
-  const input = usage.inputTokens ?? 0;
-  const output = usage.outputTokens ?? 0;
-  const steps = usage.operations ?? 0;
-  return Math.round(
-    (input * INPUT_CENTS_PER_MILLION + output * OUTPUT_CENTS_PER_MILLION) / 1_000_000 +
-      (steps * STEP_CENTS_PER_THOUSAND) / 1_000,
-  );
+  // W035: list prices live in the module registry (single source of truth).
+  const runtime = findAgentRuntime('langgraph');
+  if (runtime === null) {
+    throw new Error("the registry carries no 'langgraph' runtime (internal invariant violation)");
+  }
+  return agentRuntimeCostMinor(runtime.pricing, usage);
 }
 
 export const langgraphAdapter: AgentRuntimeAdapter = {
