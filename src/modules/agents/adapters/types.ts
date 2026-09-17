@@ -17,13 +17,11 @@
 // NON-retryable failed attempt (evidence), never as a fake success (the
 // llm module's adapter discipline).
 //
-// Pricing: cost accounting is CENTRALIZED in the module's runtime
-// registry (W035 — registry.ts `agentRuntimeCostMinor`), exactly like the
-// llm registry owns model list prices. Adapters keep a thin
-// `costForUsage` that reads the registry descriptor, so the dialect
-// knowledge (what a "usage" means) stays with the adapter while the
-// reference data lives in ONE place (the W021 interim per-adapter
-// constants moved there verbatim — recorded costs stay reproducible).
+// Pricing: `costForUsage` is the deterministic integer-minor-unit cost of
+// provider-reported usage. It lives with the adapter because only the
+// adapter understands its provider's billable units — the interim home
+// until W035 (Agent Provider Registry) centralizes runtime reference
+// data, exactly like the llm registry owns model list prices.
 
 import type { AgentRuntimeProvider } from '../policy';
 import { AgentsError } from '../errors';

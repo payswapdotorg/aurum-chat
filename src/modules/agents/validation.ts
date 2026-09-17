@@ -17,39 +17,27 @@ import {
   AGENT_PERMISSION_SCOPES,
   AGENT_RUNTIME_PROVIDERS,
   AGENT_STATUSES,
-  AUTHORITY_LEVELS,
   isAgentExecutionStatus,
   isAgentPermissionScope,
   isAgentRuntimeProvider,
   isAgentStatus,
-  isAuthorityLevelWord,
 } from './policy';
 import type {
   AgentExecutionStatusWord,
   AgentPermissionScopeWord,
   AgentRuntimeProvider,
   AgentStatusWord,
-  AuthorityLevelWord,
 } from './policy';
-import { AGENT_RUNTIME_CAPABILITIES, isAgentRuntimeCapability } from './registry';
-import type { AgentRuntimeCapability } from './registry';
 import type {
   CancelAgentExecutionInput,
-  GetAgentRuntimeAccountQuery,
-  GetAgentRuntimeAvailabilityQuery,
   ListAgentsQuery,
   ListAgentExecutionAttemptsQuery,
   ListAgentExecutionsQuery,
-  ListAgentRuntimeAccountsQuery,
   RegisterAgentInput,
-  RegisterAgentRuntimeAccountInput,
   RunAgentExecutionInput,
-  SetAgentRuntimeAvailabilityInput,
   SubmitAgentExecutionInput,
   UpdateAgentInput,
-  UpdateAgentRuntimeAccountInput,
 } from './types';
-import type { AgentRuntimeAccount } from './types';
 
 // ---------------------------------------------------------------------------
 // Bounds (module-owned constants, re-exported through the contract)
@@ -73,14 +61,6 @@ export const MAX_PERMISSIONS = 6;
 export const MAX_CORRELATION_CHARS = 128;
 export const MAX_REASON_CHARS = 512;
 export const MAX_SUMMARY_CHARS = 512;
-// W035 — runtime account and availability guards (the llm module's account
-// bounds discipline, applied to the agent runtime family).
-export const MAX_ACCOUNT_LABEL_CHARS = 100;
-export const MAX_CREDENTIAL_REF_LENGTH = 255;
-export const MIN_PRIORITY = 0;
-export const MAX_PRIORITY = 1000;
-export const MAX_ACCOUNT_CAPABILITIES = 8;
-export const MAX_AVAILABILITY_REASON_CHARS = 500;
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,63}$/;
@@ -90,11 +70,6 @@ const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:@-]{0,199}$/;
  * printable so they stay filterable and log-safe.
  */
 const IDENTITY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/;
-/** Opaque secret-store references — printable, no control characters. */
-const CREDENTIAL_REF_PATTERN = /^[^\p{Cc}]{1,255}$/u;
-// Strict ISO 8601 with an explicit offset (timestamptz; IMPLEMENTATION-STACK §8).
-const ISO_INSTANT_PATTERN =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/;
 
 const REGISTER_INPUT_KEYS = [
   'slug',
@@ -136,25 +111,6 @@ const LIST_EXECUTIONS_QUERY_KEYS = [
   'limit',
 ] as const;
 const ATTEMPTS_QUERY_KEYS = ['executionId'] as const;
-const REGISTER_ACCOUNT_KEYS = [
-  'provider',
-  'label',
-  'credentialRef',
-  'capabilities',
-  'maxAuthorityLevel',
-  'priority',
-] as const;
-const UPDATE_ACCOUNT_KEYS = [
-  'accountId',
-  'credentialRef',
-  'capabilities',
-  'maxAuthorityLevel',
-  'priority',
-  'status',
-] as const;
-const LIST_ACCOUNTS_QUERY_KEYS = ['provider', 'status', 'limit'] as const;
-const GET_ACCOUNT_QUERY_KEYS = ['accountId'] as const;
-const SET_AVAILABILITY_KEYS = ['accountId', 'state', 'reason', 'expiresAt'] as const;
 
 /** Uuid shape guard; malformed ids are "not found" upstream. */
 export function isUuid(value: unknown): value is string {
@@ -712,302 +668,4 @@ function wrapQueryError<T>(fn: () => T): T {
     }
     throw error;
   }
-}
-
-// ---------------------------------------------------------------------------
-// Runtime accounts (W035 — "register multiple agent runtimes/providers")
-// ---------------------------------------------------------------------------
-
-/**
- * Normalize a capabilities list: must be a non-empty array from the closed
- * vocabulary; returned deduplicated and in registry order, so equal sets
- * always serialize identically (determinism — the permission-scopes
- * discipline).
- */
-function normalizeCapabilities(
-  value: unknown,
-  field: string,
-  maxEntries: number,
-): AgentRuntimeCapability[] {
-  if (value === undefined || value === null || !Array.isArray(value)) {
-    throw inputError(`${field} must be an array of runtime capabilities`);
-  }
-  if (value.length === 0) {
-    throw inputError(`${field} must contain at least one runtime capability`);
-  }
-  if (value.length > maxEntries) {
-    throw inputError(`${field} must contain at most ${maxEntries} runtime capabilities`);
-  }
-  const out: AgentRuntimeCapability[] = [];
-  for (const entry of value) {
-    if (!isAgentRuntimeCapability(entry)) {
-      throw inputError(
-        `${field} entries must be one of ${AGENT_RUNTIME_CAPABILITIES.join(', ')} (got '${String(entry)}')`,
-      );
-    }
-    if (!out.includes(entry)) out.push(entry);
-  }
-  out.sort((a, b) => AGENT_RUNTIME_CAPABILITIES.indexOf(a) - AGENT_RUNTIME_CAPABILITIES.indexOf(b));
-  return out;
-}
-
-function requireAuthorityLevel(value: unknown, field: string): AuthorityLevelWord {
-  if (!isAuthorityLevelWord(value)) {
-    throw inputError(
-      `${field} must be one of ${AUTHORITY_LEVELS.join(', ')} (got '${String(value)}')`,
-    );
-  }
-  return value;
-}
-
-function requirePriority(value: unknown, field: string): number {
-  if (
-    typeof value !== 'number' ||
-    !Number.isInteger(value) ||
-    value < MIN_PRIORITY ||
-    value > MAX_PRIORITY
-  ) {
-    throw inputError(
-      `${field} must be an integer in [${MIN_PRIORITY}, ${MAX_PRIORITY}] (got ${String(value)})`,
-    );
-  }
-  return value;
-}
-
-function requireCredentialRef(value: unknown, field: string): string {
-  const text = requireString(value, field);
-  if (text.length > MAX_CREDENTIAL_REF_LENGTH) {
-    throw inputError(
-      `${field} must be at most ${MAX_CREDENTIAL_REF_LENGTH} characters (got ${text.length})`,
-    );
-  }
-  if (!CREDENTIAL_REF_PATTERN.test(text)) {
-    throw inputError(`${field} must be 1..${MAX_CREDENTIAL_REF_LENGTH} printable characters`);
-  }
-  return text;
-}
-
-function requireIsoInstant(value: unknown, field: string): string {
-  const text = requireString(value, field);
-  if (!ISO_INSTANT_PATTERN.test(text) || Number.isNaN(Date.parse(text))) {
-    throw inputError(
-      `${field} must be a strict ISO 8601 timestamp with explicit offset, e.g. 2026-09-14T12:30:00Z (got '${text}')`,
-    );
-  }
-  return text;
-}
-
-/** Fully validated + normalized form of `RegisterAgentRuntimeAccountInput`. */
-export interface ValidatedRegisterAccountInput {
-  provider: AgentRuntimeProvider;
-  label: string;
-  credentialRef: string;
-  capabilities: AgentRuntimeCapability[];
-  maxAuthorityLevel: AuthorityLevelWord;
-  priority: number;
-}
-
-export function validateRegisterAgentRuntimeAccountInput(
-  input: RegisterAgentRuntimeAccountInput,
-): ValidatedRegisterAccountInput {
-  if (!isPlainObject(input)) {
-    throw inputError('runtime account input must be an object');
-  }
-  for (const key of Object.keys(input)) {
-    if (!(REGISTER_ACCOUNT_KEYS as readonly string[]).includes(key)) {
-      throw inputError(
-        `unknown field '${key}' on the runtime account input (allowed: ${REGISTER_ACCOUNT_KEYS.join(', ')})`,
-      );
-    }
-  }
-
-  const provider = requireProvider(input.provider, 'provider');
-  const label = requireString(input.label, 'label');
-  if (label.length > MAX_ACCOUNT_LABEL_CHARS) {
-    throw inputError(`label must be at most ${MAX_ACCOUNT_LABEL_CHARS} characters`);
-  }
-  const credentialRef = requireCredentialRef(input.credentialRef, 'credentialRef');
-  const capabilities = normalizeCapabilities(
-    input.capabilities,
-    'capabilities',
-    MAX_ACCOUNT_CAPABILITIES,
-  );
-  const maxAuthorityLevel = requireAuthorityLevel(input.maxAuthorityLevel, 'maxAuthorityLevel');
-  const priority = requirePriority(input.priority, 'priority');
-
-  return { provider, label, credentialRef, capabilities, maxAuthorityLevel, priority };
-}
-
-/**
- * Fully validated + normalized form of `UpdateAgentRuntimeAccountInput` —
- * at least one mutable field must be present (`accountId` alone is not an
- * update).
- */
-export interface ValidatedUpdateAccountInput {
-  accountId: string;
-  credentialRef: string | undefined;
-  capabilities: AgentRuntimeCapability[] | undefined;
-  maxAuthorityLevel: AuthorityLevelWord | undefined;
-  priority: number | undefined;
-  status: AgentRuntimeAccount['status'] | undefined;
-}
-
-export function validateUpdateAgentRuntimeAccountInput(
-  input: UpdateAgentRuntimeAccountInput,
-): ValidatedUpdateAccountInput {
-  if (!isPlainObject(input)) {
-    throw inputError('runtime account update must be an object');
-  }
-  for (const key of Object.keys(input)) {
-    if (!(UPDATE_ACCOUNT_KEYS as readonly string[]).includes(key)) {
-      throw inputError(
-        `unknown field '${key}' on the runtime account update (allowed: ${UPDATE_ACCOUNT_KEYS.join(', ')})`,
-      );
-    }
-  }
-  const accountId = requireUuid(input.accountId, 'accountId');
-
-  let credentialRef: string | undefined;
-  if (input.credentialRef !== undefined) {
-    credentialRef = requireCredentialRef(input.credentialRef, 'credentialRef');
-  }
-  let capabilities: AgentRuntimeCapability[] | undefined;
-  if (input.capabilities !== undefined) {
-    capabilities = normalizeCapabilities(input.capabilities, 'capabilities', MAX_ACCOUNT_CAPABILITIES);
-  }
-  let maxAuthorityLevel: AuthorityLevelWord | undefined;
-  if (input.maxAuthorityLevel !== undefined) {
-    maxAuthorityLevel = requireAuthorityLevel(input.maxAuthorityLevel, 'maxAuthorityLevel');
-  }
-  let priority: number | undefined;
-  if (input.priority !== undefined) {
-    priority = requirePriority(input.priority, 'priority');
-  }
-  let status: AgentRuntimeAccount['status'] | undefined;
-  if (input.status !== undefined) {
-    if (input.status !== 'active' && input.status !== 'disabled') {
-      throw inputError(`status must be 'active' or 'disabled' (got '${String(input.status)}')`);
-    }
-    status = input.status;
-  }
-
-  if (
-    credentialRef === undefined &&
-    capabilities === undefined &&
-    maxAuthorityLevel === undefined &&
-    priority === undefined &&
-    status === undefined
-  ) {
-    throw inputError('runtime account update carries no change (set at least one mutable field)');
-  }
-
-  return { accountId, credentialRef, capabilities, maxAuthorityLevel, priority, status };
-}
-
-/** Fully validated form of `ListAgentRuntimeAccountsQuery`. */
-export interface ValidatedListAccountsQuery {
-  provider: AgentRuntimeProvider | null;
-  status: AgentRuntimeAccount['status'] | null;
-  limit: number;
-}
-
-export function validateListAgentRuntimeAccountsQuery(
-  query: ListAgentRuntimeAccountsQuery,
-): ValidatedListAccountsQuery {
-  if (!isPlainObject(query)) throw queryError('query must be an object');
-  return wrapQueryError(() => {
-    rejectUnknownKeys(query, LIST_ACCOUNTS_QUERY_KEYS, 'the query');
-    let status: AgentRuntimeAccount['status'] | null = null;
-    if (query.status !== undefined && query.status !== null) {
-      if (query.status !== 'active' && query.status !== 'disabled') {
-        throw queryError(`query.status must be 'active' or 'disabled' (got '${String(query.status)}')`);
-      }
-      status = query.status;
-    }
-    return {
-      provider:
-        query.provider === undefined || query.provider === null
-          ? null
-          : requireProvider(query.provider, 'query.provider'),
-      status,
-      limit: requireLimit(query.limit),
-    };
-  });
-}
-
-/** Fully validated form of `GetAgentRuntimeAccountQuery`. */
-export interface ValidatedGetAccountQuery {
-  accountId: string;
-}
-
-export function validateGetAgentRuntimeAccountQuery(
-  query: GetAgentRuntimeAccountQuery,
-): ValidatedGetAccountQuery {
-  if (!isPlainObject(query)) throw queryError('query must be an object');
-  return wrapQueryError(() => {
-    rejectUnknownKeys(query, GET_ACCOUNT_QUERY_KEYS, 'the query');
-    return { accountId: requireUuid(query.accountId, 'query.accountId') };
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Runtime availability (W035 — manual overrides and reads)
-// ---------------------------------------------------------------------------
-
-/** Fully validated + normalized form of `SetAgentRuntimeAvailabilityInput`. */
-export interface ValidatedSetAvailabilityInput {
-  accountId: string;
-  state: 'available' | 'unavailable';
-  reason: string | null;
-  expiresAt: string | null;
-}
-
-export function validateSetAgentRuntimeAvailabilityInput(
-  input: SetAgentRuntimeAvailabilityInput,
-): ValidatedSetAvailabilityInput {
-  if (!isPlainObject(input)) {
-    throw inputError('availability input must be an object');
-  }
-  for (const key of Object.keys(input)) {
-    if (!(SET_AVAILABILITY_KEYS as readonly string[]).includes(key)) {
-      throw inputError(
-        `unknown field '${key}' on the availability input (allowed: ${SET_AVAILABILITY_KEYS.join(', ')})`,
-      );
-    }
-  }
-  const accountId = requireUuid(input.accountId, 'accountId');
-  if (input.state !== 'available' && input.state !== 'unavailable') {
-    throw inputError(`state must be 'available' or 'unavailable' (got '${String(input.state)}')`);
-  }
-  let reason: string | null = null;
-  if (input.reason !== undefined && input.reason !== null) {
-    reason = requireString(input.reason, 'reason');
-    if (reason.length > MAX_AVAILABILITY_REASON_CHARS) {
-      throw inputError(`reason must be at most ${MAX_AVAILABILITY_REASON_CHARS} characters`);
-    }
-  }
-  let expiresAt: string | null = null;
-  if (input.expiresAt !== undefined && input.expiresAt !== null) {
-    expiresAt = requireIsoInstant(input.expiresAt, 'expiresAt');
-  }
-  if (expiresAt !== null && input.state !== 'unavailable') {
-    throw inputError('expiresAt applies to the unavailable state only');
-  }
-  return { accountId, state: input.state, reason, expiresAt };
-}
-
-/** Fully validated form of `GetAgentRuntimeAvailabilityQuery`. */
-export interface ValidatedGetAvailabilityQuery {
-  accountId: string | null;
-}
-
-export function validateGetAgentRuntimeAvailabilityQuery(
-  query: GetAgentRuntimeAvailabilityQuery,
-): ValidatedGetAvailabilityQuery {
-  if (!isPlainObject(query)) throw queryError('availability query must be an object');
-  const accountId = query.accountId;
-  if (accountId !== undefined && accountId !== null && !isUuid(accountId)) {
-    throw queryError('accountId must be a uuid when present');
-  }
-  return { accountId: accountId ?? null };
 }

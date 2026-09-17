@@ -12,7 +12,10 @@
 import type { AgentRuntimeProvider } from '../policy';
 import { invalidRuntimeConfig, type AgentRuntimeAdapter, type WireTaskInput, type WireTaskResult, type WireUsage } from './types';
 import { asObject, boundedId, boundedSummary, optionalCount } from './shared';
-import { agentRuntimeCostMinor, findAgentRuntime } from '../registry';
+
+/** Interim list prices (USD): $3.00 / 1M input tokens, $9.00 / 1M output tokens. */
+const INPUT_CENTS_PER_MILLION = 300;
+const OUTPUT_CENTS_PER_MILLION = 900;
 
 function resolveRuntimeAgentRef(runtimeConfig: unknown): string {
   if (typeof runtimeConfig !== 'object' || runtimeConfig === null || Array.isArray(runtimeConfig)) {
@@ -58,12 +61,11 @@ function parseTaskResult(payload: unknown): WireTaskResult {
 }
 
 function costForUsage(usage: WireUsage): number {
-  // W035: list prices live in the module registry (single source of truth).
-  const runtime = findAgentRuntime('autogen');
-  if (runtime === null) {
-    throw new Error("the registry carries no 'autogen' runtime (internal invariant violation)");
-  }
-  return agentRuntimeCostMinor(runtime.pricing, usage);
+  const input = usage.inputTokens ?? 0;
+  const output = usage.outputTokens ?? 0;
+  return Math.round(
+    (input * INPUT_CENTS_PER_MILLION + output * OUTPUT_CENTS_PER_MILLION) / 1_000_000,
+  );
 }
 
 export const autogenAdapter: AgentRuntimeAdapter = {

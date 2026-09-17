@@ -1,5 +1,4 @@
-// Public domain types of the agents module (W021 — Agent Gateway; W035 —
-// Agent Provider Registry).
+// Public domain types of the agents module (W021 — Agent Gateway).
 //
 // W021 owns the provider-independent EXECUTION contract of the agent
 // workforce (ARCHITECTURE.md §16, frozen): "Persistent agent definitions
@@ -8,29 +7,6 @@
 // result/evidence/cost/outcome`. Agent providers/runtimes are replaceable.
 // Execution is asynchronous, permission-scoped, retryable, traceable and
 // idempotent where applicable."
-//
-// W035 owns the runtime REGISTRY/ROUTING layer on top of that gateway
-// (work item: "Register multiple agent runtimes/providers and route
-// execution without semantic provider coupling"):
-//   * REGISTRY — the code-owned runtime catalog (registry.ts): one
-//     descriptor per canonical runtime with capabilities and centralized
-//     list pricing (the single source of cost truth, moved from the W021
-//     adapters' interim constants);
-//   * ACCOUNTS — `AgentRuntimeAccount` is the tenant-owned registration of
-//     one runtime deployment (lock 29's "agent/provider account
-//     boundaries"): opaque credential reference, capability permissions,
-//     a §20 authority ceiling, routing priority and enable/disable. A
-//     tenant may register ANY number of accounts per runtime family —
-//     that is how they "register multiple agent runtimes/providers";
-//   * ROUTING — `AgentRoutingSnapshot` is the deterministic, explainable
-//     routing decision frozen onto each dispatch attempt: every candidate
-//     account with its machine-readable eligibility reason and the chosen
-//     target (routing.ts decides on neutral facts only — provider family,
-//     capability, authority, availability, priority — never provider
-//     semantics; dialects stay inside adapters/, lock 24);
-//   * AVAILABILITY — `AgentRuntimeAvailability` is the effective per-account
-//     outage state, observed as append-only events (automatic cooldowns on
-//     transient dispatch failures, recoveries, manual operator overrides).
 //
 // Everything in this file is provider-neutral BY CONSTRUCTION (lock 24:
 // "Agent providers/runtimes are hidden behind the Agent Gateway";
@@ -67,14 +43,8 @@
 //
 // Cost follows the house convention (IMPLEMENTATION-STACK §8): integer
 // minor units + ISO currency code, computed deterministically from the
-// provider-reported usage by the REGISTRY's centralized pricing
-// (registry.ts `agentRuntimeCostMinor` — W035 moved it there from the
-// adapters' interim constants, exactly like the llm registry owns model
-// list prices).
-
-import type { AgentRuntimeCapability } from './registry';
-
-export type { AgentRuntimeCapability, AgentRuntimeDescriptor, AgentRuntimePricing } from './registry';
+// provider-reported usage by the adapter that understands the provider's
+// pricing (module-internal; W035 centralizes runtime registry/pricing).
 
 // ---------------------------------------------------------------------------
 // Vocabularies mirrored by the migrations' CHECK constraints
@@ -362,16 +332,6 @@ export interface AgentExecutionAttempt {
   /** 1..maxAttempts; unique per execution (also the double-dispatch guard). */
   attemptNumber: number;
   provider: AgentRuntimeProvider;
-  /**
-   * The tenant-registered runtime account that served this dispatch
-   * (W035 routing), or null when the tenant has no accounts for this
-   * runtime family and the process transport served unrouted (the W021
-   * path, preserved).
-   */
-  runtimeAccountId: string | null;
-  /** The frozen routing decision (W035): every candidate considered, why,
-   *  and the chosen account. Null only on pre-W035 rows. */
-  routing: AgentRoutingSnapshot | null;
   status: AgentAttemptStatus;
   /** The deterministic retry classification (true only for transient failures). */
   retryable: boolean;
@@ -417,154 +377,6 @@ export interface ListAgentExecutionAttemptsQuery {
 }
 
 // ---------------------------------------------------------------------------
-// Tenant-registered runtime accounts (W035 — "register multiple agent
-// runtimes/providers"; lock 29's agent/provider account boundaries)
-// ---------------------------------------------------------------------------
-
-/**
- * A tenant-scoped registration of ONE agent runtime deployment the gateway
- * may route dispatches to. The tenant-facing surface of the W035 registry:
- * the code-owned catalog (registry.ts) names the runtime families; accounts
- * are the tenant's own deployments OF a family — any number per family
- * (self-hosted and cloud, staging and production, …).
- *
- *  * `credentialRef` — OPAQUE reference into the secret store holding the
- *    deployment credentials; the credential VALUE never reaches any domain
- *    table (IMPLEMENTATION-STACK §8; GOVERNANCE mandatory invariant).
- *  * `capabilities` — which canonical execution capabilities the account
- *    permits (the tenant's own permission — a subset of the runtime's).
- *  * `maxAuthorityLevel` — the account's §20 authority ceiling: dispatches
- *    authorized above it never route here (the authority matrix applies
- *    uniformly, §20).
- *  * `priority` — routing preference: among eligible accounts, lower
- *    priority is preferred (deterministic tiebreak: creation time, then
- *    id). Registry position NEVER participates (lock 30 mirrored).
- */
-export interface AgentRuntimeAccount {
-  id: string;
-  tenantId: string;
-  provider: AgentRuntimeProvider;
-  /** Tenant-chosen unique label for this (tenant, provider). */
-  label: string;
-  credentialRef: string;
-  status: 'active' | 'disabled';
-  capabilities: AgentRuntimeCapability[];
-  maxAuthorityLevel: 'OBSERVE' | 'ANALYZE' | 'RECOMMEND' | 'ASK' | 'PROPOSE' | 'EXECUTE';
-  priority: number;
-  createdBy: string;
-  /** ISO 8601 — service clock. */
-  createdAt: string;
-  /** ISO 8601 — service clock; moves on configuration changes only. */
-  updatedAt: string;
-}
-
-export interface RegisterAgentRuntimeAccountInput {
-  provider: AgentRuntimeProvider;
-  label: string;
-  /** Opaque secret-store reference (never the credential value). */
-  credentialRef: string;
-  capabilities: AgentRuntimeCapability[];
-  maxAuthorityLevel: AgentRuntimeAccount['maxAuthorityLevel'];
-  priority: number;
-}
-
-export interface RegisterAgentRuntimeAccountResult {
-  account: AgentRuntimeAccount;
-  /** false when an account for this (provider, label) already existed. */
-  created: boolean;
-}
-
-export interface UpdateAgentRuntimeAccountInput {
-  accountId: string;
-  credentialRef?: string;
-  capabilities?: AgentRuntimeCapability[];
-  maxAuthorityLevel?: AgentRuntimeAccount['maxAuthorityLevel'];
-  priority?: number;
-  status?: AgentRuntimeAccount['status'];
-}
-
-export interface ListAgentRuntimeAccountsQuery {
-  provider?: AgentRuntimeProvider;
-  status?: AgentRuntimeAccount['status'];
-  /** 1..500, default 50. */
-  limit?: number;
-}
-
-export interface GetAgentRuntimeAccountQuery {
-  accountId: string;
-}
-
-// ---------------------------------------------------------------------------
-// Availability (per runtime account — append-only observation evidence)
-// ---------------------------------------------------------------------------
-
-/**
- * The effective availability of one runtime account. `state` accounts for
- * expiry (an `unavailable` event whose cooldown has lapsed reads as
- * `available` again); `reason`, `source`, `expiresAt` and `observedAt`
- * describe the latest event that produced it. Transitions are recorded as
- * append-only events — nothing rewrites availability history.
- */
-export interface AgentRuntimeAvailability {
-  accountId: string;
-  provider: AgentRuntimeProvider;
-  state: 'available' | 'unavailable';
-  reason: string | null;
-  source: 'execution' | 'manual';
-  /** When the unavailable state lapses; null = indefinite (or n/a for available). */
-  expiresAt: string | null;
-  /** ISO 8601 — when the deciding event was observed. */
-  observedAt: string;
-}
-
-export interface SetAgentRuntimeAvailabilityInput {
-  accountId: string;
-  state: 'available' | 'unavailable';
-  reason?: string | null;
-  /** Strict ISO 8601; only meaningful (and allowed) for `unavailable`. */
-  expiresAt?: string | null;
-}
-
-export interface GetAgentRuntimeAvailabilityQuery {
-  accountId?: string | null;
-}
-
-// ---------------------------------------------------------------------------
-// Routing evidence (W035 — frozen onto every dispatch attempt, §24)
-// ---------------------------------------------------------------------------
-
-/** Why one runtime-account candidate was or was not routable. */
-export type AgentRoutingRejectionReason =
-  | 'provider_mismatch'
-  | 'account_disabled'
-  | 'capability_not_permitted'
-  | 'authority_exceeds_account_policy'
-  | 'unavailable';
-
-export interface AgentRoutingCandidateSnapshot {
-  accountId: string;
-  provider: AgentRuntimeProvider;
-  eligible: boolean;
-  /** null when eligible; the machine reason otherwise. */
-  reason: AgentRoutingRejectionReason | null;
-}
-
-/** The deterministic routing decision frozen onto a dispatch attempt (§24 auditability). */
-export interface AgentRoutingSnapshot {
-  /** true when a runtime account served (or was chosen for) the dispatch. */
-  routed: boolean;
-  /** The runtime family the dispatch belongs to (the agent definition's canonical provider). */
-  provider: AgentRuntimeProvider;
-  candidates: AgentRoutingCandidateSnapshot[];
-  chosen: { accountId: string; provider: AgentRuntimeProvider } | null;
-}
-
-export interface AgentRoutingCandidate {
-  accountId: string;
-  provider: AgentRuntimeProvider;
-}
-
-// ---------------------------------------------------------------------------
 // The runtime transport port (provider-neutral delivery; implementations
 // are module-internal — provider SDKs may only live inside src/modules/agents/)
 // ---------------------------------------------------------------------------
@@ -582,14 +394,6 @@ export interface AgentRuntimeTransportRequest {
   agentId: string;
   /** Adapter-resolved provider-side agent reference (opaque string). */
   runtimeAgentRef: string;
-  /**
-   * The tenant-registered runtime account the router chose for this
-   * dispatch (W035), when one did — transports resolve the account's
-   * opaque credential reference to reach the tenant's own deployment.
-   * Null when the tenant registered no account for this runtime family
-   * and the dispatch is served unrouted (the W021 path).
-   */
-  runtimeAccountId?: string | null;
   body: unknown;
 }
 

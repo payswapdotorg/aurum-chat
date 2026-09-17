@@ -22,14 +22,6 @@
 // possible — that state is the explicit `provider_unavailable`, never a
 // silent no-op or a fake success (the llm/channels/sources discipline).
 //
-// `runtime_account_not_found` extends the uniform not-found discipline to
-// the W035 tenant runtime accounts; `no_eligible_runtime_account` is the
-// loud failure when the tenant HAS accounts for a runtime family but none
-// is routable (disabled, capability not permitted, authority above the
-// account's §20 ceiling, or cooling down) — the dispatch is NOT attempted,
-// no attempt evidence is consumed and the execution stays queued, exactly
-// like the unwired-transport state.
-//
 // `execution_refused` is NOT an error: a submission the authority matrix
 // forbids is RECORDED as a terminal `refused` execution (evidence, §24)
 // and returned to the caller — exactly like a gated submission, which is
@@ -48,8 +40,6 @@ export type AgentsErrorCode =
   | 'invalid_runtime_config'
   | 'provider_unavailable'
   | 'provider_malformed_response'
-  | 'runtime_account_not_found'
-  | 'no_eligible_runtime_account'
   | 'execution_not_found'
   | 'not_runnable'
   | 'not_cancellable'
