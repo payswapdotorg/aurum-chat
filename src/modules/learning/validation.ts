@@ -1,8 +1,9 @@
 // Pure validation/normalization logic of the learning module (no database).
-// Everything a caller may put into an outcome, a measurement or a
-// realization crosses these guards first; the SQL CHECK constraints in
-// migrations/001-outcomes.sql mirror the load-bearing rules as defense in
-// depth.
+// Everything a caller may put into an outcome, a measurement, a
+// realization or a company-learning feedback record crosses these guards
+// first; the SQL CHECK constraints in migrations/001-outcomes.sql and
+// migrations/002-company-learning.sql mirror the load-bearing rules as
+// defense in depth.
 //
 // Deliberately strict about unknown keys: a caller can never smuggle `id`,
 // `tenantId`, `status`, `realization`, `measurementCount`,
@@ -14,19 +15,32 @@
 // (see types.ts) — the only writes after definition are the measurement
 // series and the one terminal realization.
 //
+// The W041 guards keep the same discipline for company learnings: no
+// caller can smuggle `id`, `tenantId`, `learningId`, `version`, `isCurrent`,
+// `status`, `validFrom`, `recordedAt`, `recordedByPrincipal` — and above all
+// NOT `authoritative`: a learned assertion is never authoritative (lock 14,
+// ADR-0016 — "Explicit policy remains authoritative over learned
+// preference"), so the read model's `authoritative: false` constant is
+// system-minted and the input surface cannot even express a policy claim.
+//
 // Every shared primitive takes the error factory of its calling context, so
 // a bad field reports the operation's own error code (invalid_outcome_input
-// on definitions, invalid_measurement_input on measurements, and so on) —
-// the same discipline the missions module applies per operation.
+// on definitions, invalid_measurement_input on measurements,
+// invalid_learning_input on company-learning feedback, and so on) — the
+// same discipline the missions module applies per operation.
 //
 // `assessRealization` is the single definition of expected-versus-realized:
 // the deterministic math the service freezes onto the terminal realization
 // row at settle time (unit-tested in isolation; W054/W055 consume the
-// frozen result, never a re-derivation).
+// frozen result, never a re-derivation). `deriveLearningStatus` is the
+// single definition of a company learning chain's read-time validity.
 
 import type { TenantContext } from '@/infra/tenant';
 import { LearningError } from './errors';
 import type {
+  LearningFeedbackChannel,
+  LearningStatus,
+  LearningTargetKind,
   OutcomeAssessment,
   OutcomeDirection,
   OutcomeEvidenceKind,
@@ -36,7 +50,8 @@ import type {
 } from './types';
 
 // ---------------------------------------------------------------------------
-// Vocabularies (mirrored by the CHECK constraints in migrations/001)
+// Vocabularies (mirrored by the CHECK constraints in migrations/001;
+// the W041 vocabularies by those in migrations/002)
 // ---------------------------------------------------------------------------
 
 /** The subjects W040 ties to measurable outcomes (the catalog entry's list). */
@@ -714,4 +729,357 @@ export function assessRealization(
     improvementVsBaseline: realized - baseline,
     assessment,
   };
+}
+
+// ---------------------------------------------------------------------------
+// W041 — Company Learning (versioned usefulness/preferences)
+// ---------------------------------------------------------------------------
+
+/** What a company-specific usefulness/preference is versioned for. */
+export const LEARNING_TARGET_KINDS = [
+  'source',
+  'person',
+  'agent',
+  'extension',
+  'mission',
+  'channel',
+  'process',
+  'capability',
+] as const;
+
+/** The feedback legs that may produce a version (the item's three channels). */
+export const LEARNING_FEEDBACK_CHANNELS = ['explicit', 'behavioral', 'outcome'] as const;
+
+/** The derived read-time validity of a chain's current version. */
+export const LEARNING_STATUSES = ['active', 'expired'] as const;
+
+/**
+ * Aspects are slugs: lowercase first, then letters/digits/dots/dashes/
+ * underscores, at most 100 characters — queryable keys, not prose (W053's
+ * CompanyModel owns the taxonomy).
+ */
+const ASPECT_PATTERN = /^[a-z0-9][a-z0-9._-]{0,99}$/;
+
+/** Learned assertion payloads stay modest; large artifacts belong to object storage. */
+export const MAX_LEARNING_VALUE_BYTES = 16_384;
+
+/** Aspects are capped by the slug pattern; the explicit constant mirrors it. */
+export const MAX_ASPECT_LENGTH = 100;
+
+const RECORD_LEARNING_INPUT_KEYS = [
+  'target',
+  'aspect',
+  'value',
+  'confidence',
+  'channel',
+  'reason',
+  'evidence',
+  'outcomeId',
+  'validUntil',
+  'actor',
+] as const;
+
+const LEARNING_TARGET_KEYS = ['kind', 'id', 'label'] as const;
+
+const LIST_LEARNINGS_QUERY_KEYS = [
+  'targetKind',
+  'targetId',
+  'aspect',
+  'channel',
+  'validity',
+  'limit',
+] as const;
+
+const LIST_LEARNING_VERSIONS_QUERY_KEYS = ['learningId'] as const;
+
+// ---------------------------------------------------------------------------
+// W041 type guards
+// ---------------------------------------------------------------------------
+
+export function isLearningTargetKind(value: unknown): value is LearningTargetKind {
+  return isOneOf(value, LEARNING_TARGET_KINDS);
+}
+
+export function isLearningFeedbackChannel(value: unknown): value is LearningFeedbackChannel {
+  return isOneOf(value, LEARNING_FEEDBACK_CHANNELS);
+}
+
+export function isLearningStatus(value: unknown): value is LearningStatus {
+  return isOneOf(value, LEARNING_STATUSES);
+}
+
+// ---------------------------------------------------------------------------
+// W041 input validation
+// ---------------------------------------------------------------------------
+
+function learningInputError(message: string): LearningError {
+  return new LearningError('invalid_learning_input', message);
+}
+
+/**
+ * The subject a company-specific usefulness/preference is versioned for:
+ * one of the target kinds plus the target record's REQUIRED uuid id (the
+ * tie must be precise — the W040 subject rule) and an optional human
+ * label. The reference is deliberately opaque: the owning module remains
+ * the verification point — no cross-module foreign key, no contract
+ * import (the W040 subject precedent).
+ */
+function validateLearningTarget(target: unknown, err: Err): ValidatedLearningTarget {
+  if (!isPlainObject(target)) throw err('target must be an object');
+  rejectUnknownKeys(target, LEARNING_TARGET_KEYS, 'target', err);
+  if (!isLearningTargetKind(target.kind)) {
+    throw err(
+      `target.kind must be one of ${LEARNING_TARGET_KINDS.join(', ')} (got '${String(target.kind)}')`,
+    );
+  }
+  const id = requireUuid(target.id, 'target.id', err);
+  const label = optionalTrimmed(target.label, 'target.label', MAX_SUBJECT_LABEL_LENGTH, err);
+  return { kind: target.kind, id, label };
+}
+
+/**
+ * The aspect being versioned: trimmed, lowercased and matched against the
+ * slug pattern (mirror of the migration 002 CHECK).
+ */
+function requireAspect(value: unknown, err: Err): string {
+  const text = requireString(value, 'aspect', err).toLowerCase();
+  if (!ASPECT_PATTERN.test(text)) {
+    throw err(
+      `aspect must be a slug (lowercase letters, digits, '.', '-', '_', at most ${MAX_ASPECT_LENGTH} characters; got '${text}')`,
+    );
+  }
+  return text;
+}
+
+/**
+ * The learned assertion's content: any non-null plain JSON value (the deep
+ * check rejects class instances and non-JSON types), bounded in serialized
+ * size so a preference assertion never becomes an artifact.
+ */
+function checkLearnedValue(value: unknown, err: Err): void {
+  if (value === undefined || value === null) {
+    throw err('value must be a non-null JSON value — the learned assertion needs content');
+  }
+  deepCheckJson(value, 'value', 0, err);
+  const serialized = JSON.stringify(value) ?? '';
+  if (serialized.length > MAX_LEARNING_VALUE_BYTES) {
+    throw err(
+      `value exceeds the maximum of ${MAX_LEARNING_VALUE_BYTES} bytes (${serialized.length}); large artifacts belong to object storage`,
+    );
+  }
+}
+
+/** Deep JSON check for learned values (same discipline as W040 payloads, local to this module). */
+function deepCheckJson(value: unknown, where: string, depth: number, err: Err): void {
+  if (value === null) return;
+  const type = typeof value;
+  if (type === 'string' || type === 'boolean') return;
+  if (type === 'number') {
+    if (!Number.isFinite(value)) throw err(`${where} must be finite (got ${String(value)})`);
+    return;
+  }
+  if (type === 'undefined' || type === 'bigint' || type === 'symbol' || type === 'function') {
+    throw err(`${where} contains a non-JSON value of type ${type}`);
+  }
+  if (depth > 64) {
+    throw err(`${where} exceeds the maximum nesting depth of 64`);
+  }
+  if (Array.isArray(value)) {
+    for (const [index, entry] of value.entries()) {
+      deepCheckJson(entry, `${where}[${index}]`, depth + 1, err);
+    }
+    return;
+  }
+  if (!isPlainObject(value)) {
+    throw err(`${where} must be a plain JSON value (no class instances)`);
+  }
+  for (const key of Object.keys(value)) {
+    deepCheckJson(value[key], `${where}.${key}`, depth + 1, err);
+  }
+}
+
+/** Confidence: a finite double in [0, 1] (ADR-0016 confidence metadata). */
+function requireConfidence(value: unknown, err: Err): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw err(`confidence must be a finite number (got ${String(value)})`);
+  }
+  if (value < 0 || value > 1) {
+    throw err(`confidence must be between 0 and 1 inclusive (got ${value})`);
+  }
+  return value;
+}
+
+/** Fully validated + normalized form of `recordCompanyLearning`'s input. */
+export interface ValidatedRecordLearningInput {
+  target: ValidatedLearningTarget;
+  aspect: string;
+  value: unknown;
+  confidence: number;
+  channel: LearningFeedbackChannel;
+  reason: string;
+  evidence: ValidatedEvidenceRef[];
+  outcomeId: string | null;
+  validUntil: string | null;
+  actor: ValidatedParty;
+}
+
+/** Fully validated + normalized form of a learning target. */
+export interface ValidatedLearningTarget {
+  kind: LearningTargetKind;
+  id: string;
+  label: string | null;
+}
+
+export function validateRecordCompanyLearningInput(input: unknown): ValidatedRecordLearningInput {
+  const err = learningInputError;
+  if (!isPlainObject(input)) throw err('company learning input must be an object');
+  rejectUnknownKeys(input, RECORD_LEARNING_INPUT_KEYS, 'the company learning input', err);
+
+  const target = validateLearningTarget(input.target, err);
+  const aspect = requireAspect(input.aspect, err);
+  checkLearnedValue(input.value, err);
+  const confidence = requireConfidence(input.confidence, err);
+
+  if (!isLearningFeedbackChannel(input.channel)) {
+    throw err(
+      `channel must be one of ${LEARNING_FEEDBACK_CHANNELS.join(', ')} (got '${String(input.channel)}')`,
+    );
+  }
+  const channel = input.channel;
+
+  const reason = requireBoundedString(input.reason, 'reason', MAX_REASON_LENGTH, err);
+  const evidence = validateEvidenceRefs(input.evidence ?? [], err);
+
+  // The channel shapes (mirrored by migration 002 CHECKs): outcome feedback
+  // is grounded in a settled W040 outcome; explicit feedback is a statement;
+  // behavioral feedback is evidence-linked observed behavior.
+  let outcomeId: string | null;
+  if (input.outcomeId === undefined || input.outcomeId === null) {
+    outcomeId = null;
+  } else {
+    outcomeId = requireUuid(input.outcomeId, 'outcomeId', err);
+  }
+  if (channel === 'outcome' && outcomeId === null) {
+    throw err(
+      'outcome feedback requires outcomeId — the settled outcome the feedback is grounded in',
+    );
+  }
+  if (channel !== 'outcome' && outcomeId !== null) {
+    throw err("outcomeId applies only to outcome feedback (channel 'outcome')");
+  }
+  if (channel === 'behavioral' && evidence.length === 0) {
+    throw err(
+      'behavioral feedback must cite at least one evidence reference — observed behavior is only learnable from evidence',
+    );
+  }
+
+  const validUntil = optionalIsoDate(input.validUntil, 'validUntil', err);
+  const actor = validateParty(input.actor, 'actor', err);
+
+  return { target, aspect, value: input.value, confidence, channel, reason, evidence, outcomeId, validUntil, actor };
+}
+
+// ---------------------------------------------------------------------------
+// W041 queries
+// ---------------------------------------------------------------------------
+
+/** Fully validated + normalized form of `listCompanyLearnings`' query. */
+export interface ValidatedListLearningsQuery {
+  targetKind: LearningTargetKind | null;
+  targetId: string | null;
+  aspect: string | null;
+  channel: LearningFeedbackChannel | null;
+  validity: LearningStatus | null;
+  limit: number;
+}
+
+export function validateListCompanyLearningsQuery(query: unknown): ValidatedListLearningsQuery {
+  const err = queryError;
+  if (!isPlainObject(query)) throw err('company learnings query must be an object');
+  rejectUnknownKeys(query, LIST_LEARNINGS_QUERY_KEYS, 'the company learnings query', err);
+
+  let targetKind: LearningTargetKind | null = null;
+  if (query.targetKind !== undefined) {
+    if (!isLearningTargetKind(query.targetKind)) {
+      throw err(
+        `targetKind must be one of ${LEARNING_TARGET_KINDS.join(', ')} (got '${String(query.targetKind)}')`,
+      );
+    }
+    targetKind = query.targetKind;
+  }
+
+  let targetId: string | null = null;
+  if (query.targetId !== undefined) {
+    targetId = requireUuid(query.targetId, 'targetId', err);
+    if (targetKind === null) {
+      throw err('targetId requires targetKind — a target id is meaningless without its kind');
+    }
+  }
+
+  let aspect: string | null = null;
+  if (query.aspect !== undefined) {
+    aspect = requireAspect(query.aspect, err);
+  }
+
+  let channel: LearningFeedbackChannel | null = null;
+  if (query.channel !== undefined) {
+    if (!isLearningFeedbackChannel(query.channel)) {
+      throw err(
+        `channel must be one of ${LEARNING_FEEDBACK_CHANNELS.join(', ')} (got '${String(query.channel)}')`,
+      );
+    }
+    channel = query.channel;
+  }
+
+  let validity: LearningStatus | null = null;
+  if (query.validity !== undefined) {
+    if (!isLearningStatus(query.validity)) {
+      throw err(`validity must be one of ${LEARNING_STATUSES.join(', ')} (got '${String(query.validity)}')`);
+    }
+    validity = query.validity;
+  }
+
+  let limit = DEFAULT_LIST_LIMIT;
+  if (query.limit !== undefined) {
+    if (typeof query.limit !== 'number' || !Number.isInteger(query.limit) || query.limit < 1) {
+      throw err(`limit must be a positive integer (got ${String(query.limit)})`);
+    }
+    if (query.limit > MAX_LIST_LIMIT) {
+      throw err(`limit must be at most ${MAX_LIST_LIMIT} (got ${query.limit})`);
+    }
+    limit = query.limit;
+  }
+
+  return { targetKind, targetId, aspect, channel, validity, limit };
+}
+
+/** Fully validated + normalized form of `listCompanyLearningVersions`' query. */
+export interface ValidatedListLearningVersionsQuery {
+  learningId: string;
+}
+
+export function validateListCompanyLearningVersionsQuery(
+  query: unknown,
+): ValidatedListLearningVersionsQuery {
+  const err = queryError;
+  if (!isPlainObject(query)) throw err('company learning versions query must be an object');
+  rejectUnknownKeys(query, LIST_LEARNING_VERSIONS_QUERY_KEYS, 'the versions query', err);
+  return { learningId: requireUuid(query.learningId, 'learningId', err) };
+}
+
+// ---------------------------------------------------------------------------
+// The read-time validity derivation (single definition)
+// ---------------------------------------------------------------------------
+
+/**
+ * The single definition of a chain's read-time validity: a null valid_until
+ * holds forever; a dated one holds through the END of its day (UTC), then
+ * the chain is 'expired'. Expired is not terminal — new feedback appends a
+ * new version (see types.ts). The service applies this with the service
+ * clock; unit tests exercise it in isolation.
+ */
+export function deriveLearningStatus(validUntil: string | null, at: Date): LearningStatus {
+  if (validUntil === null) return 'active';
+  const today = at.toISOString().slice(0, 10);
+  return validUntil >= today ? 'active' : 'expired';
 }

@@ -362,3 +362,215 @@ export interface SummarizeRealizationQuery {
   /** Narrow the rollup to one subject kind; omitted = all kinds. */
   subjectKind?: OutcomeSubjectKind;
 }
+
+// ---------------------------------------------------------------------------
+// W041 — Company Learning (versioned usefulness/preferences)
+// ---------------------------------------------------------------------------
+//
+// The work item: "Version company-specific usefulness/preferences from
+// explicit, behavioral and outcome feedback without mutating policy
+// silently." (DAG: W040 → W041; ADR-0016 normative.)
+//
+// A CompanyLearning is ONE company-specific version chain: the subject is a
+// (target, aspect) pair — an opaque forward reference to the entity the
+// usefulness/preference is about (a source, a person, an agent, an
+// extension, a mission, a channel, a process or a capability — the owning
+// module stays the verification point, no cross-module FK, the W040 subject
+// precedent) plus the aspect being versioned ('source-reliability',
+// 'preferred-channel', 'usefulness', ... an open slug vocabulary; W053's
+// CompanyModel owns the taxonomy). Each recorded feedback event appends ONE
+// version — the learned assertion — and never rewrites history: "what
+// changed" is the retained previous version, "why" is the required reason
+// (ADR-0016's learning invariant). The current version of a chain is the
+// maximum version, DERIVED (never stored, the W040 discipline).
+//
+// Feedback legs (the item's three channels):
+//  * 'explicit'    — a stated usefulness/preference by an actor;
+//  * 'behavioral'  — observed behavior, which MUST cite at least one
+//                    evidence reference (behavior is only learnable from
+//                    evidence);
+//  * 'outcome'     — feedback grounded in a SETTLED outcome (W040, this
+//                    module): the outcome id is validated same-tenant at
+//                    write time and the frozen met/exceeded/missed
+//                    assessment is snapshotted onto the version, so the
+//                    feedback signal stays self-contained. This is the W040
+//                    → W041 dependency made behavioral, not just declared.
+//
+// POLICY NON-AUTHORITY (lock 14; ADR-0016 "Explicit policy remains
+// authoritative over learned preference"): every version read exposes
+// `authoritative: false` — a system-minted constant. There is no input
+// field that could set it (validation rejects unknown keys), no operation
+// in this module touches any policy surface, and versions are append-only:
+// a learned preference can never silently override or mutate policy.
+
+/** Which leg produced one version: the item's three feedback channels. */
+export type LearningFeedbackChannel = 'explicit' | 'behavioral' | 'outcome';
+
+/**
+ * What a company-specific usefulness/preference is versioned FOR: an
+ * opaque uuid forward reference to the entity — the target module
+ * (sources, people, agents, extensions, missions, channels, processes,
+ * capabilities) remains the verification point. Company-specific means
+ * tenant-scoped: the same target in two tenants is two chains.
+ */
+export type LearningTargetKind =
+  | 'source'
+  | 'person'
+  | 'agent'
+  | 'extension'
+  | 'mission'
+  | 'channel'
+  | 'process'
+  | 'capability';
+
+/** The subject a usefulness/preference is versioned for (opaque forward reference). */
+export interface LearningTarget {
+  kind: LearningTargetKind;
+  id: string;
+  label?: string | null;
+}
+
+/** Input shape of `LearningTarget`. */
+export interface LearningTargetInput {
+  kind: LearningTargetKind;
+  id: string;
+  label?: string | null;
+}
+
+/** The actor that supplied one feedback event (the module's party vocabulary). */
+export type LearningActor = OutcomeParty;
+
+/** One evidence reference cited by a feedback event (the module's vocabulary). */
+export type LearningEvidenceRef = OutcomeEvidenceRef;
+
+/**
+ * The validity of a chain's current version at read time, derived from the
+ * current version's validity interval: 'active' while valid_until is null
+ * or not yet elapsed, 'expired' afterwards. An expired chain is not dead —
+ * new feedback appends a new version (the W040 "tie to a new outcome"
+ * precedent; there is no terminal transition because a preference has no
+ * terminal state, only superseded and expired versions).
+ */
+export type LearningStatus = 'active' | 'expired';
+
+/**
+ * One learned assertion — one append-only version of a company learning
+ * chain (ADR-0016: "Each learned assertion has provenance, confidence,
+ * validity interval and learning/version metadata").
+ */
+export interface CompanyLearningVersion {
+  id: string;
+  tenantId: string;
+  /** The chain this version belongs to. */
+  learningId: string;
+  /** 1-based, monotonic per chain; the current version is the maximum. */
+  version: number;
+  /** Derived: this is the chain's maximum version. */
+  isCurrent: boolean;
+  /** Which feedback leg produced this version. */
+  channel: LearningFeedbackChannel;
+  /** The learned assertion's content — any plain JSON value (a score, a preference object, ...). */
+  value: unknown;
+  /** 0..1 — how much to trust this assertion (ADR-0016 confidence metadata). */
+  confidence: number;
+  /** Where the feedback came from (opaque references; required non-empty for behavioral feedback). */
+  evidence: LearningEvidenceRef[];
+  /** The settled outcome this version's feedback is grounded in (outcome channel only). */
+  outcomeId: string | null;
+  /** The outcome's frozen assessment, snapshotted at version time (outcome channel only). */
+  outcomeAssessment: OutcomeAssessment | null;
+  /** REQUIRED: why this learning update happened (ADR-0016's learning invariant). */
+  reason: string;
+  /** ISO 8601 — when this version became valid (the service clock's stamp). */
+  validFrom: string;
+  /** Optional ISO date (YYYY-MM-DD) through which the assertion holds; null = no stated end. */
+  validUntil: string | null;
+  /** Who supplied the feedback (domain provenance). */
+  actor: LearningActor;
+  /** The authenticated TenantContext principal that committed this version. */
+  recordedByPrincipal: string;
+  /** ISO 8601 — when Aurum committed this version (service clock). */
+  recordedAt: string;
+  /**
+   * ALWAYS false (system-minted): a learned assertion is never authoritative
+   * — explicit policy remains authoritative over learned preference
+   * (lock 14, ADR-0016). Consumers must defer to policy.
+   */
+  authoritative: false;
+}
+
+/** Input shape of `recordCompanyLearning` — one feedback event → one new version. */
+export interface RecordCompanyLearningInput {
+  /** The company-specific subject this feedback is about. */
+  target: LearningTargetInput;
+  /** The aspect of the target being versioned (open slug vocabulary, e.g. 'source-reliability'). */
+  aspect: string;
+  /** The learned assertion's content — any plain JSON value. */
+  value: unknown;
+  /** 0..1 confidence in the assertion. */
+  confidence: number;
+  /** Which feedback leg produced this version. */
+  channel: LearningFeedbackChannel;
+  /** REQUIRED: why this learning update happened ("what changed" is the retained previous version). */
+  reason: string;
+  /**
+   * Opaque evidence references. REQUIRED non-empty for behavioral feedback
+   * (observed behavior is only learnable from evidence); optional otherwise.
+   */
+  evidence?: LearningEvidenceRef[];
+  /**
+   * REQUIRED for channel='outcome': the SETTLED W040 outcome the feedback
+   * is grounded in (validated same-tenant at write time). Must be absent
+   * for the other channels.
+   */
+  outcomeId?: string | null;
+  /** Optional ISO date (YYYY-MM-DD) through which the learned assertion holds. */
+  validUntil?: string | null;
+  /** Who supplied the feedback (audit trail). */
+  actor: OutcomePartyInput;
+}
+
+/**
+ * The current view of one company learning chain: the immutable subject
+ * (target + aspect), the derived validity status, the current version (the
+ * maximum), the previous version (so "what changed and why" is visible in
+ * one read) and the version count.
+ */
+export interface CompanyLearning {
+  id: string;
+  tenantId: string;
+  target: LearningTarget;
+  aspect: string;
+  /** Derived at read time from the current version's validity interval. */
+  status: LearningStatus;
+  /** How many versions the chain holds (append-only history). */
+  versionCount: number;
+  /** The chain's maximum version — the current learned assertion. */
+  currentVersion: CompanyLearningVersion;
+  /** The version the current one superseded — the "what changed" half of the learning invariant; null on version 1. */
+  previousVersion: CompanyLearningVersion | null;
+  /** ISO 8601 — when the chain was created (its first version). */
+  createdAt: string;
+  /** ISO 8601 — when the current version was committed. */
+  lastUpdatedAt: string;
+}
+
+/** Query shape of `listCompanyLearnings` (over the derived current views). */
+export interface ListCompanyLearningsQuery {
+  targetKind?: LearningTargetKind;
+  /** Requires `targetKind` (an id is meaningless without its kind). */
+  targetId?: string;
+  /** Exact aspect match (aspects are slugs). */
+  aspect?: string;
+  /** Filters on the CURRENT version's channel. */
+  channel?: LearningFeedbackChannel;
+  /** Filters on the derived current validity. */
+  validity?: LearningStatus;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+/** Query shape of `listCompanyLearningVersions` (the chain's audit trail). */
+export interface ListCompanyLearningVersionsQuery {
+  learningId: string;
+}
