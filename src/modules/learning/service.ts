@@ -5,9 +5,10 @@
 // (`gen_random_uuid()`); `recorded_at` comes from the injectable clock and
 // is never caller-supplied; every statement is scoped by the explicit
 // TenantContext (ADR-0001) — cross-tenant access is indistinguishable from
-// a missing record (`outcome_not_found` / `measurement_not_found`), on
-// reads AND on writes (measuring, settling and abandoning a foreign-tenant
-// outcome id read the same as a missing one).
+// a missing record (`outcome_not_found` / `measurement_not_found` /
+// `learning_not_found` / `learning_version_not_found`), on reads AND on
+// writes (measuring, settling, abandoning, recording feedback for or
+// appending to a foreign-tenant id read the same as a missing one).
 //
 // W040 acceptance is carried by these deliberate properties, all tested:
 //   1. TIED: every outcome names ONE subject (recommendation / agent /
@@ -43,6 +44,34 @@
 // (append-only observation series) and `outcome_realizations`
 // (first-write-wins terminal records). Reads derive the current view by
 // LEFT JOINing the realization and the latest measurement.
+//
+// W041 acceptance (company learning) is carried by these deliberate
+// properties, all tested:
+//   1. VERSIONED: `company_learnings` holds one immutable chain head per
+//      (tenant, target, aspect) — the company-specific subject — and
+//      `company_learning_versions` holds the append-only version rows.
+//      Every feedback event appends ONE version under a FOR UPDATE lock on
+//      the head (version numbers are 1-based, monotonic, UNIQUE per
+//      chain); nothing is ever rewritten, so "what changed" is always the
+//      retained previous version and "why" the required reason
+//      (ADR-0016's learning invariant). PostgreSQL rejects
+//      UPDATE/DELETE/TRUNCATE on both tables via migration 002 triggers.
+//   2. THREE FEEDBACK LEGS: explicit (a statement), behavioral (observed
+//      behavior — requires ≥1 evidence reference) and outcome (grounded in
+//      a SETTLED W040 outcome of the same tenant, its frozen assessment
+//      snapshotted onto the version — the W040 → W041 dependency made
+//      behavioral: ADR-0016 "A completed project or intervention may
+//      improve future behavior only through a recorded learning update
+//      linked to evidence and outcome").
+//   3. POLICY NON-AUTHORITY (the item's "without mutating policy silently",
+//      lock 14): the read model mints `authoritative: false` on every
+//      version — there is no input field that could set it (validation
+//      rejects unknown keys), no operation here touches any policy
+//      surface, and versions are append-only, so a learned preference can
+//      never silently override or mutate policy. Consumers must defer to
+//      explicit policy.
+//   4. TENANT-COMPANY-SPECIFIC: the chain key includes tenant_id — the
+//      same target+aspect in two tenants is two independent chains.
 
 import { now } from '@/infra/clock';
 import { getDb, type DbRow, type DbResult, type Queryable } from '@/infra/db';
@@ -52,13 +81,17 @@ import { LearningError } from './errors';
 import {
   assertLearningTenantContext,
   assessRealization,
+  deriveLearningStatus,
   escapeLike,
   isUuid,
   OUTCOME_SUBJECT_KINDS,
   validateAbandonOutcomeInput,
   validateDefineOutcomeInput,
+  validateListCompanyLearningsQuery,
+  validateListCompanyLearningVersionsQuery,
   validateListMeasurementsQuery,
   validateListOutcomesQuery,
+  validateRecordCompanyLearningInput,
   validateRecordMeasurementInput,
   validateSettleOutcomeInput,
   validateSummarizeRealizationQuery,
@@ -66,9 +99,15 @@ import {
 } from './validation';
 import type {
   AbandonOutcomeInput,
+  CompanyLearning,
+  CompanyLearningVersion,
   DefineOutcomeInput,
+  ListCompanyLearningsQuery,
+  ListCompanyLearningVersionsQuery,
   ListMeasurementsQuery,
   ListOutcomesQuery,
+  LearningFeedbackChannel,
+  LearningTarget,
   Outcome,
   OutcomeActor,
   OutcomeAssessment,
@@ -79,6 +118,7 @@ import type {
   OutcomeRealization,
   OutcomeStatus,
   OutcomeSubject,
+  RecordCompanyLearningInput,
   RecordMeasurementInput,
   RealizationBucket,
   RealizationSummary,
@@ -968,4 +1008,433 @@ export async function summarizeRealization(
   }
 
   return { overall, bySubjectKind };
+}
+
+// ---------------------------------------------------------------------------
+// W041 — Company Learning (versioned usefulness/preferences)
+// ---------------------------------------------------------------------------
+
+/** Row shape of `company_learnings` (the immutable chain head). */
+interface CompanyLearningRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  target_kind: string;
+  target_id: string;
+  target_label: string | null;
+  aspect: string;
+  created_at: Date | string;
+}
+
+/** Row shape of `company_learning_versions` (the append-only version rows). */
+interface LearningVersionRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  company_learning_id: string;
+  version: number | string;
+  channel: string;
+  value: unknown;
+  confidence: number;
+  evidence: unknown;
+  outcome_id: string | null;
+  outcome_assessment: string | null;
+  reason: string;
+  valid_from: Date | string;
+  valid_until: string | null;
+  actor_kind: string;
+  actor_id: string | null;
+  actor_label: string | null;
+  recorded_by_principal: string;
+  recorded_at: Date | string;
+}
+
+/** Row shape of the derived chain-view join (head ⊕ current ⊕ previous ⊕ count). */
+interface LearningViewRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  target_kind: string;
+  target_id: string;
+  target_label: string | null;
+  aspect: string;
+  created_at: Date | string;
+  version_count: number | string;
+}
+
+// The derived chain view, shared by getCompanyLearning, listCompanyLearnings
+// and recordCompanyLearning's return assembly. The two LATERAL joins pick
+// the current version (max version) and the one it superseded,
+// deterministically; the scalar subquery counts the chain.
+const LEARNING_VIEW_FROM = `FROM company_learnings cl
+  LEFT JOIN LATERAL (
+    SELECT v.* FROM company_learning_versions v
+      WHERE v.tenant_id = cl.tenant_id AND v.company_learning_id = cl.id
+      ORDER BY v.version DESC LIMIT 1
+  ) cv ON true
+  LEFT JOIN LATERAL (
+    SELECT v.* FROM company_learning_versions v
+      WHERE v.tenant_id = cl.tenant_id AND v.company_learning_id = cl.id
+      ORDER BY v.version DESC OFFSET 1 LIMIT 1
+  ) pv ON true`;
+
+const LEARNING_VIEW_COLUMNS = `SELECT
+    cl.id, cl.tenant_id, cl.target_kind, cl.target_id, cl.target_label,
+    cl.aspect, cl.created_at,
+    (SELECT count(*)::int FROM company_learning_versions v
+       WHERE v.tenant_id = cl.tenant_id AND v.company_learning_id = cl.id) AS version_count,
+    cv.id AS cur_id, cv.company_learning_id AS cur_learning_id, cv.version AS cur_version,
+    cv.channel AS cur_channel, cv.value AS cur_value, cv.confidence AS cur_confidence,
+    cv.evidence AS cur_evidence, cv.outcome_id AS cur_outcome_id,
+    cv.outcome_assessment AS cur_outcome_assessment, cv.reason AS cur_reason,
+    cv.valid_from AS cur_valid_from, cv.valid_until AS cur_valid_until,
+    cv.actor_kind AS cur_actor_kind, cv.actor_id AS cur_actor_id, cv.actor_label AS cur_actor_label,
+    cv.recorded_by_principal AS cur_recorded_by_principal, cv.recorded_at AS cur_recorded_at,
+    pv.id AS prev_id, pv.company_learning_id AS prev_learning_id, pv.version AS prev_version,
+    pv.channel AS prev_channel, pv.value AS prev_value, pv.confidence AS prev_confidence,
+    pv.evidence AS prev_evidence, pv.outcome_id AS prev_outcome_id,
+    pv.outcome_assessment AS prev_outcome_assessment, pv.reason AS prev_reason,
+    pv.valid_from AS prev_valid_from, pv.valid_until AS prev_valid_until,
+    pv.actor_kind AS prev_actor_kind, pv.actor_id AS prev_actor_id, pv.actor_label AS prev_actor_label,
+    pv.recorded_by_principal AS prev_recorded_by_principal, pv.recorded_at AS prev_recorded_at`;
+
+function learningNotFound(learningId: string): LearningError {
+  return new LearningError('learning_not_found', `company learning '${learningId}' does not exist in this tenant`);
+}
+
+function learningVersionNotFound(versionId: string): LearningError {
+  return new LearningError(
+    'learning_version_not_found',
+    `company learning version '${versionId}' does not exist in this tenant`,
+  );
+}
+
+/**
+ * Maps one version row. `isCurrent` is DERIVED (the caller knows whether
+ * this row is the chain's maximum version) — never stored. The
+ * `authoritative: false` constant is minted here (lock 14, ADR-0016): a
+ * learned assertion is never authoritative, and no input can forge it.
+ */
+function mapLearningVersion(row: LearningVersionRow, isCurrent: boolean): CompanyLearningVersion {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    learningId: row.company_learning_id,
+    version: toInt(row.version),
+    isCurrent,
+    channel: row.channel as LearningFeedbackChannel, // CHECK-constrained by migration 002
+    value: row.value,
+    confidence: row.confidence,
+    evidence: mapEvidence(row.evidence),
+    outcomeId: row.outcome_id,
+    outcomeAssessment: row.outcome_assessment as OutcomeAssessment | null, // CHECK-constrained
+    reason: row.reason,
+    validFrom: toIso(row.valid_from),
+    validUntil: row.valid_until,
+    actor: mapActor(row),
+    recordedByPrincipal: row.recorded_by_principal,
+    recordedAt: toIso(row.recorded_at),
+    authoritative: false,
+  };
+}
+
+/** Projects the `cur_`/`prev_` columns of a view-join row into a version row shape. */
+function prefixedVersion(row: LearningViewRow, prefix: 'cur' | 'prev'): LearningVersionRow | null {
+  const id = row[`${prefix}_id`];
+  if (id === null || id === undefined) return null;
+  return {
+    id: id as string,
+    tenant_id: row.tenant_id,
+    company_learning_id: row[`${prefix}_learning_id`] as string,
+    version: row[`${prefix}_version`] as number | string,
+    channel: row[`${prefix}_channel`] as string,
+    value: row[`${prefix}_value`],
+    confidence: row[`${prefix}_confidence`] as number,
+    evidence: row[`${prefix}_evidence`],
+    outcome_id: row[`${prefix}_outcome_id`] as string | null,
+    outcome_assessment: row[`${prefix}_outcome_assessment`] as string | null,
+    reason: row[`${prefix}_reason`] as string,
+    valid_from: row[`${prefix}_valid_from`] as Date | string,
+    valid_until: row[`${prefix}_valid_until`] as string | null,
+    actor_kind: row[`${prefix}_actor_kind`] as string,
+    actor_id: row[`${prefix}_actor_id`] as string | null,
+    actor_label: row[`${prefix}_actor_label`] as string | null,
+    recorded_by_principal: row[`${prefix}_recorded_by_principal`] as string,
+    recorded_at: row[`${prefix}_recorded_at`] as Date | string,
+  };
+}
+
+/** Assembles the derived chain view: current + previous version, derived validity. */
+function mapCompanyLearning(row: LearningViewRow): CompanyLearning {
+  const current = prefixedVersion(row, 'cur')!;
+  const previous = prefixedVersion(row, 'prev');
+  const currentVersion = mapLearningVersion(current, true);
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    target: {
+      kind: row.target_kind as LearningTarget['kind'], // CHECK-constrained
+      id: row.target_id,
+      label: row.target_label,
+    },
+    aspect: row.aspect,
+    status: deriveLearningStatus(currentVersion.validUntil, now()),
+    versionCount: toInt(row.version_count),
+    currentVersion,
+    previousVersion: previous === null ? null : mapLearningVersion(previous, false),
+    createdAt: toIso(row.created_at),
+    lastUpdatedAt: currentVersion.recordedAt,
+  };
+}
+
+/** The chain's maximum version number (0 when the chain has no versions — never the case in practice). */
+async function chainMaxVersion(ctx: TenantContext, learningId: string): Promise<number> {
+  const rows = await getDb().query<{ max: number | string | null }>(
+    `SELECT max(version) AS max FROM company_learning_versions
+       WHERE tenant_id = $1 AND company_learning_id = $2`,
+    [ctx.tenantId, learningId],
+  );
+  const max = rows.rows[0]?.max;
+  return max === null || max === undefined ? 0 : toInt(max);
+}
+
+// ---------------------------------------------------------------------------
+// recordCompanyLearning — one feedback event → one appended version
+// ---------------------------------------------------------------------------
+
+export async function recordCompanyLearning(
+  ctx: TenantContext,
+  input: RecordCompanyLearningInput,
+): Promise<{ learning: CompanyLearning; version: CompanyLearningVersion }> {
+  assertLearningTenantContext(ctx);
+  const valid = validateRecordCompanyLearningInput(input);
+  const recordedAt = now();
+
+  // A validity window cannot be born elapsed: the pure validation checked
+  // the calendar shape; the elapsed comparison needs the service clock.
+  if (valid.validUntil !== null && valid.validUntil < recordedAt.toISOString().slice(0, 10)) {
+    throw new LearningError(
+      'invalid_learning_input',
+      `validUntil '${valid.validUntil}' is already in the past — a learned assertion cannot be born expired`,
+    );
+  }
+
+  // Outcome feedback is grounded in a SETTLED outcome of THIS tenant (the
+  // W040 → W041 dependency made behavioral; ADR-0016: a learning update is
+  // "linked to evidence and outcome"). Missing and foreign-tenant outcome
+  // ids are uniformly `outcome_not_found` — no existence leak. No lock is
+  // taken: a settled realization is terminal and immutable, so the read
+  // can never flip.
+  let outcomeAssessment: OutcomeAssessment | null = null;
+  if (valid.channel === 'outcome') {
+    const outcomeId = valid.outcomeId!;
+    const rows = await getDb().query<{ disposition: string | null; assessment: string | null }>(
+      `SELECT r.disposition, r.assessment
+         FROM outcomes o
+         LEFT JOIN outcome_realizations r
+           ON r.outcome_id = o.id AND r.tenant_id = o.tenant_id
+        WHERE o.tenant_id = $1 AND o.id = $2`,
+      [ctx.tenantId, outcomeId],
+    );
+    const row = rows.rows[0];
+    if (row === undefined) throw outcomeNotFound(outcomeId);
+    if (row.disposition !== 'settled') {
+      throw new LearningError(
+        'invalid_outcome_ref',
+        `outcome '${outcomeId}' is ${row.disposition ?? 'open'} — outcome feedback requires a settled (realized) outcome`,
+      );
+    }
+    outcomeAssessment = row.assessment as OutcomeAssessment; // CHECK-constrained
+  }
+
+  return getDb().transaction(async (tx) => {
+    // Ensure the chain head exists (first write wins on the label), then
+    // lock it: version numbering serializes on this row, so concurrent
+    // feedback for the same (tenant, target, aspect) appends strictly
+    // after this version — a chain is one company-specific subject.
+    await tx.query(
+      `INSERT INTO company_learnings (
+         tenant_id, target_kind, target_id, target_label, aspect, created_at
+       ) VALUES ($1, $2, $3, $4, $5, $6::timestamptz)
+       ON CONFLICT (tenant_id, target_kind, target_id, aspect) DO NOTHING`,
+      [ctx.tenantId, valid.target.kind, valid.target.id, valid.target.label, valid.aspect, recordedAt],
+    );
+    const headRows = await tx.query<CompanyLearningRow>(
+      `SELECT * FROM company_learnings
+        WHERE tenant_id = $1 AND target_kind = $2 AND target_id = $3 AND aspect = $4
+        FOR UPDATE`,
+      [ctx.tenantId, valid.target.kind, valid.target.id, valid.aspect],
+    );
+    const head = headRows.rows[0]!;
+
+    const nextRows = await tx.query<{ next: number | string }>(
+      `SELECT COALESCE(max(version), 0) + 1 AS next FROM company_learning_versions
+        WHERE tenant_id = $1 AND company_learning_id = $2`,
+      [ctx.tenantId, head.id],
+    );
+    const nextVersion = toInt(nextRows.rows[0]!.next);
+
+    let inserted: DbResult<LearningVersionRow>;
+    try {
+      inserted = await tx.query<LearningVersionRow>(
+        `INSERT INTO company_learning_versions (
+           tenant_id, company_learning_id, version, channel,
+           value, confidence, evidence, outcome_id, outcome_assessment,
+           reason, valid_from, valid_until,
+           actor_kind, actor_id, actor_label, recorded_by_principal, recorded_at
+         ) VALUES (
+           $1, $2, $3, $4,
+           $5::jsonb, $6, $7::jsonb, $8, $9,
+           $10, $11::timestamptz, $12,
+           $13, $14, $15, $16, $17::timestamptz
+         ) RETURNING *`,
+        [
+          ctx.tenantId,
+          head.id,
+          nextVersion,
+          valid.channel,
+          JSON.stringify(valid.value),
+          valid.confidence,
+          JSON.stringify(valid.evidence),
+          valid.outcomeId,
+          outcomeAssessment,
+          valid.reason,
+          recordedAt,
+          valid.validUntil,
+          valid.actor.kind,
+          valid.actor.id,
+          valid.actor.label,
+          ctx.principalId,
+          recordedAt,
+        ],
+      );
+    } catch (error) {
+      if (isDuplicateKeyOn(error, 'company_learning_versions')) {
+        throw new LearningError(
+          'learning_conflict',
+          'a concurrent feedback event versioned this chain first; re-read the learning and retry',
+        );
+      }
+      throw error;
+    }
+
+    // The just-appended version is the chain's maximum (the FOR UPDATE lock
+    // guarantees it inside this transaction).
+    const version = mapLearningVersion(inserted.rows[0]!, true);
+
+    const viewRows = await tx.query<LearningViewRow>(
+      `${LEARNING_VIEW_COLUMNS} ${LEARNING_VIEW_FROM}
+        WHERE cl.tenant_id = $1 AND cl.id = $2`,
+      [ctx.tenantId, head.id],
+    );
+    return { learning: mapCompanyLearning(viewRows.rows[0]!), version };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Company learning reads
+// ---------------------------------------------------------------------------
+
+export async function getCompanyLearning(
+  ctx: TenantContext,
+  learningId: string,
+): Promise<CompanyLearning> {
+  assertLearningTenantContext(ctx);
+  if (!isUuid(learningId)) throw learningNotFound(learningId);
+
+  const rows = await getDb().query<LearningViewRow>(
+    `${LEARNING_VIEW_COLUMNS} ${LEARNING_VIEW_FROM}
+      WHERE cl.tenant_id = $1 AND cl.id = $2`,
+    [ctx.tenantId, learningId],
+  );
+  const row = rows.rows[0];
+  if (row === undefined) throw learningNotFound(learningId);
+  return mapCompanyLearning(row);
+}
+
+export async function listCompanyLearnings(
+  ctx: TenantContext,
+  query: ListCompanyLearningsQuery,
+): Promise<CompanyLearning[]> {
+  assertLearningTenantContext(ctx);
+  const valid = validateListCompanyLearningsQuery(query);
+
+  const conditions: string[] = ['cl.tenant_id = $1'];
+  const params: unknown[] = [ctx.tenantId];
+  const add = (fragment: string, value: unknown): void => {
+    params.push(value);
+    conditions.push(fragment.replace('$#', `$${params.length}`));
+  };
+
+  if (valid.targetKind !== null) add('cl.target_kind = $#', valid.targetKind);
+  if (valid.targetId !== null) add('cl.target_id = $#', valid.targetId);
+  if (valid.aspect !== null) add('cl.aspect = $#', valid.aspect);
+  if (valid.channel !== null) add('cv.channel = $#', valid.channel);
+  if (valid.validity !== null) {
+    // Derived read-time validity, in lockstep with deriveLearningStatus:
+    // active ⇔ valid_until is null or not before today (UTC); expired
+    // otherwise. The comparison is chronological because ISO dates sort
+    // lexicographically.
+    const today = now().toISOString().slice(0, 10);
+    if (valid.validity === 'active') {
+      add('(cv.valid_until IS NULL OR cv.valid_until >= $#)', today);
+    } else {
+      add('(cv.valid_until IS NOT NULL AND cv.valid_until < $#)', today);
+    }
+  }
+
+  params.push(valid.limit);
+  const limitPlaceholder = `$${params.length}`;
+  // Most recently learned first (the "what changed lately" feed); the head
+  // id breaks ties deterministically.
+  const rows = await getDb().query<LearningViewRow>(
+    `${LEARNING_VIEW_COLUMNS} ${LEARNING_VIEW_FROM}
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY cv.recorded_at DESC, cl.id DESC
+      LIMIT ${limitPlaceholder}`,
+    params,
+  );
+  return rows.rows.map(mapCompanyLearning);
+}
+
+export async function getCompanyLearningVersion(
+  ctx: TenantContext,
+  versionId: string,
+): Promise<CompanyLearningVersion> {
+  assertLearningTenantContext(ctx);
+  if (!isUuid(versionId)) throw learningVersionNotFound(versionId);
+
+  const rows = await getDb().query<LearningVersionRow>(
+    `SELECT * FROM company_learning_versions WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, versionId],
+  );
+  const row = rows.rows[0];
+  if (row === undefined) throw learningVersionNotFound(versionId);
+  const max = await chainMaxVersion(ctx, row.company_learning_id);
+  return mapLearningVersion(row, toInt(row.version) === max);
+}
+
+export async function listCompanyLearningVersions(
+  ctx: TenantContext,
+  query: ListCompanyLearningVersionsQuery,
+): Promise<CompanyLearningVersion[]> {
+  assertLearningTenantContext(ctx);
+  const valid = validateListCompanyLearningVersionsQuery(query);
+
+  // Distinguish "no such chain in this tenant" from "chain without
+  // versions" — a foreign-tenant learning id reads the same as a missing
+  // one either way; the explicit check keeps the error honest (the
+  // listMeasurements precedent).
+  const exists = await getDb().query<{ id: string }>(
+    `SELECT id FROM company_learnings WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, valid.learningId],
+  );
+  if (exists.rows.length === 0) throw learningNotFound(valid.learningId);
+
+  const rows = await getDb().query<LearningVersionRow>(
+    `SELECT * FROM company_learning_versions
+      WHERE tenant_id = $1 AND company_learning_id = $2
+      ORDER BY version ASC, id ASC`,
+    [ctx.tenantId, valid.learningId],
+  );
+  const last = rows.rows.at(-1);
+  const max = last === undefined ? 0 : toInt(last.version);
+  return rows.rows.map((row) => mapLearningVersion(row, toInt(row.version) === max));
 }
