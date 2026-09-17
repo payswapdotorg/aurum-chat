@@ -77,6 +77,16 @@
 // of which outcome measurement consumes — W042 (Knowledge Contributions:
 // "mission impact and investigation-cost avoidance") is the learning item
 // that builds on the acquisition contract.
+//
+// W053 — CompanyModel Learning (ADR-0016) extends this module with the
+// versioned CompanyModel (see the W053 section below): durable
+// company-specific learning — vocabulary, organization, process
+// exceptions, source reliability, employee expertise, capability patterns,
+// goal interpretation, investigation preferences, intervention priors and
+// organizational norms — where every learned assertion carries provenance,
+// confidence, a validity interval and version metadata; learned preference
+// never overrides explicit policy; provider/model replacement preserves
+// learned state; and a longitudinal fixture proves measurable improvement.
 // ============================================================================
 
 export {
@@ -89,6 +99,14 @@ export {
   recordMeasurement,
   settleOutcome,
   summarizeRealization,
+  // W053 — CompanyModel Learning (ADR-0016)
+  getCompanyModel,
+  getCompanyModelAssertion,
+  getLearningUpdate,
+  listCompanyModelAssertions,
+  listLearningUpdates,
+  rankCandidates,
+  recordLearningUpdate,
 } from './service';
 
 export { LearningError } from './errors';
@@ -99,6 +117,19 @@ export type { LearningErrorCode } from './errors';
 // FROZEN record this produces; the function is exported for verification).
 export { assessRealization } from './validation';
 export type { RealizationAssessment } from './validation';
+
+// W053 — the deterministic learned-prior scoring (the single definition of
+// how the CompanyModel reorders policy-vetted candidates), plus the subject
+// key derivation. Pure and provider-independent; exported for verification
+// and for downstream learning surfaces (W054/W055/W056 consume these, never
+// a re-derivation).
+export { deriveSubjectKey, scoreCandidateSet, slugifySubjectName } from './validation';
+export type {
+  ScoreableAssertion,
+  ValidatedRankCandidate,
+  ValidatedRankInput,
+  ValidatedRankPolicy,
+} from './validation';
 
 export {
   DEFAULT_LIST_LIMIT,
@@ -128,6 +159,34 @@ export {
   isOutcomeStatus,
   isOutcomeSubjectKind,
   isUuid,
+  // W053 — CompanyModel Learning (ADR-0016)
+  ASSERTION_DISPOSITIONS,
+  ASSERTION_PROVENANCE_KINDS,
+  CANDIDATE_DOMAINS,
+  COMPANY_MODEL_AREAS,
+  COMPANY_MODEL_STATUSES,
+  COMPANY_MODEL_SUBJECT_KINDS,
+  DEFAULT_CANDIDATE_BASE_SCORE,
+  MAX_CHANGES_PER_UPDATE,
+  MAX_POLICY_KIND_LENGTH,
+  MAX_POLICY_KINDS,
+  MAX_PROVENANCE_REFS,
+  MAX_RANK_CANDIDATES,
+  MAX_STATEMENT_JSON_LENGTH,
+  MAX_STATEMENT_KEYS,
+  MAX_STATEMENT_KEY_LENGTH,
+  MAX_SUBJECT_KEY_LENGTH,
+  MAX_SUBJECT_NAME_LENGTH,
+  MAX_SUBJECT_SLUG_LENGTH,
+  MAX_TOPIC_LENGTH,
+  RANK_DOMAIN_FAMILIES,
+  SCORE_DECIMALS,
+  isAssertionDisposition,
+  isAssertionProvenanceKind,
+  isCandidateDomain,
+  isCompanyModelArea,
+  isCompanyModelStatus,
+  isCompanyModelSubjectKind,
 } from './validation';
 
 export type {
@@ -139,6 +198,14 @@ export type {
   ValidatedParty,
   ValidatedSettleInput,
   ValidatedSummarizeQuery,
+  // W053 — CompanyModel Learning (ADR-0016)
+  ValidatedAssertionDelta,
+  ValidatedAssertionListQuery,
+  ValidatedCompanyModelSubject,
+  ValidatedModelQuery,
+  ValidatedProvenanceRef,
+  ValidatedUpdateInput,
+  ValidatedUpdatesListQuery,
 } from './validation';
 
 export type {
@@ -169,4 +236,29 @@ export type {
   RecordMeasurementInput,
   SettleOutcomeInput,
   SummarizeRealizationQuery,
+  // W053 — CompanyModel Learning (ADR-0016)
+  AppliedPrior,
+  AssertionDeltaInput,
+  AssertionDisposition,
+  AssertionProvenanceKind,
+  AssertionProvenanceRef,
+  AssertionProvenanceRefInput,
+  CandidateDomain,
+  CompanyModel,
+  CompanyModelArea,
+  CompanyModelAssertion,
+  CompanyModelAssertionStatus,
+  CompanyModelRanking,
+  CompanyModelSubject,
+  CompanyModelSubjectInput,
+  CompanyModelSubjectKind,
+  GetCompanyModelQuery,
+  LearningUpdate,
+  ListCompanyAssertionsQuery,
+  ListLearningUpdatesQuery,
+  RankCandidatesInput,
+  RankCandidateInput,
+  RankedCandidate,
+  RankPolicyConstraints,
+  RecordLearningUpdateInput,
 } from './types';
