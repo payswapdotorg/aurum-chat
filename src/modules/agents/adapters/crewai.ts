@@ -13,11 +13,7 @@
 import type { AgentRuntimeProvider } from '../policy';
 import { invalidRuntimeConfig, type AgentRuntimeAdapter, type WireTaskInput, type WireTaskResult, type WireUsage } from './types';
 import { asObject, boundedId, boundedSummary, optionalCount } from './shared';
-
-/** Interim list prices (USD): $1.50 / 1M input tokens, $6.00 / 1M output tokens, $0.10 / request. */
-const INPUT_CENTS_PER_MILLION = 150;
-const OUTPUT_CENTS_PER_MILLION = 600;
-const REQUEST_CENTS = 10;
+import { agentRuntimeCostMinor, findAgentRuntime } from '../registry';
 
 function resolveRuntimeAgentRef(runtimeConfig: unknown): string {
   if (typeof runtimeConfig !== 'object' || runtimeConfig === null || Array.isArray(runtimeConfig)) {
@@ -65,13 +61,12 @@ function parseTaskResult(payload: unknown): WireTaskResult {
 }
 
 function costForUsage(usage: WireUsage): number {
-  const input = usage.inputTokens ?? 0;
-  const output = usage.outputTokens ?? 0;
-  const requests = usage.operations ?? 0;
-  return Math.round(
-    (input * INPUT_CENTS_PER_MILLION + output * OUTPUT_CENTS_PER_MILLION) / 1_000_000 +
-      requests * REQUEST_CENTS,
-  );
+  // W035: list prices live in the module registry (single source of truth).
+  const runtime = findAgentRuntime('crewai');
+  if (runtime === null) {
+    throw new Error("the registry carries no 'crewai' runtime (internal invariant violation)");
+  }
+  return agentRuntimeCostMinor(runtime.pricing, usage);
 }
 
 export const crewaiAdapter: AgentRuntimeAdapter = {

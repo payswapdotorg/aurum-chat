@@ -13,11 +13,7 @@
 import type { AgentRuntimeProvider } from '../policy';
 import { invalidRuntimeConfig, type AgentRuntimeAdapter, type WireTaskInput, type WireTaskResult, type WireUsage } from './types';
 import { asObject, boundedId, boundedSummary, optionalCount } from './shared';
-
-/** Interim list prices (USD): $2.00 / 1M input tokens, $8.00 / 1M output tokens, $0.05 / invocation. */
-const INPUT_CENTS_PER_MILLION = 200;
-const OUTPUT_CENTS_PER_MILLION = 800;
-const INVOCATION_CENTS = 5;
+import { agentRuntimeCostMinor, findAgentRuntime } from '../registry';
 
 function resolveRuntimeAgentRef(runtimeConfig: unknown): string {
   if (typeof runtimeConfig !== 'object' || runtimeConfig === null || Array.isArray(runtimeConfig)) {
@@ -63,13 +59,12 @@ function parseTaskResult(payload: unknown): WireTaskResult {
 }
 
 function costForUsage(usage: WireUsage): number {
-  const input = usage.inputTokens ?? 0;
-  const output = usage.outputTokens ?? 0;
-  const invocations = usage.operations ?? 0;
-  return Math.round(
-    (input * INPUT_CENTS_PER_MILLION + output * OUTPUT_CENTS_PER_MILLION) / 1_000_000 +
-      invocations * INVOCATION_CENTS,
-  );
+  // W035: list prices live in the module registry (single source of truth).
+  const runtime = findAgentRuntime('semantic-kernel');
+  if (runtime === null) {
+    throw new Error("the registry carries no 'semantic-kernel' runtime (internal invariant violation)");
+  }
+  return agentRuntimeCostMinor(runtime.pricing, usage);
 }
 
 export const semanticKernelAdapter: AgentRuntimeAdapter = {
