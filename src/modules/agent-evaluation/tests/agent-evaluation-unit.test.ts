@@ -93,6 +93,8 @@ function attempt(overrides: Partial<AgentExecutionAttempt> = {}): AgentExecution
     executionId: 'exec-1',
     attemptNumber: 1,
     provider: 'openai-assistants',
+    runtimeAccountId: null,
+    routing: null,
     status: 'completed',
     retryable: false,
     errorCode: null,
