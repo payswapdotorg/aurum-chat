@@ -45,10 +45,9 @@ export type LearningErrorCode =
   | 'invalid_outcome_ref'
   | 'update_conflict'
   | 'assertion_not_found'
-  | 'learning_update_not_found';
+  | 'learning_update_not_found'
   // W041 — Company Learning (versioned usefulness/preferences)
   | 'invalid_learning_input'
-  | 'invalid_outcome_ref'
   | 'learning_not_found'
   | 'learning_version_not_found'
   | 'learning_conflict';

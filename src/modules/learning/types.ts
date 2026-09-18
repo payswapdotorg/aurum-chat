@@ -363,7 +363,7 @@ export interface SummarizeRealizationQuery {
   subjectKind?: OutcomeSubjectKind;
 }
 
-// =====================================================================
+// ============================================================================
 // W053 — CompanyModel Learning (ADR-0016)
 //
 // The work item (spec/work-items/WORK-ITEM-CATALOG.md, W053):
@@ -635,7 +635,101 @@ export interface ListCompanyAssertionsQuery {
   updateId?: string;
   /** Case-insensitive substring on topic or subject label. */
   search?: string;
-=======
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+/** Query shape of `listLearningUpdates`. */
+export interface ListLearningUpdatesQuery {
+  /** Case-insensitive substring on the rationale. */
+  search?: string;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+/**
+ * The application domains of `rankCandidates` — the two canonical learned
+ * prior families (both machine-readable through statement.score in [0,1]):
+ *  * 'source_selection' — investigation source selection: applies
+ *    ('source_reliability', 'reliability') assertions to candidate sources;
+ *  * 'intervention'     — intervention recommendation: applies
+ *    ('intervention_prior', 'effectiveness') assertions to candidate
+ *    intervention patterns.
+ */
+export type CandidateDomain = 'source_selection' | 'intervention';
+
+/** One candidate the CompanyModel's learned priors are applied to. */
+export interface RankCandidateInput {
+  kind: CompanyModelSubjectKind;
+  /** The owning record's uuid (record-backed kinds). */
+  id?: string | null;
+  /** A stable name (record-less kinds, e.g. intervention patterns). */
+  name?: string | null;
+  label?: string | null;
+  /** The caller's policy/workflow-level base score in [0,1]; default 0.5. */
+  baseScore?: number;
+}
+
+/**
+ * The explicit policy constraints the learned preference must respect —
+ * the lock-14 mechanism made concrete. Learned priors can NEVER override
+ * these: candidates of a kind policy does not allow are excluded from the
+ * ranking no matter how reliable they have learned to be, and the policy's
+ * kind precedence is a hard sort key ahead of every learned score.
+ */
+export interface RankPolicyConstraints {
+  /** Candidate kinds explicit policy permits; omitted = no kind filter. */
+  allowedKinds?: readonly string[];
+  /** Hard policy ordering of kinds; omitted = a single tier. */
+  kindPrecedence?: readonly string[];
+}
+
+/** Input shape of `rankCandidates`. */
+export interface RankCandidatesInput {
+  domain: CandidateDomain;
+  /** 1..32 policy-vetted candidates; the surface never adds or removes any. */
+  candidates: RankCandidateInput[];
+  /** Explicit policy constraints; learned preference never overrides them. */
+  policy?: RankPolicyConstraints;
+}
+
+/** The learned prior that was applied to one ranked candidate (attribution). */
+export interface AppliedPrior {
+  assertionId: string;
+  version: number;
+  confidence: number;
+  learnedScore: number;
+}
+
+/** One scored + ordered candidate (the deterministic result row). */
+export interface RankedCandidate {
+  /** 1-based position in the deterministic order. */
+  rank: number;
+  key: string;
+  kind: CompanyModelSubjectKind;
+  label: string | null;
+  /** The caller's base score (default 0.5 when not supplied). */
+  baseScore: number;
+  /** The combined score: base blended with the learned prior by confidence. */
+  score: number;
+  /** The learned prior's score, or null when no prior applied. */
+  learnedScore: number | null;
+  /** Which recorded assertion version produced `learnedScore` (audit trail). */
+  appliedPrior: AppliedPrior | null;
+  /** The policy precedence tier (0 when no precedence given). */
+  policyTier: number;
+  /** True when explicit policy excludes this candidate kind — always last. */
+  policyExcluded: boolean;
+}
+
+/** Result shape of `rankCandidates`. */
+export interface CompanyModelRanking {
+  /** The CompanyModel version the ranking was derived from. */
+  modelVersion: number;
+  domain: CandidateDomain;
+  candidates: RankedCandidate[];
+}
+
 // ---------------------------------------------------------------------------
 // W041 — Company Learning (versioned usefulness/preferences)
 // ---------------------------------------------------------------------------
@@ -838,99 +932,12 @@ export interface ListCompanyLearningsQuery {
   /** Filters on the CURRENT version's channel. */
   channel?: LearningFeedbackChannel;
   /** Filters on the derived current validity. */
-  validity?: LearningStatus;  /** 1..500, default 50. */
-  limit?: number;
-}
-
-/** Query shape of `listLearningUpdates`. */
-export interface ListLearningUpdatesQuery {
-  /** Case-insensitive substring on the rationale. */
-  search?: string;
+  validity?: LearningStatus;
   /** 1..500, default 50. */
   limit?: number;
 }
 
-/**
- * The application domains of `rankCandidates` — the two canonical learned
- * prior families (both machine-readable through statement.score in [0,1]):
- *  * 'source_selection' — investigation source selection: applies
- *    ('source_reliability', 'reliability') assertions to candidate sources;
- *  * 'intervention'     — intervention recommendation: applies
- *    ('intervention_prior', 'effectiveness') assertions to candidate
- *    intervention patterns.
- */
-export type CandidateDomain = 'source_selection' | 'intervention';
-
-/** One candidate the CompanyModel's learned priors are applied to. */
-export interface RankCandidateInput {
-  kind: CompanyModelSubjectKind;
-  /** The owning record's uuid (record-backed kinds). */
-  id?: string | null;
-  /** A stable name (record-less kinds, e.g. intervention patterns). */
-  name?: string | null;
-  label?: string | null;
-  /** The caller's policy/workflow-level base score in [0,1]; default 0.5. */
-  baseScore?: number;
-}
-
-/**
- * The explicit policy constraints the learned preference must respect —
- * the lock-14 mechanism made concrete. Learned priors can NEVER override
- * these: candidates of a kind policy does not allow are excluded from the
- * ranking no matter how reliable they have learned to be, and the policy's
- * kind precedence is a hard sort key ahead of every learned score.
- */
-export interface RankPolicyConstraints {
-  /** Candidate kinds explicit policy permits; omitted = no kind filter. */
-  allowedKinds?: readonly string[];
-  /** Hard policy ordering of kinds; omitted = a single tier. */
-  kindPrecedence?: readonly string[];
-}
-
-/** Input shape of `rankCandidates`. */
-export interface RankCandidatesInput {
-  domain: CandidateDomain;
-  /** 1..32 policy-vetted candidates; the surface never adds or removes any. */
-  candidates: RankCandidateInput[];
-  /** Explicit policy constraints; learned preference never overrides them. */
-  policy?: RankPolicyConstraints;
-}
-
-/** The learned prior that was applied to one ranked candidate (attribution). */
-export interface AppliedPrior {
-  assertionId: string;
-  version: number;
-  confidence: number;
-  learnedScore: number;
-}
-
-/** One scored + ordered candidate (the deterministic result row). */
-export interface RankedCandidate {
-  /** 1-based position in the deterministic order. */
-  rank: number;
-  key: string;
-  kind: CompanyModelSubjectKind;
-  label: string | null;
-  /** The caller's base score (default 0.5 when not supplied). */
-  baseScore: number;
-  /** The combined score: base blended with the learned prior by confidence. */
-  score: number;
-  /** The learned prior's score, or null when no prior applied. */
-  learnedScore: number | null;
-  /** Which recorded assertion version produced `learnedScore` (audit trail). */
-  appliedPrior: AppliedPrior | null;
-  /** The policy precedence tier (0 when no precedence given). */
-  policyTier: number;
-  /** True when explicit policy excludes this candidate kind — always last. */
-  policyExcluded: boolean;
-}
-
-/** Result shape of `rankCandidates`. */
-export interface CompanyModelRanking {
-  /** The CompanyModel version the ranking was derived from. */
-  modelVersion: number;
-  domain: CandidateDomain;
-  candidates: RankedCandidate[];
 /** Query shape of `listCompanyLearningVersions` (the chain's audit trail). */
 export interface ListCompanyLearningVersionsQuery {
-  learningId: string;}
+  learningId: string;
+}
