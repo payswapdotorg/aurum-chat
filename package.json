@@ -11,10 +11,12 @@
     "arch": "tsx scripts/check-architecture.ts",
     "lint": "eslint .",
     "migrate": "tsx scripts/migrate.ts",
-    "db:dev": "tsx scripts/dev-db.ts"
+    "db:dev": "tsx scripts/dev-db.ts",
+    "mcp": "tsx src/mcp/server.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "ioredis": "^6.0.0",
     "next": "^16.3.5",
     "pg": "^8.23.0",

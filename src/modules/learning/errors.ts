@@ -16,7 +16,17 @@
 // (missing, malformed and foreign-tenant outcome ids are indistinguishable),
 // and a concurrent writer on the same assertion chain or model version loses
 // cleanly with `update_conflict` (the W040 `outcome_conflict` pattern).
-
+// `learning_not_found` / `learning_version_not_found`) — the existence of
+// another tenant's outcomes, measurements, company learnings or versions
+// must never leak (ADR-0001), on reads AND on writes: measuring, settling,
+// abandoning, recording feedback for or appending to a foreign-tenant id
+// is reported as the same not-found, never as a transition error. The one
+// validated cross-module reference (the originating cognitive execution)
+// is uniformly `invalid_origin_ref` for the same reason: missing,
+// malformed and foreign-tenant execution ids are indistinguishable. The
+// outcome link of outcome feedback (W041) follows the same discipline:
+// missing/foreign-tenant outcome ids are `outcome_not_found`; an outcome
+// that exists but is not settled is `invalid_outcome_ref`.
 export type LearningErrorCode =
   | 'invalid_context'
   | 'invalid_outcome_input'
@@ -36,7 +46,12 @@ export type LearningErrorCode =
   | 'update_conflict'
   | 'assertion_not_found'
   | 'learning_update_not_found';
-
+  // W041 — Company Learning (versioned usefulness/preferences)
+  | 'invalid_learning_input'
+  | 'invalid_outcome_ref'
+  | 'learning_not_found'
+  | 'learning_version_not_found'
+  | 'learning_conflict';
 export class LearningError extends Error {
   constructor(
     public readonly code: LearningErrorCode,
