@@ -114,6 +114,39 @@
 // Terminal states are dead ends by design: a subject whose need returns
 // is tied to a NEW outcome, which is what keeps realization measurable.
 //
+// Cross-module references: subjects (recommendations/agents/extensions/
+// missions) and affected goals are opaque forward references owned by
+// their modules (actions W009, agents W021+, extensions W025+, missions
+// W011, goals W008) — no cross-module foreign keys, no contract imports
+// (the missions module's affected-goals precedent). The originating
+// cognitive execution is the one validated cross-module link: it is
+// checked readable through the cognition contract at write time (the
+// sanctioned W013 → W040 dependency; ADR-0019: outcomes are "linked to
+// the originating goal, recommendation, authorization and execution").
+//
+// Tenancy (ADR-0001): every operation takes an explicit TenantContext and
+// is tenant-scoped at the SQL layer; access to another tenant's outcomes
+// or measurements (including measuring, settling and abandoning by
+// foreign-tenant outcome id) is reported as `outcome_not_found` /
+// `measurement_not_found` — no existence leak.
+//
+// Dependency posture (WORK-ITEM-DEPENDENCY-GRAPH.md: W012 + W013 → W040):
+// this module imports the cognition contract only. The declared
+// knowledge-acquisition (W012) dependency is verified present but not
+// imported: its planner records answer investigations for missions, none
+// of which outcome measurement consumes — W042 (Knowledge Contributions:
+// "mission impact and investigation-cost avoidance") is the learning item
+// that builds on the acquisition contract.
+//
+// W053 — CompanyModel Learning (ADR-0016) extends this module with the
+// versioned CompanyModel (see the W053 section below): durable
+// company-specific learning — vocabulary, organization, process
+// exceptions, source reliability, employee expertise, capability patterns,
+// goal interpretation, investigation preferences, intervention priors and
+// organizational norms — where every learned assertion carries provenance,
+// confidence, a validity interval and version metadata; learned preference
+// never overrides explicit policy; provider/model replacement preserves
+// learned state; and a longitudinal fixture proves measurable improvement.
 // Dependency posture (WORK-ITEM-DEPENDENCY-GRAPH.md: W012 + W013 → W040,
 // then W040 → W041): this module imports the cognition contract only. The
 // declared knowledge-acquisition (W012) dependency is verified present but
@@ -122,8 +155,7 @@
 // Contributions: "mission impact and investigation-cost avoidance") is
 // the learning item that builds on the acquisition contract. W041's
 // outcome-feedback grounding reads this module's own `outcomes` tables
-// directly — no additional cross-module edge.
-// ============================================================================
+// directly — no additional cross-module edge.// ============================================================================
 
 export {
   abandonOutcome,
@@ -135,6 +167,14 @@ export {
   recordMeasurement,
   settleOutcome,
   summarizeRealization,
+  // W053 — CompanyModel Learning (ADR-0016)
+  getCompanyModel,
+  getCompanyModelAssertion,
+  getLearningUpdate,
+  listCompanyModelAssertions,
+  listLearningUpdates,
+  rankCandidates,
+  recordLearningUpdate,
 } from './service';
 
 // W041 — Company Learning (versioned usefulness/preferences).
@@ -155,11 +195,22 @@ export type { LearningErrorCode } from './errors';
 export { assessRealization } from './validation';
 export type { RealizationAssessment } from './validation';
 
+// W053 — the deterministic learned-prior scoring (the single definition of
+// how the CompanyModel reorders policy-vetted candidates), plus the subject
+// key derivation. Pure and provider-independent; exported for verification
+// and for downstream learning surfaces (W054/W055/W056 consume these, never
+// a re-derivation).
+export { deriveSubjectKey, scoreCandidateSet, slugifySubjectName } from './validation';
+export type {
+  ScoreableAssertion,
+  ValidatedRankCandidate,
+  ValidatedRankInput,
+  ValidatedRankPolicy,
+} from './validation';
 // The read-time validity derivation — the single deterministic definition
 // of a company learning chain's 'active' | 'expired' state (pure; exported
 // for verification).
 export { deriveLearningStatus } from './validation';
-
 export {
   DEFAULT_LIST_LIMIT,
   MAX_AFFECTED_GOALS,
@@ -196,6 +247,34 @@ export {
   isOutcomeStatus,
   isOutcomeSubjectKind,
   isUuid,
+  // W053 — CompanyModel Learning (ADR-0016)
+  ASSERTION_DISPOSITIONS,
+  ASSERTION_PROVENANCE_KINDS,
+  CANDIDATE_DOMAINS,
+  COMPANY_MODEL_AREAS,
+  COMPANY_MODEL_STATUSES,
+  COMPANY_MODEL_SUBJECT_KINDS,
+  DEFAULT_CANDIDATE_BASE_SCORE,
+  MAX_CHANGES_PER_UPDATE,
+  MAX_POLICY_KIND_LENGTH,
+  MAX_POLICY_KINDS,
+  MAX_PROVENANCE_REFS,
+  MAX_RANK_CANDIDATES,
+  MAX_STATEMENT_JSON_LENGTH,
+  MAX_STATEMENT_KEYS,
+  MAX_STATEMENT_KEY_LENGTH,
+  MAX_SUBJECT_KEY_LENGTH,
+  MAX_SUBJECT_NAME_LENGTH,
+  MAX_SUBJECT_SLUG_LENGTH,
+  MAX_TOPIC_LENGTH,
+  RANK_DOMAIN_FAMILIES,
+  SCORE_DECIMALS,
+  isAssertionDisposition,
+  isAssertionProvenanceKind,
+  isCandidateDomain,
+  isCompanyModelArea,
+  isCompanyModelStatus,
+  isCompanyModelSubjectKind,
 } from './validation';
 
 export type {
@@ -210,6 +289,14 @@ export type {
   ValidatedRecordLearningInput,
   ValidatedSettleInput,
   ValidatedSummarizeQuery,
+  // W053 — CompanyModel Learning (ADR-0016)
+  ValidatedAssertionDelta,
+  ValidatedAssertionListQuery,
+  ValidatedCompanyModelSubject,
+  ValidatedModelQuery,
+  ValidatedProvenanceRef,
+  ValidatedUpdateInput,
+  ValidatedUpdatesListQuery,
 } from './validation';
 
 export type {
@@ -251,4 +338,29 @@ export type {
   RecordMeasurementInput,
   SettleOutcomeInput,
   SummarizeRealizationQuery,
+  // W053 — CompanyModel Learning (ADR-0016)
+  AppliedPrior,
+  AssertionDeltaInput,
+  AssertionDisposition,
+  AssertionProvenanceKind,
+  AssertionProvenanceRef,
+  AssertionProvenanceRefInput,
+  CandidateDomain,
+  CompanyModel,
+  CompanyModelArea,
+  CompanyModelAssertion,
+  CompanyModelAssertionStatus,
+  CompanyModelRanking,
+  CompanyModelSubject,
+  CompanyModelSubjectInput,
+  CompanyModelSubjectKind,
+  GetCompanyModelQuery,
+  LearningUpdate,
+  ListCompanyAssertionsQuery,
+  ListLearningUpdatesQuery,
+  RankCandidatesInput,
+  RankCandidateInput,
+  RankedCandidate,
+  RankPolicyConstraints,
+  RecordLearningUpdateInput,
 } from './types';

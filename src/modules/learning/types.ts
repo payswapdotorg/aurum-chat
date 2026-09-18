@@ -363,6 +363,373 @@ export interface SummarizeRealizationQuery {
   subjectKind?: OutcomeSubjectKind;
 }
 
+// ============================================================================
+// W053 — CompanyModel Learning (ADR-0016)
+//
+// The work item (spec/work-items/WORK-ITEM-CATALOG.md, W053):
+// "Implement the versioned CompanyModel per ADR-0016: durable
+//  company-specific learning stores vocabulary, organization, process
+//  exceptions, source reliability, employee expertise, capability patterns,
+//  investigation preferences and intervention priors; every learned
+//  assertion has provenance, confidence, validity and version; learned
+//  preference never overrides policy; provider/model replacement preserves
+//  learned state; longitudinal testing shows measurable improvement."
+//
+// The CompanyModel is durable company-specific learning BEYOND raw memories
+// (memory W010) and distinct from beliefs (epistemics W007): it is not a
+// claim about the world's truth — it is versioned working knowledge about
+// HOW THIS COMPANY works (its vocabulary, organization, process exceptions,
+// source reliability, employee expertise, capability patterns, goal
+// interpretation, investigation preferences, intervention priors and
+// organizational norms). It is "never authoritative merely because it was
+// learned": explicit policy stays authoritative, and every assertion keeps
+// provenance so it can always be traced back to evidence, outcomes and
+// validated interactions.
+// ============================================================================
+
+/**
+ * The ten ADR-0016 knowledge areas of the CompanyModel (mirrored by the
+ * migration 002 CHECK and validation.ts):
+ *  * 'vocabulary'             — company vocabulary and semantic conventions;
+ *  * 'organization'           — organizational structure and role relationships;
+ *  * 'process_exception'      — process patterns and documented-versus-observed exceptions;
+ *  * 'source_reliability'     — source reliability and freshness characteristics;
+ *  * 'employee_expertise'     — employee expertise and transactive-memory signals;
+ *  * 'capability_pattern'     — capability patterns and known capability gaps;
+ *  * 'goal_interpretation'    — goal interpretation and priority patterns;
+ *  * 'investigation_preference' — investigation and source-selection preferences;
+ *  * 'intervention_prior'     — intervention effectiveness priors (ADR-0019);
+ *  * 'organizational_norm'    — recurring organizational norms and exceptions.
+ */
+export type CompanyModelArea =
+  | 'vocabulary'
+  | 'organization'
+  | 'process_exception'
+  | 'source_reliability'
+  | 'employee_expertise'
+  | 'capability_pattern'
+  | 'goal_interpretation'
+  | 'investigation_preference'
+  | 'intervention_prior'
+  | 'organizational_norm';
+
+/**
+ * What a CompanyModel assertion can be about: a provider-neutral subject
+ * kind (the owning module stays the verification point — opaque forward
+ * references, the W040 subjects precedent). Record-backed subjects
+ * (employee, team, role, source, process, capability, goal, agent) carry
+ * the owning record's uuid; 'term' and 'intervention' may instead carry a
+ * stable name (there is no record yet); 'company' is company-wide.
+ */
+export type CompanyModelSubjectKind =
+  | 'company'
+  | 'term'
+  | 'employee'
+  | 'team'
+  | 'role'
+  | 'source'
+  | 'process'
+  | 'capability'
+  | 'goal'
+  | 'intervention'
+  | 'agent';
+
+/** The resolved subject of one learned assertion (view shape). */
+export interface CompanyModelSubject {
+  kind: CompanyModelSubjectKind;
+  /** The normalized stable key: '<kind>:<uuid>' | '<kind>:<slug>' | 'company'. */
+  key: string;
+  label: string | null;
+}
+
+/** Input shape of `CompanyModelSubject` (exactly one of id/name, per kind). */
+export interface CompanyModelSubjectInput {
+  kind: CompanyModelSubjectKind;
+  /** The owning record's uuid (record-backed subjects). */
+  id?: string | null;
+  /** A stable name for record-less subjects (terms, intervention patterns). */
+  name?: string | null;
+  label?: string | null;
+}
+
+/** Whether an assertion version states knowledge or retracts it. */
+export type AssertionDisposition = 'asserted' | 'retracted';
+
+/**
+ * Provenance kinds of a learned assertion: the W040 evidence kinds plus
+ * 'interaction' (a validated interaction, e.g. a confirmed exchange) and
+ * 'contribution' (an employee knowledge contribution — W042's records,
+ * referenced opaquely until that item lands).
+ */
+export type AssertionProvenanceKind =
+  | 'observation'
+  | 'event'
+  | 'document'
+  | 'report'
+  | 'system'
+  | 'metric'
+  | 'interaction'
+  | 'contribution';
+
+/** One provenance reference of a learned assertion (traceable: id and/or label). */
+export interface AssertionProvenanceRef {
+  kind: AssertionProvenanceKind;
+  id?: string | null;
+  label?: string | null;
+}
+
+/** Input shape of `AssertionProvenanceRef`. */
+export interface AssertionProvenanceRefInput {
+  kind: AssertionProvenanceKind;
+  id?: string | null;
+  label?: string | null;
+}
+
+/**
+ * The DERIVED lifecycle status of one assertion version (never stored):
+ *  * 'active'    — the chain's current head, asserted, valid now (a member
+ *                  of the effective CompanyModel and of every score);
+ *  * 'pending'   — current head, asserted, but valid_from is in the future;
+ *  * 'expired'   — current head, asserted, but valid_until has passed;
+ *  * 'retracted' — current head whose disposition closes the chain;
+ *  * 'superseded'— a historical version: a newer version exists in its chain.
+ */
+export type CompanyModelAssertionStatus =
+  | 'active'
+  | 'pending'
+  | 'expired'
+  | 'retracted'
+  | 'superseded';
+
+/** One change of a learning update: a new version of one assertion chain. */
+export interface AssertionDeltaInput {
+  area: CompanyModelArea;
+  subject: CompanyModelSubjectInput;
+  /** The specific dimension of the subject, e.g. 'reliability', 'definition'. */
+  topic: string;
+  /** The learned assertion payload (bounded JSON object). */
+  statement: Record<string, unknown>;
+  /** 0..1 — how confident Aurum is in this assertion. */
+  confidence: number;
+  /** Defaults to 'asserted'; 'retracted' closes the chain. */
+  disposition?: AssertionDisposition;
+  /** ISO 8601; defaults to the service clock's now. */
+  validFrom?: string | null;
+  /** ISO 8601, exclusive; null = open-ended. */
+  validUntil?: string | null;
+  /** Opaque evidence references supporting the assertion. */
+  evidence?: AssertionProvenanceRefInput[];
+  /** The W040 outcome this assertion was learned from (optional per delta). */
+  outcomeId?: string | null;
+}
+
+/** Input shape of `recordLearningUpdate` — the ONE CompanyModel mutation. */
+export interface RecordLearningUpdateInput {
+  /** 1..16 assertion deltas; two deltas may not touch the same chain. */
+  changes: AssertionDeltaInput[];
+  /** Required: what changed and why (ADR-0016's learning invariant). */
+  rationale: string;
+  /** Who is recording the update (audit trail). */
+  actor: OutcomePartyInput;
+}
+
+/** One learned assertion version — the full ADR-0016 record. */
+export interface CompanyModelAssertion {
+  id: string;
+  tenantId: string;
+  area: CompanyModelArea;
+  subject: CompanyModelSubject;
+  topic: string;
+  statement: Record<string, unknown>;
+  confidence: number;
+  disposition: AssertionDisposition;
+  /** Derived (never stored): see `CompanyModelAssertionStatus`. */
+  status: CompanyModelAssertionStatus;
+  /** ISO 8601 — active during [validFrom, validUntil). */
+  validFrom: string;
+  validUntil: string | null;
+  /** Learning/version metadata: the chain position of this version. */
+  version: number;
+  supersedesId: string | null;
+  updateId: string;
+  /** Provenance: evidence refs and/or the outcome this was learned from. */
+  provenance: {
+    evidence: AssertionProvenanceRef[];
+    outcomeId: string | null;
+  };
+  /** The authenticated TenantContext principal that committed the version. */
+  recordedByPrincipal: string;
+  /** ISO 8601 — when this version was committed (service clock). */
+  recordedAt: string;
+  /** The recorded learning update that minted this version. */
+  change: {
+    updateId: string;
+    modelVersion: number;
+    rationale: string;
+    actor: OutcomeActor;
+    changedByPrincipal: string;
+    recordedAt: string;
+  };
+}
+
+/** One recorded learning update (the change-set view). */
+export interface LearningUpdate {
+  id: string;
+  tenantId: string;
+  /** The tenant-monotonic CompanyModel version this update minted. */
+  modelVersion: number;
+  rationale: string;
+  actor: OutcomeActor;
+  recordedByPrincipal: string;
+  recordedAt: string;
+  /** The assertion versions this update appended. */
+  changes: Array<{
+    assertionId: string;
+    area: CompanyModelArea;
+    subject: CompanyModelSubject;
+    topic: string;
+    version: number;
+    disposition: AssertionDisposition;
+  }>;
+  /** The distinct W040 outcomes this update's assertions were learned from. */
+  linkedOutcomeIds: string[];
+}
+
+/** The current CompanyModel of a tenant (the derived effective view). */
+export interface CompanyModel {
+  tenantId: string;
+  /** The latest minted model version (0 when nothing has been learned). */
+  modelVersion: number;
+  /** How many assertions the returned view holds. */
+  assertionCount: number;
+  /** The distinct areas present in the returned view. */
+  areas: CompanyModelArea[];
+  assertions: CompanyModelAssertion[];
+  /** ISO 8601 — when the view was derived (service clock). */
+  generatedAt: string;
+}
+
+/** Query shape of `getCompanyModel`. */
+export interface GetCompanyModelQuery {
+  /** Narrow the view to these areas; omitted = every area. */
+  areas?: CompanyModelArea[];
+  /**
+   * Include current-head assertions that are not effective right now
+   * (pending, expired, retracted); default false — only 'active'.
+   */
+  includeInactive?: boolean;
+}
+
+/** Query shape of `listCompanyModelAssertions`. */
+export interface ListCompanyAssertionsQuery {
+  area?: CompanyModelArea;
+  subjectKind?: CompanyModelSubjectKind;
+  /** Exact subject-key match, e.g. 'source:0b2f…'. */
+  subjectKey?: string;
+  /** Exact topic match. */
+  topic?: string;
+  status?: CompanyModelAssertionStatus;
+  /** Assertions learned from this W040 outcome. */
+  outcomeId?: string;
+  /** Assertions appended by this learning update. */
+  updateId?: string;
+  /** Case-insensitive substring on topic or subject label. */
+  search?: string;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+/** Query shape of `listLearningUpdates`. */
+export interface ListLearningUpdatesQuery {
+  /** Case-insensitive substring on the rationale. */
+  search?: string;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+/**
+ * The application domains of `rankCandidates` — the two canonical learned
+ * prior families (both machine-readable through statement.score in [0,1]):
+ *  * 'source_selection' — investigation source selection: applies
+ *    ('source_reliability', 'reliability') assertions to candidate sources;
+ *  * 'intervention'     — intervention recommendation: applies
+ *    ('intervention_prior', 'effectiveness') assertions to candidate
+ *    intervention patterns.
+ */
+export type CandidateDomain = 'source_selection' | 'intervention';
+
+/** One candidate the CompanyModel's learned priors are applied to. */
+export interface RankCandidateInput {
+  kind: CompanyModelSubjectKind;
+  /** The owning record's uuid (record-backed kinds). */
+  id?: string | null;
+  /** A stable name (record-less kinds, e.g. intervention patterns). */
+  name?: string | null;
+  label?: string | null;
+  /** The caller's policy/workflow-level base score in [0,1]; default 0.5. */
+  baseScore?: number;
+}
+
+/**
+ * The explicit policy constraints the learned preference must respect —
+ * the lock-14 mechanism made concrete. Learned priors can NEVER override
+ * these: candidates of a kind policy does not allow are excluded from the
+ * ranking no matter how reliable they have learned to be, and the policy's
+ * kind precedence is a hard sort key ahead of every learned score.
+ */
+export interface RankPolicyConstraints {
+  /** Candidate kinds explicit policy permits; omitted = no kind filter. */
+  allowedKinds?: readonly string[];
+  /** Hard policy ordering of kinds; omitted = a single tier. */
+  kindPrecedence?: readonly string[];
+}
+
+/** Input shape of `rankCandidates`. */
+export interface RankCandidatesInput {
+  domain: CandidateDomain;
+  /** 1..32 policy-vetted candidates; the surface never adds or removes any. */
+  candidates: RankCandidateInput[];
+  /** Explicit policy constraints; learned preference never overrides them. */
+  policy?: RankPolicyConstraints;
+}
+
+/** The learned prior that was applied to one ranked candidate (attribution). */
+export interface AppliedPrior {
+  assertionId: string;
+  version: number;
+  confidence: number;
+  learnedScore: number;
+}
+
+/** One scored + ordered candidate (the deterministic result row). */
+export interface RankedCandidate {
+  /** 1-based position in the deterministic order. */
+  rank: number;
+  key: string;
+  kind: CompanyModelSubjectKind;
+  label: string | null;
+  /** The caller's base score (default 0.5 when not supplied). */
+  baseScore: number;
+  /** The combined score: base blended with the learned prior by confidence. */
+  score: number;
+  /** The learned prior's score, or null when no prior applied. */
+  learnedScore: number | null;
+  /** Which recorded assertion version produced `learnedScore` (audit trail). */
+  appliedPrior: AppliedPrior | null;
+  /** The policy precedence tier (0 when no precedence given). */
+  policyTier: number;
+  /** True when explicit policy excludes this candidate kind — always last. */
+  policyExcluded: boolean;
+}
+
+/** Result shape of `rankCandidates`. */
+export interface CompanyModelRanking {
+  /** The CompanyModel version the ranking was derived from. */
+  modelVersion: number;
+  domain: CandidateDomain;
+  candidates: RankedCandidate[];
+}
+
 // ---------------------------------------------------------------------------
 // W041 — Company Learning (versioned usefulness/preferences)
 // ---------------------------------------------------------------------------
