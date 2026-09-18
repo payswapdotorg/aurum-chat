@@ -97,22 +97,15 @@ Use two connected modes:
    - retain the existing 15 canonical surfaces;
    - transform them into drill-down destinations from chat, Today and context cards.
 
-### ShareNet design reference
+### ShareNet-dominant visual direction
 
-Use `pectoraux/ShareNet` and the ShareNet Conformance UI as visual/interaction inspiration:
+Use `pectoraux/ShareNet` and the ShareNet Conformance UI as the primary visual/interaction reference. ShareNet should define most of Aurum's visual language.
 
-- warm off-white canvas;
-- restrained typography;
-- persistent desktop navigation;
-- mobile header + bottom navigation;
-- clear active navigation state;
-- generous whitespace;
-- subtle borders/status pills;
-- progressive disclosure;
-- calm loading/empty/error states;
-- no glassmorphism or visually noisy dashboard chrome.
+Adopt its warm off-white canvas, soft graphite typography, restrained neutral palette, subtle teal/green semantic accents, generous whitespace, slim desktop navigation, mobile header + bottom navigation, clear active-state treatment, subtle borders/status pills, progressive disclosure, calm loading/empty/error states, restrained motion and accessible focus treatment.
 
-Keep Aurum's own gold/amber accent and WhatsApp-like conversation density. Do not copy ShareNet product semantics.
+Do **not** make gold/amber the dominant Aurum palette. Aurum branding stays subtle and secondary to the ShareNet-inspired visual system.
+
+Keep Aurum's WhatsApp-like conversation density, message behavior and employee semantics, but let the visual language predominantly feel like ShareNet. Do not copy ShareNet's product semantics or information architecture.
 
 ## Worker orchestration
 
