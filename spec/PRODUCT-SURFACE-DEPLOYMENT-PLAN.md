@@ -1,6 +1,6 @@
 # Aurum Product Surface, UX Journey & Free-Tier Deployment Plan
 
-Status: PROPOSED HANDOFF ADDENDUM
+Status: CANONICAL IMPLEMENTATION PLAN · HANDOFF READY
 Date: 2026-09-18
 Target repository: payswapdotorg/aurum-chat
 Architecture baseline: v2.1 (frozen)
@@ -9,7 +9,7 @@ This addendum follows the implementation of W000-W056. It does not change the fr
 
 ## 1. Repository reality check
 
-Current main: b41a696292e5447c476b09f44e04871413e38dba.
+Current main at this plan revision: f380bedb44d60aa77907f61b9527a47bf5ad7dd0.
 
 The repository now contains:
 - the 43 implemented domain modules;
@@ -416,11 +416,12 @@ Canonical dogfood stack:
 - Vercel Hobby for the web surface;
 - Neon Free PostgreSQL;
 - Upstash Redis Free for queue/cache/lock when required;
-- Upstash QStash Free or an equivalent HTTP queue adapter for resumable cognition execution;
-- Cloudflare R2 Free for large objects;
-- Resend Free for transactional email;
+- Vercel Workflows for durable/resumable cognition orchestration;
+- Vercel Queues for durable asynchronous delivery where queue semantics are required;
+- Vercel Blob Hobby for large objects;
+- Resend Free for transactional email and invitations;
 - GitHub Actions for CI.
-The deployment must be treated as non-commercial dogfood while Vercel Hobby is used.
+The deployment must be treated as internal/non-commercial dogfood while Vercel Hobby is used.
 
 Acceptance:
 - real external PostgreSQL;
@@ -546,12 +547,17 @@ Upstash Redis Free:
 - cache/locks/short-lived queue state if needed;
 - never domain truth.
 
-Upstash QStash Free:
-- HTTP delivery for resumable cognition worker jobs, retries and scheduled wakeups;
-- each request must process a bounded execution stage;
-- idempotency and audit remain in Aurum's domain state.
+Vercel Workflows:
+- durable, resumable multi-step cognition orchestration;
+- steps can pause/retry/resume across crashes and deployments;
+- Aurum's own persisted CognitionExecution remains the authoritative business record.
 
-Cloudflare R2 Free:
+Vercel Queues:
+- durable asynchronous message delivery for fan-out/background stages;
+- at-least-once delivery, so Aurum consumers must remain idempotent;
+- use only where queue semantics are actually needed; direct durable workflows remain preferred for single-owner orchestration.
+
+Vercel Blob:
 - documents, large evidence artifacts, extension artifacts and generated files.
 
 Resend Free:
@@ -601,7 +607,7 @@ post-deploy smoke + runtime health + queue health
 Production configuration must include explicit environment variables for:
 - DATABASE_URL;
 - REDIS_URL where Redis is enabled;
-- queue/QStash credentials;
+- workflow/queue configuration;
 - object storage credentials;
 - auth/session secrets;
 - application URL;
@@ -671,6 +677,8 @@ Current UX evidence:
 ## 10. Handoff instruction
 
 This document is the authoritative implementation addendum for the product-surface/deployment phase. The Tech Lead must inspect the repository at the handoff SHA, verify every dependency directly, then dispatch workers only within the wave boundaries above.
+
+The implementation plan is canonical for W057-W070. `spec/UX-DEPLOYMENT-HANDOFF-2026-09-18.md` is the concise tech-lead handoff wrapper and must not introduce a competing work breakdown.
 
 No worker may redesign the frozen domain model. UX may expose, compose and navigate the existing contracts, but must not introduce a second source of organizational truth.
 
