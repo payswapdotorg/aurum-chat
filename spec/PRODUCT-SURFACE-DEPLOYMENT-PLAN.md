@@ -227,18 +227,28 @@ Aurum should have two connected modes:
    - current 15 intelligence/governance surfaces remain;
    - surfaces become drill-down destinations rather than the first discovery mechanism.
 
-The shell should be inspired by ShareNet (`https://sharenet-conformance.vercel.app`, source `pectoraux/ShareNet`) without copying product semantics:
+### ShareNet-dominant visual direction
+
+Use `pectoraux/ShareNet` and `https://sharenet-conformance.vercel.app` as the primary visual and interaction reference. ShareNet should shape most of Aurum's visual system rather than merely influence the shell.
+
+Adopt its:
 - warm off-white canvas;
-- restrained typography and generous whitespace;
-- calm, understated status treatments;
+- soft graphite typography;
+- restrained neutral palette;
+- subtle teal/green semantic accents;
+- generous whitespace;
 - slim persistent desktop navigation;
-- mobile compact header + bottom navigation;
-- subtle hairlines/pills instead of dense cards;
-- no glassmorphism or visual noise;
-- skeletons that match final content shapes;
-- quiet empty/error states;
-- Aurum keeps its gold/amber brand accent;
-- WhatsApp-like chat density and message ergonomics are the product interaction model.
+- compact mobile header + bottom navigation;
+- clear active navigation state;
+- subtle hairlines and status pills;
+- progressive disclosure through detail panels/sheets;
+- quiet skeleton, empty and error states;
+- restrained motion and accessible focus treatment;
+- avoidance of glassmorphism, heavy gradients and dashboard visual noise.
+
+Aurum's branding should remain subtle and secondary. Do **not** make gold/amber the dominant product palette. WhatsApp-like conversation density, message behavior and employee semantics remain the product interaction model, while the visual language is predominantly ShareNet-inspired.
+
+Do not copy ShareNet's product semantics or information architecture.
 
 ### Canonical product shell
 
@@ -276,7 +286,7 @@ All generated findings should expose structured links/cards to the underlying do
 
 ### W057 — Unified Product Shell & UX System
 Dependencies: W033, W029.
-Implement ShareNet-inspired responsive shell, Aurum visual language, desktop rail/mobile bottom nav, command search, notification entry, context drawer, loading/empty/error patterns and tenant/workspace switcher.
+Implement a ShareNet-dominant responsive shell and visual system, with Aurum's employee/product semantics, desktop rail/mobile bottom nav, command search, notification entry, context drawer, loading/empty/error patterns and tenant/workspace switcher.
 Acceptance:
 - desktop and mobile shells;
 - no dense dashboard-only navigation;
