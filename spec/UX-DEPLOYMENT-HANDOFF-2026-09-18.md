@@ -2,7 +2,7 @@
 Date: 2026-09-18
 Repository: `payswapdotorg/aurum-chat`
 Architecture: v2.1 FROZEN
-Current main at handoff revision: f380bedb44d60aa77907f61b9527a47bf5ad7dd0
+Current main at handoff revision: d7a4e911c196ba4f9fe17b05bf9d5d6881c592e0
 
 ## Canonical implementation plan
 
