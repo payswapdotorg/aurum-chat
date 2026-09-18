@@ -295,6 +295,14 @@ describe('the append-only audit trail', () => {
       correlationId,
       summary: 'first',
     });
+    // W056 seam fix (TL, 2026-09-18): PGlite's clock resolves to the
+    // millisecond and audit_records.id is gen_random_uuid() (W046
+    // migration) — two inserts inside the same millisecond tie on
+    // recorded_at and list in random id order. The 118-file full battery
+    // (simulator suite added) surfaced the tie under parallel load. Space
+    // the events so each commits at a strictly larger timestamp and the
+    // chronological assertion below is deterministic.
+    await new Promise((resolve) => setTimeout(resolve, 3));
     const b = await recordAudit(ctx, {
       subjectKind: 'actions.request',
       subjectId: newId(),
@@ -303,6 +311,7 @@ describe('the append-only audit trail', () => {
       correlationId,
       summary: 'second',
     });
+    await new Promise((resolve) => setTimeout(resolve, 3));
     const c = await recordAudit(ctx, {
       subjectKind: 'cognition.execution',
       subjectId: newId(),
