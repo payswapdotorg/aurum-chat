@@ -52,6 +52,7 @@
 // plan is a new row. First outcome on a plan wins; there is no un-answer.
 
 import type { AuthorityOutcome, PolicyResolutionSource } from '@/modules/actions/contract';
+import type { TransactiveRelation } from '@/modules/memory/contract';
 import type { MissionCandidateKind, MissionParty } from '@/modules/missions/contract';
 
 // ---------------------------------------------------------------------------
@@ -340,6 +341,193 @@ export interface ListAcquisitionPlansQuery {
   missionId?: string;
   decision?: PlanDecision;
   action?: AcquisitionActionKind;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+// ---------------------------------------------------------------------------
+// W052 — Knowledge Source Ranking (ADR-0018)
+//
+// The W012 planner takes the ADR-0018 signal VALUES as caller input; W052
+// is the layer that DERIVES them from source evidence — the learned
+// CompanyModel track record (the planner's own terminal outcomes,
+// tenant-wide) for reliability / expected quality / prior contribution
+// value / freshness, and transactive memory (memory module, W010) for
+// relevance / authority, matched against the mission's subject topics.
+// Cost and access scope are NEVER learned: they are explicit caller
+// policy on every ranking call, and learned state cannot override them.
+// The derivation itself (source-ranking.ts) is pure and deterministic:
+// the same evidence, the same mission and the same evaluation instant
+// always produce the same signal vector, the same basis and therefore
+// the same ordering (ADR-0018: "the same inputs and the same learned
+// state produce the same ordering").
+// ---------------------------------------------------------------------------
+
+/**
+ * The explicit, non-learned policy for ONE mission menu candidate:
+ * its estimated investigation cost (minor units of the mission's
+ * investigation-budget currency) and its access scope. ADR-0018:
+ * "Learned source reliability (CompanyModel) modulates ranking without
+ * overriding explicit access policy" — `access: 'forbidden'` excludes the
+ * candidate outright no matter how good its evidence is.
+ */
+export interface SourcePolicyInput {
+  kind: MissionCandidateKind;
+  id?: string | null;
+  label?: string | null;
+  /** Estimated investigation cost (non-negative integer minor units). */
+  cost: number;
+  /** Explicit access scope; `forbidden` excludes the candidate. */
+  access: AccessScope;
+}
+
+/** Input shape of `rankMissionSources`. */
+export interface RankMissionSourcesInput {
+  /** The mission whose candidate menu is ranked (must be active). */
+  missionId: string;
+  /**
+   * Explicit policy for EVERY candidate in the mission's CURRENT menu
+   * (matched by (kind, id) or (kind, label)); extra or missing entries
+   * are rejected — the ranking never invents policy it was not given.
+   * The LEARNED signals (relevance, reliability, freshness, authority,
+   * expected quality, prior contribution value) are derived from source
+   * evidence, never supplied here.
+   */
+  policies: SourcePolicyInput[];
+  /** Who/what is driving this ranking pass (audit trail). */
+  actor: AcquisitionActorInput;
+  /** Why now — optional, recorded on the ranking. */
+  rationale?: string | null;
+}
+
+/**
+ * One transactive-memory entry as the ranking derivation consults it
+ * (memory module, W010): the §7 relation the actor holds and the topics
+ * the assertion is about. Only `person` and `agent` candidates with an
+ * id can be transactive actors (the memory module's actor vocabulary);
+ * every other candidate carries no transactive evidence — neutral, not
+ * zero (no record is no evidence).
+ */
+export interface SourceTransactiveEntrySnapshot {
+  id: string;
+  relation: TransactiveRelation;
+  topics: string[];
+}
+
+/**
+ * The assembled source evidence of ONE candidate, from which the six
+ * learned signals are derived: the terminal outcome counts of its
+ * learning window (the planner's own answered/unavailable/failed record,
+ * tenant-wide across missions — the CompanyModel's learned reliability),
+ * the confidence + observation clock of each readable answered-evidence
+ * observation, and the transactive-memory entries about the actor.
+ */
+export interface SourceEvidenceSnapshot {
+  outcomes: SourceOutcomeCounts;
+  /** Confidence values of the answered evidence readable by the ranking principal. */
+  evidenceConfidences: number[];
+  /** Observed-at of the latest readable answered evidence; null when none. */
+  latestEvidenceObservedAt: string | null;
+  /** The actor's transactive-memory entries (latest window); empty when none. */
+  transactiveEntries: SourceTransactiveEntrySnapshot[];
+}
+
+/** Terminal outcome counts of one source's learning window. */
+export interface SourceOutcomeCounts {
+  answered: number;
+  unavailable: number;
+  failed: number;
+}
+
+/**
+ * The basis of one candidate's derived signals — WHERE each learned value
+ * came from, persisted on every ranking so a selection that changed
+ * because the EVIDENCE changed is reconstructable from two snapshots
+ * (ADR-0018's required verification): which outcome counts produced the
+ * reliability / prior-contribution values, what evidence confidence mean
+ * produced expected quality, which evidence clock produced freshness,
+ * and which transactive entries, matched topics and relations produced
+ * relevance and authority.
+ */
+export interface SourceEvidenceBasis {
+  /** The outcome counts of the learning window (reliability, prior value). */
+  outcomes: SourceOutcomeCounts;
+  /** Mean confidence of the readable answered evidence; null when none. */
+  evidenceConfidenceMean: number | null;
+  /** Observed-at of the latest readable answered evidence; null when none. */
+  latestEvidenceObservedAt: string | null;
+  /** The transactive entries consulted (ids, sorted). */
+  transactiveEntryIds: string[];
+  /** Mission subject topics the actor is on record as knowing (sorted). */
+  matchedTopics: string[];
+  /** §7 relations of the subject-matching transactive entries (sorted). */
+  relations: TransactiveRelation[];
+}
+
+/**
+ * One candidate's derivation inside the persisted ranking rationale: the
+ * candidate reference, its FULL separately represented ADR-0018 signal
+ * vector (the six learned signals plus the explicit cost and access
+ * policy), its deterministic planner score / cost share / dominant
+ * signal (the same arithmetic the plan's own snapshot carries), and the
+ * evidence basis that explains the learned values.
+ */
+export interface RankedSource {
+  candidate: {
+    kind: MissionCandidateKind;
+    id: string | null;
+    label: string | null;
+  };
+  signals: PersistedSignals;
+  score: number;
+  costShare: number;
+  dominantSignal: SignalName;
+  basis: SourceEvidenceBasis;
+}
+
+/**
+ * One persisted source-ranking decision — the append-only audit record of
+ * HOW Aurum derived the ranking signals for one mission's candidate menu
+ * from source evidence, and WHICH plan the derived signals produced.
+ * Persisted by `rankMissionSources` alongside the plan the W012 planner
+ * committed from those signals; there is deliberately no operation to
+ * update or erase it.
+ *
+ * (W051 posture: goal-gap discovery launches the missions this module
+ * ranks through the shared missions contract; the audit chain goal gap →
+ * unknown → mission → ranking → plan is reconstructable across the
+ * attention and knowledge-acquisition records — attention's discovery
+ * candidates carry the mission id — without any import between the two
+ * modules, which the migration-order graph forbids; see service.ts.)
+ */
+export interface SourceRanking {
+  id: string;
+  tenantId: string;
+  /** The mission this ranking was computed for. */
+  missionId: string;
+  /** The mission version the derivation saw (the plan's version — see rankMissionSources). */
+  missionVersion: number;
+  /** The mission subject topics the relevance/authority derivations matched against. */
+  subjectTopics: string[];
+  /** The full derivation rationale, every menu candidate, deterministic order. */
+  derived: RankedSource[];
+  /** The decision of the plan this ranking produced. */
+  decision: PlanDecision;
+  /** The plan committed from the derived signals ('selected' only). */
+  planId: string | null;
+  actor: AcquisitionActor;
+  /** The authenticated TenantContext principal that committed the ranking. */
+  rankedByPrincipal: string;
+  rationale: string | null;
+  /** ISO 8601 — the evaluation instant (freshness is derived against it). */
+  recordedAt: string;
+}
+
+/** Query shape of `listSourceRankings`. */
+export interface ListSourceRankingsQuery {
+  /** Rankings for one mission. */
+  missionId?: string;
+  decision?: PlanDecision;
   /** 1..500, default 50. */
   limit?: number;
 }

@@ -64,6 +64,7 @@ import { now } from '@/infra/clock';
 import { getDb, type DbRow, type DbResult } from '@/infra/db';
 import type { TenantContext } from '@/infra/tenant';
 import { evaluateActionAuthority } from '@/modules/actions/contract';
+import { listTransactiveEntries } from '@/modules/memory/contract';
 import {
   getEmployeeByPerson,
   getPerson,
@@ -78,6 +79,7 @@ import {
   type MissionCandidateKind,
 } from '@/modules/missions/contract';
 import {
+  getObservation,
   ObservationsError,
   recordObservation,
   type ObservationSourceKind,
@@ -91,13 +93,25 @@ import {
   scoreCandidateSignals,
 } from './ranking';
 import {
+  deriveSourceSignals,
+  LEARNING_WINDOW,
+  missionSubjectTopics,
+  orderRankedSources,
+  TRANSACTIVE_WINDOW,
+} from './source-ranking';
+import {
   assertAcquisitionTenantContext,
   validateListAcquisitionPlansQuery,
+  validateListSourceRankingsQuery,
   validatePlanNextAcquisitionInput,
+  validateRankMissionSourcesInput,
   validateRecordAcquisitionOutcomeInput,
   type ValidatedCandidateSignals,
   type ValidatedOutcomeInput,
   type ValidatedPlanInput,
+  type ValidatedRankingInput,
+  type ValidatedRankingListQuery,
+  type ValidatedSourcePolicy,
 } from './validation';
 import type {
   AcquisitionActionKind,
@@ -105,12 +119,19 @@ import type {
   AcquisitionPlan,
   AcquisitionPlanOutcome,
   AskPolicyEvaluation,
+  CandidateSignals,
   ExclusionReason,
   ListAcquisitionPlansQuery,
+  ListSourceRankingsQuery,
   PlanDecision,
   PlanNextAcquisitionInput,
   RankedCandidate,
+  RankedSource,
+  RankMissionSourcesInput,
   RecordAcquisitionOutcomeInput,
+  SourceEvidenceSnapshot,
+  SourceRanking,
+  SourceTransactiveEntrySnapshot,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -775,4 +796,414 @@ export async function listAcquisitionPlans(
     params,
   );
   return rows.rows.map(mapPlan);
+}
+
+// ---------------------------------------------------------------------------
+// W052 — Knowledge Source Ranking (ADR-0018)
+//
+// rankMissionSources is the evidence-driven front door of the planner:
+// it DERIVES the ADR-0018 signal values for one mission's candidate menu
+// from source evidence (instead of taking them as caller input), hands
+// them to planNextAcquisition — which owns the deterministic evaluation,
+// the eligibility gates, the budget accounting, the targeted questioning
+// and the plan's own persisted rationale — and then commits the
+// DERIVATION rationale as an append-only source_rankings row linking the
+// plan it produced.
+//
+//   learned signals  (reliability, expectedQuality, priorContributionValue,
+//                      freshness)  ← the source's terminal acquisition
+//                      outcomes, tenant-wide across missions (the learned
+//                      CompanyModel track record), and the confidence +
+//                      observation clock of the evidence each answered
+//                      acquisition produced (observations contract);
+//   learned signals  (relevance, authority) ← transactive memory (memory
+//                      contract, W010) matched against the mission's
+//                      subject topics (deterministic tokenization);
+//   explicit policy  (cost, access) ← the caller, per candidate, on every
+//                      call — never learned, never defaulted (ADR-0018:
+//                      learned state cannot override explicit access
+//                      policy).
+//
+// Determinism (ADR-0018): the evidence loaders are pure reads of
+// append-only state, the derivation is a total function of (evidence,
+// mission topics, evaluation instant), and the planner's evaluation is
+// fixed-weight arithmetic — the same learned state, the same mission and
+// the same instant always produce the same ranking and the same
+// selection. Freshness is derived against the single evaluation instant
+// stamped on the ranking record, so two snapshots are comparable.
+//
+// W051 posture (declared dependency, no import): goal-gap discovery
+// promotes material unknowns into missions THROUGH the missions contract;
+// this module ranks those missions through the same contract. The audit
+// chain goal gap → unknown → mission → ranking → plan is reconstructable
+// across the two modules' records without any edge between them — and an
+// import would be architecturally impossible: attention depends on
+// cognition (the originating-execution link), and cognition depends on
+// this module's planner (W013 drives planNextAcquisition), so
+// knowledge-acquisition → attention would be a migration-order cycle
+// (scripts/migrate.ts treats any contract import as an edge).
+//
+// Ordering: the plan is committed FIRST (its own transaction), the
+// ranking row second, linking the plan. If the ranking insert fails the
+// plan still stands — it is self-contained evidence (it carries the full
+// signal snapshot it was given); the caller sees the error and the
+// missing ranking is visible in the audit feed. There is no
+// half-committed ranking (the ranking is one row).
+// ---------------------------------------------------------------------------
+
+/** Row shape of `source_rankings`. */
+interface SourceRankingRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  mission_id: string;
+  mission_version: number | string;
+  subject_topics: unknown;
+  derived: unknown;
+  decision: string;
+  plan_id: string | null;
+  actor_kind: string;
+  actor_id: string | null;
+  actor_label: string | null;
+  ranked_by_principal: string;
+  rationale: string | null;
+  recorded_at: Date | string;
+}
+
+const RANKING_FIELDS = [
+  'id',
+  'tenant_id',
+  'mission_id',
+  'mission_version',
+  'subject_topics',
+  'derived',
+  'decision',
+  'plan_id',
+  'actor_kind',
+  'actor_id',
+  'actor_label',
+  'ranked_by_principal',
+  'rationale',
+  'recorded_at',
+] as const;
+
+const RANKING_COLUMNS = RANKING_FIELDS.join(', ');
+
+function rankingNotFound(rankingId: string): KnowledgeAcquisitionError {
+  return new KnowledgeAcquisitionError(
+    'ranking_not_found',
+    `source ranking '${rankingId}' does not exist in this tenant`,
+  );
+}
+
+function rankingInputError(message: string): KnowledgeAcquisitionError {
+  return new KnowledgeAcquisitionError('invalid_ranking_input', message);
+}
+
+/** jsonb columns arrive parsed on both backends; storage is write-validated. */
+function mapStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? (value as string[]) : [];
+}
+
+function mapRanking(row: SourceRankingRow): SourceRanking {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    missionId: row.mission_id,
+    missionVersion: toInt(row.mission_version),
+    subjectTopics: mapStringArray(row.subject_topics),
+    derived: Array.isArray(row.derived) ? (row.derived as RankedSource[]) : [],
+    decision: row.decision as PlanDecision, // CHECK-constrained
+    planId: row.plan_id,
+    actor: {
+      kind: row.actor_kind as SourceRanking['actor']['kind'], // CHECK-constrained
+      id: row.actor_id,
+      label: row.actor_label,
+    },
+    rankedByPrincipal: row.ranked_by_principal,
+    rationale: row.rationale,
+    recordedAt: toIso(row.recorded_at),
+  };
+}
+
+/** Row shape of the source track-record query (plans ⋈ outcomes). */
+interface TrackRow extends DbRow {
+  outcome: string;
+  evidence_observation_id: string | null;
+}
+
+/**
+ * Assembles ONE candidate's source evidence — everything the learned
+ * signals are derived from:
+ *
+ *  * the terminal outcome track record: the plans that CHOSE this exact
+ *    candidate (the planner's own (kind, id)/(kind, label) identity rule)
+ *    across ALL the tenant's missions, joined with their first-write
+ *    terminal outcomes, latest LEARNING_WINDOW rows — the learned
+ *    CompanyModel reliability record of the source;
+ *  * the answered evidence: each answered outcome's evidence observation
+ *    (observations contract) contributes its confidence (expected
+ *    quality) and its observation clock (freshness). Evidence the
+ *    ranking principal may not read is skipped — a partial view, never a
+ *    leak (the memory module's evidence-resolution precedent);
+ *  * transactive memory (memory contract, W010): the latest
+ *    TRANSACTIVE_WINDOW entries about the actor, for id-bearing person
+ *    and agent candidates only (the memory module's actor vocabulary).
+ *    Everything else carries no transactive evidence — the derivation
+ *    treats that as neutral, not zero.
+ */
+async function loadSourceEvidence(
+  ctx: TenantContext,
+  candidate: MissionCandidate,
+): Promise<SourceEvidenceSnapshot> {
+  const id = candidate.id ?? null;
+  const label = candidate.label ?? null;
+  const track = await getDb().query<TrackRow>(
+    `SELECT o.outcome, o.evidence_observation_id
+       FROM acquisition_plans p
+       JOIN acquisition_outcomes o
+         ON o.plan_id = p.id AND o.tenant_id = p.tenant_id
+      WHERE p.tenant_id = $1 AND p.decision = 'selected' AND p.chosen_kind = $2
+        AND (p.chosen_id = $3
+             OR ($3::text IS NULL AND p.chosen_id IS NULL AND p.chosen_label = $4))
+      ORDER BY o.recorded_at DESC, o.id DESC
+      LIMIT $5`,
+    [ctx.tenantId, candidate.kind, id, label, LEARNING_WINDOW],
+  );
+
+  const outcomes = { answered: 0, unavailable: 0, failed: 0 };
+  const evidenceConfidences: number[] = [];
+  let latestEvidenceObservedAt: string | null = null;
+  for (const row of track.rows) {
+    if (row.outcome === 'answered') outcomes.answered += 1;
+    else if (row.outcome === 'unavailable') outcomes.unavailable += 1;
+    else outcomes.failed += 1;
+    if (row.outcome === 'answered' && row.evidence_observation_id !== null) {
+      try {
+        const observation = await getObservation(ctx, row.evidence_observation_id);
+        evidenceConfidences.push(observation.confidence.value);
+        if (
+          latestEvidenceObservedAt === null ||
+          observation.observedAt > latestEvidenceObservedAt
+        ) {
+          latestEvidenceObservedAt = observation.observedAt;
+        }
+      } catch (error) {
+        if (!(error instanceof ObservationsError)) throw error;
+        // Unreadable evidence is skipped (partial view, no leak); the
+        // outcome itself still counts toward the track record.
+      }
+    }
+  }
+
+  const transactiveEntries: SourceTransactiveEntrySnapshot[] = [];
+  if ((candidate.kind === 'person' || candidate.kind === 'agent') && id !== null) {
+    const entries = await listTransactiveEntries(ctx, {
+      actorKind: candidate.kind === 'person' ? 'person' : 'agent',
+      actorId: id,
+      limit: TRANSACTIVE_WINDOW,
+    });
+    for (const entry of entries) {
+      transactiveEntries.push({
+        id: entry.id,
+        relation: entry.relation,
+        topics: [...entry.topics],
+      });
+    }
+  }
+
+  return { outcomes, evidenceConfidences, latestEvidenceObservedAt, transactiveEntries };
+}
+
+/**
+ * Derives the ADR-0018 signal values for one mission's candidate menu
+ * from source evidence, drives the W012 planner with them, and persists
+ * the derivation rationale (source_rankings) linking the plan it
+ * produced. Returns both records. See the section header for the full
+ * contract; the derivation itself is source-ranking.ts (pure).
+ */
+export async function rankMissionSources(
+  ctx: TenantContext,
+  input: RankMissionSourcesInput,
+): Promise<{ ranking: SourceRanking; plan: AcquisitionPlan }> {
+  assertAcquisitionTenantContext(ctx);
+  const valid: ValidatedRankingInput = validateRankMissionSourcesInput(input);
+
+  // --- the mission (the ranking is mission-driven by construction) ---
+  const mission = await loadMission(ctx, valid.missionId);
+  if (mission.content.status !== 'active') {
+    throw new KnowledgeAcquisitionError(
+      'mission_not_active',
+      `mission '${valid.missionId}' is ${mission.content.status} — only an active mission can be ranked; define a new mission instead`,
+    );
+  }
+
+  // --- the menu + explicit policy coverage (the ranking never invents
+  //     policy it was not given) ---
+  const menu = new Map<string, MissionCandidate>();
+  for (const candidate of mission.content.candidateSources) {
+    const key = candidateKey(candidate);
+    if (!menu.has(key)) menu.set(key, candidate); // duplicate menu entries collapse by key
+  }
+  const policyByKey = new Map<string, ValidatedSourcePolicy>();
+  for (const policy of valid.policies) {
+    const key = candidateKey(policy);
+    if (!menu.has(key)) {
+      throw rankingInputError(
+        `policy supplied for '${policy.kind}' candidate '${policy.label ?? policy.id}' which is not in the mission's current candidate menu — the ranking governs the mission's candidates only`,
+      );
+    }
+    policyByKey.set(key, policy);
+  }
+  for (const key of menu.keys()) {
+    if (!policyByKey.has(key)) {
+      throw rankingInputError(
+        `no explicit policy supplied for menu candidate '${key}' — every candidate's cost and access scope must be stated (learned state never supplies them)`,
+      );
+    }
+  }
+
+  // --- the evaluation instant: one clock read anchors freshness AND the
+  //     ranking record, so a snapshot explains its own time base ---
+  const evaluationAt = now();
+  const subjectTopics = missionSubjectTopics(
+    mission.content.title,
+    mission.content.knowledgeObjective,
+  );
+  const budgetAmount = mission.content.investigationBudget.amount;
+
+  // --- the derivation: evidence → signals + basis, and the planner's own
+  //     deterministic evaluation of each derived vector ---
+  const derived: RankedSource[] = [];
+  const planCandidates: CandidateSignals[] = [];
+  for (const candidate of menu.values()) {
+    const policy = policyByKey.get(candidateKey(candidate))!;
+    const evidence = await loadSourceEvidence(ctx, candidate);
+    const derivation = deriveSourceSignals(subjectTopics, evidence, evaluationAt);
+    const evaluation = scoreCandidateSignals(derivation.signals, policy.cost, budgetAmount);
+    derived.push({
+      candidate: {
+        kind: candidate.kind,
+        id: candidate.id ?? null,
+        label: candidate.label ?? null,
+      },
+      signals: {
+        ...derivation.signals,
+        cost: policy.cost,
+        access: policy.access,
+      },
+      score: evaluation.score,
+      costShare: evaluation.costShare,
+      dominantSignal: evaluation.dominantSignal,
+      basis: derivation.basis,
+    });
+    planCandidates.push({
+      kind: candidate.kind,
+      id: candidate.id ?? null,
+      label: candidate.label ?? null,
+      ...derivation.signals,
+      cost: policy.cost,
+      access: policy.access,
+    });
+  }
+  const ordered = orderRankedSources(derived);
+
+  // --- the planner commits the plan from the derived signals: its own
+  //     transaction, advisory lock, eligibility gates (attempted, access,
+  //     person resolution, ASK policy, budget), composed question and
+  //     persisted ranked snapshot. Its missionVersion equals the one
+  //     loaded above whenever planning succeeds — the derived signals
+  //     cover exactly the menu the planner validates against.
+  const plan = await planNextAcquisition(ctx, {
+    missionId: valid.missionId,
+    candidates: planCandidates,
+    actor: valid.actor,
+    rationale: valid.rationale,
+  });
+
+  // --- the derivation rationale, append-only, linking the plan ---
+  const result: DbResult<SourceRankingRow> = await getDb().query<SourceRankingRow>(
+    `INSERT INTO source_rankings (
+       tenant_id, mission_id, mission_version,
+       subject_topics, derived, decision, plan_id,
+       actor_kind, actor_id, actor_label, ranked_by_principal, rationale, recorded_at
+     ) VALUES (
+       $1, $2, $3,
+       $4::jsonb, $5::jsonb, $6, $7,
+       $8, $9, $10, $11, $12, $13::timestamptz
+     ) RETURNING ${RANKING_COLUMNS}`,
+    [
+      ctx.tenantId,
+      valid.missionId,
+      plan.missionVersion,
+      JSON.stringify(subjectTopics),
+      JSON.stringify(ordered),
+      plan.decision,
+      plan.decision === 'selected' ? plan.id : null,
+      valid.actor.kind,
+      valid.actor.id,
+      valid.actor.label,
+      ctx.principalId,
+      valid.rationale,
+      evaluationAt,
+    ],
+  );
+
+  return { ranking: mapRanking(result.rows[0]!), plan };
+}
+
+// ---------------------------------------------------------------------------
+// Source ranking reads
+// ---------------------------------------------------------------------------
+
+export async function getSourceRanking(
+  ctx: TenantContext,
+  rankingId: string,
+): Promise<SourceRanking> {
+  assertAcquisitionTenantContext(ctx);
+  if (typeof rankingId !== 'string' || rankingId.trim() === '') throw rankingNotFound(rankingId);
+  const trimmed = rankingId.trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
+    // Malformed ids are indistinguishable from missing rankings (no leak).
+    throw rankingNotFound(trimmed);
+  }
+
+  const rows = await getDb().query<SourceRankingRow>(
+    `SELECT ${RANKING_COLUMNS} FROM source_rankings
+      WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, trimmed.toLowerCase()],
+  );
+  const row = rows.rows[0];
+  if (row === undefined) throw rankingNotFound(trimmed);
+  return mapRanking(row);
+}
+
+export async function listSourceRankings(
+  ctx: TenantContext,
+  query: ListSourceRankingsQuery,
+): Promise<SourceRanking[]> {
+  assertAcquisitionTenantContext(ctx);
+  const valid: ValidatedRankingListQuery = validateListSourceRankingsQuery(query);
+
+  const conditions: string[] = ['r.tenant_id = $1'];
+  const params: unknown[] = [ctx.tenantId];
+  const add = (fragment: string, value: unknown): void => {
+    params.push(value);
+    conditions.push(fragment.replace('$#', `$${params.length}`));
+  };
+
+  if (valid.missionId !== null) add('r.mission_id = $#', valid.missionId);
+  if (valid.decision !== null) add('r.decision = $#', valid.decision);
+
+  params.push(valid.limit);
+  const limitPlaceholder = `$${params.length}`;
+  // Latest first, id breaks ties deterministically (the plans feed
+  // precedent).
+  const rows = await getDb().query<SourceRankingRow>(
+    `SELECT ${RANKING_COLUMNS} FROM source_rankings r
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY r.recorded_at DESC, r.id DESC
+      LIMIT ${limitPlaceholder}`,
+    params,
+  );
+  return rows.rows.map(mapRanking);
 }

@@ -31,8 +31,10 @@ import type {
   AccessScope,
   AcquisitionOutcomeKind,
   ListAcquisitionPlansQuery,
+  ListSourceRankingsQuery,
   PlanDecision,
   PlanNextAcquisitionInput,
+  RankMissionSourcesInput,
   RecordAcquisitionOutcomeInput,
 } from './types';
 
@@ -542,4 +544,220 @@ function validateListAcquisitionPlansQueryInner(query: ListAcquisitionPlansQuery
   }
 
   return { missionId, decision, action, limit };
+}
+
+// ---------------------------------------------------------------------------
+// W052 — Source ranking input (rankMissionSources)
+// ---------------------------------------------------------------------------
+//
+// The ranking input carries NO learned signals — those are derived from
+// source evidence by the module. What the caller supplies is exactly the
+// explicit, non-learnable policy: the estimated cost and the access scope
+// of every menu candidate. Strict about unknown keys for the same reason
+// as the plan input: a caller can never smuggle `id`, `tenantId`,
+// `subjectTopics`, `derived`, `planId`, `missionVersion`, `recordedAt` or
+// `rankedByPrincipal` into a ranking — those are minted by the system
+// (the derivation rationale is evidence, and evidence is not
+// caller-forgeable).
+
+const RANKING_INPUT_KEYS = ['missionId', 'policies', 'actor', 'rationale'] as const;
+const POLICY_KEYS = ['kind', 'id', 'label', 'cost', 'access'] as const;
+const RANKING_LIST_QUERY_KEYS = ['missionId', 'decision', 'limit'] as const;
+
+function rankingError(message: string): KnowledgeAcquisitionError {
+  return new KnowledgeAcquisitionError('invalid_ranking_input', message);
+}
+
+/** Fully validated + normalized policy for one menu candidate. */
+export interface ValidatedSourcePolicy {
+  kind: MissionCandidateKind;
+  id: string | null;
+  label: string | null;
+  cost: number;
+  access: AccessScope;
+}
+
+/** Fully validated + normalized ranking input. */
+export interface ValidatedRankingInput {
+  missionId: string;
+  policies: ValidatedSourcePolicy[];
+  actor: { kind: MissionPartyKind; id: string | null; label: string | null };
+  rationale: string | null;
+}
+
+function validatePolicyEntry(entry: unknown, where: string): ValidatedSourcePolicy {
+  if (!isPlainObject(entry)) throw rankingError(`${where} must be an object`);
+  rejectUnknownKeys(entry, POLICY_KEYS, where, rankingError);
+
+  const kind = entry.kind;
+  if (!isMissionCandidateKind(kind)) {
+    throw rankingError(
+      `${where}.kind must be one of person, system, document, external, agent, analysis (got '${String(kind)}')`,
+    );
+  }
+  const id =
+    entry.id === undefined || entry.id === null ? null : requireUuid(entry.id, `${where}.id`);
+  const label = optionalTrimmed(entry.label, `${where}.label`, MAX_LABEL_LENGTH);
+  if (id === null && label === null) {
+    throw rankingError(
+      `${where} must carry an id or a label — the policy target must be traceable`,
+    );
+  }
+  return {
+    kind,
+    id,
+    label,
+    cost: validatePolicyCost(entry.cost, `${where}.cost`),
+    access: validatePolicyAccess(entry.access, `${where}.access`),
+  };
+}
+
+function validatePolicyCost(value: unknown, field: string): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw rankingError(`${field} must be a non-negative integer amount of minor units`);
+  }
+  if (value > MAX_COST_AMOUNT) {
+    throw rankingError(`${field} must not exceed ${MAX_COST_AMOUNT} minor units (got ${value})`);
+  }
+  return value;
+}
+
+function validatePolicyAccess(value: unknown, field: string): AccessScope {
+  if (!isAccessScope(value)) {
+    throw rankingError(
+      `${field} must be one of ${ACCESS_SCOPES.join(', ')} (got '${String(value)}')`,
+    );
+  }
+  return value;
+}
+
+/** Fully validated + normalized form of `RankMissionSourcesInput`. */
+export function validateRankMissionSourcesInput(
+  input: RankMissionSourcesInput,
+): ValidatedRankingInput {
+  try {
+    return validateRankMissionSourcesInputInner(input);
+  } catch (error) {
+    // The shared string/uuid/label guards throw `invalid_plan_input`; for
+    // a ranking input the correct code is `invalid_ranking_input` (the
+    // list-query remapping precedent).
+    if (
+      error instanceof KnowledgeAcquisitionError &&
+      error.code === 'invalid_plan_input'
+    ) {
+      throw new KnowledgeAcquisitionError('invalid_ranking_input', error.message);
+    }
+    throw error;
+  }
+}
+
+function validateRankMissionSourcesInputInner(
+  input: RankMissionSourcesInput,
+): ValidatedRankingInput {
+  if (!isPlainObject(input)) throw rankingError('ranking input must be an object');
+  rejectUnknownKeys(input, RANKING_INPUT_KEYS, 'the ranking input', rankingError);
+
+  const missionId = requireUuid(input.missionId, 'missionId');
+
+  const policiesRaw = input.policies;
+  if (!Array.isArray(policiesRaw)) {
+    throw rankingError('policies must be an array of candidate policy entries');
+  }
+  if (policiesRaw.length > MAX_PLAN_CANDIDATES) {
+    throw rankingError(
+      `policies must hold at most ${MAX_PLAN_CANDIDATES} entries (got ${policiesRaw.length})`,
+    );
+  }
+  const policies = policiesRaw.map((entry, index) =>
+    validatePolicyEntry(entry, `policies[${index}]`),
+  );
+  // A caller must state the policy of each candidate exactly once (the
+  // planner's own duplicate-candidate rule: scoring one candidate twice
+  // would make the policy ambiguous).
+  const seenKeys = new Set<string>();
+  for (const entry of policies) {
+    const key = candidateKey(entry);
+    if (seenKeys.has(key)) {
+      throw rankingError(
+        `duplicate policy for candidate '${key}' — state each candidate's policy once`,
+      );
+    }
+    seenKeys.add(key);
+  }
+
+  if (!isPlainObject(input.actor)) throw rankingError('actor must be an object');
+  rejectUnknownKeys(input.actor, ACTOR_KEYS, 'actor', rankingError);
+  const actorKind = input.actor.kind;
+  if (!isMissionPartyKind(actorKind)) {
+    throw rankingError(
+      `actor.kind must be one of person, team, agent, system, external (got '${String(actorKind)}')`,
+    );
+  }
+  const actorId =
+    input.actor.id === undefined || input.actor.id === null
+      ? null
+      : requireUuid(input.actor.id, 'actor.id');
+  const actorLabel = optionalTrimmed(input.actor.label, 'actor.label', MAX_LABEL_LENGTH);
+  if (actorId === null && actorLabel === null) {
+    throw rankingError('actor must carry an id or a label — the ranking party must be traceable');
+  }
+
+  const rationale = optionalTrimmed(input.rationale, 'rationale', MAX_RATIONALE_LENGTH);
+
+  return {
+    missionId,
+    policies,
+    actor: { kind: actorKind, id: actorId, label: actorLabel },
+    rationale,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// W052 — Source ranking list query
+// ---------------------------------------------------------------------------
+
+/** Fully validated + normalized form of `ListSourceRankingsQuery`. */
+export interface ValidatedRankingListQuery {
+  missionId: string | null;
+  decision: PlanDecision | null;
+  limit: number;
+}
+
+export function validateListSourceRankingsQuery(
+  query: ListSourceRankingsQuery,
+): ValidatedRankingListQuery {
+  if (!isPlainObject(query)) {
+    throw new KnowledgeAcquisitionError('invalid_query', 'query must be an object');
+  }
+  const unknown = Object.keys(query).filter(
+    (key) => !(RANKING_LIST_QUERY_KEYS as readonly string[]).includes(key),
+  );
+  if (unknown.length > 0) {
+    throw new KnowledgeAcquisitionError(
+      'invalid_query',
+      `unknown query field '${unknown[0]}' (allowed: ${RANKING_LIST_QUERY_KEYS.join(', ')})`,
+    );
+  }
+
+  const missionId =
+    query.missionId === undefined || query.missionId === null
+      ? null
+      : requireUuid(query.missionId, 'query.missionId');
+  const decision =
+    query.decision === undefined || query.decision === null ? null : query.decision;
+  if (decision !== null && !isPlanDecision(decision)) {
+    throw new KnowledgeAcquisitionError(
+      'invalid_query',
+      `query.decision must be one of ${PLAN_DECISIONS.join(', ')} (got '${String(decision)}')`,
+    );
+  }
+  const limit = query.limit === undefined ? DEFAULT_LIST_LIMIT : query.limit;
+  if (typeof limit !== 'number' || !Number.isInteger(limit) || limit < 1 || limit > MAX_LIST_LIMIT) {
+    throw new KnowledgeAcquisitionError(
+      'invalid_query',
+      `query.limit must be an integer between 1 and ${MAX_LIST_LIMIT} (got ${String(query.limit)})`,
+    );
+  }
+
+  return { missionId, decision, limit };
 }
