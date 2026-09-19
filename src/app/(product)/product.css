@@ -1,0 +1,1545 @@
+/* ============================================================================
+   Product shell (W057) — the product surface's entire stylesheet.
+   Scoped under `.aurum-shell` (the root layout stays untouched, exactly the
+   discipline the Management Control Tower follows).
+
+   VISUAL DIRECTION (frozen 2026-09-18): ShareNet defines most of Aurum's
+   visual language — warm off-white canvas, soft graphite typography,
+   restrained neutral palette, subtle teal/green semantic accents, generous
+   whitespace, hairline borders, status pills, progressive disclosure,
+   quiet skeleton/empty/error states, restrained motion, accessible focus.
+   WhatsApp defines the conversation INTERACTION MODEL (message density,
+   compact timestamps) — not chrome or colors. Aurum's own branding stays
+   subtle; gold/amber appears ONLY in degraded/warning states.
+
+   Hard constraints (work-item acceptance): no glassmorphism (no backdrop
+   blur, no translucency-as-chrome), no gradient chrome (zero gradients),
+   flat surfaces + hairlines only.
+   ========================================================================== */
+
+.aurum-shell {
+  /* Canvas, surfaces, ink — the ShareNet warm-light system. */
+  --bg: #f9f8f7;            /* warm off-white canvas (not pure white) */
+  --surface: #fcfcfb;       /* cards, panels, popovers */
+  --sidebar: #f6f5f3;       /* the rail's slightly deeper warm tone */
+  --ink: #171613;           /* soft graphite (not pure black) */
+  --ink-soft: #22221f;
+  --muted-ink: #5f5d59;     /* secondary text */
+  --faint-ink: #8a8781;     /* tertiary/meta text */
+
+  /* Hairlines and fills. */
+  --line: #e2e1de;          /* hairline */
+  --line-strong: #d4d2cd;
+  --fill: #efeeec;          /* warm gray fill (inputs, quiet hovers) */
+
+  /* The accent: calm teal-green (semantic + interactive). */
+  --accent: #5cb28f;
+  --accent-soft: #d9eee4;   /* ~6% tint */
+  --accent-ink: #00563c;    /* AA text on soft */
+  --accent-deep: #043726;   /* deep green text */
+
+  /* Status pills — each tone carries base/soft/text; color is never the
+     only signal (the dot is always paired with a label). */
+  --pos: #5cb28f;  --pos-soft: #d9eee4;  --pos-text: #00563c;
+  --warn: #d58b4b; --warn-soft: #fbe7d8; --warn-text: #7d460b;
+  --risk: #dc655f; --risk-soft: #ffe4e1; --risk-text: #90302e;
+  --neu: #82807a;  --neu-soft: #e8e8e6;  --neu-text: #57554f;
+
+  --graphite: #2b2923;      /* primary actions, the brand tile */
+  --ring: #5cb28f;          /* keyboard focus */
+
+  --radius-s: 8px;
+  --radius: 12px;
+  --radius-l: 16px;
+  --rail-w: 248px;
+  --shell-break: 920px;     /* rail + topbar vs mobile header + bottom nav */
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.aurum-shell *,
+.aurum-shell *::before,
+.aurum-shell *::after {
+  box-sizing: border-box;
+}
+
+/* Match the canvas behind the shell so mobile overscroll never flashes,
+   and zero the browser's default body margin for a full-bleed shell (the
+   repo has no global reset; the :has() guard scopes this to product pages
+   only — the tower and any other surface keep their own layout). */
+html:has(.aurum-shell) {
+  background-color: #f9f8f7;
+}
+
+body:has(.aurum-shell) {
+  margin: 0;
+}
+
+/* Visible keyboard focus everywhere inside the shell. */
+.aurum-shell :focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- skip link ---- */
+
+.aurum-skip {
+  position: absolute;
+  left: -9999px;
+}
+.aurum-skip:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 90;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-s);
+  padding: 10px 14px;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Screen-reader-only text (visual labels stay visible; this is for
+   tone announcements and loading text). */
+.aurum-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- shell layout ---- */
+
+.aurum-body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.aurum-main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 28px 28px 48px;
+}
+
+.aurum-main-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.aurum-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding: 14px 28px;
+  font-size: 12px;
+  color: var(--muted-ink);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* ---- brand ---- */
+
+.aurum-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.aurum-brand:hover {
+  opacity: 0.82;
+}
+
+.aurum-brand-tile {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--graphite);   /* flat tile — no gradient */
+  color: #f9f8f7;
+  font-weight: 700;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.aurum-brand-name {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.aurum-brand-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted-ink);
+  letter-spacing: 0.01em;
+}
+
+/* ---- desktop rail ---- */
+
+.aurum-rail {
+  display: none;                 /* mobile by default; enabled ≥ breakpoint */
+}
+
+@media (min-width: 920px) {
+  .aurum-rail {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    width: var(--rail-w);
+    flex: none;
+    background: var(--sidebar);
+    border-right: 1px solid var(--line);
+  }
+}
+
+.aurum-rail-head {
+  padding: 18px 18px 14px;
+}
+
+.aurum-rail-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 12px 12px;
+}
+
+.aurum-rail-heading {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--faint-ink);
+  font-weight: 600;
+  padding: 14px 10px 6px;
+}
+
+.aurum-rail-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-s);
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.aurum-rail-link:hover {
+  background: var(--fill);
+  color: var(--ink);
+}
+
+.aurum-rail-link[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.aurum-rail-link .aurum-icon {
+  flex: none;
+}
+
+.aurum-rail-link .aurum-nav-note {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint-ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.aurum-rail-link[aria-current="page"] .aurum-nav-note {
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.aurum-rail-foot {
+  border-top: 1px solid var(--line);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-rail-cluster {
+  display: flex;
+  gap: 6px;
+}
+
+/* The search/notifications cluster buttons (rail, desktop). */
+.aurum-cluster-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.aurum-cluster-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+}
+
+.aurum-kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  color: var(--muted-ink);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 0 5px;
+  background: var(--bg);
+}
+
+/* Notification count badge. */
+.aurum-badge-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--risk);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--sidebar);
+}
+
+/* ---- presence ---- */
+
+.aurum-presence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-s);
+  background: var(--fill);
+  color: var(--neu-text);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.aurum-presence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--neu);
+  flex: none;
+}
+
+.aurum-presence[data-scoped="true"] .aurum-presence-dot {
+  background: var(--pos);
+}
+
+.aurum-presence[data-scoped="true"] {
+  color: var(--pos-text);
+}
+
+.aurum-presence strong {
+  font-weight: 650;
+}
+
+/* ---- mobile top bar ---- */
+
+.aurum-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  min-height: 56px;
+  padding: 8px 14px;
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 920px) {
+  .aurum-topbar {
+    display: none;
+  }
+}
+
+.aurum-topbar-spacer {
+  flex: 1;
+}
+
+.aurum-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;           /* touch target floor */
+  height: 44px;
+  border-radius: var(--radius-s);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  position: relative;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.aurum-icon-btn:hover {
+  background: var(--fill);
+  color: var(--ink);
+}
+
+.aurum-icon-btn[aria-expanded="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  border-color: var(--accent);
+}
+
+.aurum-icon-btn .aurum-badge-count {
+  border-color: var(--bg);
+}
+
+/* ---- mobile bottom nav ---- */
+
+.aurum-bottomnav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.aurum-bottomnav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.aurum-bottomnav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 56px;       /* 44px+ touch target with the tap area */
+  padding: 8px 2px 10px;
+  color: var(--muted-ink);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  position: relative;
+}
+
+.aurum-bottomnav a[aria-current="page"] {
+  color: var(--accent-deep);
+}
+
+.aurum-bottomnav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+@media (min-width: 920px) {
+  .aurum-bottomnav {
+    display: none;
+  }
+}
+
+/* Mobile main clearance for the bottom nav. */
+@media (max-width: 919.98px) {
+  .aurum-main {
+    padding: 20px 16px 32px;
+  }
+  .aurum-body {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ---- page header ---- */
+
+.aurum-page-head {
+  margin-bottom: 22px;
+}
+
+.aurum-page-head h1 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.aurum-page-head p {
+  margin: 0;
+  color: var(--muted-ink);
+  max-width: 72ch;
+  font-size: 14px;
+}
+
+.aurum-page-head .aurum-page-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--faint-ink);
+}
+
+/* ---- panels, cards, sections ---- */
+
+.aurum-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.aurum-panel-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.aurum-panel-blurb {
+  margin: 0 0 14px;
+  color: var(--muted-ink);
+  font-size: 13px;
+  max-width: 78ch;
+}
+
+.aurum-meta {
+  font-size: 12px;
+  color: var(--muted-ink);
+  font-weight: 400;
+}
+
+.aurum-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aurum-item-list > li {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+
+.aurum-item-list > li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.aurum-item-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-item-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.aurum-item-text {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  max-width: 88ch;
+}
+
+.aurum-item-foot {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--faint-ink);
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.aurum-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+/* ---- status pills (color + label, never color alone) ---- */
+
+.aurum-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  line-height: 1.5;
+}
+
+.aurum-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  flex: none;
+}
+
+.aurum-pill[data-tone="positive"] { background: var(--pos-soft); color: var(--pos-text); border-color: #bce3cf; }
+.aurum-pill[data-tone="positive"] .aurum-pill-dot { background: var(--pos); }
+.aurum-pill[data-tone="warning"]  { background: var(--warn-soft); color: var(--warn-text); border-color: #f0d2b8; }
+.aurum-pill[data-tone="warning"] .aurum-pill-dot { background: var(--warn); }
+.aurum-pill[data-tone="error"]    { background: var(--risk-soft); color: var(--risk-text); border-color: #f4c1bd; }
+.aurum-pill[data-tone="error"] .aurum-pill-dot { background: var(--risk); }
+.aurum-pill[data-tone="neutral"]  { background: var(--neu-soft); color: var(--neu-text); border-color: var(--line-strong); }
+.aurum-pill[data-tone="neutral"] .aurum-pill-dot { background: var(--neu); }
+.aurum-pill[data-tone="info"]     { background: var(--accent-soft); color: var(--accent-ink); border-color: #bfe3d3; }
+.aurum-pill[data-tone="info"] .aurum-pill-dot { background: var(--accent); }
+
+/* ---- quiet state patterns: skeleton / empty / error / working ---- */
+
+.aurum-skel {
+  display: block;
+  border-radius: 6px;
+  background: var(--fill);
+  animation: aurum-pulse 1.6s ease-in-out infinite;
+}
+
+.aurum-skel-line {
+  height: 12px;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.aurum-skel-pill {
+  display: inline-block;
+  height: 20px;
+  width: 96px;
+  border-radius: 999px;
+}
+
+@keyframes aurum-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.aurum-loading {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 20px;
+  color: var(--muted-ink);
+  font-size: 13px;
+}
+
+.aurum-empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  padding: 26px 20px;
+  text-align: center;
+  color: var(--muted-ink);
+  font-size: 13.5px;
+  background: transparent;
+}
+
+.aurum-empty strong {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.aurum-empty .aurum-empty-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--faint-ink);
+  max-width: 52ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.aurum-error {
+  border: 1px solid #f4c1bd;
+  background: var(--risk-soft);
+  color: var(--risk-text);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  font-size: 13.5px;
+}
+
+.aurum-error strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+
+.aurum-error .aurum-error-retry {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--risk-text);
+  font-weight: 650;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.aurum-working {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-ink);
+  font-size: 12.5px;
+}
+
+.aurum-working-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.aurum-working-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  animation: aurum-dot 1.2s ease-in-out infinite;
+}
+
+.aurum-working-dots span:nth-child(2) { animation-delay: 0.15s; }
+.aurum-working-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes aurum-dot {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* ---- notices ---- */
+
+.aurum-notice {
+  border: 1px solid var(--line-strong);
+  background: var(--fill);
+  color: var(--ink-soft);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  max-width: 88ch;
+}
+
+.aurum-notice a {
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.aurum-notice code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0 4px;
+}
+
+/* ---- hub grids (Intelligence / People / Connections / Marketplace / More) ---- */
+
+.aurum-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.aurum-hub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.aurum-hub-card:hover {
+  border-color: var(--accent);
+  background: #fdfefd;
+}
+
+.aurum-hub-card .aurum-hub-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  font-size: 14px;
+}
+
+.aurum-hub-card .aurum-hub-tagline {
+  color: var(--muted-ink);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.aurum-hub-card .aurum-hub-note {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint-ink);
+}
+
+/* ---- chat area (the conversation entry point) ---- */
+
+.aurum-chat-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: 26px;
+  margin-bottom: 16px;
+}
+
+.aurum-chat-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.aurum-chat-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--graphite);
+  color: #f9f8f7;
+  font-weight: 700;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.aurum-chat-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.aurum-chat-role {
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-starter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.aurum-starter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: none;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.aurum-starter:hover {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.aurum-starter[aria-current="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.aurum-starter .aurum-starter-q {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--accent-deep);
+}
+
+.aurum-starter .aurum-starter-hint {
+  font-size: 12px;
+  color: var(--muted-ink);
+}
+
+.aurum-pending-question {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  padding: 14px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+/* ---- buttons ---- */
+
+.aurum-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--graphite);
+  background: var(--graphite);
+  color: #f9f8f7;
+  font-size: 13.5px;
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 120ms ease;
+}
+
+.aurum-btn:hover {
+  opacity: 0.86;
+}
+
+.aurum-btn[data-variant="quiet"] {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--line-strong);
+}
+
+.aurum-btn[data-variant="quiet"]:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  opacity: 1;
+}
+
+/* ---- overlay scrim (flat translucent — not glass) ---- */
+
+.aurum-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(23, 22, 19, 0.32);
+}
+
+/* ---- sheet (shared by context drawer + notification panel) ---- */
+
+.aurum-sheet {
+  position: fixed;
+  z-index: 80;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  box-shadow: -12px 0 32px rgba(23, 22, 19, 0.08);
+  display: flex;
+  flex-direction: column;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 92vw;
+}
+
+@media (max-width: 919.98px) {
+  .aurum-sheet {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    max-height: 86dvh;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    border-radius: var(--radius-l) var(--radius-l) 0 0;
+    box-shadow: 0 -12px 32px rgba(23, 22, 19, 0.1);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+.aurum-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.aurum-sheet-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.aurum-sheet-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-sheet-close {
+  margin-left: auto;
+}
+
+.aurum-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 22px;
+}
+
+.aurum-sheet-foot {
+  border-top: 1px solid var(--line);
+  padding: 10px 20px;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
+/* Context drawer sections. */
+.aurum-ctx-section {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+.aurum-ctx-section:first-child {
+  border-top: none;
+  padding-top: 2px;
+}
+
+.aurum-ctx-heading {
+  margin: 0 0 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--faint-ink);
+  font-weight: 650;
+}
+
+.aurum-ctx-line {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.aurum-ctx-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.aurum-ctx-links a {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Notification items inside the sheet. */
+.aurum-notif {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: var(--surface);
+}
+
+.aurum-notif[data-attention="true"] {
+  border-color: #f0d2b8;
+  background: #fdfaf7;
+}
+
+.aurum-notif-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aurum-notif-kind {
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint-ink);
+}
+
+.aurum-notif-subject {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.aurum-notif-meta {
+  margin-top: 8px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+  align-items: center;
+}
+
+.aurum-notif-details {
+  margin-top: 10px;
+}
+
+/* ---- command search ---- */
+
+.aurum-cmdk {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+  background: rgba(23, 22, 19, 0.32);
+}
+
+.aurum-cmdk-panel {
+  width: 620px;
+  max-width: 100%;
+  max-height: 70dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-l);
+  box-shadow: 0 24px 56px rgba(23, 22, 19, 0.16);
+  overflow: hidden;
+}
+
+.aurum-cmdk-inputrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.aurum-cmdk-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+}
+
+.aurum-cmdk-input::placeholder {
+  color: var(--faint-ink);
+}
+
+.aurum-cmdk-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.aurum-cmdk-group {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 650;
+  color: var(--faint-ink);
+  padding: 10px 10px 4px;
+}
+
+.aurum-cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.aurum-cmdk-item[aria-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.aurum-cmdk-item .aurum-cmdk-title {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.aurum-cmdk-item .aurum-cmdk-sub {
+  font-size: 12px;
+  color: var(--muted-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aurum-cmdk-item .aurum-cmdk-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.aurum-cmdk-empty {
+  padding: 26px 16px;
+  text-align: center;
+  color: var(--muted-ink);
+  font-size: 13px;
+}
+
+.aurum-cmdk-foot {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
+.aurum-cmdk-foot .aurum-kbd {
+  background: var(--surface);
+}
+
+/* ---- tenant / workspace switcher ---- */
+
+.aurum-switcher {
+  position: relative;
+}
+
+.aurum-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease;
+}
+
+.aurum-switcher-btn:hover {
+  border-color: var(--accent);
+}
+
+.aurum-switcher-btn[aria-expanded="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.aurum-switcher-glyph {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex: none;
+}
+
+.aurum-switcher-name {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.aurum-switcher-company {
+  font-weight: 650;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aurum-switcher-workspace {
+  font-size: 11px;
+  color: var(--muted-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aurum-switcher-caret {
+  margin-left: auto;
+  flex: none;
+  color: var(--muted-ink);
+}
+
+.aurum-switcher-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 230px;
+  z-index: 60;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px rgba(23, 22, 19, 0.12);
+  padding: 6px;
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
+.aurum-switcher-heading {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 650;
+  color: var(--faint-ink);
+  padding: 8px 10px 4px;
+}
+
+.aurum-switcher-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+
+.aurum-switcher-item:hover {
+  background: var(--fill);
+  color: var(--ink);
+}
+
+.aurum-switcher-item[aria-checked="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.aurum-switcher-item .aurum-switcher-check {
+  margin-left: auto;
+  flex: none;
+}
+
+.aurum-switcher-form {
+  padding: 8px 10px 10px;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+}
+
+.aurum-switcher-input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border-radius: var(--radius-s);
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.aurum-switcher-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.aurum-switcher-note {
+  font-size: 11px;
+  color: var(--faint-ink);
+  margin: 8px 0 0;
+  line-height: 1.45;
+}
+
+.aurum-switcher-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Mobile top-bar switcher is compact: name only, no workspace line. */
+.aurum-topbar .aurum-switcher {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- connections hub ---- */
+
+.aurum-conn-providers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.aurum-tag {
+  display: inline-block;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--neu-text);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 9px;
+}
+
+/* ---- more page ---- */
+
+.aurum-kbd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.aurum-kbd-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--faint-ink);
+  font-weight: 650;
+  padding: 6px 10px 6px 0;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.aurum-kbd-table td {
+  padding: 9px 10px 9px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  color: var(--ink-soft);
+}
+
+.aurum-kbd-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- reduced motion ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .aurum-shell *,
+  .aurum-shell *::before,
+  .aurum-shell *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+}
+
+/* ---- slim scrollbars for overlay lists ---- */
+
+.aurum-cmdk-list,
+.aurum-sheet-body,
+.aurum-switcher-menu {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.aurum-cmdk-list::-webkit-scrollbar,
+.aurum-sheet-body::-webkit-scrollbar,
+.aurum-switcher-menu::-webkit-scrollbar {
+  width: 8px;
+}
+
+.aurum-cmdk-list::-webkit-scrollbar-thumb,
+.aurum-sheet-body::-webkit-scrollbar-thumb,
+.aurum-switcher-menu::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+/* ---- small screens: tighten the chat + hub ---- */
+
+@media (max-width: 560px) {
+  .aurum-chat-card {
+    padding: 18px;
+  }
+  .aurum-starter-grid {
+    grid-template-columns: 1fr;
+  }
+  .aurum-page-head h1 {
+    font-size: 22px;
+  }
+}
