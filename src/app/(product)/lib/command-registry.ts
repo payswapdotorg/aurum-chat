@@ -13,6 +13,41 @@ import type { ChatStarter } from './chat-starters';
 import { PRODUCT_AREAS, towerSurfaceLinks } from './navigation';
 import type { ShellIcon } from './navigation';
 
+/**
+ * The marketplace area's keyboard destinations (W064). The area's hub
+ * is already a PRODUCT_AREAS command; these are its three working
+ * surfaces, so Cmd/Ctrl+K reaches them without a second registry.
+ */
+export const MARKETPLACE_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'browse',
+    title: 'Marketplace — browse',
+    subtitle: 'The governed catalog: extensions and agent packages',
+    href: '/marketplace',
+    keywords: ['marketplace', 'catalog', 'extensions', 'packages', 'install'],
+  },
+  {
+    id: 'installed',
+    title: 'Marketplace — installed',
+    subtitle: 'Govern what your company runs: activate, suspend, rollback',
+    href: '/marketplace/installed',
+    keywords: ['marketplace', 'installed', 'extensions', 'govern', 'rollback', 'suspend'],
+  },
+  {
+    id: 'developer',
+    title: 'Marketplace — developer',
+    subtitle: 'Build extensions, publish packages, review submissions',
+    href: '/marketplace/developer',
+    keywords: ['marketplace', 'developer', 'builder', 'publish', 'review', 'submit'],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -45,6 +80,21 @@ export function buildShellCommands(): ShellCommand[] {
       icon: area.icon,
       keywords: [area.id, 'go', 'open', ...(area.mode === 'management' ? ['tower', 'management'] : [])],
       target: { kind: 'navigate', href: area.href },
+    });
+  }
+
+  // W064 — the marketplace area's own destinations (the same registry
+  // the rail and bottom nav build on; added here so the marketplace
+  // surfaces are keyboard-discoverable exactly once each).
+  for (const destination of MARKETPLACE_DESTINATIONS) {
+    commands.push({
+      id: `marketplace:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'marketplace',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
     });
   }
 

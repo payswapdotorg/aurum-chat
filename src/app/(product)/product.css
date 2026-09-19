@@ -1543,3 +1543,639 @@ body:has(.aurum-shell) {
     font-size: 22px;
   }
 }
+
+/* ==========================================================================
+   Marketplace area (W064) — browse, package detail, developer, installed.
+   Same visual system: warm off-white, hairlines, status pills, quiet
+   forms, restrained motion. No new palette, no gradients, no glass.
+   ========================================================================== */
+
+.aurum-mkt-area-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.aurum-mkt-area-link {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-decoration: none;
+  color: var(--ink);
+  min-height: 44px;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.aurum-mkt-area-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.aurum-mkt-area-link .aurum-icon {
+  color: var(--accent-deep);
+  margin-top: 2px;
+  flex: none;
+}
+
+.aurum-mkt-area-link strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.aurum-mkt-area-link span span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted-ink);
+  margin-top: 2px;
+}
+
+.aurum-mkt-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.aurum-mkt-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--fill);
+  min-width: 86px;
+}
+
+.aurum-mkt-stat strong {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.aurum-mkt-stat span {
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-mkt-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.aurum-mkt-tab {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted-ink);
+  font-size: 12.5px;
+  text-decoration: none;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.aurum-mkt-tab:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.aurum-mkt-tab[aria-current="page"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
+.aurum-mkt-item-title {
+  font-weight: 650;
+  font-size: 14.5px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.aurum-mkt-item-title:hover {
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.aurum-mkt-link {
+  color: var(--accent-deep);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.aurum-mkt-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---- package detail ---- */
+
+.aurum-mkt-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+@media (min-width: 940px) {
+  .aurum-mkt-detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.aurum-mkt-chain {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  padding: 0;
+  margin: 8px 0 12px;
+}
+
+.aurum-mkt-chain li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--faint-ink);
+  padding: 3px 10px 3px 6px;
+  position: relative;
+}
+
+.aurum-mkt-chain li + li::before {
+  content: '→';
+  color: var(--line-strong);
+  margin: 0 8px 0 2px;
+  font-size: 11px;
+}
+
+.aurum-mkt-chain-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  flex: none;
+}
+
+.aurum-mkt-chain li[data-reached="true"] {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.aurum-mkt-chain li[data-reached="true"] .aurum-mkt-chain-dot {
+  background: var(--accent);
+}
+
+.aurum-mkt-chain li[data-rejected="true"] {
+  color: var(--risk-text);
+  font-weight: 650;
+}
+
+.aurum-mkt-chain li[data-rejected="true"] .aurum-mkt-chain-dot {
+  background: var(--risk);
+}
+
+.aurum-mkt-meta-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-mkt-perm-list-static {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.aurum-mkt-perm-list-static > li {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  align-items: flex-start;
+}
+
+.aurum-mkt-perm-list-static > li:last-child {
+  border-bottom: none;
+}
+
+.aurum-mkt-perm-key {
+  font-size: 11.5px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--muted-ink);
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.aurum-mkt-perm-body-static {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.aurum-mkt-perm-body-static strong {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.aurum-mkt-perm-body-static span {
+  font-size: 12.5px;
+  color: var(--muted-ink);
+  line-height: 1.45;
+}
+
+.aurum-mkt-cap-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aurum-mkt-cap-list > li {
+  display: flex;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+  line-height: 1.5;
+}
+
+.aurum-mkt-cap-label {
+  flex: none;
+  width: 148px;
+  font-weight: 650;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.aurum-mkt-instructions {
+  display: block;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: inherit;
+}
+
+.aurum-mkt-subhead {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 650;
+  color: var(--faint-ink);
+  margin: 16px 0 8px;
+}
+
+.aurum-mkt-subhead:first-child {
+  margin-top: 0;
+}
+
+.aurum-mkt-checks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.aurum-mkt-checks > li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+}
+
+.aurum-mkt-checks > li:last-child {
+  border-bottom: none;
+}
+
+.aurum-mkt-checks .aurum-mkt-check-name {
+  flex: none;
+  width: 168px;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.aurum-mkt-checks > li[data-outcome="pass"] .aurum-mkt-check-name::before {
+  content: '✓ ';
+  color: var(--accent-deep);
+}
+
+.aurum-mkt-checks > li[data-outcome="fail"] .aurum-mkt-check-name {
+  color: var(--risk-text);
+}
+
+.aurum-mkt-checks > li[data-outcome="fail"] .aurum-mkt-check-name::before {
+  content: '✕ ';
+}
+
+.aurum-mkt-check-detail {
+  color: var(--muted-ink);
+  line-height: 1.45;
+}
+
+.aurum-mkt-trail {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-mkt-trail > li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.aurum-mkt-trail > li .aurum-mono {
+  flex: none;
+  width: 86px;
+  font-size: 11.5px;
+}
+
+/* ---- action forms ---- */
+
+.aurum-mkt-action-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 940px) {
+  .aurum-mkt-action-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.aurum-mkt-action {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--surface);
+  min-width: 0;
+}
+
+.aurum-mkt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.aurum-mkt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.aurum-mkt-field-label {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.aurum-mkt-input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  padding: 9px 11px;
+  min-height: 40px;
+  width: 100%;
+  transition: border-color 120ms ease;
+}
+
+.aurum-mkt-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+textarea.aurum-mkt-input {
+  resize: vertical;
+  min-height: 74px;
+}
+
+.aurum-mkt-hint {
+  font-size: 11.5px;
+  color: var(--faint-ink);
+  line-height: 1.45;
+}
+
+.aurum-mkt-perms {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 10px 12px 12px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aurum-mkt-perms legend {
+  padding: 0 4px;
+}
+
+.aurum-mkt-perm-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.aurum-mkt-perm {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 7px 4px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.aurum-mkt-perm:hover {
+  background: var(--fill);
+}
+
+.aurum-mkt-perm input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: var(--accent-deep);
+  flex: none;
+}
+
+.aurum-mkt-perm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.aurum-mkt-perm-label {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.aurum-mkt-perm-desc {
+  font-size: 11.5px;
+  color: var(--muted-ink);
+  line-height: 1.4;
+}
+
+.aurum-mkt-confirm {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  padding: 10px 12px;
+  background: var(--fill);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+.aurum-mkt-confirm input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  accent-color: var(--accent-deep);
+  flex: none;
+}
+
+.aurum-mkt-form-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aurum-mkt-form-actions .aurum-btn {
+  min-height: 44px;
+}
+
+.aurum-mkt-report {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 12px;
+  background: var(--surface);
+  font-size: 12.5px;
+}
+
+.aurum-mkt-report-steps {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-mkt-report-steps > li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.aurum-mkt-report-steps > li::before {
+  position: absolute;
+  left: 2px;
+  top: 1px;
+  font-size: 11px;
+}
+
+.aurum-mkt-report-steps > li[data-status='done']::before {
+  content: '✓';
+  color: var(--accent-deep);
+}
+
+.aurum-mkt-report-steps > li[data-status='skipped']::before {
+  content: '–';
+  color: var(--faint-ink);
+}
+
+.aurum-mkt-report-steps > li[data-status='awaiting_approval']::before {
+  content: '⏳';
+  color: var(--warn-text);
+  font-size: 10px;
+  top: 3px;
+}
+
+.aurum-mkt-report-steps > li[data-status='failed']::before {
+  content: '✕';
+  color: var(--risk);
+}
+
+.aurum-mkt-report-step-label {
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.aurum-mkt-report-step-detail {
+  color: var(--muted-ink);
+  line-height: 1.45;
+}
+
+.aurum-mkt-build-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  align-items: flex-start;
+}
+
+.aurum-mkt-build-actions .aurum-mkt-form {
+  margin-top: 0;
+  gap: 8px;
+}
+
+/* ---- small screens: the marketplace area stacks ---- */
+
+@media (max-width: 560px) {
+  .aurum-mkt-detail-grid,
+  .aurum-mkt-action-grid {
+    grid-template-columns: 1fr;
+  }
+  .aurum-mkt-cap-label {
+    width: 118px;
+  }
+  .aurum-mkt-checks .aurum-mkt-check-name {
+    width: 132px;
+  }
+  .aurum-mkt-chain li {
+    padding: 3px 6px 3px 4px;
+  }
+}
