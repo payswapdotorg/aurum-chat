@@ -187,3 +187,185 @@ Implement quality metrics: unknown-discovery precision/recall, source-selection 
 
 ### W056 — Longitudinal Company Simulator
 Implement the synthetic company simulator: employees, teams, CRM/ERP-like systems, messages, projects, suppliers, goals, processes, external events and hidden consequential facts; run month 1/3/6/12/24 scenarios per LONGITUDINAL-BENCHMARK.md; prove repeated work improves source routing, unknown resolution efficiency or recommendation quality; prove no cross-tenant or hidden-ground-truth leakage. Dependencies: W053, W054, W055.
+
+### W057 — Unified Product Shell & UX System
+Dependencies: W033, W029.
+Implement a ShareNet-dominant responsive shell and visual system, with Aurum's employee/product semantics, desktop rail/mobile bottom nav, command search, notification entry, context drawer, loading/empty/error patterns and tenant/workspace switcher.
+Acceptance:
+- desktop and mobile shells;
+- no dense dashboard-only navigation;
+- all major product areas discoverable;
+- accessibility keyboard traversal;
+- no glassmorphism/gradient chrome.
+
+### W058 — Authentication, Sessions & Tenant Onboarding
+Dependencies: W001, W002.
+Implement auth/session domain and product entry flow; sign-in/sign-out/session renewal; company/workspace creation and selection; membership/invite flows; authenticated routing.
+Remove the query/header tenant seam from normal user navigation. Preserve explicit TenantContext internally.
+Acceptance:
+- unauthenticated users cannot reach tenant data;
+- tenant switching cannot cross scope;
+- onboarding reaches usable Aurum chat;
+- no development tenant parameter required in authenticated UX.
+
+### W059 — Connection & Integration Hub
+Dependencies: W002, W030, W036, W037.
+Build user-facing connections center for channels, source systems and destinations.
+Acceptance:
+- connect/disconnect/configure;
+- connection health;
+- identity verification/linking;
+- source freshness/checkpoint state;
+- destination delivery state;
+- tenant-owned credential references only.
+
+### W060 — Aurum WhatsApp-like Chat
+Dependencies: W013, W029, W034, W057, W058.
+Build employee conversation UI and Aurum chat workflow.
+Acceptance:
+- conversation list;
+- unread/new activity;
+- message timeline;
+- composer;
+- streaming/working states;
+- citations/evidence;
+- action cards for goals/unknowns/missions/risks/opportunities/recommendations/approvals;
+- links to management surfaces;
+- responsive mobile layout.
+
+### W061 — Intelligence Discovery & Briefing UX
+Dependencies: W013, W051, W052, W057, W060.
+Turn Today, goals, situation, unknowns, missions, risks, opportunities and capabilities into a discoverable intelligence workflow.
+Acceptance:
+- goal → gap → unknown → mission → evidence → belief path is navigable;
+- proactive findings enter chat and Today;
+- severity/urgency is legible;
+- “why this matters” and “what Aurum needs next” are always visible.
+
+### W062 — Learning Missions, Contributions & Rewards UX
+Dependencies: W011, W012, W042, W043, W061.
+Surface learning missions to management and employees.
+Acceptance:
+- mission detail/progress;
+- ask/answer knowledge requests;
+- evidence capture;
+- contribution acknowledgement;
+- reward status/history;
+- no compensation/performance semantics leakage.
+
+### W063 — Capability, Workforce & Agent Intervention UX
+Dependencies: W018, W019, W022, W023, W024, W040, W062.
+Surface capability-gap alternatives and the full agent/workforce lifecycle.
+Acceptance:
+- compare train/reassign/hire/automate/recruit/install/outsource;
+- explicit uncertainty and evidence;
+- proposal → approval → activation;
+- team topology/budget;
+- outcome tracking;
+- retain/modify/terminate agent lifecycle;
+- human employment decisions remain human-authorized.
+
+### W064 — Extensions, Marketplace & Builder UX
+Dependencies: W025, W026, W027, W028, W057.
+Build developer/user marketplace surfaces.
+Acceptance:
+- browse/install;
+- permission inspection;
+- package status;
+- submission/verification/review states;
+- publish flow;
+- install/activate/suspend/rollback;
+- agent packages use the same governance surface.
+
+### W065 — Evidence, Audit & Explainability UX
+Dependencies: W046, W061, W063.
+Build one causal evidence view.
+Acceptance:
+- reconstruct any consequential answer/decision;
+- source reliability/freshness;
+- contradiction display;
+- policy evaluation;
+- approval record;
+- execution/outcome;
+- learning update.
+
+### W066 — AI/BYOA & Provider Routing UX
+Dependencies: W034, W048, W058.
+Build AI provider account management and routing interface.
+Acceptance:
+- add/verify/revoke tenant provider account;
+- model availability;
+- policy/routing configuration;
+- cost/latency view;
+- hot-swap test;
+- no provider becomes architecturally privileged.
+
+### W067 — Developer / API / MCP Console
+Dependencies: W038, W039, W058, W066.
+Build API key/scopes, webhook, MCP connection and developer activity surfaces.
+Acceptance:
+- create/revoke/rotate keys;
+- scope visibility;
+- webhook setup/test/redelivery;
+- MCP connection instructions;
+- auditable integration events.
+
+### W068 — Deterministic Demo Tenant & Role Journey Harness
+Dependencies: W049, W050, W056, W058.
+Provide non-production seeded tenants/roles for browser verification.
+Roles:
+- manager;
+- employee;
+- developer;
+- platform reviewer.
+Acceptance:
+- no production backdoor;
+- deterministic data for every major journey;
+- role-specific capability visibility.
+
+### W069 — Free-Tier Deployment Foundation
+Dependencies: W058, W059, W060.
+Implement provider-neutral production adapters and deployment configuration.
+Canonical dogfood stack:
+- Vercel Hobby for the web surface;
+- Neon Free PostgreSQL;
+- Upstash Redis Free for queue/cache/lock when required;
+- Vercel Workflows for durable/resumable cognition orchestration;
+- Vercel Queues for durable asynchronous delivery where queue semantics are required;
+- Vercel Blob Hobby for large objects;
+- Resend Free for transactional email and invitations;
+- GitHub Actions for CI.
+The deployment must be treated as internal/non-commercial dogfood while Vercel Hobby is used.
+
+Acceptance:
+- real external PostgreSQL;
+- real queue/worker execution;
+- object storage path;
+- email path;
+- migrations;
+- health/readiness;
+- preview/staging/production environment separation;
+- usage guardrails;
+- observability.
+
+### W070 — Browser Journey, Accessibility & Discoverability Proof
+Dependencies: W057-W069.
+Automate the end-user journey matrix on desktop and mobile.
+Acceptance:
+- first-run onboarding;
+- manager chat;
+- employee chat;
+- goal → unknown → mission;
+- evidence/explainability;
+- recommendation → approval → outcome;
+- learning contribution/reward;
+- connections;
+- BYOA;
+- agent recruitment;
+- marketplace;
+- developer/API/MCP;
+- mobile navigation;
+- accessibility;
+- no dead-end pages;
+- every architecture capability has a discoverable user route.
+
