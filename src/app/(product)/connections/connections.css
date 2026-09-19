@@ -1,0 +1,697 @@
+/* ============================================================================
+   Connection & Integration Hub (W059) — the surface's entire stylesheet.
+   Scoped under `.conn` (the root layout is W000's and stays untouched).
+   ShareNet-dominant visual direction (frozen UX direction 2026-09-18):
+   warm off-white canvas, soft graphite typography, restrained neutral
+   palette, subtle teal/green semantic accents, generous whitespace,
+   hairline borders, status pills, quiet states, restrained motion.
+   No glassmorphism, no heavy gradients, no dashboard noise. Gold/amber
+   appears ONLY for degraded/warning tones (sparingly).
+   Mobile-first; interactive targets are 44px+.
+   ========================================================================== */
+
+.conn {
+  --canvas: #f9f8f7;
+  --card: #fcfcfb;
+  --ink: #171613;
+  --ink-soft: #3f3d38;
+  --muted: #6f6c66;
+  --line: #e2e1de;
+  --line-strong: #d2d1cd;
+
+  /* subtle teal/green semantic accents (ShareNet accent family) */
+  --ok: #0b6e57;
+  --ok-soft: #d9eee4;
+  --ok-line: #b5d9cb;
+  --teal: #0f766e;
+
+  /* amber reserved for degraded/warning states ONLY */
+  --warn: #8a5a08;
+  --warn-soft: #f7eed6;
+  --warn-line: #e3d3a8;
+
+  --risk: #a33a34;
+  --risk-soft: #f6e2e0;
+  --risk-line: #e6c3c0;
+
+  --neutral-soft: #f1f0ee;
+
+  --primary: #1d1c1a;
+  --primary-ink: #faf9f8;
+  --focus: #0b6e57;
+  --radius: 10px;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+  color: var(--ink);
+  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.conn * {
+  box-sizing: border-box;
+}
+
+.conn .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+
+/* ---- skip link ---- */
+
+.conn-skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.conn-skip:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 60;
+  background: var(--card);
+  border: 1px solid var(--focus);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+/* ---- header ---- */
+
+.conn-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.conn-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-weight: 650;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.conn-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.conn-sub {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.conn-header-meta {
+  margin-left: auto;
+  text-align: right;
+  color: var(--muted);
+  font-size: 12px;
+  display: none;
+}
+
+@media (min-width: 860px) {
+  .conn-header {
+    padding: 16px 28px;
+  }
+  .conn-header-meta {
+    display: block;
+  }
+}
+
+/* ---- body / sections ---- */
+
+.conn-body {
+  flex: 1;
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 18px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+@media (min-width: 860px) {
+  .conn-body {
+    padding: 26px 28px 56px;
+  }
+}
+
+.conn-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 13.5px;
+}
+
+.chip:hover {
+  border-color: var(--line-strong);
+}
+
+.chip[aria-current="true"] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-ink);
+}
+
+.chip:focus-visible,
+.conn :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---- section cards ---- */
+
+.conn-section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+@media (min-width: 860px) {
+  .conn-section {
+    padding: 22px 24px;
+  }
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.card-meta {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.card-desc {
+  margin: 2px 0 14px;
+  color: var(--muted);
+  font-size: 13.5px;
+  max-width: 70ch;
+}
+
+/* ---- stats ---- */
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+@media (min-width: 720px) {
+  .stat-row {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+}
+
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.stat-label {
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.stat-hint {
+  color: var(--muted);
+  font-size: 11.5px;
+  margin-top: 3px;
+}
+
+/* ---- pills ---- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.pill-ok {
+  background: var(--ok-soft);
+  border-color: var(--ok-line);
+  color: var(--ok);
+}
+
+.pill-warn {
+  background: var(--warn-soft);
+  border-color: var(--warn-line);
+  color: var(--warn);
+}
+
+.pill-risk {
+  background: var(--risk-soft);
+  border-color: var(--risk-line);
+  color: var(--risk);
+}
+
+.pill-info {
+  background: var(--neutral-soft);
+  border-color: var(--line);
+  color: var(--ink-soft);
+}
+
+.pill-muted {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+/* ---- item rows ---- */
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  border-top: 1px solid var(--line);
+  padding: 14px 2px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.rows .row:first-child {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.row-title {
+  font-weight: 620;
+  font-size: 14.5px;
+}
+
+.row-sub {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.row-foot {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.reasons {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reasons li {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  padding-left: 14px;
+  position: relative;
+}
+
+.reasons li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.reasons li.r-degraded::before {
+  background: var(--risk);
+}
+
+.reasons li.r-attention::before {
+  background: var(--warn);
+}
+
+.reasons li.r-disabled::before {
+  background: var(--ink-soft);
+}
+
+/* ---- detail grids (progressive disclosure) ---- */
+
+details.disclose {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas);
+  margin-top: 8px;
+}
+
+details.disclose > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  list-style: none;
+}
+
+details.disclose > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.disclose > summary::before {
+  content: "+";
+  margin-right: 8px;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+details.disclose[open] > summary::before {
+  content: "–";
+}
+
+details.disclose > .disclose-body {
+  padding: 4px 12px 14px;
+  border-top: 1px solid var(--line);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) 1fr;
+  gap: 4px 14px;
+  margin: 8px 0;
+  font-size: 13px;
+}
+
+.detail-grid dt {
+  color: var(--muted);
+}
+
+.detail-grid dd {
+  margin: 0;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* ---- forms & buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #33322f;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-quiet {
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+}
+
+.btn-quiet:hover {
+  background: var(--neutral-soft);
+}
+
+.btn-danger {
+  background: var(--card);
+  border: 1px solid var(--risk-line);
+  color: var(--risk);
+}
+
+.btn-danger:hover {
+  background: var(--risk-soft);
+}
+
+.btn-sm {
+  min-height: 38px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.conn form.stack,
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field > label,
+.radios legend {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.field .hint {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.conn input[type="text"],
+.conn input[type="email"],
+.conn input[type="datetime-local"],
+.conn select,
+.conn textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  width: 100%;
+}
+
+.conn textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.conn input:focus,
+.conn select:focus,
+.conn textarea:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-color: var(--focus);
+}
+
+.radios {
+  border: none;
+  padding: 0;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radios .radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  min-height: 44px;
+}
+
+.radios input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--focus);
+}
+
+.action-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-inline input[type="text"] {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 190px;
+  max-width: 320px;
+}
+
+.status-line {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.status-line.error {
+  color: var(--risk);
+}
+
+.status-line.ok {
+  color: var(--ok);
+}
+
+.pending-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- empty / notice states (quiet) ---- */
+
+.empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  color: var(--muted);
+  font-size: 13.5px;
+  text-align: center;
+}
+
+.empty strong {
+  display: block;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.notice {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.notice-neutral {
+  border-left-color: var(--line-strong);
+}
+
+.notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- footer (sticky bottom) ---- */
+
+.conn-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  background: var(--card);
+  padding: 12px 20px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+@media (min-width: 860px) {
+  .conn-footer {
+    padding: 14px 28px 16px;
+  }
+}
+
+/* ---- restrained motion ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .conn *,
+  .conn *::before,
+  .conn *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
