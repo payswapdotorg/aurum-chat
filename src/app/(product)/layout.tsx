@@ -1,0 +1,55 @@
+// Product shell (W057) — the product-surface layout.
+//
+// The ShareNet-dominant shell (PRODUCT-SURFACE-DEPLOYMENT-PLAN §3):
+// desktop rail + main workflow + overlay system (command search, context
+// drawer, notification sheet), or mobile top bar + main + bottom nav.
+// The tower (W033) keeps its own (tower) layout and routes — management
+// mode stays a drill-down destination, never the first discovery
+// mechanism. Styling is fully scoped under `.aurum-shell`; the root layout
+// stays untouched, exactly the discipline the tower follows.
+
+import type { ReactNode } from 'react';
+import './product.css';
+import { ProductShellProvider } from './components/product-shell-provider';
+import { ShellStateProvider } from './components/shell-state-context';
+import { DesktopRail } from './components/desktop-rail';
+import { MobileTopBar, MobileBottomNav } from './components/mobile-chrome';
+import { CommandSearch } from './components/command-search';
+import { ContextDrawer } from './components/context-drawer';
+
+export default function ProductLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="aurum-shell">
+      <a className="aurum-skip" href="#product-main">
+        Skip to content
+      </a>
+      <ProductShellProvider>
+        <ShellStateProvider>
+          {/* The mobile top bar is a COLUMN child of the shell (not of the
+              body row) so it never stretches to the page content height;
+              the body row holds rail + main only. */}
+          <MobileTopBar />
+          <div className="aurum-body">
+            <DesktopRail />
+            <main id="product-main" className="aurum-main">
+              <div className="aurum-main-inner">{children}</div>
+            </main>
+          </div>
+          <MobileBottomNav />
+          <CommandSearch />
+          <ContextDrawer />
+        </ShellStateProvider>
+      </ProductShellProvider>
+      <footer className="aurum-footer">
+        <span>
+          Aurum — the organizational intelligence employee. Chat is a channel;
+          the company intelligence loop is the product core.
+        </span>
+        <span>
+          Tenant-scoped reads · evidence-backed findings · approval-gated
+          actions · PostgreSQL is domain truth
+        </span>
+      </footer>
+    </div>
+  );
+}
