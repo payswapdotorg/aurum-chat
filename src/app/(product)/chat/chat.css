@@ -1,0 +1,860 @@
+/* ============================================================================
+   Aurum chat (W060) — the conversation surface's entire stylesheet.
+   Scoped under `.aurum-chat-app` inside the product shell (`.aurum-shell`
+   owns the tokens; the root layout stays untouched — the connections-hub
+   precedent).
+
+   VISUAL DIRECTION (frozen 2026-09-18): ShareNet defines the visual
+   language — warm off-white canvas, soft graphite typography, restrained
+   neutrals, subtle teal/green accents, hairline borders, status pills,
+   quiet states, restrained motion. WhatsApp defines the INTERACTION
+   MODEL only — conversation list, message bubbles with compact
+   timestamps/statuses, unread states, typing/working indicator, compact
+   composer. No WhatsApp colors or chrome; no glassmorphism; zero
+   gradients; gold/amber never dominates.
+   ========================================================================== */
+
+/* The chat workspace is an APP surface, not a document surface: widen the
+   shell's content column a little while it is open (scoped to pages that
+   actually render the chat app). */
+.aurum-shell:has(.aurum-chat-app) .aurum-main-inner {
+  max-width: 1180px;
+}
+
+.aurum-chat-app {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  /* App-like height: the panes scroll internally, not the page. */
+  height: calc(100dvh - 196px);
+  min-height: 460px;
+}
+
+/* ---- conversation list pane ---- */
+
+.aurum-chat-listpane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+}
+
+.aurum-chat-listhead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.aurum-chat-listhead .aurum-chat-name {
+  font-size: 15px;
+}
+
+.aurum-chat-listhead .aurum-chat-role {
+  font-size: 11.5px;
+}
+
+.aurum-chat-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.aurum-chat-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.aurum-chat-list::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+.aurum-chat-convo {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.aurum-chat-convo:hover {
+  background: var(--bg);
+}
+
+.aurum-chat-convo[aria-current='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.aurum-chat-convo:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.aurum-chat-convo-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.aurum-chat-convo-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aurum-chat-convo-when {
+  flex: none;
+  font-size: 11px;
+  color: var(--faint-ink);
+  white-space: nowrap;
+}
+
+.aurum-chat-convo-preview {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aurum-chat-convo-foot {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aurum-chat-convo-count {
+  font-size: 11px;
+  color: var(--faint-ink);
+}
+
+.aurum-chat-unread {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.aurum-chat-unread[data-activity='new'] {
+  background: var(--accent);
+  color: #f9f8f7;
+}
+
+.aurum-chat-listempty {
+  margin: 12px;
+  padding: 18px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+/* The "new conversation" affordance at the top of the list. */
+.aurum-chat-newconv {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.aurum-chat-newconv:hover {
+  border-color: var(--accent);
+  background: var(--bg);
+}
+
+.aurum-chat-newconv[aria-current='true'] {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.aurum-chat-newconv .aurum-chat-convo-title {
+  color: var(--accent-ink);
+}
+
+.aurum-chat-newconv .aurum-chat-convo-count {
+  display: block;
+  margin-top: 3px;
+}
+
+/* Compact starter chips inside the list pane (the mobile first-run
+   discovery surface — hidden on desktop, where the full starter grid
+   lives in the thread pane). */
+.aurum-chat-pane-starters {
+  display: none;
+}
+
+/* ---- the welcome state (no conversation open) ---- */
+
+.aurum-chat-welcome {
+  padding: 8px 2px 16px;
+}
+
+.aurum-chat-welcome-hint {
+  font-size: 13px;
+  color: var(--muted-ink);
+  margin: 0 0 12px;
+}
+
+.aurum-chat-welcome .aurum-starter {
+  cursor: pointer;
+  font: inherit;
+}
+
+/* ---- thread pane ---- */
+
+.aurum-chat-thread {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+}
+
+.aurum-chat-thread-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.aurum-chat-back {
+  display: none; /* mobile-only (the media query below shows it) */
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.aurum-chat-back:hover {
+  background: var(--fill);
+}
+
+.aurum-chat-thread-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.aurum-chat-thread-title strong {
+  display: block;
+  font-size: 14.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aurum-chat-thread-title span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-chat-thread-link {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: var(--bg);
+}
+
+.aurum-chat-thread-link:hover {
+  border-color: var(--accent);
+}
+
+/* ---- timeline ---- */
+
+.aurum-chat-timeline {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 16px 10px;
+  background: var(--bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.aurum-chat-timeline::-webkit-scrollbar {
+  width: 8px;
+}
+
+.aurum-chat-timeline::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+.aurum-chat-day {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0 14px;
+}
+
+.aurum-chat-day span {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint-ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 12px;
+}
+
+.aurum-chat-msg {
+  display: flex;
+  margin: 2px 0;
+}
+
+.aurum-chat-msg[data-side='member'] {
+  justify-content: flex-end;
+}
+
+.aurum-chat-msg[data-side='aurum'] {
+  justify-content: flex-start;
+}
+
+.aurum-chat-bubble {
+  max-width: min(78%, 560px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  padding: 9px 13px 6px;
+  background: var(--surface);
+}
+
+.aurum-chat-msg[data-side='member'] .aurum-chat-bubble {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-bottom-right-radius: 4px;
+}
+
+.aurum-chat-msg[data-side='aurum'] .aurum-chat-bubble {
+  border-bottom-left-radius: 4px;
+}
+
+.aurum-chat-msg[data-pending='true'] .aurum-chat-bubble {
+  opacity: 0.72;
+}
+
+.aurum-chat-bubble-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.aurum-chat-msg[data-side='member'] .aurum-chat-bubble-text {
+  color: var(--accent-deep);
+}
+
+.aurum-chat-bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 3px;
+  font-size: 10.5px;
+  color: var(--faint-ink);
+}
+
+.aurum-chat-msg[data-side='member'] .aurum-chat-bubble-meta {
+  color: color-mix(in srgb, var(--accent-ink) 72%, transparent);
+}
+
+.aurum-chat-status {
+  display: inline-flex;
+  align-items: center;
+}
+
+.aurum-chat-working-row {
+  display: flex;
+  justify-content: flex-start;
+  margin: 10px 0 4px;
+}
+
+/* ---- answer cards (inside Aurum messages) ---- */
+
+.aurum-chat-cards {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  max-width: min(92%, 640px);
+}
+
+.aurum-chat-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 10px 12px;
+}
+
+.aurum-chat-card[data-kind='approval'] {
+  border-color: var(--warn);
+}
+
+.aurum-chat-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aurum-chat-card-kind {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-ink);
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.aurum-chat-card[data-kind='approval'] .aurum-chat-card-kind {
+  color: var(--warn-text);
+  border-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.aurum-chat-card-title {
+  flex: 1 1 160px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.aurum-chat-card-meta {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+
+.aurum-chat-card-meta li {
+  font-size: 12px;
+  color: var(--muted-ink);
+  overflow-wrap: anywhere;
+}
+
+.aurum-chat-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+
+.aurum-chat-card-open {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--accent-ink);
+  text-decoration: none;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--radius-s);
+  padding: 6px 12px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.aurum-chat-card-open:hover {
+  background: color-mix(in srgb, var(--accent-soft) 70%, var(--accent) 10%);
+}
+
+.aurum-chat-card-why {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-ink);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  padding: 6px 12px;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.aurum-chat-card-why:hover {
+  border-color: var(--graphite);
+  color: var(--ink);
+}
+
+.aurum-chat-decide {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: var(--radius-s);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  border: 1px solid var(--graphite);
+  background: var(--graphite);
+  color: #f9f8f7;
+}
+
+.aurum-chat-decide[data-decision='reject'] {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.aurum-chat-decide:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.aurum-chat-card-note {
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
+/* ---- citations ---- */
+
+.aurum-chat-citations {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+
+.aurum-chat-citations-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--faint-ink);
+  margin-bottom: 6px;
+}
+
+.aurum-chat-citation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.aurum-chat-citation {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted-ink);
+  text-decoration: none;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 11px;
+}
+
+.aurum-chat-citation:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.aurum-chat-citation-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  flex: none;
+}
+
+/* ---- answer mode note ---- */
+
+.aurum-chat-mode {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--faint-ink);
+}
+
+/* ---- composer ---- */
+
+.aurum-chat-composer {
+  border-top: 1px solid var(--line);
+  padding: 12px 14px;
+  background: var(--surface);
+  display: grid;
+  gap: 8px;
+}
+
+.aurum-chat-composer-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.aurum-chat-input {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.45;
+  padding: 11px 13px;
+  min-height: 44px;
+  max-height: 148px;
+}
+
+.aurum-chat-input:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 0;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.aurum-chat-input::placeholder {
+  color: var(--faint-ink);
+}
+
+.aurum-chat-send {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--graphite);
+  background: var(--graphite);
+  color: #f9f8f7;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.aurum-chat-send:hover:not(:disabled) {
+  background: var(--ink-soft);
+}
+
+.aurum-chat-send:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.aurum-chat-send:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.aurum-chat-send[data-busy='true'] .aurum-chat-send-icon {
+  animation: aurum-chat-pulse 1s ease-in-out infinite;
+}
+
+@keyframes aurum-chat-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.aurum-chat-hint {
+  font-size: 11px;
+  color: var(--faint-ink);
+}
+
+.aurum-chat-hint kbd {
+  font: inherit;
+  font-size: 10px;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  background: var(--bg);
+}
+
+.aurum-chat-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--risk-text);
+  background: var(--risk-soft);
+  border: 1px solid var(--risk);
+  border-radius: var(--radius-s);
+  padding: 8px 12px;
+}
+
+.aurum-chat-retry {
+  flex: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--risk-text);
+  background: transparent;
+  border: 1px solid var(--risk);
+  border-radius: var(--radius-s);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+/* ---- the no-conversation state (Aurum identity + discovery starters) ---- */
+
+.aurum-chat-empty {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
+}
+
+.aurum-chat-empty-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.aurum-chat-empty-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.aurum-chat-empty-body .aurum-starter-grid {
+  margin: 0;
+}
+
+/* ---- responsive: the WhatsApp-like mode switch ---- */
+
+/* Desktop: both panes always visible. */
+@media (min-width: 920px) {
+  .aurum-chat-app {
+    grid-template-columns: 316px minmax(0, 1fr);
+    height: calc(100dvh - 168px);
+  }
+  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-listpane,
+  .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-listpane {
+    display: flex;
+  }
+  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-thread,
+  .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-thread,
+  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-empty,
+  .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-empty {
+    display: flex;
+  }
+}
+
+/* Mobile: one pane at a time — the conversation-first experience. */
+@media (max-width: 919.98px) {
+  .aurum-chat-app {
+    height: calc(100dvh - 208px);
+    min-height: 420px;
+  }
+  .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-listpane {
+    display: none;
+  }
+  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-thread,
+  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-empty {
+    display: none;
+  }
+  .aurum-chat-back {
+    display: grid;
+    place-items: center;
+  }
+  .aurum-chat-bubble {
+    max-width: 86%;
+  }
+  .aurum-chat-cards {
+    max-width: 100%;
+  }
+  .aurum-chat-pane-starter {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 14px;
+    min-height: 40px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .aurum-chat-pane-starter:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .aurum-chat-pane-starters {
+    display: grid;
+    gap: 6px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* Reduced motion: the working dots already respect the shell's global
+   reduce rule; the send pulse follows it too. */
+@media (prefers-reduced-motion: reduce) {
+  .aurum-chat-send[data-busy='true'] .aurum-chat-send-icon {
+    animation: none;
+  }
+}
