@@ -89,7 +89,6 @@ import {
 } from './labels';
 import type { PackageActions } from './labels';
 import type { PillTone } from '../../lib/states';
-import { PRODUCT_OPERATOR_PRINCIPAL } from '../../lib/context';
 
 /** The pill tone as the marketplace views type it (re-anchored once). */
 type PillToneAlias = PillTone;
@@ -110,10 +109,13 @@ type PillToneAlias = PillTone;
  */
 export const PUBLIC_CATALOG_TENANT = '00000000-0000-4000-8000-000000000064';
 
+/** The catalog's anonymous reader principal (well-formed, never provisioned). */
+export const PUBLIC_CATALOG_PRINCIPAL = '00000000-0000-4000-8000-0000000006b';
+
 export function publicBrowsingContext(): TenantContext {
   return {
     tenantId: PUBLIC_CATALOG_TENANT,
-    principalId: PRODUCT_OPERATOR_PRINCIPAL,
+    principalId: PUBLIC_CATALOG_PRINCIPAL,
     authority: [],
   };
 }

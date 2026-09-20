@@ -25,12 +25,8 @@ import { formatInstant, formatMinorUnits, joinList, titleCase } from '../lib/for
 
 export const dynamic = 'force-dynamic';
 
-export default async function AgentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function AgentsPage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildAgentsView(resolution.context);
 

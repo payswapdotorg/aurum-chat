@@ -7,7 +7,7 @@
 // duties enforced by the module, first decision wins, never un-decidable.
 
 import { buildApprovalsView } from '../lib/views/approvals';
-import { resolvePageContext, scopeQuery } from '../lib/page-context';
+import { resolvePageContext } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -26,16 +26,13 @@ import { DecisionForm } from './decision-form';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ApprovalsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const resolution = await resolvePageContext(params);
+export default async function ApprovalsPage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildApprovalsView(resolution.context);
-  const scope = scopeQuery(params);
+  // W058: scope lives in the session — the decision form posts with the
+  // session cookie, so no scope threading is needed.
+  const scope = { tenant: null, principal: null, authority: null };
 
   const canDecide = resolution.context.authority.includes('actions:approve');
   const principal = resolution.context.principalId;
@@ -49,10 +46,11 @@ export default async function ApprovalsPage({
       />
       {canDecide ? null : (
         <Notice>
-          Deciding requires the <code>actions:approve</code> authority claim. Until
-          authentication lands (W038), pass it explicitly:{' '}
-          <code>?authority=actions:approve</code> — the actions contract checks the claim
-          itself; the tower never bypasses it.
+          Deciding requires the <code>actions:approve</code> authority claim, which
+          the session derives from your verified company role (owner or admin).
+          Your current role carries it neither way — a company admin can invite
+          or promote you, or another approver decides. The actions contract
+          checks the claim itself; the tower never bypasses it.
         </Notice>
       )}
       <StatTiles

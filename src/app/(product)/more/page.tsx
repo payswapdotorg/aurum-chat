@@ -6,10 +6,14 @@
 // the shell's keyboard & accessibility reference. "All major product areas
 // discoverable" gets its guarantee here: every destination in one honest
 // list, each link scope-preserving.
+//
+// W058: the account section — who is signed in, the company switch
+// entry, invitations, and sign-out.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
+import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
+import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import {
   governanceSurfaces,
   overviewSurfaces,
@@ -17,6 +21,7 @@ import {
 } from '../lib/navigation';
 import { PageHead, Panel } from '../components/states';
 import { ShellGlyph } from '../components/icons';
+import { SignOutButton } from '@/app/(auth)/components/sign-out-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +31,8 @@ export default async function MorePage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const params = await searchParams;
+  const session = await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
-  const scoped = productContextFromSearchParams(params).ok;
   const groups = towerLinksByGroup();
 
   return (
@@ -35,12 +40,31 @@ export default async function MorePage({
       <PageHead
         title="More"
         description="Management mode, platform tools, and the shell itself — everything the product surface exposes, in one place."
-        meta={
-          scoped ? undefined : (
-            <span>Browsing without a company scope — links keep your current scope.</span>
-          )
-        }
       />
+
+      <Panel
+        title="Account"
+        blurb="Your session, your companies, and the membership flows."
+      >
+        <ul className="aurum-item-list">
+          <li>
+            <div className="aurum-item-head">
+              <span className="aurum-item-title">{session.principal.displayName}</span>
+            </div>
+            <p className="aurum-item-text">
+              Signed in as <code className="aurum-mono">{session.principal.email}</code>
+              · verified company role: <strong>{session.role}</strong> · scope
+              re-verified from the session on every request.
+            </p>
+          </li>
+        </ul>
+        <div className="aurum-mkt-form-actions" style={{ marginTop: 12 }}>
+          <Link className="aurum-btn" data-variant="quiet" href="/onboarding">
+            Company &amp; invitations
+          </Link>
+          <SignOutButton label="Sign out" />
+        </div>
+      </Panel>
 
       <Panel
         title="Management mode — the Control Tower"

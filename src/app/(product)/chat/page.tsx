@@ -6,12 +6,17 @@
 // "Chat discovery starters"), selectable into the URL (`/chat?q=<id>`) so
 // the live conversation workflow (W060) inherits a stable input contract.
 // No fake composer, no fake replies — quiet, honest states only.
+//
+// W058: company scope comes from the signed-in session (the unscoped
+// dev-seam state no longer renders — anonymous visitors are redirected
+// to sign-in, company-less sessions to onboarding).
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
+import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
+import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { CHAT_STARTERS, findStarter, starterHref } from '../lib/chat-starters';
-import { PageHead, ScopeNotice, StatusPill, WorkingIndicator } from '../components/states';
+import { PageHead, StatusPill, WorkingIndicator } from '../components/states';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,8 +26,7 @@ export default async function ChatPage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const params = await searchParams;
-  const resolution = productContextFromSearchParams(params);
-  const scoped = resolution.ok;
+  const session = await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
   const q = Array.isArray(params['q']) ? (params['q'][0] ?? null) : (params['q'] ?? null);
   const selected = findStarter(q);
@@ -33,12 +37,12 @@ export default async function ChatPage({
         title="Chat"
         description="Talk with Aurum like you would a colleague who happens to know the whole company. Answers are evidence-backed, findings arrive as cards, and consequential actions always pass a human approval gate."
         meta={
-          scoped ? (
-            <span>Company scope active — Aurum answers from your tenant-scoped state.</span>
-          ) : undefined
+          <span>
+            Company scope active — Aurum answers from {session.principal.displayName}&apos;s
+            tenant-scoped state.
+          </span>
         }
       />
-      {!scoped ? <ScopeNotice /> : null}
 
       <section className="aurum-chat-card" aria-labelledby="aurum-chat-identity-title">
         <div className="aurum-chat-identity">
@@ -54,9 +58,7 @@ export default async function ChatPage({
             </p>
           </div>
           <div style={{ marginLeft: 'auto' }}>
-            <StatusPill tone={scoped ? 'positive' : 'neutral'}>
-              {scoped ? 'on duty' : 'no company'}
-            </StatusPill>
+            <StatusPill tone="positive">on duty</StatusPill>
           </div>
         </div>
 

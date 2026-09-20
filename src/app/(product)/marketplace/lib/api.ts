@@ -18,9 +18,8 @@
 // The read side is the server pages themselves (view builders above);
 // these handlers are the product's ONLY write surface for the area.
 
-import { productContextFromRequest } from '../../lib/context';
-import type { ProductContextResolution } from '../../lib/context';
 import type { TenantContext } from '@/infra/tenant';
+import { resolveSessionRequest } from '@/app/lib/session';
 import { ExtensionsError } from '@/modules/extensions/contract';
 import {
   cancelExtensionBuild,
@@ -46,7 +45,7 @@ import {
 import { installPackage } from './install';
 import type { InstallReport } from './install';
 
-export type ApiErrorStatus = 400 | 403 | 404 | 409 | 500;
+export type ApiErrorStatus = 400 | 401 | 403 | 404 | 409 | 500;
 
 export interface ApiError {
   status: ApiErrorStatus;
@@ -61,6 +60,12 @@ function apiError(status: ApiErrorStatus, error: string, message: string): ApiEr
   return { status, body: { error, message } };
 }
 
+/** Map a session-resolution failure to its API outcome (W058). */
+function marketplaceContextError(failure: string, detail: string): ApiError {
+  if (failure === 'unauthenticated') return apiError(401, failure, detail);
+  return apiError(409, failure, detail);
+}
+
 // ---------------------------------------------------------------------------
 // Context resolution for this surface
 // ---------------------------------------------------------------------------
@@ -70,18 +75,27 @@ export type MarketplaceContextResolution =
   | { ok: false; failure: string; detail: string };
 
 /**
- * Resolve the context for a WRITE: writes always need a real caller —
- * an unscoped request cannot write anything (the browsing context is
- * read-only by construction: no claims, no vendorship).
+ * Resolve the context for a WRITE (W058: from the session cookie — the
+ * header/query seam is gone). Writes always need a real caller: an
+ * anonymous request cannot write anything, and a session without an
+ * active company has no scope to write within (the public browsing
+ * context of the catalog pages is read-only by construction).
  */
-export function writeContextFromRequest(
+export async function writeContextFromRequest(
   request: Request,
-): MarketplaceContextResolution {
-  const resolution: ProductContextResolution = productContextFromRequest(request);
-  if (!resolution.ok) {
-    return { ok: false, failure: resolution.failure, detail: resolution.detail };
+): Promise<MarketplaceContextResolution> {
+  const resolution = await resolveSessionRequest(request);
+  if (resolution.status === 'anonymous') {
+    return { ok: false, failure: 'unauthenticated', detail: 'no session for this request' };
   }
-  return { ok: true, context: resolution.resolved.context };
+  if (resolution.status === 'no-company') {
+    return {
+      ok: false,
+      failure: 'no_active_company',
+      detail: 'the session has no active company — complete onboarding first',
+    };
+  }
+  return { ok: true, context: resolution.context };
 }
 
 // ---------------------------------------------------------------------------
@@ -367,9 +381,9 @@ export async function handlePackageAction(
   action: PackageAction,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = writeContextFromRequest(request);
+  const context = await writeContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    return marketplaceContextError(context.failure, context.detail);
   }
   const ctx = context.context;
 
@@ -479,9 +493,9 @@ export async function handleExtensionAction(
   action: ExtensionAction,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = writeContextFromRequest(request);
+  const context = await writeContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    return marketplaceContextError(context.failure, context.detail);
   }
   const ctx = context.context;
 
@@ -578,9 +592,9 @@ export async function handleDeveloperAction(
   action: DeveloperAction,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = writeContextFromRequest(request);
+  const context = await writeContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    return marketplaceContextError(context.failure, context.detail);
   }
   const ctx = context.context;
 

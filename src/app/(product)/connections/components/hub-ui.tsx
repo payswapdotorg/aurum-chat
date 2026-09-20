@@ -143,17 +143,16 @@ export function Notice({
   return <div className={neutral ? 'notice notice-neutral' : 'notice'}>{children}</div>;
 }
 
-/** The not-scoped state: the hub needs an explicit tenant. */
+/**
+ * The not-scoped state (kept as the honest fallback; since W058 the
+ * session owns tenant scope, so reachable requests render scoped).
+ */
 export function NotScoped({ detail }: { detail: string }): ReactNode {
   return (
     <>
       <Notice>
-        {detail}. Example: append <code>?tenant=&lt;tenant uuid&gt;</code> to the
-        URL. Authentication and sessions land with W058 — until then this
-        surface resolves its context from explicit query parameters (
-        <code>?tenant=</code>, optional <code>?principal=</code>, optional{' '}
-        <code>?authority=</code> claims such as{' '}
-        <code>identity:attest,identity:link</code>).
+        {detail}. Company scope comes from your signed-in session — sign in
+        and select a company; there is no query parameter for it.
       </Notice>
     </>
   );

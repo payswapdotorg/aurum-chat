@@ -6,10 +6,11 @@
 // interventions W063). Honest structural hub — no invented data.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
+import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
+import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { peopleSurfaces } from '../lib/navigation';
-import { PageHead, Panel, ScopeNotice } from '../components/states';
+import { PageHead, Panel } from '../components/states';
 import { ShellGlyph } from '../components/icons';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export default async function PeoplePage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const params = await searchParams;
-  const scoped = productContextFromSearchParams(params).ok;
+  await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
 
   return (
@@ -28,13 +29,7 @@ export default async function PeoplePage({
       <PageHead
         title="People"
         description="The humans and the agents doing the work — who they are, what they know, and how Aurum helps without ever making employment decisions on its own."
-        meta={
-          scoped ? undefined : (
-            <span>Browsing without a company scope — links keep your current scope.</span>
-          )
-        }
       />
-      {!scoped ? <ScopeNotice /> : null}
 
       <div className="aurum-hub-grid">
         {peopleSurfaces().map((surface) => (

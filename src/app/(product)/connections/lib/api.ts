@@ -1,18 +1,21 @@
 // Connection & Integration Hub (W059) — API request handling.
 //
 // The /api/connections route handlers are thin adapters in the
-// IMPLEMENTATION-STACK §5 sense: resolve the tenant context (the documented
-// dev seam until W058), delegate to the view builder / action dispatcher
-// (module contracts only — locks 31/32), map module errors to HTTP-ish
-// outcomes. No handler logic lives in route.ts, so the entire surface is
-// testable without booting Next.js — the same discipline the tower (W033)
-// applies.
+// IMPLEMENTATION-STACK §5 sense: resolve the tenant context — W058: from
+// the SESSION COOKIE (the auth contract re-verifies the active company's
+// membership; the header/query seam is gone) — delegate to the view
+// builder / action dispatcher (module contracts only — locks 31/32), map
+// module errors to HTTP-ish outcomes. No handler logic lives in route.ts,
+// so the entire surface is testable without booting Next.js — the same
+// discipline the tower (W033) applies.
 
-import {
-  connectionsContextFromHeaders,
-  connectionsContextFromSearchParams,
-} from './context';
-import type { ConnectionsContextResolution } from './context';
+import { resolveSessionRequest } from '@/app/lib/session';
+import type { TenantContext } from '@/infra/tenant';
+
+/** The session-based context resolution of the hub API (W058). */
+export type ConnectionsContextResolution =
+  | { ok: true; context: TenantContext }
+  | { ok: false; failure: 'unauthenticated' | 'no_active_company'; detail: string };
 import { buildConnectionsView } from './views';
 import type { ConnectionsView, ConnectionsViewOptions } from './views';
 import { executeConnectionsAction, parseActionBody } from './actions';
@@ -23,7 +26,7 @@ export interface ApiOk {
   body: ConnectionsApiEnvelope;
 }
 
-export type ApiErrorStatus = 400 | 403 | 404 | 409 | 500;
+export type ApiErrorStatus = 400 | 401 | 403 | 404 | 409 | 500;
 
 export interface ApiError {
   status: ApiErrorStatus;
@@ -43,6 +46,12 @@ export interface ConnectionsApiEnvelope {
   result?: unknown;
 }
 
+/** Map a session-resolution failure to its API outcome (W058). */
+function connectionsContextError(failure: string, detail: string): ApiError {
+  if (failure === 'unauthenticated') return apiError(401, failure, detail);
+  return apiError(409, failure, detail);
+}
+
 function apiError(
   status: ApiErrorStatus,
   error: string,
@@ -52,21 +61,24 @@ function apiError(
 }
 
 /**
- * Resolve the hub context for an API request: headers first, then query
- * parameters (so a browser fetch can also scope a tenant without custom
- * headers). Header failures win the error message when both fail.
+ * Resolve the hub context for an API request (W058: from the session
+ * cookie — the header/query seam is gone). Anonymous requests are 401; a
+ * session without an active company is 409 (the client routes to
+ * onboarding).
  */
-export function connectionsContextFromRequest(request: Request): ConnectionsContextResolution {
-  const fromHeaders = connectionsContextFromHeaders(request.headers);
-  if (fromHeaders.ok) return fromHeaders;
-  const url = new URL(request.url);
-  const query: Record<string, string> = {};
-  for (const key of ['tenant', 'principal', 'authority']) {
-    const value = url.searchParams.get(key);
-    if (value !== null) query[key] = value;
+export async function connectionsContextFromRequest(request: Request): Promise<ConnectionsContextResolution> {
+  const resolution = await resolveSessionRequest(request);
+  if (resolution.status === 'anonymous') {
+    return { ok: false, failure: 'unauthenticated', detail: 'no session for this request' };
   }
-  const fromQuery = connectionsContextFromSearchParams(query);
-  return fromQuery.ok ? fromQuery : fromHeaders;
+  if (resolution.status === 'no-company') {
+    return {
+      ok: false,
+      failure: 'no_active_company',
+      detail: 'the session has no active company — complete onboarding first',
+    };
+  }
+  return { ok: true, context: resolution.context };
 }
 
 /** Query-string view options (identity lookup parameters). */
@@ -82,9 +94,9 @@ export function viewOptionsFromRequest(request: Request): ConnectionsViewOptions
 
 /** GET /api/connections — build the whole hub view. */
 export async function handleConnectionsGet(request: Request): Promise<ApiResult> {
-  const context = connectionsContextFromRequest(request);
+  const context = await connectionsContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    return connectionsContextError(context.failure, context.detail);
   }
   const view = await buildConnectionsView(context.context, viewOptionsFromRequest(request));
   return {
@@ -103,9 +115,9 @@ export async function handleConnectionsAction(
   request: Request,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = connectionsContextFromRequest(request);
+  const context = await connectionsContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    return connectionsContextError(context.failure, context.detail);
   }
   const parsed = parseActionBody(body);
   if (!parsed.ok) {

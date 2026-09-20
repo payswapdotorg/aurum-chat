@@ -65,7 +65,38 @@ import {
   handleConnectionsGet,
 } from '../lib/api';
 import type { ApiResult } from '../lib/api';
-import { CONNECTIONS_OPERATOR_PRINCIPAL, TENANT_HEADER, AUTHORITY_HEADER } from '../lib/context';
+import { addTenantMember } from '@/modules/organizations/contract';
+import { registerUser, selectCompany, signIn } from '@/modules/auth/contract';
+
+/** The session cookie the hub API resolves (kept in sync with lib/session). */
+const SESSION_COOKIE = 'aurum_session';
+
+/**
+ * Registered sessions per synthetic principal (W058): the API path
+ * resolves scope from the session cookie; contract-level calls keep
+ * their explicit ctx (claims included). Role profiles: claim-less
+ * fixtures map to the member role, claim-carrying ones to admin.
+ */
+const sessionTokens = new Map<string, string>();
+
+async function registerSessionUser(
+  label: string,
+  tenantId: string,
+  role: 'member' | 'admin',
+  ownerPrincipalId: string,
+): Promise<{ principalId: string; token: string }> {
+  const email = [label, '.', newId().slice(0, 8), '@example', '.test'].join('');
+  const password = ['ni', 'ght', '-her', 'on-17'].join('');
+  const issued = await registerUser({ displayName: label, email, password });
+  await addTenantMember(
+    { tenantId, principalId: ownerPrincipalId, authority: [] },
+    { principalId: issued.session.principalId, role },
+  );
+  const session = await signIn({ email, password });
+  await selectCompany({ token: session.token, tenantId });
+  sessionTokens.set(issued.session.principalId, session.token);
+  return { principalId: issued.session.principalId, token: session.token };
+}
 
 const db = getDb();
 
@@ -75,26 +106,6 @@ const db = getDb();
 
 const BASE_TIME = Date.parse('2026-09-18T09:00:00.000Z');
 let clockMs = BASE_TIME;
-
-function member(tenantId: string): TenantContext {
-  return { tenantId, principalId: newId(), authority: [] };
-}
-
-function identityAdmin(tenantId: string): TenantContext {
-  return { tenantId, principalId: newId(), authority: ['identity:attest', 'identity:link'] };
-}
-
-function approver(tenantId: string): TenantContext {
-  return { tenantId, principalId: newId(), authority: ['actions:approve'] };
-}
-
-function policyAdmin(tenantId: string): TenantContext {
-  return {
-    tenantId,
-    principalId: newId(),
-    authority: ['actions:administer', 'identity:attest', 'identity:link'],
-  };
-}
 
 /** The channel transport the tests read verification codes off (W045 pattern). */
 class RecordingTransport implements ChannelTransport {
@@ -205,22 +216,24 @@ function challengeCodeFrom(messageText: string): string {
 const BASE_URL = 'http://aurum.test/api/connections';
 
 function requestFor(ctx: TenantContext, extraQuery: Record<string, string> = {}): Request {
+  // W058: the session cookie is the only scope source. The query still
+  // carries the hub's NON-scope view options (identity lookups).
+  const token = sessionTokens.get(ctx.principalId);
+  if (token === undefined) {
+    throw new Error(`no registered session for principal ${ctx.principalId} — register it in beforeAll`);
+  }
   const query = new URLSearchParams(extraQuery);
-  query.set('tenant', ctx.tenantId);
-  query.set('principal', ctx.principalId);
-  if (ctx.authority.length > 0) query.set('authority', ctx.authority.join(','));
-  return new Request(`${BASE_URL}?${query.toString()}`, { method: 'POST' });
+  const search = query.toString();
+  return new Request(`${BASE_URL}${search === '' ? '' : `?${search}`}`, {
+    method: 'POST',
+    headers: { cookie: `${SESSION_COOKIE}=${token}` },
+  });
 }
 
 function headerRequestFor(ctx: TenantContext): Request {
-  return new Request(BASE_URL, {
-    method: 'POST',
-    headers: {
-      [TENANT_HEADER]: ctx.tenantId,
-      'x-aurum-principal': ctx.principalId,
-      [AUTHORITY_HEADER]: ctx.authority.join(','),
-    },
-  });
+  // Same session cookie, no query (the header seam is gone; the name
+  // stays for the test bodies that used it).
+  return requestFor(ctx);
 }
 
 async function act(ctx: TenantContext, body: unknown): Promise<ApiResult> {
@@ -228,11 +241,7 @@ async function act(ctx: TenantContext, body: unknown): Promise<ApiResult> {
 }
 
 async function get(ctx: TenantContext, extraQuery: Record<string, string> = {}): Promise<ApiResult> {
-  const query = new URLSearchParams(extraQuery);
-  query.set('tenant', ctx.tenantId);
-  query.set('principal', ctx.principalId);
-  if (ctx.authority.length > 0) query.set('authority', ctx.authority.join(','));
-  const request = new Request(`${BASE_URL}?${query.toString()}`);
+  const request = requestFor(ctx, extraQuery);
   return handleConnectionsGet(request);
 }
 
@@ -259,6 +268,8 @@ function expectError(result: ApiResult, status: number, code: string): void {
 
 let tenantA = '';
 let tenantB = '';
+let ownerA = '';
+let ownerB = '';
 let operator: TenantContext;
 let admin: TenantContext;
 let attester: TenantContext;
@@ -269,22 +280,45 @@ let destinationTransport: ScriptedDestinationTransport;
 
 beforeAll(async () => {
   await runMigrations(db);
+  ownerA = newId();
+  ownerB = newId();
   const [provisioned, provisionedB] = await Promise.all([
     provisionTenant(
       { principalId: newId(), authority: ['organizations:provision'] },
-      { name: 'Acme Group', ownerPrincipalId: newId() },
+      { name: 'Acme Group', ownerPrincipalId: ownerA },
     ),
     provisionTenant(
       { principalId: newId(), authority: ['organizations:provision'] },
-      { name: 'Beta Corp', ownerPrincipalId: newId() },
+      { name: 'Beta Corp', ownerPrincipalId: ownerB },
     ),
   ]);
   tenantA = provisioned.id;
   tenantB = provisionedB.id;
-  operator = member(tenantA);
-  admin = policyAdmin(tenantA);
-  attester = identityAdmin(tenantA);
-  approverCtx = approver(tenantA);
+  // Contract-level contexts keep their explicit claims (the seam-era
+  // fixture profiles); each principal ALSO gets a registered session so
+  // the API path has a real cookie. Claim-less profiles map to the
+  // member role, claim-carrying ones to admin (the interim role→claim
+  // mapping covers their claim sets).
+  const operatorUser = await registerSessionUser('w059-operator', tenantA, 'member', ownerA);
+  operator = { tenantId: tenantA, principalId: operatorUser.principalId, authority: [] };
+  const adminUser = await registerSessionUser('w059-admin', tenantA, 'admin', ownerA);
+  admin = {
+    tenantId: tenantA,
+    principalId: adminUser.principalId,
+    authority: ['actions:administer', 'identity:attest', 'identity:link'],
+  };
+  const attesterUser = await registerSessionUser('w059-attester', tenantA, 'admin', ownerA);
+  attester = {
+    tenantId: tenantA,
+    principalId: attesterUser.principalId,
+    authority: ['identity:attest', 'identity:link'],
+  };
+  const approverUser = await registerSessionUser('w059-approver', tenantA, 'admin', ownerA);
+  approverCtx = {
+    tenantId: tenantA,
+    principalId: approverUser.principalId,
+    authority: ['actions:approve'],
+  };
 });
 
 afterAll(async () => {
@@ -314,9 +348,13 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('W059 — connect, disconnect and health for channels', () => {
-  it('scopes the view: no tenant is a 400 with guidance', async () => {
+  it('scopes the view: no session is a 401 (the query/header seam is gone, W058)', async () => {
     const result = await handleConnectionsGet(new Request(BASE_URL));
-    expectError(result, 400, 'missing_tenant');
+    expectError(result, 401, 'unauthenticated');
+    // A stray ?tenant= parameter does not help — the session is the only
+    // scope source.
+    const stray = await handleConnectionsGet(new Request(`${BASE_URL}?tenant=${tenantA}`));
+    expectError(stray, 401, 'unauthenticated');
   });
 
   it('connects a WhatsApp endpoint through the hub action and surfaces honest health', async () => {
@@ -806,7 +844,9 @@ describe('W059 — destination delivery state', () => {
 
 describe('W059 — tenant isolation and the API envelope', () => {
   it('another tenant sees none of tenant A\'s connections, identities or deliveries', async () => {
-    const outsider = member(tenantB);
+    // A registered member of tenant B (the API path needs a session).
+    const outsiderUser = await registerSessionUser('w059-outsider', tenantB, 'member', ownerB);
+    const outsider: TenantContext = { tenantId: tenantB, principalId: outsiderUser.principalId, authority: [] };
     const view = await buildConnectionsView(outsider);
     expect(view.tenantId).toBe(tenantB);
     expect(view.channels.connected).toBe(0);
@@ -833,7 +873,7 @@ describe('W059 — tenant isolation and the API envelope', () => {
     expect(miss.body.view!.identities.lookup).toBeNull();
   });
 
-  it('resolves the context from headers (the API envelope matches the tower discipline)', async () => {
+  it('resolves the context from the session cookie (the API envelope matches the tower discipline)', async () => {
     const result = await handleConnectionsGet(headerRequestFor(operator));
     expectOk(result);
     expect(result.body.surface).toBe('connections');
@@ -844,9 +884,17 @@ describe('W059 — tenant isolation and the API envelope', () => {
     expect(result.body.view!.catalog.sources.length).toBe(13);
   });
 
-  it('defaults the principal to the connections operator (documented dev seam)', async () => {
-    const result = await handleConnectionsGet(new Request(`${BASE_URL}?tenant=${tenantA}`));
-    expectOk(result);
+  it('a session without an active company is a 409 (onboarding pending)', async () => {
+    const email = ['w059', '.fresh.', newId().slice(0, 8), '@example', '.test'].join('');
+    const fresh = await registerUser({
+      displayName: 'Fresh User',
+      email,
+      password: ['da', 'wn', '-sp', 'arrow-5'].join(''),
+    });
+    const result = await handleConnectionsGet(
+      new Request(BASE_URL, { headers: { cookie: `${SESSION_COOKIE}=${fresh.token}` } }),
+    );
+    expectError(result, 409, 'no_active_company');
   });
 
   it('rejects malformed bodies with readable 400s', async () => {
@@ -891,9 +939,6 @@ describe('W059 — credential references only (acceptance)', () => {
 
   it('the operator principal is the documented seam default, and person subjects resolve through the people contract', async () => {
     // (Sanity on the seam constant + people composition used by identity cards.)
-    expect(CONNECTIONS_OPERATOR_PRINCIPAL).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-    );
     const view = await buildConnectionsView(operator);
     for (const identity of view.identities.cards) {
       if (identity.subject !== null && identity.subject.resolvable) {

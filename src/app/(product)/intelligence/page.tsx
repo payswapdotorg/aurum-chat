@@ -8,10 +8,11 @@
 // scope; this hub is its shell home.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
+import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
+import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { intelligenceSurfaces } from '../lib/navigation';
-import { PageHead, Panel, ScopeNotice } from '../components/states';
+import { PageHead, Panel } from '../components/states';
 import { ShellGlyph } from '../components/icons';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +23,7 @@ export default async function IntelligencePage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const params = await searchParams;
-  const scoped = productContextFromSearchParams(params).ok;
+  await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
   const surfaces = intelligenceSurfaces();
 
@@ -31,13 +32,7 @@ export default async function IntelligencePage({
       <PageHead
         title="Intelligence"
         description="Everything Aurum understands about where the company is heading and what it has found — direction, risks, opportunities and the mechanics underneath."
-        meta={
-          scoped ? undefined : (
-            <span>Browsing without a company scope — links keep your current scope.</span>
-          )
-        }
       />
-      {!scoped ? <ScopeNotice /> : null}
 
       <div className="aurum-hub-grid">
         {surfaces.map((surface) => (

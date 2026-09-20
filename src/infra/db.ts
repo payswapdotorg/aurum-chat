@@ -109,17 +109,29 @@ class PostgresDb implements DbPort {
   }
 }
 
-let instance: DbPort | null = null;
-let closeInstance: (() => Promise<void>) | null = null;
+// The singleton lives on globalThis (NOT a module-level variable): Next's
+// dev runtime compiles route bundles into separate module registries, and
+// a module-level singleton would hand each registry its OWN PGlite
+// instance over the same file — divergent in-memory state followed by
+// whole-file last-writer-wins corruption (W058 exposed this: a session
+// written by an API route "vanished" for a page render). The global
+// object is shared by every registry in the process, so exactly one
+// embedded database (or Pool) exists per process, the same discipline
+// Prisma's Next.js guidance uses for its client.
+interface DbGlobal {
+  __aurumDbPort?: DbPort;
+  __aurumDbClose?: () => Promise<void>;
+}
+const dbGlobal = globalThis as unknown as DbGlobal;
 
 function createFilePglite(): PGlite {
   mkdirSync(path.dirname(EMBEDDED_DB_PATH), { recursive: true });
   return new PGlite(EMBEDDED_DB_PATH);
 }
 
-/** Singleton database port for this process. */
+/** Singleton database port for this process (shared across every route bundle). */
 export function getDb(): DbPort {
-  if (instance !== null) return instance;
+  if (dbGlobal.__aurumDbPort !== undefined) return dbGlobal.__aurumDbPort;
   const backend = getAurumDb() ?? (getDatabaseUrl() !== undefined ? 'postgres' : 'embedded');
   if (backend === 'postgres') {
     const url = getDatabaseUrl();
@@ -127,20 +139,20 @@ export function getDb(): DbPort {
       throw new Error('AURUM_DB=postgres requires DATABASE_URL to be set');
     }
     const postgres = new PostgresDb(new Pool({ connectionString: url }));
-    instance = postgres;
-    closeInstance = () => postgres.close();
-    return instance;
+    dbGlobal.__aurumDbPort = postgres;
+    dbGlobal.__aurumDbClose = () => postgres.close();
+    return postgres;
   }
   const embedded = isDbMemory() ? new EmbeddedDb(new PGlite()) : new EmbeddedDb(createFilePglite());
-  instance = embedded;
-  closeInstance = () => embedded.close();
-  return instance;
+  dbGlobal.__aurumDbPort = embedded;
+  dbGlobal.__aurumDbClose = () => embedded.close();
+  return embedded;
 }
 
 /** Close the singleton (flushes the embedded database; ends the pool). */
 export async function closeDb(): Promise<void> {
-  const close = closeInstance;
-  instance = null;
-  closeInstance = null;
-  if (close !== null) await close();
+  const close = dbGlobal.__aurumDbClose;
+  dbGlobal.__aurumDbPort = undefined;
+  dbGlobal.__aurumDbClose = undefined;
+  if (close !== undefined) await close();
 }

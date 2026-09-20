@@ -3,11 +3,7 @@
 // parsing, API error mapping and the provider catalog.
 
 import { describe, expect, it } from 'vitest';
-import {
-  CONNECTIONS_OPERATOR_PRINCIPAL,
-  resolveConnectionsContext,
-  scopeQuery,
-} from '../lib/context';
+import { firstValue, scopeParamsOf } from '../lib/context';
 import {
   OAUTH_EXPIRING_WITHIN_SECONDS,
   ageSeconds,
@@ -35,65 +31,23 @@ const NOW = '2026-09-18T12:00:00.000Z';
 const HOUR = 3600;
 
 // ---------------------------------------------------------------------------
-// Context resolution (the documented dev seam until W058)
+// Query helpers (post-W058: the scope seam is gone — the session carries it)
 // ---------------------------------------------------------------------------
 
-describe('connections context resolution', () => {
-  it('rejects a missing tenant with actionable guidance', () => {
-    const result = resolveConnectionsContext({ tenant: null });
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.failure).toBe('missing_tenant');
-      expect(result.detail).toContain('x-aurum-tenant');
-    }
-  });
-
-  it('rejects a non-uuid tenant', () => {
-    const result = resolveConnectionsContext({ tenant: 'acme' });
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.failure).toBe('invalid_tenant');
-  });
-
-  it('defaults the principal to the connections operator and parses authority claims', () => {
-    const result = resolveConnectionsContext({
-      tenant: '9f0bdbaa-1d2f-4b6f-8f97-2c6ff6b64b6f',
-      authority: 'identity:attest, identity:link,,identity:attest',
+describe('connections query helpers', () => {
+  it('scopeParamsOf is the null triple — scope never rides a URL', () => {
+    expect(scopeParamsOf({ tenant: '00000000-0000-4000-8000-000000000001' })).toEqual({
+      tenant: null,
+      principal: null,
+      authority: null,
     });
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.principalExplicit).toBe(false);
-      expect(result.context.principalId).toBe(CONNECTIONS_OPERATOR_PRINCIPAL);
-      expect(result.context.tenantId).toBe('9f0bdbaa-1d2f-4b6f-8f97-2c6ff6b64b6f');
-      expect(result.context.authority).toEqual(['identity:attest', 'identity:link']);
-    }
   });
 
-  it('rejects a non-uuid principal and lowercases explicit ids', () => {
-    const bad = resolveConnectionsContext({
-      tenant: '9f0bdbaa-1d2f-4b6f-8f97-2c6ff6b64b6f',
-      principal: 'maya',
-    });
-    expect(bad.ok).toBe(false);
-    if (!bad.ok) expect(bad.failure).toBe('invalid_principal');
-
-    const good = resolveConnectionsContext({
-      tenant: '9F0BDBAA-1D2F-4B6F-8F97-2C6FF6B64B6F',
-      principal: '1C8E0CB6-7F8D-4C7D-9D1B-7D31C1C59A22',
-    });
-    expect(good.ok).toBe(true);
-    if (good.ok) {
-      expect(good.context.tenantId).toBe('9f0bdbaa-1d2f-4b6f-8f97-2c6ff6b64b6f');
-      expect(good.context.principalId).toBe('1c8e0cb6-7f8d-4c7d-9d1b-7d31c1c59a22');
-    }
-  });
-
-  it('serializes scope into a preserved query string', () => {
-    const query = scopeQuery(
-      { tenant: 't', principal: 'p', authority: 'a,b' },
-      { identity_provider: 'whatsapp' },
-    );
-    expect(query).toBe('?tenant=t&principal=p&authority=a%2Cb&identity_provider=whatsapp');
-    expect(scopeQuery({ tenant: null, principal: null, authority: null })).toBe('');
+  it('firstValue picks the first value of array parameters', () => {
+    expect(firstValue(['a', 'b'])).toBe('a');
+    expect(firstValue('a')).toBe('a');
+    expect(firstValue(undefined)).toBeNull();
+    expect(firstValue([])).toBeNull();
   });
 });
 

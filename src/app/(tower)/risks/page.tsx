@@ -24,12 +24,8 @@ import { formatInstant, joinList, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function RisksPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function RisksPage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildRisksView(resolution.context);
 

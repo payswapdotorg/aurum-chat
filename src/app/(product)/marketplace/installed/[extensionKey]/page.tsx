@@ -11,13 +11,13 @@
 // mutation of history.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../../../lib/context';
+import { withProductScope } from '../../../lib/context';
+import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import type { PageSearchParams } from '../../../lib/context';
 import { buildExtensionView } from '../../lib/views';
 import {
   EmptyState,
   ErrorState,
-  NotScoped,
   PageHead,
   Panel,
   StatusPill,
@@ -37,12 +37,9 @@ export default async function InstalledExtensionPage({
 }) {
   const { extensionKey } = await params;
   const query = await searchParams;
-  const resolution = productContextFromSearchParams(query);
-  if (!resolution.ok) {
-    return <NotScoped detail={resolution.detail} />;
-  }
+  const session = await requireAuthenticatedPage();
   const scopeQuery = withProductScope(query);
-  const result = await buildExtensionView(resolution.resolved.context, extensionKey);
+  const result = await buildExtensionView(session.context, extensionKey);
 
   if (!result.ok) {
     if (result.failure === 'not_found') {

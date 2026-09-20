@@ -26,15 +26,7 @@ import {
   scoreCommand,
   starterOfCommand,
 } from '../lib/command-registry';
-import {
-  productContextFromHeaders,
-  productContextFromSearchParams,
-  resolveProductContext,
-  scopeFromSearch,
-  switchScopeTarget,
-  withProductScope,
-  PRODUCT_OPERATOR_PRINCIPAL,
-} from '../lib/context';
+import { withProductScope } from '../lib/context';
 import {
   contextDrawerReducer,
   normalizeContextPayload,
@@ -240,105 +232,13 @@ describe('command search registry', () => {
 // Context seam
 // ---------------------------------------------------------------------------
 
-describe('product context seam', () => {
-  const TENANT = '6F9619FF-8B86-D011-B42D-00C04FC964FF'; // uppercase on purpose
-
-  it('fails honestly without a tenant', () => {
-    const result = resolveProductContext({});
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.failure).toBe('missing_tenant');
-  });
-
-  it('rejects non-uuid tenants and principals', () => {
-    expect(resolveProductContext({ tenant: 'globex' })).toMatchObject({
-      ok: false,
-      failure: 'invalid_tenant',
-    });
-    expect(
-      resolveProductContext({ tenant: TENANT, principal: 'me' }),
-    ).toMatchObject({ ok: false, failure: 'invalid_principal' });
-  });
-
-  it('resolves a valid context with the well-known operator default', () => {
-    const result = resolveProductContext({ tenant: TENANT });
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.resolved.context.tenantId).toBe(TENANT.toLowerCase());
-      expect(result.resolved.context.principalId).toBe(PRODUCT_OPERATOR_PRINCIPAL);
-      expect(result.resolved.principalExplicit).toBe(false);
-      expect(result.resolved.context.authority).toEqual([]);
-      expect(result.resolved.workspace).toBeNull();
-    }
-  });
-
-  it('parses authority claims and normalizes workspace slugs', () => {
-    const result = resolveProductContext({
-      tenant: TENANT,
-      principal: PRODUCT_OPERATOR_PRINCIPAL,
-      authority: 'actions:approve, notifications:administer,, actions:approve',
-      workspace: '  operations  ',
-    });
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.resolved.context.authority).toEqual([
-        'actions:approve',
-        'notifications:administer',
-      ]);
-      expect(result.resolved.workspace).toBe('operations');
-      expect(result.resolved.principalExplicit).toBe(true);
-    }
-  });
-
-  it('reads the same seam from search params and headers', () => {
-    expect(
-      productContextFromSearchParams({ tenant: [TENANT], workspace: 'ops' }),
-    ).toMatchObject({ ok: true });
-    const headers = new Headers();
-    headers.set('x-aurum-tenant', TENANT);
-    expect(productContextFromHeaders(headers)).toMatchObject({ ok: true });
-    const bad = new Headers();
-    bad.set('x-aurum-tenant', 'not-a-uuid');
-    expect(productContextFromHeaders(bad)).toMatchObject({ ok: false });
-  });
-
-  it('withProductScope preserves scope and applies overrides', () => {
-    const params = {
-      tenant: TENANT,
-      principal: '00000000-0000-4000-8000-000000000001',
-      authority: 'actions:approve',
-      workspace: 'ops',
-      q: 'attention', // non-scope params are NOT preserved by scope helpers
-    };
-    expect(withProductScope(params)).toBe(
-      `?tenant=${TENANT}&principal=00000000-0000-4000-8000-000000000001&authority=actions%3Aapprove&workspace=ops`,
-    );
-    expect(withProductScope(params, { workspace: null })).toBe(
-      `?tenant=${TENANT}&principal=00000000-0000-4000-8000-000000000001&authority=actions%3Aapprove`,
-    );
+describe('link query building (post-W058: no scope seam)', () => {
+  it('withProductScope applies overrides only — scope parameters never ride a URL', () => {
     expect(withProductScope({})).toBe('');
-  });
-
-  it('scopeFromSearch extracts only the scope parameters', () => {
-    expect(scopeFromSearch('?tenant=t&q=why&principal=p&sort=1')).toBe(
-      '?tenant=t&principal=p',
-    );
-    expect(scopeFromSearch('?q=why')).toBe('');
-  });
-
-  it('switchScopeTarget: workspace switch, clear, and tenant change (drops workspace)', () => {
-    const base = '?tenant=t1&workspace=ops&principal=p';
-    expect(switchScopeTarget(base, { workspace: 'growth' })).toBe(
-      '?tenant=t1&workspace=growth&principal=p',
-    );
-    expect(switchScopeTarget(base, { workspace: null })).toBe(
-      '?tenant=t1&principal=p',
-    );
-    expect(switchScopeTarget(base, { tenant: 't2' })).toBe(
-      '?tenant=t2&principal=p',
-    );
-    expect(switchScopeTarget('?q=why', { tenant: 't9' })).toBe(
-      '?q=why&tenant=t9',
-    );
+    expect(withProductScope({ tenant: '00000000-0000-4000-8000-000000000001' })).toBe('');
+    expect(withProductScope({}, { kind: 'agent' })).toBe('?kind=agent');
+    expect(withProductScope({}, { kind: null })).toBe('');
+    expect(withProductScope({}, { status: 'archived' })).toBe('?status=archived');
   });
 });
 

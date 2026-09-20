@@ -13,8 +13,9 @@
 // working parts of the pages below.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
+import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
+import { resolveSession } from '@/app/lib/session';
 import {
   buildCatalogView,
   parseKindFilter,
@@ -25,7 +26,6 @@ import {
   ErrorState,
   PageHead,
   Panel,
-  ScopeNotice,
   StatusPill,
   Tag,
 } from '../components/states';
@@ -45,9 +45,12 @@ export default async function MarketplacePage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const params = await searchParams;
-  const resolution = productContextFromSearchParams(params);
-  const scoped = resolution.ok;
-  const ctx = resolution.ok ? resolution.resolved.context : publicBrowsingContext();
+  // W058: scope comes from the session; an anonymous visitor still browses
+  // the public catalog with the claim-less browsing context (reads only —
+  // every write path requires a signed-in session with an active company).
+  const session = await resolveSession();
+  const scoped = session.status === 'authenticated';
+  const ctx = scoped ? session.context : publicBrowsingContext();
   const scopeQuery = withProductScope(params);
   const rawKind = Array.isArray(params['kind']) ? (params['kind'][0] ?? null) : (params['kind'] ?? null);
   const kindFilter = parseKindFilter(rawKind);
@@ -66,7 +69,14 @@ export default async function MarketplacePage({
         description="Extensions and governed agent packages — general software capabilities for your Aurum, not a fixed feature catalog. Every listing passed automated verification AND platform review before it became installable; publication and installation are separate states."
         meta={<span>Live catalog · {view.total} listing{view.total === 1 ? '' : 's'} shown</span>}
       />
-      {!scoped ? <ScopeNotice /> : null}
+      {!scoped ? (
+        <div className="aurum-notice">
+          You are browsing the public catalog without signing in. Sign in to
+          see your company&apos;s installed extensions and to install or
+          govern anything — every write passes your session&apos;s verified
+          scope.
+        </div>
+      ) : null}
 
       <div className="aurum-mkt-area-links">
         <Link className="aurum-mkt-area-link" href={`/marketplace/installed${scopeQuery}`}>
