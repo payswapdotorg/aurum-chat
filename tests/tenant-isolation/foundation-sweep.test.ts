@@ -1,8 +1,10 @@
 // W044 — Tenant Isolation Verification · application-boundary sweep for the
 // L0 foundation modules: organizations (W001), identity (W002), people
 // (W002), events (W003), world (W005), audit (W046, the append-only
-// decision-evidence trail), simulator (W056, the synthetic company) and
-// auth (W058 — principals, sessions and invitations).
+// decision-evidence trail), simulator (W056, the synthetic company), auth
+// (W058 — principals, sessions and invitations) and demo (W068, the
+// deterministic demo harness — a contract-composing module with no tables
+// of its own; see its sweep block for the boundary posture).
 //
 // Two REAL tenants are provisioned through the organizations contract (the
 // platform operation), then every module contract is driven for both tenants
@@ -27,11 +29,15 @@ process.env.AURUM_DB_MEMORY = '1';
 delete process.env.DATABASE_URL;
 delete process.env.REDIS_URL;
 
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { closeDb, getDb } from '@/infra/db';
 import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import { authorizeAction } from '@/modules/actions/contract';
+import { seedDemoHarness } from '@/modules/demo/contract';
 import {
   getAuditRecord,
   listAuditRecords,
@@ -1129,6 +1135,48 @@ describe('W044 simulator — synthetic companies and hidden ground truth are ten
     const bReports = await listMonthReports(member(tenantB.tenantId), { companyId: beta.id });
     expect(bReports.map((report) => report.month)).toEqual([1]);
     expect(bReports.every((report) => report.companyId === beta.id)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// demo (W068 — the deterministic demo harness)
+// ---------------------------------------------------------------------------
+
+describe('W044 demo — the harness adds no tenant surface of its own', () => {
+  // The demo module is a CONTRACT-COMPOSING harness (the simulator
+  // precedent): it owns no tables, so it cannot add a tenant-scoped
+  // surface beyond the already-swept modules it seeds through. What the
+  // sweep proves here is exactly that posture plus the boundary guard;
+  // the seeded dataset's own tenant isolation (foreign tenants see
+  // nothing of it) is proven by the module's integration tests
+  // (src/modules/demo/tests/demo-seed.test.ts) — this sweep's database
+  // cannot host the demo companies because the row-partition integrity
+  // check below pins every row to the two sweep tenants.
+
+  it('owns no tables (no migrations of its own — every demo record lives in an already-swept module)', () => {
+    const sweepDir = path.dirname(fileURLToPath(import.meta.url));
+    const demoMigrations = path.join(sweepDir, '..', '..', 'src', 'modules', 'demo', 'migrations');
+    expect(existsSync(demoMigrations), `${demoMigrations} must not exist`).toBe(false);
+  });
+
+  it('refuses to seed outside the guarded non-production database (the boundary guard)', async () => {
+    const savedUrl = process.env.DATABASE_URL;
+    const savedOptIn = process.env.AURUM_DEMO_SEED;
+    try {
+      // A server database is refused before anything is created.
+      process.env.DATABASE_URL = 'postgres://sweep:probe@db.invalid:5432/aurum';
+      await expect(seedDemoHarness()).rejects.toMatchObject({ code: 'production_backdoor' });
+
+      // The embedded database without the explicit opt-in is refused too.
+      delete process.env.DATABASE_URL;
+      delete process.env.AURUM_DEMO_SEED;
+      await expect(seedDemoHarness()).rejects.toMatchObject({ code: 'production_backdoor' });
+    } finally {
+      if (savedUrl === undefined) delete process.env.DATABASE_URL;
+      else process.env.DATABASE_URL = savedUrl;
+      if (savedOptIn === undefined) delete process.env.AURUM_DEMO_SEED;
+      else process.env.AURUM_DEMO_SEED = savedOptIn;
+    }
   });
 });
 
