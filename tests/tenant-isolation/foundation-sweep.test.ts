@@ -1,8 +1,9 @@
 // W044 — Tenant Isolation Verification · application-boundary sweep for the
 // L0 foundation modules: organizations (W001), identity (W002), people
 // (W002), events (W003), world (W005), audit (W046, the append-only
-// decision-evidence trail), simulator (W056, the synthetic company) and
-// auth (W058 — principals, sessions and invitations).
+// decision-evidence trail), simulator (W056, the synthetic company),
+// auth (W058 — principals, sessions and invitations) and demo (W068 — the
+// demo harness's seed-anchor registry).
 //
 // Two REAL tenants are provisioned through the organizations contract (the
 // platform operation), then every module contract is driven for both tenants
@@ -72,6 +73,7 @@ import {
   listPersonIdentities,
   setEmployeeStatus,
 } from '@/modules/people/contract';
+import { DemoError, readDemoJourneyAnchors } from '@/modules/demo/contract';
 import {
   addTenantMember,
   createWorkspace,
@@ -955,6 +957,42 @@ describe('W044 auth — sessions and invitations are scope-safe', () => {
     // The session's scope is unchanged.
     const still = await signIn({ email, password });
     expect(still.session.company!.tenantId).toBe(tenantA.tenantId);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// demo (W068)
+// ---------------------------------------------------------------------------
+
+describe('W044 demo — the seed-anchor registry is tenant-scoped', () => {
+  it('keeps the harness directory per tenant: disjoint listings, no cross-tenant reads', async () => {
+    const ctxA = tenantA.owner;
+    const ctxB = tenantB.owner;
+
+    // Both tenants start with an empty anchor directory (per-tenant listing).
+    expect(await readDemoJourneyAnchors(ctxA)).toEqual([]);
+    expect(await readDemoJourneyAnchors(ctxB)).toEqual([]);
+
+    // A storage-level anchor row for tenant A — the exact row shape the
+    // harness's seeding path writes (bookkeeping, never domain truth).
+    await getDb().query(
+      `INSERT INTO demo_journey_anchors (tenant_id, journey_id, anchor_key, record_id, metadata)
+         VALUES ($1, 'demo-world', 'sweep-anchor', $2, '{}'::jsonb)`,
+      [ctxA.tenantId, newId()],
+    );
+
+    const anchorsA = await readDemoJourneyAnchors(ctxA);
+    expect(anchorsA).toHaveLength(1);
+    expect(anchorsA[0]!.journeyId).toBe('demo-world');
+    expect(anchorsA[0]!.anchorKey).toBe('sweep-anchor');
+
+    // Tenant B's directory stays empty — the row never leaks across scope.
+    expect(await readDemoJourneyAnchors(ctxB)).toEqual([]);
+
+    // A malformed context is refused by the harness's shape gate.
+    await expect(
+      readDemoJourneyAnchors({ tenantId: '', principalId: newId(), authority: [] }),
+    ).rejects.toBeInstanceOf(DemoError);
   });
 });
 

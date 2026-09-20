@@ -33,6 +33,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   cognition: 'cognition-sweep.test.ts',
   contributions: 'evidence-sweep.test.ts',
   conversations: 'experience-sweep.test.ts',
+  demo: 'foundation-sweep.test.ts',
   destinations: 'experience-sweep.test.ts',
   environment: 'evidence-sweep.test.ts',
   epistemics: 'evidence-sweep.test.ts',

@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "migrate": "tsx scripts/migrate.ts",
     "db:dev": "tsx scripts/dev-db.ts",
+    "seed:demo": "tsx scripts/seed-demo-harness.ts",
     "mcp": "tsx src/mcp/server.ts"
   },
   "dependencies": {
