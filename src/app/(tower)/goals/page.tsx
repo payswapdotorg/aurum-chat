@@ -6,7 +6,7 @@
 // trail lives in the module (every version records who/when/what/why).
 
 import { buildGoalsView } from '../lib/views/goals';
-import { resolvePageContext, withScope } from '../lib/page-context';
+import { requireTowerScope, withQuery } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -14,7 +14,6 @@ import {
   ItemFoot,
   ItemHead,
   ItemText,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -30,10 +29,10 @@ export default async function GoalsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const resolution = await resolvePageContext(params);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/goals');
   const status: GoalStatus = params['status'] === 'archived' ? 'archived' : 'active';
-  const view = await buildGoalsView(resolution.context, status);
+  const view = await buildGoalsView(scope.context, status);
 
   return (
     <>
@@ -44,9 +43,9 @@ export default async function GoalsPage({
           <>
             Showing <strong>{status}</strong> goals ·{' '}
             {status === 'active' ? (
-              <a href={withScope(params, { status: 'archived' })}>view archived</a>
+              <a href={withQuery(params, { status: 'archived' })}>view archived</a>
             ) : (
-              <a href={withScope(params, { status: null })}>view active</a>
+              <a href={withQuery(params, { status: null })}>view active</a>
             )}
             {' · '}Generated {formatInstant(view.generatedAt)}
           </>

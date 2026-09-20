@@ -6,7 +6,7 @@
 // claims and the open contradictions deliberately retained (lock 12).
 
 import { buildSituationView } from '../lib/views/situation';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -14,7 +14,6 @@ import {
   ItemFoot,
   ItemHead,
   ItemText,
-  NotScoped,
   StatTiles,
   SurfaceHeader,
 } from '../components/view-ui';
@@ -22,14 +21,10 @@ import { formatConfidence, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SituationPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildSituationView(resolution.context);
+export default async function SituationPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/situation');
+  const view = await buildSituationView(scope.context);
 
   return (
     <>

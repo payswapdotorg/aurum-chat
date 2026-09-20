@@ -18,8 +18,7 @@
 // The read side is the server pages themselves (view builders above);
 // these handlers are the product's ONLY write surface for the area.
 
-import { productContextFromRequest } from '../../lib/context';
-import type { ProductContextResolution } from '../../lib/context';
+import { resolveRequestScope } from '@/app/lib/request-session';
 import type { TenantContext } from '@/infra/tenant';
 import { ExtensionsError } from '@/modules/extensions/contract';
 import {
@@ -46,7 +45,7 @@ import {
 import { installPackage } from './install';
 import type { InstallReport } from './install';
 
-export type ApiErrorStatus = 400 | 403 | 404 | 409 | 500;
+export type ApiErrorStatus = 400 | 401 | 403 | 404 | 409 | 500;
 
 export interface ApiError {
   status: ApiErrorStatus;
@@ -70,18 +69,30 @@ export type MarketplaceContextResolution =
   | { ok: false; failure: string; detail: string };
 
 /**
- * Resolve the context for a WRITE: writes always need a real caller —
- * an unscoped request cannot write anything (the browsing context is
- * read-only by construction: no claims, no vendorship).
+ * Resolve the context for a WRITE (W058: from the SESSION COOKIE — the
+ * query/header seam is gone). Writes always need a real caller: an
+ * unauthenticated request cannot write anything, and a session without
+ * an active company has nothing to write into.
  */
-export function writeContextFromRequest(
+export async function writeContextFromRequest(
   request: Request,
-): MarketplaceContextResolution {
-  const resolution: ProductContextResolution = productContextFromRequest(request);
-  if (!resolution.ok) {
-    return { ok: false, failure: resolution.failure, detail: resolution.detail };
+): Promise<MarketplaceContextResolution> {
+  const scope = await resolveRequestScope(request);
+  if (scope.phase === 'unauthenticated') {
+    return {
+      ok: false,
+      failure: 'unauthenticated',
+      detail: 'sign in to use Aurum',
+    };
   }
-  return { ok: true, context: resolution.resolved.context };
+  if (scope.phase === 'no_active_tenant') {
+    return {
+      ok: false,
+      failure: 'no_active_tenant',
+      detail: 'choose or create a company first',
+    };
+  }
+  return { ok: true, context: scope.context };
 }
 
 // ---------------------------------------------------------------------------
@@ -367,9 +378,16 @@ export async function handlePackageAction(
   action: PackageAction,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = writeContextFromRequest(request);
+  const context = await writeContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    // W058: unauthenticated/no-company are 401/409, not bad requests.
+    const status: ApiErrorStatus =
+      context.failure === 'unauthenticated'
+        ? 401
+        : context.failure === 'no_active_tenant'
+          ? 409
+          : 400;
+    return apiError(status, context.failure, context.detail);
   }
   const ctx = context.context;
 
@@ -479,9 +497,16 @@ export async function handleExtensionAction(
   action: ExtensionAction,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = writeContextFromRequest(request);
+  const context = await writeContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    // W058: unauthenticated/no-company are 401/409, not bad requests.
+    const status: ApiErrorStatus =
+      context.failure === 'unauthenticated'
+        ? 401
+        : context.failure === 'no_active_tenant'
+          ? 409
+          : 400;
+    return apiError(status, context.failure, context.detail);
   }
   const ctx = context.context;
 
@@ -578,9 +603,16 @@ export async function handleDeveloperAction(
   action: DeveloperAction,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = writeContextFromRequest(request);
+  const context = await writeContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    // W058: unauthenticated/no-company are 401/409, not bad requests.
+    const status: ApiErrorStatus =
+      context.failure === 'unauthenticated'
+        ? 401
+        : context.failure === 'no_active_tenant'
+          ? 409
+          : 400;
+    return apiError(status, context.failure, context.detail);
   }
   const ctx = context.context;
 

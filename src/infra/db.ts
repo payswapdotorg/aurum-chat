@@ -109,17 +109,39 @@ class PostgresDb implements DbPort {
   }
 }
 
-let instance: DbPort | null = null;
-let closeInstance: (() => Promise<void>) | null = null;
+// W058 note: the singleton lives on globalThis. Next.js dev servers can
+// duplicate module instances between route-handler and server-component
+// bundles; a plain module-level singleton would give each bundle its OWN
+// embedded (file-backed) PGlite, and writes from one bundle (e.g. the
+// auth API opening a session) would be invisible to the others (e.g. the
+// page resolving that session). The process-global holder keeps ONE db
+// port per process — the same pattern the Prisma/Next ecosystem uses.
+// (With DATABASE_URL every instance would pool against the same server
+// anyway; this matters for the embedded backend.)
+interface DbGlobal {
+  __aurumDbInstance?: DbPort;
+  __aurumDbClose?: () => Promise<void>;
+}
+const dbGlobal = globalThis as typeof globalThis & DbGlobal;
+
+function getHeldInstance(): DbPort | null {
+  return dbGlobal.__aurumDbInstance ?? null;
+}
+
+function setHeldInstance(db: DbPort, close: () => Promise<void>): void {
+  dbGlobal.__aurumDbInstance = db;
+  dbGlobal.__aurumDbClose = close;
+}
 
 function createFilePglite(): PGlite {
   mkdirSync(path.dirname(EMBEDDED_DB_PATH), { recursive: true });
   return new PGlite(EMBEDDED_DB_PATH);
 }
 
-/** Singleton database port for this process. */
+/** Singleton database port for this process (held on globalThis — see above). */
 export function getDb(): DbPort {
-  if (instance !== null) return instance;
+  const held = getHeldInstance();
+  if (held !== null) return held;
   const backend = getAurumDb() ?? (getDatabaseUrl() !== undefined ? 'postgres' : 'embedded');
   if (backend === 'postgres') {
     const url = getDatabaseUrl();
@@ -127,20 +149,18 @@ export function getDb(): DbPort {
       throw new Error('AURUM_DB=postgres requires DATABASE_URL to be set');
     }
     const postgres = new PostgresDb(new Pool({ connectionString: url }));
-    instance = postgres;
-    closeInstance = () => postgres.close();
-    return instance;
+    setHeldInstance(postgres, () => postgres.close());
+    return postgres;
   }
   const embedded = isDbMemory() ? new EmbeddedDb(new PGlite()) : new EmbeddedDb(createFilePglite());
-  instance = embedded;
-  closeInstance = () => embedded.close();
-  return instance;
+  setHeldInstance(embedded, () => embedded.close());
+  return embedded;
 }
 
 /** Close the singleton (flushes the embedded database; ends the pool). */
 export async function closeDb(): Promise<void> {
-  const close = closeInstance;
-  instance = null;
-  closeInstance = null;
+  const close = dbGlobal.__aurumDbClose ?? null;
+  dbGlobal.__aurumDbInstance = undefined;
+  dbGlobal.__aurumDbClose = undefined;
   if (close !== null) await close();
 }

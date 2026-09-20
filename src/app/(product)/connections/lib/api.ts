@@ -8,11 +8,8 @@
 // testable without booting Next.js — the same discipline the tower (W033)
 // applies.
 
-import {
-  connectionsContextFromHeaders,
-  connectionsContextFromSearchParams,
-} from './context';
-import type { ConnectionsContextResolution } from './context';
+import { resolveRequestScope } from '@/app/lib/request-session';
+import type { RequestScope } from '@/app/lib/request-session';
 import { buildConnectionsView } from './views';
 import type { ConnectionsView, ConnectionsViewOptions } from './views';
 import { executeConnectionsAction, parseActionBody } from './actions';
@@ -23,7 +20,7 @@ export interface ApiOk {
   body: ConnectionsApiEnvelope;
 }
 
-export type ApiErrorStatus = 400 | 403 | 404 | 409 | 500;
+export type ApiErrorStatus = 400 | 401 | 403 | 404 | 409 | 500;
 
 export interface ApiError {
   status: ApiErrorStatus;
@@ -52,21 +49,24 @@ function apiError(
 }
 
 /**
- * Resolve the hub context for an API request: headers first, then query
- * parameters (so a browser fetch can also scope a tenant without custom
- * headers). Header failures win the error message when both fail.
+ * Resolve the hub context for an API request (W058: from the SESSION
+ * COOKIE — the query/header seam is gone). Returns the ready scope or
+ * the 401/409 failure the handlers answer with.
  */
-export function connectionsContextFromRequest(request: Request): ConnectionsContextResolution {
-  const fromHeaders = connectionsContextFromHeaders(request.headers);
-  if (fromHeaders.ok) return fromHeaders;
-  const url = new URL(request.url);
-  const query: Record<string, string> = {};
-  for (const key of ['tenant', 'principal', 'authority']) {
-    const value = url.searchParams.get(key);
-    if (value !== null) query[key] = value;
+export async function connectionsScopeFromRequest(
+  request: Request,
+): Promise<
+  | { ok: true; scope: Extract<RequestScope, { phase: 'ready' }> }
+  | { ok: false; error: ApiError }
+> {
+  const scope = await resolveRequestScope(request);
+  if (scope.phase === 'unauthenticated') {
+    return { ok: false, error: apiError(401, 'unauthenticated', 'sign in to use Aurum') };
   }
-  const fromQuery = connectionsContextFromSearchParams(query);
-  return fromQuery.ok ? fromQuery : fromHeaders;
+  if (scope.phase === 'no_active_tenant') {
+    return { ok: false, error: apiError(409, 'no_active_tenant', 'choose or create a company first') };
+  }
+  return { ok: true, scope };
 }
 
 /** Query-string view options (identity lookup parameters). */
@@ -82,16 +82,15 @@ export function viewOptionsFromRequest(request: Request): ConnectionsViewOptions
 
 /** GET /api/connections — build the whole hub view. */
 export async function handleConnectionsGet(request: Request): Promise<ApiResult> {
-  const context = connectionsContextFromRequest(request);
-  if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
-  }
-  const view = await buildConnectionsView(context.context, viewOptionsFromRequest(request));
+  const resolved = await connectionsScopeFromRequest(request);
+  if (!resolved.ok) return resolved.error;
+  const context = resolved.scope.context;
+  const view = await buildConnectionsView(context, viewOptionsFromRequest(request));
   return {
     status: 200,
     body: {
       surface: 'connections',
-      tenantId: context.context.tenantId,
+      tenantId: context.tenantId,
       generatedAt: view.generatedAt,
       view,
     },
@@ -103,21 +102,20 @@ export async function handleConnectionsAction(
   request: Request,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = connectionsContextFromRequest(request);
-  if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
-  }
+  const resolved = await connectionsScopeFromRequest(request);
+  if (!resolved.ok) return resolved.error;
+  const context = resolved.scope.context;
   const parsed = parseActionBody(body);
   if (!parsed.ok) {
     return apiError(400, 'invalid_body', parsed.error);
   }
   try {
-    const outcome: ActionOutcome = await executeConnectionsAction(context.context, parsed.value);
+    const outcome: ActionOutcome = await executeConnectionsAction(context, parsed.value);
     return {
       status: 200,
       body: {
         surface: 'connections',
-        tenantId: context.context.tenantId,
+        tenantId: context.tenantId,
         generatedAt: new Date().toISOString(),
         action: outcome.action,
         summary: outcome.summary,

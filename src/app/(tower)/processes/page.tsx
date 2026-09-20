@@ -5,14 +5,13 @@
 // each citing the event/observation evidence that justifies it.
 
 import { buildProcessesView } from '../lib/views/processes';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
   Empty,
   ItemFoot,
   ItemHead,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -21,14 +20,10 @@ import { formatConfidence, formatCount, formatDuration, formatInstant, formatSha
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProcessesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildProcessesView(resolution.context);
+export default async function ProcessesPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/processes');
+  const view = await buildProcessesView(scope.context);
 
   return (
     <>

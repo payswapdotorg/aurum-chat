@@ -1,52 +1,48 @@
-// Management Control Tower (W033) — page-side context resolution.
+// Management Control Tower (W033/W058) — page-side context resolution.
 //
-// Every (tower) page is an async server component that resolves its
-// TenantContext from the request's query parameters (the documented dev
-// seam until auth/W038) and either renders the surface or the honest
-// not-scoped state. One helper, used by all fifteen pages.
+// HISTORY: until W058 every tower page resolved an EXPLICIT development
+// context from ?tenant=/x-aurum-tenant (documented seam). W058 removed
+// that seam: the tower — management mode inside the same authenticated
+// product — resolves its TenantContext from the SESSION COOKIE through
+// @/app/lib/page-session. Unauthenticated visitors are redirected to
+// sign-in (W058 acceptance: unauthenticated users cannot reach tenant
+// data); sessions without an active company go to onboarding.
+//
+// The explicit TenantContext discipline is untouched: every view builder
+// still receives the context as its first argument (no ambient global).
 
-import { towerContextFromSearchParams } from './tower-context';
-import type { TowerContextResolution } from './tower-context';
+import { requirePageScope } from '@/app/lib/page-session';
+import type { RequestScope } from '@/app/lib/request-session';
 
 export type PageSearchParams = Record<string, string | string[] | undefined>;
 
-export async function resolvePageContext(
-  searchParams: PageSearchParams,
-): Promise<TowerContextResolution> {
-  return towerContextFromSearchParams(await searchParams);
+/** The ready scope a tower page renders with (redirects otherwise). */
+export async function requireTowerScope(
+  pathname: string,
+): Promise<Extract<RequestScope, { phase: 'ready' }>> {
+  return requirePageScope(pathname);
 }
 
-/** Forward the scoping query parameters to a client action target. */
-export function scopeQuery(
-  params: PageSearchParams,
-): { tenant: string | null; principal: string | null; authority: string | null } {
-  const first = (value: string | string[] | undefined): string | null =>
-    Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
-  return {
-    tenant: first(params['tenant']),
-    principal: first(params['principal']),
-    authority: first(params['authority']),
-  };
+/** First non-empty value of a possibly-array query parameter. */
+export function firstValue(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
 }
 
 /**
- * Build a query string that PRESERVES the scoping parameters (tenant,
- * principal, authority) and applies `overrides`. Pages use this so
- * navigation links never silently drop the tenant scope.
+ * Build a query string from a page's NON-scope parameters plus overrides
+ * (e.g. the Goals surface's `?status=archived` filter). Scope parameters
+ * no longer exist in tower URLs — the session carries them (W058).
  */
-export function withScope(
+export function withQuery(
   params: PageSearchParams,
   overrides: Record<string, string | null> = {},
 ): string {
-  const scope = scopeQuery(params);
   const query = new URLSearchParams();
-  for (const [key, value] of Object.entries({
-    tenant: scope.tenant,
-    principal: scope.principal,
-    authority: scope.authority,
-    ...overrides,
-  })) {
-    if (value !== null && value !== '') query.set(key, value);
+  for (const [key, value] of Object.entries({ ...params, ...overrides })) {
+    if (value === null) continue;
+    const first = firstValue(value);
+    if (first !== null && first !== '') query.set(key, first);
   }
   const text = query.toString();
   return text === '' ? '' : `?${text}`;

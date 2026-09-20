@@ -65,7 +65,8 @@ import {
   handleConnectionsGet,
 } from '../lib/api';
 import type { ApiResult } from '../lib/api';
-import { CONNECTIONS_OPERATOR_PRINCIPAL, TENANT_HEADER, AUTHORITY_HEADER } from '../lib/context';
+import { addTenantMember } from '@/modules/organizations/contract';
+import { signUp, switchTenant } from '@/modules/auth/contract';
 
 const db = getDb();
 
@@ -78,10 +79,6 @@ let clockMs = BASE_TIME;
 
 function member(tenantId: string): TenantContext {
   return { tenantId, principalId: newId(), authority: [] };
-}
-
-function identityAdmin(tenantId: string): TenantContext {
-  return { tenantId, principalId: newId(), authority: ['identity:attest', 'identity:link'] };
 }
 
 function approver(tenantId: string): TenantContext {
@@ -199,41 +196,35 @@ function challengeCodeFrom(messageText: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Request shims (the handlers take standard `Request` objects)
+// Request shims (W058: the handlers take standard `Request` objects whose
+// SESSION COOKIE is the only scope source — the query/header seam is gone)
 // ---------------------------------------------------------------------------
 
 const BASE_URL = 'http://aurum.test/api/connections';
 
-function requestFor(ctx: TenantContext, extraQuery: Record<string, string> = {}): Request {
+/** A Request carrying one of the fixture session cookies. */
+function sessionRequest(
+  token: string,
+  extraQuery: Record<string, string> = {},
+  method: 'GET' | 'POST' = 'POST',
+): Request {
   const query = new URLSearchParams(extraQuery);
-  query.set('tenant', ctx.tenantId);
-  query.set('principal', ctx.principalId);
-  if (ctx.authority.length > 0) query.set('authority', ctx.authority.join(','));
-  return new Request(`${BASE_URL}?${query.toString()}`, { method: 'POST' });
-}
-
-function headerRequestFor(ctx: TenantContext): Request {
-  return new Request(BASE_URL, {
-    method: 'POST',
-    headers: {
-      [TENANT_HEADER]: ctx.tenantId,
-      'x-aurum-principal': ctx.principalId,
-      [AUTHORITY_HEADER]: ctx.authority.join(','),
-    },
+  const qs = query.toString();
+  return new Request(`${BASE_URL}${qs === '' ? '' : `?${qs}`}`, {
+    method,
+    headers: { cookie: `aurum_session=${token}` },
   });
 }
 
-async function act(ctx: TenantContext, body: unknown): Promise<ApiResult> {
-  return handleConnectionsAction(requestFor(ctx), body);
+async function actAs(token: string, body: unknown): Promise<ApiResult> {
+  return handleConnectionsAction(sessionRequest(token), body);
 }
 
-async function get(ctx: TenantContext, extraQuery: Record<string, string> = {}): Promise<ApiResult> {
-  const query = new URLSearchParams(extraQuery);
-  query.set('tenant', ctx.tenantId);
-  query.set('principal', ctx.principalId);
-  if (ctx.authority.length > 0) query.set('authority', ctx.authority.join(','));
-  const request = new Request(`${BASE_URL}?${query.toString()}`);
-  return handleConnectionsGet(request);
+async function getAs(
+  token: string,
+  extraQuery: Record<string, string> = {},
+): Promise<ApiResult> {
+  return handleConnectionsGet(sessionRequest(token, extraQuery, 'GET'));
 }
 
 function expectOk(result: ApiResult): asserts result is Extract<ApiResult, { status: 200 }> {
@@ -261,30 +252,71 @@ let tenantA = '';
 let tenantB = '';
 let operator: TenantContext;
 let admin: TenantContext;
-let attester: TenantContext;
 let approverCtx: TenantContext;
+// Session tokens (W058): the API surface authenticates by cookie; the
+// role-derived claims replace the old ?authority= seam.
+let operatorToken = '';
+let adminToken = '';
+let memberBToken = '';
 let channelTransport: RecordingTransport;
 let sourceTransport: ScriptedSourceTransport;
 let destinationTransport: ScriptedDestinationTransport;
 
 beforeAll(async () => {
   await runMigrations(db);
+  const ownerAPrincipal = newId();
+  const ownerBPrincipal = newId();
   const [provisioned, provisionedB] = await Promise.all([
     provisionTenant(
       { principalId: newId(), authority: ['organizations:provision'] },
-      { name: 'Acme Group', ownerPrincipalId: newId() },
+      { name: 'Acme Group', ownerPrincipalId: ownerAPrincipal },
     ),
     provisionTenant(
       { principalId: newId(), authority: ['organizations:provision'] },
-      { name: 'Beta Corp', ownerPrincipalId: newId() },
+      { name: 'Beta Corp', ownerPrincipalId: ownerBPrincipal },
     ),
   ]);
   tenantA = provisioned.id;
   tenantB = provisionedB.id;
   operator = member(tenantA);
   admin = policyAdmin(tenantA);
-  attester = identityAdmin(tenantA);
   approverCtx = approver(tenantA);
+
+  // Real sessions for the API tests: a plain member of tenant A, an admin
+  // of tenant A (role-derived identity:attest/link + actions:approve), and
+  // a plain member of tenant B (the isolation outsider). Membership is
+  // granted through the organizations contract by the provisioned owners.
+  const ownerA: TenantContext = { tenantId: tenantA, principalId: ownerAPrincipal, authority: [] };
+  const ownerB: TenantContext = { tenantId: tenantB, principalId: ownerBPrincipal, authority: [] };
+  const memberAccount = await signUp({
+    email: [newId().slice(0, 8), 'conn', 'member'].join('.') + '@example.invalid',
+    password: ['conn', 'member', newId().slice(0, 6)].join('-'),
+    displayName: 'Connections Member',
+  });
+  await addTenantMember(ownerA, { principalId: memberAccount.principal.id, role: 'member' });
+  const memberSwitched = await switchTenant(memberAccount.token, { tenantId: tenantA });
+  expect(memberSwitched.tenant?.id).toBe(tenantA);
+  operatorToken = memberAccount.token;
+
+  const adminAccount = await signUp({
+    email: [newId().slice(0, 8), 'conn', 'admin'].join('.') + '@example.invalid',
+    password: ['conn', 'admin', newId().slice(0, 6)].join('-'),
+    displayName: 'Connections Admin',
+  });
+  await addTenantMember(ownerA, { principalId: adminAccount.principal.id, role: 'admin' });
+  const adminSwitched = await switchTenant(adminAccount.token, { tenantId: tenantA });
+  expect(adminSwitched.tenant?.id).toBe(tenantA);
+  adminToken = adminAccount.token;
+
+  const memberBAccount = await signUp({
+    email: [newId().slice(0, 8), 'conn', 'beta'].join('.') + '@example.invalid',
+    password: ['conn', 'beta', newId().slice(0, 6)].join('-'),
+    displayName: 'Beta Member',
+  });
+  await addTenantMember(ownerB, { principalId: memberBAccount.principal.id, role: 'member' });
+  const betaSwitched = await switchTenant(memberBAccount.token, { tenantId: tenantB });
+  expect(betaSwitched.tenant?.id).toBe(tenantB);
+  memberBToken = memberBAccount.token;
 });
 
 afterAll(async () => {
@@ -314,13 +346,13 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('W059 — connect, disconnect and health for channels', () => {
-  it('scopes the view: no tenant is a 400 with guidance', async () => {
+  it('scopes the view: no session is a 401 (no tenant data unauthenticated)', async () => {
     const result = await handleConnectionsGet(new Request(BASE_URL));
-    expectError(result, 400, 'missing_tenant');
+    expectError(result, 401, 'unauthenticated');
   });
 
   it('connects a WhatsApp endpoint through the hub action and surfaces honest health', async () => {
-    const result = await act(operator, {
+    const result = await actAs(operatorToken, {
       action: 'channel.register',
       provider: 'whatsapp',
       providerAccountId: '+15550100001',
@@ -356,7 +388,7 @@ describe('W059 — connect, disconnect and health for channels', () => {
     const view = await buildConnectionsView(operator);
     const connectionId = view.channels.cards.find((c) => c.provider === 'whatsapp')!.connection!.id;
 
-    const disconnected = await act(operator, {
+    const disconnected = await actAs(operatorToken, {
       action: 'channel.setStatus',
       connectionId,
       status: 'disabled',
@@ -370,7 +402,7 @@ describe('W059 — connect, disconnect and health for channels', () => {
     expect(disabledCard.health.level).toBe('disabled');
     expect(afterDisconnect.channels.active).toBe(0);
 
-    const reconnected = await act(operator, {
+    const reconnected = await actAs(operatorToken, {
       action: 'channel.setStatus',
       connectionId,
       status: 'active',
@@ -381,7 +413,7 @@ describe('W059 — connect, disconnect and health for channels', () => {
   });
 
   it('re-registering an existing endpoint is an honest no-op (first registration wins)', async () => {
-    const result = await act(operator, {
+    const result = await actAs(operatorToken, {
       action: 'channel.register',
       provider: 'whatsapp',
       providerAccountId: '+15550100001',
@@ -397,7 +429,7 @@ describe('W059 — connect, disconnect and health for channels', () => {
   });
 
   it('maps a foreign/missing connection uniformly to 404 (no existence leak)', async () => {
-    const result = await act(operator, {
+    const result = await actAs(operatorToken, {
       action: 'channel.setStatus',
       connectionId: newId(),
       status: 'disabled',
@@ -436,14 +468,14 @@ describe('W059 — identity verification and linking through the hub', () => {
     const view = await buildConnectionsView(operator);
     const identityId = view.identities.cards[0]!.id;
 
-    const delivered = await act(operator, { action: 'identity.challenge', identityId });
+    const delivered = await actAs(operatorToken, { action: 'identity.challenge', identityId });
     expectOk(delivered);
     expect(delivered.body.summary).toContain('Verification code delivered');
 
     const sent = channelTransport.requests[channelTransport.requests.length - 1]!;
     const code = challengeCodeFrom(sent.message.text);
 
-    const completed = await act(operator, { action: 'identity.complete', identityId, code });
+    const completed = await actAs(operatorToken, { action: 'identity.complete', identityId, code });
     expectOk(completed);
     expect(completed.body.summary).toContain('verified');
 
@@ -453,7 +485,7 @@ describe('W059 — identity verification and linking through the hub', () => {
   });
 
   it('links the verified identity to a person (claim-gated) and shows the subject', async () => {
-    const personResult = await act(attester, {
+    const personResult = await actAs(adminToken, {
       action: 'person.create',
       fullName: 'Maya Chen',
       email: 'maya.chen@acme.example',
@@ -465,11 +497,11 @@ describe('W059 — identity verification and linking through the hub', () => {
     const identityId = view.identities.cards[0]!.id;
 
     // A plain member may NOT link (uniform forbidden → 403).
-    const denied = await act(operator, { action: 'identity.link', identityId, personId });
+    const denied = await actAs(operatorToken, { action: 'identity.link', identityId, personId });
     expectError(denied, 403, 'forbidden');
 
     // The identity admin links through the same hub action.
-    const linked = await act(attester, { action: 'identity.link', identityId, personId });
+    const linked = await actAs(adminToken, { action: 'identity.link', identityId, personId });
     expectOk(linked);
     expect(linked.body.summary).toContain('linked');
 
@@ -481,7 +513,7 @@ describe('W059 — identity verification and linking through the hub', () => {
   });
 
   it('finds identities outside the discovery window via the provider+account lookup', async () => {
-    const result = await get(operator, {
+    const result = await getAs(operatorToken, {
       identity_provider: 'whatsapp',
       identity_account: '+15550102299',
     });
@@ -491,7 +523,7 @@ describe('W059 — identity verification and linking through the hub', () => {
     expect(view.identities.lookup!.providerAccountId).toBe('+15550102299');
     expect(view.identities.lookup!.discovered).toBe(false);
 
-    const miss = await get(operator, {
+    const miss = await getAs(operatorToken, {
       identity_provider: 'telegram',
       identity_account: '77999000',
     });
@@ -504,12 +536,12 @@ describe('W059 — identity verification and linking through the hub', () => {
     let view = await buildConnectionsView(operator);
     const identityId = view.identities.cards[0]!.id;
 
-    const detached = await act(attester, { action: 'identity.detach', identityId });
+    const detached = await actAs(adminToken, { action: 'identity.detach', identityId });
     expectOk(detached);
     view = await buildConnectionsView(operator);
     expect(view.identities.cards[0]!.subject).toBeNull();
 
-    const revoked = await act(attester, {
+    const revoked = await actAs(adminToken, {
       action: 'identity.revoke',
       identityId,
       reason: 'Account holder left the company',
@@ -526,7 +558,7 @@ describe('W059 — source freshness and checkpoint state', () => {
   const CREDENTIAL_REF = `${storePath()}tenantA/salesforce`;
 
   async function registerSource(): Promise<string> {
-    const result = await act(operator, {
+    const result = await actAs(operatorToken, {
       action: 'source.register',
       provider: 'salesforce',
       providerAccountId: 'org-00D1',
@@ -578,7 +610,7 @@ describe('W059 — source freshness and checkpoint state', () => {
       hasMore: false,
     });
 
-    const polled = await act(operator, { action: 'source.poll', sourceId });
+    const polled = await actAs(operatorToken, { action: 'source.poll', sourceId });
     expectOk(polled);
     expect(polled.body.summary).toContain('1 fetched, 1 new observations');
 
@@ -608,7 +640,7 @@ describe('W059 — source freshness and checkpoint state', () => {
 
   it('replays from the start: the checkpoint rewinds (audited) under dedupe', async () => {
     const sourceId = (await buildConnectionsView(operator)).sources.cards[0]!.id;
-    const replayed = await act(operator, { action: 'source.replay', sourceId });
+    const replayed = await actAs(operatorToken, { action: 'source.replay', sourceId });
     expectOk(replayed);
     expect(replayed.body.summary).toContain('rewound');
 
@@ -621,7 +653,7 @@ describe('W059 — source freshness and checkpoint state', () => {
 
   it('re-authorizes (configures) the source through re-registration', async () => {
     const sourceId = (await buildConnectionsView(operator)).sources.cards[0]!.id;
-    const result = await act(operator, {
+    const result = await actAs(operatorToken, {
       action: 'source.register',
       provider: 'salesforce',
       providerAccountId: 'org-00D1',
@@ -641,7 +673,7 @@ describe('W059 — source freshness and checkpoint state', () => {
 
   it('disconnects the source (status is the ingestion lifecycle)', async () => {
     const sourceId = (await buildConnectionsView(operator)).sources.cards[0]!.id;
-    const result = await act(operator, {
+    const result = await actAs(operatorToken, {
       action: 'source.setStatus',
       sourceId,
       status: 'disabled',
@@ -659,7 +691,7 @@ describe('W059 — destination delivery state', () => {
   const CREDENTIAL_REF = `${storePath()}tenantA/webhook`;
 
   async function registerDestination(): Promise<string> {
-    const result = await act(operator, {
+    const result = await actAs(operatorToken, {
       action: 'destination.register',
       provider: 'webhook',
       providerAccountId: 'https://bi.acme.test/aurum',
@@ -707,7 +739,7 @@ describe('W059 — destination delivery state', () => {
       requestId: dispatch.delivery.actionRequestId!,
       decision: 'approve',
     });
-    const retried = await act(operator, {
+    const retried = await actAs(operatorToken, {
       action: 'destination.retry',
       deliveryId: dispatch.delivery.id,
     });
@@ -732,7 +764,7 @@ describe('W059 — destination delivery state', () => {
     // Policy must allow the immediate gate pass for the replay to attempt now.
     await setAuthorityPolicy(admin, { actionKind: 'data-export', approvalLevels: [], forbiddenLevels: [] });
 
-    const replayed = await act(operator, {
+    const replayed = await actAs(operatorToken, {
       action: 'destination.replay',
       deliveryId: delivered.id,
     });
@@ -766,7 +798,7 @@ describe('W059 — destination delivery state', () => {
     expect(card.health.reasons.some((r) => r.text.includes('failed transiently'))).toBe(true);
 
     // A retry succeeds once the transport is healthy again.
-    const retried = await act(operator, {
+    const retried = await actAs(operatorToken, {
       action: 'destination.retry',
       deliveryId: dispatch.delivery.id,
     });
@@ -779,7 +811,7 @@ describe('W059 — destination delivery state', () => {
 
   it('re-authorizes (configures) and disconnects the destination', async () => {
     const destinationId = (await buildConnectionsView(operator)).destinations.cards[0]!.id;
-    const reauthorized = await act(operator, {
+    const reauthorized = await actAs(operatorToken, {
       action: 'destination.register',
       provider: 'webhook',
       providerAccountId: 'https://bi.acme.test/aurum',
@@ -789,7 +821,7 @@ describe('W059 — destination delivery state', () => {
     expectOk(reauthorized);
     expect(reauthorized.body.summary).toContain('Re-authorized');
 
-    const disconnected = await act(operator, {
+    const disconnected = await actAs(operatorToken, {
       action: 'destination.setStatus',
       destinationId,
       status: 'disabled',
@@ -817,7 +849,7 @@ describe('W059 — tenant isolation and the API envelope', () => {
     // Foreign ids are uniformly not found — no existence leak.
     const tenantAView = await buildConnectionsView(operator);
     const channelConnectionId = tenantAView.channels.cards.find((c) => c.connection !== null)!.connection!.id;
-    const denied = await act(outsider, {
+    const denied = await actAs(memberBToken, {
       action: 'channel.setStatus',
       connectionId: channelConnectionId,
       status: 'disabled',
@@ -825,7 +857,7 @@ describe('W059 — tenant isolation and the API envelope', () => {
     expectError(denied, 404, 'connection_not_found');
 
     // Lookup in tenant B finds nothing for tenant A's account.
-    const miss = await get(outsider, {
+    const miss = await getAs(memberBToken, {
       identity_provider: 'whatsapp',
       identity_account: '+15550102299',
     });
@@ -833,8 +865,8 @@ describe('W059 — tenant isolation and the API envelope', () => {
     expect(miss.body.view!.identities.lookup).toBeNull();
   });
 
-  it('resolves the context from headers (the API envelope matches the tower discipline)', async () => {
-    const result = await handleConnectionsGet(headerRequestFor(operator));
+  it('resolves the context from the session cookie (the W058 discipline)', async () => {
+    const result = await handleConnectionsGet(sessionRequest(operatorToken, {}, 'GET'));
     expectOk(result);
     expect(result.body.surface).toBe('connections');
     expect(result.body.tenantId).toBe(tenantA);
@@ -844,17 +876,22 @@ describe('W059 — tenant isolation and the API envelope', () => {
     expect(result.body.view!.catalog.sources.length).toBe(13);
   });
 
-  it('defaults the principal to the connections operator (documented dev seam)', async () => {
-    const result = await handleConnectionsGet(new Request(`${BASE_URL}?tenant=${tenantA}`));
-    expectOk(result);
+  it('a session without an active company is a 409 (onboarding territory)', async () => {
+    const fresh = await signUp({
+      email: [newId().slice(0, 8), 'conn', 'fresh'].join('.') + '@example.invalid',
+      password: ['conn', 'fresh', newId().slice(0, 6)].join('-'),
+      displayName: 'Connections Fresh',
+    });
+    const result = await handleConnectionsGet(sessionRequest(fresh.token, {}, 'GET'));
+    expectError(result, 409, 'no_active_tenant');
   });
 
   it('rejects malformed bodies with readable 400s', async () => {
-    const noBody = await act(operator, null);
+    const noBody = await actAs(operatorToken, null);
     expectError(noBody, 400, 'invalid_body');
-    const unknownAction = await act(operator, { action: 'explode' });
+    const unknownAction = await actAs(operatorToken, { action: 'explode' });
     expectError(unknownAction, 400, 'invalid_body');
-    const badProvider = await act(operator, {
+    const badProvider = await actAs(operatorToken, {
       action: 'channel.register',
       provider: 'semaphore',
       providerAccountId: 'x',
@@ -889,11 +926,7 @@ describe('W059 — credential references only (acceptance)', () => {
     expect(serialized).not.toContain('"apiKey"');
   });
 
-  it('the operator principal is the documented seam default, and person subjects resolve through the people contract', async () => {
-    // (Sanity on the seam constant + people composition used by identity cards.)
-    expect(CONNECTIONS_OPERATOR_PRINCIPAL).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-    );
+  it('person subjects resolve through the people contract (composition used by identity cards)', async () => {
     const view = await buildConnectionsView(operator);
     for (const identity of view.identities.cards) {
       if (identity.subject !== null && identity.subject.resolvable) {

@@ -143,22 +143,6 @@ export function Notice({
   return <div className={neutral ? 'notice notice-neutral' : 'notice'}>{children}</div>;
 }
 
-/** The not-scoped state: the hub needs an explicit tenant. */
-export function NotScoped({ detail }: { detail: string }): ReactNode {
-  return (
-    <>
-      <Notice>
-        {detail}. Example: append <code>?tenant=&lt;tenant uuid&gt;</code> to the
-        URL. Authentication and sessions land with W058 — until then this
-        surface resolves its context from explicit query parameters (
-        <code>?tenant=</code>, optional <code>?principal=</code>, optional{' '}
-        <code>?authority=</code> claims such as{' '}
-        <code>identity:attest,identity:link</code>).
-      </Notice>
-    </>
-  );
-}
-
 /** Render a relative age with the absolute instant as tooltip/title. */
 export function When({ at, now, fallback }: { at: string | null; now: string; fallback?: string }): ReactNode {
   if (at === null) {

@@ -5,7 +5,7 @@
 // and recently resolved gaps, through the epistemics contract only.
 
 import { buildUnknownsView } from '../lib/views/unknowns';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -13,7 +13,6 @@ import {
   ItemFoot,
   ItemHead,
   ItemText,
-  NotScoped,
   StatTiles,
   SurfaceHeader,
 } from '../components/view-ui';
@@ -21,14 +20,10 @@ import { formatCount, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function UnknownsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildUnknownsView(resolution.context);
+export default async function UnknownsPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/unknowns');
+  const view = await buildUnknownsView(scope.context);
 
   return (
     <>

@@ -7,7 +7,7 @@
 // decisions happen on the Approvals surface.
 
 import { buildRecommendationsView } from '../lib/views/recommendations';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -15,7 +15,6 @@ import {
   ItemFoot,
   ItemHead,
   ItemText,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -24,14 +23,10 @@ import { formatCount, formatInstant, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function RecommendationsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildRecommendationsView(resolution.context);
+export default async function RecommendationsPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/recommendations');
+  const view = await buildRecommendationsView(scope.context);
 
   return (
     <>

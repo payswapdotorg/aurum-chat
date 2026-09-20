@@ -17,13 +17,11 @@
 // claim the developer experience needs instead of pretending.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../../lib/context';
-import type { PageSearchParams } from '../../lib/context';
+import { requirePageScope } from '@/app/lib/page-session';
 import { buildDeveloperView } from '../lib/views';
 import {
   EmptyState,
   ErrorState,
-  NotScoped,
   PageHead,
   Panel,
   StatusPill,
@@ -38,18 +36,11 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-export default async function DeveloperPage({
-  searchParams,
-}: {
-  searchParams: Promise<PageSearchParams>;
-}) {
-  const params = await searchParams;
-  const resolution = productContextFromSearchParams(params);
-  if (!resolution.ok) {
-    return <NotScoped detail={resolution.detail} />;
-  }
-  const scopeQuery = withProductScope(params);
-  const view = await buildDeveloperView(resolution.resolved.context);
+export default async function DeveloperPage() {
+  // W058: authenticated routing — the session carries the company scope
+  // (and the role-derived authority claims: every member may submit).
+  const scope = await requirePageScope('/marketplace/developer');
+  const view = await buildDeveloperView(scope.context);
 
   const activeAgents = view.builderAgents.items.filter((agent) => agent.status === 'active');
 
@@ -66,10 +57,11 @@ export default async function DeveloperPage({
           The developer surface needs one of the authority claims{' '}
           <code>marketplace:submit</code> (publish),{' '}
           <code>extensions:administer</code> (build) or{' '}
-          <code>marketplace:administer</code> (platform review). Add one with{' '}
-          <code>?authority=marketplace:submit</code> in the development seam — claims arrive
-          with the authentication experience (W058). The review queue and forms below stay
-          honest about what your scope can do.
+          <code>marketplace:administer</code> (platform review). Since the
+          authentication experience (W058), every company member carries{' '}
+          <code>marketplace:submit</code> with their session; the administer
+          claims belong to platform reviewers. The review queue and forms below
+          stay honest about what your scope can do.
         </div>
       ) : null}
 
@@ -88,7 +80,6 @@ export default async function DeveloperPage({
           <>
             <ActionForm
               action="/api/product/marketplace/developer/request-build"
-              scopeQuery={scopeQuery}
               fields={[
                 {
                   kind: 'text',
@@ -163,7 +154,6 @@ export default async function DeveloperPage({
                         {build.canAdvance ? (
                           <ActionForm
                             action="/api/product/marketplace/developer/advance-build"
-                            scopeQuery={scopeQuery}
                             fields={[]}
                             hidden={{ buildId: build.id }}
                             submitLabel="Advance one phase"
@@ -173,7 +163,6 @@ export default async function DeveloperPage({
                         {build.canCancel ? (
                           <ActionForm
                             action="/api/product/marketplace/developer/cancel-build"
-                            scopeQuery={scopeQuery}
                             fields={[
                               {
                                 kind: 'text',
@@ -216,7 +205,6 @@ export default async function DeveloperPage({
         ) : (
           <ActionForm
             action="/api/product/marketplace/developer/create-extension-package"
-            scopeQuery={scopeQuery}
             fields={[
               {
                 kind: 'select',
@@ -244,7 +232,6 @@ export default async function DeveloperPage({
         </h3>
         <ActionForm
           action="/api/product/marketplace/developer/create-agent-package"
-          scopeQuery={scopeQuery}
           fields={[
             {
               kind: 'text',
@@ -337,7 +324,7 @@ export default async function DeveloperPage({
                 <div className="aurum-item-head">
                   <Link
                     className="aurum-mkt-item-title"
-                    href={`/marketplace/package/${pkg.id}${scopeQuery}`}
+                    href={`/marketplace/package/${pkg.id}`}
                   >
                     {pkg.displayName}
                   </Link>
@@ -383,7 +370,7 @@ export default async function DeveloperPage({
                 <div className="aurum-item-head">
                   <Link
                     className="aurum-mkt-item-title"
-                    href={`/marketplace/package/${item.id}${scopeQuery}`}
+                    href={`/marketplace/package/${item.id}`}
                   >
                     {item.displayName}
                   </Link>

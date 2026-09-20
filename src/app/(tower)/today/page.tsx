@@ -6,7 +6,7 @@
 // evidence). Derived intelligence only (lock 34).
 
 import { buildTodayView } from '../lib/views/today';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -14,7 +14,6 @@ import {
   ItemFoot,
   ItemHead,
   ItemText,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -23,14 +22,10 @@ import { formatCount, formatConfidence, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TodayPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildTodayView(resolution.context);
+export default async function TodayPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/today');
+  const view = await buildTodayView(scope.context);
 
   return (
     <>

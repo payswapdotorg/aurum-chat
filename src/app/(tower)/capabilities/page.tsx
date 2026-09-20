@@ -6,12 +6,11 @@
 // employee, team, agent, software, supplier, partner.
 
 import { buildCapabilitiesView } from '../lib/views/capabilities';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
   Empty,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -20,14 +19,10 @@ import { formatCount, formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CapabilitiesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildCapabilitiesView(resolution.context);
+export default async function CapabilitiesPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/capabilities');
+  const view = await buildCapabilitiesView(scope.context);
 
   const gapped = view.capabilities.filter((c) => c.gapStatus !== 'covered' && c.gapStatus !== 'no_demand');
   const covered = view.capabilities.filter((c) => c.gapStatus === 'covered');

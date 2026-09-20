@@ -8,13 +8,11 @@
 // recorded superseded deployment.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../../lib/context';
-import type { PageSearchParams } from '../../lib/context';
+import { requirePageScope } from '@/app/lib/page-session';
 import { buildInstalledView } from '../lib/views';
 import {
   EmptyState,
   ErrorState,
-  NotScoped,
   PageHead,
   Panel,
   StatusPill,
@@ -24,18 +22,10 @@ import { verificationTone } from '../lib/labels';
 
 export const dynamic = 'force-dynamic';
 
-export default async function InstalledPage({
-  searchParams,
-}: {
-  searchParams: Promise<PageSearchParams>;
-}) {
-  const params = await searchParams;
-  const resolution = productContextFromSearchParams(params);
-  if (!resolution.ok) {
-    return <NotScoped detail={resolution.detail} />;
-  }
-  const scopeQuery = withProductScope(params);
-  const view = await buildInstalledView(resolution.resolved.context);
+export default async function InstalledPage() {
+  // W058: authenticated routing — the session carries the company scope.
+  const scope = await requirePageScope('/marketplace/installed');
+  const view = await buildInstalledView(scope.context);
 
   return (
     <>
@@ -49,14 +39,14 @@ export default async function InstalledPage({
         <ErrorState
           title="Read failed"
           detail="Your registry could not be read right now. Nothing changed — try again in a moment."
-          retryHref={`/marketplace/installed${scopeQuery}`}
+          retryHref={`/marketplace/installed`}
         />
       ) : view.items.length === 0 ? (
         <EmptyState
           title="Nothing installed yet"
           hint="Browse the catalog and install a package — or build one in the Developer surface. Installed extensions land here with their lifecycle state."
           action={
-            <Link className="aurum-btn" data-variant="quiet" href={`/marketplace${scopeQuery}`}>
+            <Link className="aurum-btn" data-variant="quiet" href={`/marketplace`}>
               Browse the catalog
             </Link>
           }
@@ -68,7 +58,7 @@ export default async function InstalledPage({
               <div className="aurum-item-head">
                 <Link
                   className="aurum-mkt-item-title"
-                  href={`/marketplace/installed/${item.extensionKey}${scopeQuery}`}
+                  href={`/marketplace/installed/${item.extensionKey}`}
                 >
                   {item.extensionKey}
                 </Link>

@@ -48,9 +48,9 @@ export function findStarter(q: string | null | undefined): ChatStarter | null {
 }
 
 /**
- * The href for a starter with the preserved scope query appended
- * (`scopeQuery` comes from `scopeFromSearch` / `withProductScope` and
- * starts with `?` when non-empty — the starter href already carries `?q=`).
+ * The href for a starter with an optional query suffix appended (starts
+ * with `?` when non-empty — the starter href already carries `?q=`).
+ * Since W058 the suffix is empty: the session carries the scope.
  */
 export function starterHref(
   candidate: ChatStarter,

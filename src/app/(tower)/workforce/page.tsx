@@ -8,7 +8,7 @@
 // this base — the surface says so.
 
 import { buildWorkforceView } from '../lib/views/workforce';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -16,7 +16,6 @@ import {
   ItemFoot,
   ItemHead,
   Notice,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -25,14 +24,10 @@ import { formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function WorkforcePage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildWorkforceView(resolution.context);
+export default async function WorkforcePage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/workforce');
+  const view = await buildWorkforceView(scope.context);
 
   return (
     <>

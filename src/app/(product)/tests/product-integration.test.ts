@@ -43,6 +43,8 @@ import {
   listNotifications,
   setNotificationPolicy,
 } from '@/modules/notifications/contract';
+import { addTenantMember, removeTenantMember } from '@/modules/organizations/contract';
+import { signUp, switchTenant } from '@/modules/auth/contract';
 import type { Notification } from '@/modules/notifications/contract';
 import {
   registerChannelConnection,
@@ -266,13 +268,29 @@ describe('buildShellState', () => {
 // The shell API surface
 // ---------------------------------------------------------------------------
 
-describe('handleShellStateGet', () => {
-  it('returns the envelope for a scoped request (headers seam)', async () => {
+describe('handleShellStateGet (the session-cookie surface, W058)', () => {
+  // Sessions are created through the auth contract (sign-up → company),
+  // so the fixture proves the FULL chain: cookie → session → verified
+  // membership → tenant-scoped view + account section.
+  let ownerASession: string;
+  let ownerBSession: string;
+
+  it('a session scoped to company A reads A (and the account lists A)', async () => {
+    const accountA = await signUp({
+      email: [newId().slice(0, 8), 'shell', 'a'].join('.') + '@example.invalid',
+      password: ['shell', 'A', newId().slice(0, 6)].join('-'),
+      displayName: 'Owner A',
+    });
+    await addTenantMember(fixture.ownerA, {
+      principalId: accountA.principal.id,
+      role: 'admin',
+    });
+    const switched = await switchTenant(accountA.token, { tenantId: fixture.tenantA.id });
+    expect(switched.tenant?.id).toBe(fixture.tenantA.id);
+    ownerASession = accountA.token;
+
     const request = new Request('https://aurum.test/api/product/shell', {
-      headers: {
-        'x-aurum-tenant': fixture.tenantA.id,
-        'x-aurum-principal': fixture.ownerA.principalId,
-      },
+      headers: { cookie: `aurum_session=${ownerASession}` },
     });
     const result = await handleShellStateGet(request);
     expect(result.status).toBe(200);
@@ -280,35 +298,91 @@ describe('handleShellStateGet', () => {
       expect(result.body.shell).toBe('state');
       expect(result.body.tenantId).toBe(fixture.tenantA.id);
       expect(result.body.view.company.ok).toBe(true);
+      expect(result.body.account.tenants.map((t) => t.id)).toContain(fixture.tenantA.id);
     }
   });
 
-  it('returns the envelope for a scoped request (query seam, workspace too)', async () => {
-    const request = new Request(
-      `https://aurum.test/api/product/shell?tenant=${fixture.tenantA.id}&principal=${fixture.ownerA.principalId}&workspace=growth`,
+  it('a session scoped to company B reads B — switching cannot cross scope', async () => {
+    const accountB = await signUp({
+      email: [newId().slice(0, 8), 'shell', 'b'].join('.') + '@example.invalid',
+      password: ['shell', 'B', newId().slice(0, 6)].join('-'),
+      displayName: 'Owner B',
+    });
+    await addTenantMember(fixture.ownerB, {
+      principalId: accountB.principal.id,
+      role: 'member',
+    });
+    const switched = await switchTenant(accountB.token, { tenantId: fixture.tenantB.id });
+    expect(switched.tenant?.id).toBe(fixture.tenantB.id);
+    ownerBSession = accountB.token;
+
+    const result = await handleShellStateGet(
+      new Request('https://aurum.test/api/product/shell', {
+        headers: { cookie: `aurum_session=${ownerBSession}` },
+      }),
     );
-    const result = await handleShellStateGet(request);
     expect(result.status).toBe(200);
     if (result.status === 200) {
-      expect(result.body.view.workspace).toBe('growth');
+      expect(result.body.tenantId).toBe(fixture.tenantB.id);
+      // B's notification feed contains ONLY B's notification.
+      expect(result.body.view.notifications.items.map((i) => i.id)).toEqual([
+        foreignNotification.id,
+      ]);
     }
+
+    // A member of B trying to switch to A fails — membership is the gate
+    // (the auth contract maps it to tenant_unavailable; no data leaks).
+    await expect(
+      switchTenant(accountB.token, { tenantId: fixture.tenantA.id }),
+    ).rejects.toMatchObject({ code: 'tenant_unavailable' });
   });
 
-  it('rejects missing and invalid tenants with 400 + honest detail', async () => {
-    const missing = await handleShellStateGet(
+  it('rejects unauthenticated requests with 401 (no tenant data without a session)', async () => {
+    const result = await handleShellStateGet(
       new Request('https://aurum.test/api/product/shell'),
     );
-    expect(missing.status).toBe(400);
-    if (missing.status === 400) {
-      expect(missing.body.error).toBe('missing_tenant');
-    }
-    const invalid = await handleShellStateGet(
-      new Request('https://aurum.test/api/product/shell?tenant=globex'),
+    expect(result.status).toBe(401);
+  });
+
+  it('rejects a session without an active company with 409', async () => {
+    const fresh = await signUp({
+      email: [newId().slice(0, 8), 'shell', 'fresh'].join('.') + '@example.invalid',
+      password: ['shell', 'fresh', newId().slice(0, 6)].join('-'),
+      displayName: 'Fresh Account',
+    });
+    const result = await handleShellStateGet(
+      new Request('https://aurum.test/api/product/shell', {
+        headers: { cookie: `aurum_session=${fresh.token}` },
+      }),
     );
-    expect(invalid.status).toBe(400);
-    if (invalid.status === 400) {
-      expect(invalid.body.error).toBe('invalid_tenant');
-    }
+    expect(result.status).toBe(409);
+  });
+
+  it('a revoked membership degrades the session to 409 on the next read', async () => {
+    const member = await signUp({
+      email: [newId().slice(0, 8), 'shell', 'revoked'].join('.') + '@example.invalid',
+      password: ['shell', 'rev', newId().slice(0, 6)].join('-'),
+      displayName: 'Soon Removed',
+    });
+    await addTenantMember(fixture.ownerA, {
+      principalId: member.principal.id,
+      role: 'member',
+    });
+    await switchTenant(member.token, { tenantId: fixture.tenantA.id });
+    const before = await handleShellStateGet(
+      new Request('https://aurum.test/api/product/shell', {
+        headers: { cookie: `aurum_session=${member.token}` },
+      }),
+    );
+    expect(before.status).toBe(200);
+
+    await removeTenantMember(fixture.ownerA, { principalId: member.principal.id });
+    const after = await handleShellStateGet(
+      new Request('https://aurum.test/api/product/shell', {
+        headers: { cookie: `aurum_session=${member.token}` },
+      }),
+    );
+    expect(after.status).toBe(409); // no active company — never tenant data
   });
 });
 

@@ -8,8 +8,7 @@
 // list, each link scope-preserving.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
-import type { PageSearchParams } from '../lib/context';
+import { requirePageScope } from '@/app/lib/page-session';
 import {
   governanceSurfaces,
   overviewSurfaces,
@@ -20,14 +19,9 @@ import { ShellGlyph } from '../components/icons';
 
 export const dynamic = 'force-dynamic';
 
-export default async function MorePage({
-  searchParams,
-}: {
-  searchParams: Promise<PageSearchParams>;
-}) {
-  const params = await searchParams;
-  const scopeQuery = withProductScope(params);
-  const scoped = productContextFromSearchParams(params).ok;
+export default async function MorePage() {
+  // W058: authenticated routing — the session carries the company scope.
+  await requirePageScope('/more');
   const groups = towerLinksByGroup();
 
   return (
@@ -35,11 +29,6 @@ export default async function MorePage({
       <PageHead
         title="More"
         description="Management mode, platform tools, and the shell itself — everything the product surface exposes, in one place."
-        meta={
-          scoped ? undefined : (
-            <span>Browsing without a company scope — links keep your current scope.</span>
-          )
-        }
       />
 
       <Panel
@@ -51,7 +40,7 @@ export default async function MorePage({
             group.links.map((surface) => (
               <Link
                 key={surface.surface}
-                href={`${surface.href}${scopeQuery}`}
+                href={`${surface.href}`}
                 className="aurum-hub-card"
               >
                 <span className="aurum-hub-label">

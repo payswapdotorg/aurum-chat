@@ -11,13 +11,11 @@
 // mutation of history.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../../../lib/context';
-import type { PageSearchParams } from '../../../lib/context';
+import { requirePageScope } from '@/app/lib/page-session';
 import { buildExtensionView } from '../../lib/views';
 import {
   EmptyState,
   ErrorState,
-  NotScoped,
   PageHead,
   Panel,
   StatusPill,
@@ -30,19 +28,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function InstalledExtensionPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ extensionKey: string }>;
-  searchParams: Promise<PageSearchParams>;
 }) {
   const { extensionKey } = await params;
-  const query = await searchParams;
-  const resolution = productContextFromSearchParams(query);
-  if (!resolution.ok) {
-    return <NotScoped detail={resolution.detail} />;
-  }
-  const scopeQuery = withProductScope(query);
-  const result = await buildExtensionView(resolution.resolved.context, extensionKey);
+  // W058: authenticated routing — the session carries the company scope.
+  const scope = await requirePageScope(`/marketplace/installed/${extensionKey}`);
+  const result = await buildExtensionView(scope.context, extensionKey);
 
   if (!result.ok) {
     if (result.failure === 'not_found') {
@@ -60,7 +52,7 @@ export default async function InstalledExtensionPage({
                 <Link
                   className="aurum-btn"
                   data-variant="quiet"
-                  href={`/marketplace/installed${scopeQuery}`}
+                  href={`/marketplace/installed`}
                 >
                   Back to installed
                 </Link>
@@ -77,7 +69,7 @@ export default async function InstalledExtensionPage({
           <ErrorState
             title="Read failed"
             detail="The extension could not be read right now. Nothing changed — try again in a moment."
-            retryHref={`/marketplace/installed/${extensionKey}${scopeQuery}`}
+            retryHref={`/marketplace/installed/${extensionKey}`}
           />
         </div>
       </>
@@ -128,7 +120,6 @@ export default async function InstalledExtensionPage({
                 <h3 className="aurum-mkt-subhead">{transition.label}</h3>
                 <ActionForm
                   action={`${actionBase}/${transition.transition}`}
-                  scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel={transition.label}
                   variant={transition.transition === 'deprecate' ? 'danger' : 'primary'}
@@ -231,7 +222,6 @@ export default async function InstalledExtensionPage({
                   <div style={{ marginTop: 10 }}>
                     <ActionForm
                       action={`${actionBase}/deploy`}
-                      scopeQuery={scopeQuery}
                       fields={[
                         {
                           kind: 'permission-select',
@@ -259,7 +249,7 @@ export default async function InstalledExtensionPage({
           </ul>
         )}
         <p className="aurum-item-text" style={{ marginTop: 10 }}>
-          <Link className="aurum-mkt-link" href={`/marketplace/installed${scopeQuery}`}>
+          <Link className="aurum-mkt-link" href={`/marketplace/installed`}>
             ← back to installed
           </Link>
         </p>
@@ -299,7 +289,6 @@ export default async function InstalledExtensionPage({
                   <div style={{ marginTop: 10 }}>
                     <ActionForm
                       action={`${actionBase}/rollback`}
-                      scopeQuery={scopeQuery}
                       fields={[]}
                       hidden={{ targetDeploymentId: deployment.id }}
                       submitLabel={`Roll back to v${deployment.version}`}

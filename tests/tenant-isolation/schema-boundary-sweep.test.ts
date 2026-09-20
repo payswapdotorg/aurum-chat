@@ -116,7 +116,16 @@ const TECHNICAL_UNIQUE_COLUMNS = new Set([
  * 256-bit randomness) and semantically an auth ambiguity that must FAIL
  * globally, not resolve per-tenant.
  */
-const GLOBAL_CREDENTIAL_ANCHORS = new Set(['api_keys.key_hash']);
+const GLOBAL_CREDENTIAL_ANCHORS = new Set([
+  'api_keys.key_hash',
+  // W058: `auth_invitations.token_hash` follows the same doctrine — the
+  // sha-256 digest of a system-minted random invite token. A presented
+  // token must resolve onto exactly ONE invitation (possession IS the
+  // authorization); tenant-namespacing it would weaken that invariant the
+  // same way it would for api keys. The ACCEPTANCE path re-verifies
+  // tenant membership through the organizations contract.
+  'auth_invitations.token_hash',
+]);
 
 function isSurrogateUuidReference(column: string, type: string): boolean {
   return type === 'uuid' && (column === 'id' || column.endsWith('_id'));

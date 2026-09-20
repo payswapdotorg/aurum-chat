@@ -13,19 +13,17 @@
 // working parts of the pages below.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
-import type { PageSearchParams } from '../lib/context';
+import { requirePageScope } from '@/app/lib/page-session';
 import {
   buildCatalogView,
-  parseKindFilter,
-  publicBrowsingContext,
+  parseKindFilter
 } from './lib/views';
 import {
   EmptyState,
   ErrorState,
   PageHead,
   Panel,
-  ScopeNotice,
+  
   StatusPill,
   Tag,
 } from '../components/states';
@@ -42,20 +40,19 @@ const KIND_TABS: { value: 'all' | 'extension' | 'agent'; label: string }[] = [
 export default async function MarketplacePage({
   searchParams,
 }: {
-  searchParams: Promise<PageSearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // W058: authenticated routing — the session carries the company scope.
+  const scope = await requirePageScope('/marketplace');
   const params = await searchParams;
-  const resolution = productContextFromSearchParams(params);
-  const scoped = resolution.ok;
-  const ctx = resolution.ok ? resolution.resolved.context : publicBrowsingContext();
-  const scopeQuery = withProductScope(params);
+  const ctx = scope.context;
   const rawKind = Array.isArray(params['kind']) ? (params['kind'][0] ?? null) : (params['kind'] ?? null);
   const kindFilter = parseKindFilter(rawKind);
   const view = await buildCatalogView(ctx, kindFilter);
 
   const tabs = KIND_TABS.map((tab) => ({
     ...tab,
-    href: `/marketplace${withProductScope(params, { kind: tab.value === 'all' ? null : tab.value })}`,
+    href: tab.value === 'all' ? '/marketplace' : `/marketplace?kind=${tab.value}`,
     active: tab.value === view.kindFilter,
   }));
 
@@ -66,17 +63,16 @@ export default async function MarketplacePage({
         description="Extensions and governed agent packages — general software capabilities for your Aurum, not a fixed feature catalog. Every listing passed automated verification AND platform review before it became installable; publication and installation are separate states."
         meta={<span>Live catalog · {view.total} listing{view.total === 1 ? '' : 's'} shown</span>}
       />
-      {!scoped ? <ScopeNotice /> : null}
 
       <div className="aurum-mkt-area-links">
-        <Link className="aurum-mkt-area-link" href={`/marketplace/installed${scopeQuery}`}>
+        <Link className="aurum-mkt-area-link" href={`/marketplace/installed`}>
           <ShellGlyph name="check" size={15} />
           <span>
             <strong>Installed</strong>
             <span>govern what your company already runs</span>
           </span>
         </Link>
-        <Link className="aurum-mkt-area-link" href={`/marketplace/developer${scopeQuery}`}>
+        <Link className="aurum-mkt-area-link" href={`/marketplace/developer`}>
           <ShellGlyph name="developer" size={15} />
           <span>
             <strong>Developer</strong>
@@ -154,7 +150,7 @@ export default async function MarketplacePage({
           <ErrorState
             title="Catalog unavailable"
             detail="The catalog read failed. Nothing about your scope changed — try again in a moment."
-            retryHref={`/marketplace${scopeQuery}`}
+            retryHref={`/marketplace`}
           />
         ) : view.items.length === 0 ? (
           <EmptyState
@@ -168,7 +164,7 @@ export default async function MarketplacePage({
                 <div className="aurum-item-head">
                   <Link
                     className="aurum-mkt-item-title"
-                    href={`/marketplace/package/${item.id}${scopeQuery}`}
+                    href={`/marketplace/package/${item.id}`}
                   >
                     {item.displayName}
                   </Link>

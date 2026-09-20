@@ -64,8 +64,9 @@ export interface ShellCommand {
 }
 
 /**
- * Every command in the shell. The scope query (`?tenant=...`, from
- * `scopeFromSearch`) is appended to navigate targets at USE time so the
+ * Every command in the shell. Navigate targets are clean hrefs since
+ * W058 (the session carries the scope); `commandHref` still appends a
+ * query suffix when one is given so the helper stays general.
  * command list itself stays independent of the current URL.
  */
 export function buildShellCommands(): ShellCommand[] {

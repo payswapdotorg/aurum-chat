@@ -53,8 +53,6 @@ export type ActionField =
 export interface ActionFormProps {
   /** The API path (relative), e.g. /api/product/marketplace/package/<id>/submit */
   action: string;
-  /** Preserved scope query ('' or '?tenant=…&principal=…'). */
-  scopeQuery: string;
   fields: ActionField[];
   submitLabel: string;
   /** Renders a quiet variant of the submit control. */
@@ -94,7 +92,6 @@ interface OutcomeBody {
 
 export function ActionForm({
   action,
-  scopeQuery,
   fields,
   submitLabel,
   variant = 'primary',
@@ -159,9 +156,8 @@ export function ActionForm({
             .map((option) => option.value);
         }
       }
-      const url =
-        scopeQuery === '' ? action : `${action}${scopeQuery}`;
-      const response = await fetch(url, {
+      // W058: the session cookie scopes the request — no URL parameters.
+      const response = await fetch(action, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
@@ -196,7 +192,7 @@ export function ActionForm({
     }
   }
 
-  const approvalsHref = `/approvals${scopeQuery === '' ? '' : scopeQuery}`;
+  const approvalsHref = '/approvals';
 
   return (
     <form className="aurum-mkt-form" onSubmit={(event) => void submit(event)}>

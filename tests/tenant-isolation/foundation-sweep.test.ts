@@ -1,7 +1,9 @@
 // W044 — Tenant Isolation Verification · application-boundary sweep for the
 // L0 foundation modules: organizations (W001), identity (W002), people
 // (W002), events (W003), world (W005), audit (W046, the append-only
-// decision-evidence trail) and simulator (W056, the synthetic company).
+// decision-evidence trail), simulator (W056, the synthetic company) and
+// auth (W058 — the session boundary: invitations are tenant-scoped and a
+// session can only ever point at a LIVE-VERIFIED member company).
 //
 // Two REAL tenants are provisioned through the organizations contract (the
 // platform operation), then every module contract is driven for both tenants
@@ -109,6 +111,14 @@ import {
   runMigrations,
   storedTenantId,
 } from './harness';
+import {
+  createInvitation,
+  listInvitations,
+  resolveSession,
+  revokeInvitation,
+  signUp,
+  switchTenant,
+} from '@/modules/auth/contract';
 
 const platform = { principalId: newId(), authority: [ORGANIZATIONS_AUTHORITY_PROVISION] };
 
@@ -1052,6 +1062,90 @@ describe('W044 simulator — synthetic companies and hidden ground truth are ten
     const bReports = await listMonthReports(member(tenantB.tenantId), { companyId: beta.id });
     expect(bReports.map((report) => report.month)).toEqual([1]);
     expect(bReports.every((report) => report.companyId === beta.id)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// auth (W058)
+// ---------------------------------------------------------------------------
+
+describe('W058 auth — invitations are tenant-scoped and sessions cannot cross scope', () => {
+  it('a forged context cannot list or create invitations in another tenant (membership gate)', async () => {
+    // tenantA's principal claiming tenantB: the organizations contract
+    // makes a non-member indistinguishable from a missing tenant, and
+    // auth maps it to tenant_unavailable — no existence leak.
+    const forged: TenantContext = {
+      tenantId: tenantB.tenantId,
+      principalId: tenantA.owner.principalId,
+      authority: [],
+    };
+    await expect(listInvitations(forged)).rejects.toMatchObject({
+      code: 'tenant_unavailable',
+    });
+    await expect(
+      createInvitation(forged, {
+        email: [newId().slice(0, 8), 'sweep'].join('.') + '@example.invalid',
+        tenantRole: 'member',
+      }),
+    ).rejects.toMatchObject({ code: 'tenant_unavailable' });
+  });
+
+  it('invitation rosters stay per-tenant and disjoint; foreign ids are uniform not-found', async () => {
+    const email = [newId().slice(0, 8), 'sweep', 'a'].join('.') + '@example.invalid';
+    const created = await createInvitation(tenantA.owner, {
+      email,
+      tenantRole: 'member',
+    });
+    expect(created.tenantId).toBe(tenantA.tenantId);
+
+    const aInvites = await listInvitations(tenantA.owner);
+    expect(aInvites.map((invite) => invite.id)).toContain(created.id);
+    expect(aInvites.every((invite) => invite.tenantId === tenantA.tenantId)).toBe(true);
+
+    const bInvites = await listInvitations(tenantB.owner);
+    expect(bInvites.map((invite) => invite.id)).not.toContain(created.id);
+    expect(bInvites.every((invite) => invite.tenantId === tenantB.tenantId)).toBe(true);
+
+    // A foreign revoke is uniform not-found (the UPDATE pins tenant_id).
+    await expect(
+      revokeInvitation(tenantB.owner, { invitationId: created.id }),
+    ).rejects.toMatchObject({ code: 'invitation_not_found' });
+  });
+
+  it('a session can only switch to a company its principal is a verified member of', async () => {
+    // Real accounts, granted membership through the organizations contract.
+    const account = await signUp({
+      email: [newId().slice(0, 8), 'sweep', 'member'].join('.') + '@example.invalid',
+      password: ['sweep', 'member', newId().slice(0, 6)].join('-'),
+      displayName: 'Sweep Member',
+    });
+    await addTenantMember(tenantA.owner, { principalId: account.principal.id, role: 'member' });
+
+    const switched = await switchTenant(account.token, { tenantId: tenantA.tenantId });
+    expect(switched.tenant?.id).toBe(tenantA.tenantId);
+
+    // Cross-scope switching (tenantB) fails — membership is the gate, and
+    // the failure is indistinguishable from a missing company.
+    await expect(
+      switchTenant(account.token, { tenantId: tenantB.tenantId }),
+    ).rejects.toMatchObject({ code: 'tenant_unavailable' });
+
+    // The session still points at tenantA after the failed attempt.
+    const resolved = await resolveSession(account.token);
+    expect(resolved.status).toBe('valid');
+    if (resolved.status === 'valid') {
+      expect(resolved.resolved.tenant?.id).toBe(tenantA.tenantId);
+    }
+
+    // Revoking the membership degrades the session to NO company — the
+    // session boundary never hands out tenant data for a lost scope.
+    await removeTenantMember(tenantA.owner, { principalId: account.principal.id });
+    const after = await resolveSession(account.token);
+    expect(after.status).toBe('valid');
+    if (after.status === 'valid') {
+      expect(after.resolved.tenant).toBeNull();
+      expect(after.resolved.context).toBeNull();
+    }
   });
 });
 

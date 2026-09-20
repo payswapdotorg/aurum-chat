@@ -5,13 +5,11 @@
 // embedded Postgres, tenant isolation) is tower-integration.test.ts.
 
 import { describe, expect, it } from 'vitest';
+import { firstValue, withQuery } from '../lib/page-context';
 import {
-  AUTHORITY_HEADER,
-  TOWER_OPERATOR_PRINCIPAL,
-  resolveTowerContext,
-  towerContextFromHeaders,
-  towerContextFromSearchParams,
-} from '../lib/tower-context';
+  SESSION_COOKIE_NAME,
+  sessionTokenFromCookieHeader,
+} from '@/app/lib/session-cookie';
 import {
   formatConfidence,
   formatCount,
@@ -31,75 +29,28 @@ import {
   towerApiError,
 } from '../lib/api';
 
-const TENANT = '0f0c1d2e-3b4a-4c5d-8e9f-0a1b2c3d4e5f';
-const TENANT_UPPER = '0F0C1D2E-3B4A-4C5D-8E9F-0A1B2C3D4E5F';
-const PRINCIPAL = '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d';
-
-describe('tower context resolution (the documented dev seam)', () => {
-  it('fails honestly without a tenant', () => {
-    const result = resolveTowerContext({});
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.failure).toBe('missing_tenant');
-    expect(result.detail).toContain(AUTHORITY_HEADER === 'x-aurum-authority' ? 'tenant' : '');
+describe('tower page context (W058 — the session replaces the dev seam)', () => {
+  it('withQuery preserves NON-scope parameters and applies overrides', () => {
+    expect(withQuery({ status: 'archived', q: 'attention' })).toBe(
+      '?status=archived&q=attention',
+    );
+    expect(withQuery({ status: 'archived' }, { status: null })).toBe('');
+    expect(withQuery({})).toBe('');
   });
 
-  it('rejects non-uuid tenants and principals', () => {
-    const badTenant = resolveTowerContext({ tenant: 'acme' });
-    expect(badTenant.ok).toBe(false);
-    if (badTenant.ok) return;
-    expect(badTenant.failure).toBe('invalid_tenant');
-
-    const badPrincipal = resolveTowerContext({ tenant: TENANT, principal: 'me' });
-    expect(badPrincipal.ok).toBe(false);
-    if (badPrincipal.ok) return;
-    expect(badPrincipal.failure).toBe('invalid_principal');
+  it('firstValue takes the first of array parameters', () => {
+    expect(firstValue(['a', 'b'])).toBe('a');
+    expect(firstValue('solo')).toBe('solo');
+    expect(firstValue(undefined)).toBeNull();
   });
 
-  it('defaults to the well-known tower operator principal when none is given', () => {
-    const result = resolveTowerContext({ tenant: TENANT });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.context.tenantId).toBe(TENANT);
-    expect(result.context.principalId).toBe(TOWER_OPERATOR_PRINCIPAL);
-    expect(result.principalExplicit).toBe(false);
-    expect(result.context.authority).toEqual([]);
-  });
-
-  it('normalizes uuids to lowercase and parses comma-separated authority claims', () => {
-    const result = resolveTowerContext({
-      tenant: TENANT_UPPER,
-      principal: PRINCIPAL.toUpperCase(),
-      authority: 'actions:approve, agents:administer ,, actions:approve',
-    });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.context.tenantId).toBe(TENANT);
-    expect(result.context.principalId).toBe(PRINCIPAL);
-    expect(result.principalExplicit).toBe(true);
-    expect(result.context.authority).toEqual(['actions:approve', 'agents:administer']);
-  });
-
-  it('adapts page search params (first value of arrays wins)', () => {
-    const result = towerContextFromSearchParams({
-      tenant: [TENANT, 'ignored'],
-      principal: PRINCIPAL,
-    });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.context.tenantId).toBe(TENANT);
-    expect(result.context.principalId).toBe(PRINCIPAL);
-  });
-
-  it('adapts fetch headers (case-insensitive)', () => {
-    const headers = new Headers();
-    headers.set('X-Aurum-Tenant', TENANT);
-    headers.set('x-aurum-principal', PRINCIPAL);
-    const result = towerContextFromHeaders(headers);
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.context.tenantId).toBe(TENANT);
-    expect(result.context.principalId).toBe(PRINCIPAL);
+  it('the tower reads its scope from the session cookie only', () => {
+    // The seam module was REMOVED with W058: the tower resolves its
+    // TenantContext from the session cookie (@/app/lib/page-session →
+    // the auth contract), never from ?tenant=/x-aurum-tenant. This pins
+    // the seam's absence so it cannot silently return.
+    expect(sessionTokenFromCookieHeader(`${SESSION_COOKIE_NAME}=tok; x=1`)).toBe('tok');
+    expect(sessionTokenFromCookieHeader('?tenant=globex')).toBeNull();
   });
 });
 

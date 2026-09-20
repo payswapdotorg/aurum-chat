@@ -8,22 +8,22 @@
 // No fake composer, no fake replies — quiet, honest states only.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../lib/context';
-import type { PageSearchParams } from '../lib/context';
+import { requirePageScope } from '@/app/lib/page-session';
 import { CHAT_STARTERS, findStarter, starterHref } from '../lib/chat-starters';
-import { PageHead, ScopeNotice, StatusPill, WorkingIndicator } from '../components/states';
+import { PageHead, StatusPill, WorkingIndicator } from '../components/states';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ChatPage({
   searchParams,
 }: {
-  searchParams: Promise<PageSearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // W058: authenticated routing — the session carries the company scope
+  // (unauthenticated visitors never reach this render; they are redirected
+  // to sign-in, and sessions without an active company go to onboarding).
+  await requirePageScope('/chat');
   const params = await searchParams;
-  const resolution = productContextFromSearchParams(params);
-  const scoped = resolution.ok;
-  const scopeQuery = withProductScope(params);
   const q = Array.isArray(params['q']) ? (params['q'][0] ?? null) : (params['q'] ?? null);
   const selected = findStarter(q);
 
@@ -32,13 +32,8 @@ export default async function ChatPage({
       <PageHead
         title="Chat"
         description="Talk with Aurum like you would a colleague who happens to know the whole company. Answers are evidence-backed, findings arrive as cards, and consequential actions always pass a human approval gate."
-        meta={
-          scoped ? (
-            <span>Company scope active — Aurum answers from your tenant-scoped state.</span>
-          ) : undefined
-        }
+        meta={<span>Company scope active — Aurum answers from your tenant-scoped state.</span>}
       />
-      {!scoped ? <ScopeNotice /> : null}
 
       <section className="aurum-chat-card" aria-labelledby="aurum-chat-identity-title">
         <div className="aurum-chat-identity">
@@ -54,9 +49,7 @@ export default async function ChatPage({
             </p>
           </div>
           <div style={{ marginLeft: 'auto' }}>
-            <StatusPill tone={scoped ? 'positive' : 'neutral'}>
-              {scoped ? 'on duty' : 'no company'}
-            </StatusPill>
+            <StatusPill tone="positive">on duty</StatusPill>
           </div>
         </div>
 
@@ -70,7 +63,7 @@ export default async function ChatPage({
               {CHAT_STARTERS.map((starter) => (
                 <Link
                   key={starter.id}
-                  href={starterHref(starter, scopeQuery)}
+                  href={starterHref(starter, '')}
                   className="aurum-starter"
                 >
                   <span className="aurum-starter-q">{starter.question}</span>
@@ -94,7 +87,7 @@ export default async function ChatPage({
               <WorkingIndicator label="Aurum will answer here" />
             </p>
             <p style={{ marginTop: 14 }}>
-              <Link className="aurum-btn" data-variant="quiet" href={`/chat${scopeQuery}`}>
+              <Link className="aurum-btn" data-variant="quiet" href="/chat">
                 Pick a different question
               </Link>
             </p>

@@ -22,7 +22,6 @@ import {
   nextCommandIndex,
 } from '../lib/command-registry';
 import type { ShellCommand } from '../lib/command-registry';
-import { scopeFromSearch } from '../lib/context';
 import { dispatchOpenNotifications } from '../lib/shell-events';
 
 export function CommandSearch(): ReactNode {
@@ -60,9 +59,8 @@ export function CommandSearch(): ReactNode {
       dispatchOpenNotifications();
       return;
     }
-    const scope =
-      typeof window === 'undefined' ? '' : scopeFromSearch(window.location.search);
-    router.push(commandHref(command, scope));
+    // W058: the session carries the scope — navigate with a clean URL.
+    router.push(commandHref(command, ''));
   };
 
   if (!commandSearchOpen) return null;

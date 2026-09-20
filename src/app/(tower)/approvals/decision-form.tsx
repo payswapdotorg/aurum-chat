@@ -14,10 +14,6 @@ import type { ReactNode } from 'react';
 
 export interface DecisionFormProps {
   requestId: string;
-  /** Scoping parameters forwarded from the page's query string. */
-  tenant: string | null;
-  principal: string | null;
-  authority: string | null;
   /** True when the current principal cannot decide (self-requested). */
   disabled?: boolean;
   disabledReason?: string | null;
@@ -25,9 +21,6 @@ export interface DecisionFormProps {
 
 export function DecisionForm({
   requestId,
-  tenant,
-  principal,
-  authority,
   disabled = false,
   disabledReason = null,
 }: DecisionFormProps): ReactNode {
@@ -39,13 +32,8 @@ export function DecisionForm({
     setPending(true);
     setError(null);
     try {
-      const query = new URLSearchParams();
-      if (tenant !== null && tenant !== '') query.set('tenant', tenant);
-      if (principal !== null && principal !== '') query.set('principal', principal);
-      if (authority !== null && authority !== '') query.set('authority', authority);
-      const response = await fetch(
-        `/api/tower/approvals/${requestId}/decide${query.size === 0 ? '' : `?${query.toString()}`}`,
-        {
+      // W058: the session cookie scopes the request — no URL parameters.
+      const response = await fetch(`/api/tower/approvals/${requestId}/decide`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ decision, note: 'Decided in the Management Control Tower' }),

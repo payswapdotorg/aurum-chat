@@ -18,12 +18,6 @@ import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { CatalogEntry } from '../lib/catalog';
 
-export interface Scope {
-  tenant: string | null;
-  principal: string | null;
-  authority: string | null;
-}
-
 interface ApiSuccess {
   summary?: string;
 }
@@ -33,20 +27,13 @@ interface ApiFailure {
   message?: string;
 }
 
-/** POST one action body to the hub API. */
-async function postAction(scope: Scope, body: Record<string, unknown>): Promise<ApiSuccess> {
-  const query = new URLSearchParams();
-  if (scope.tenant !== null && scope.tenant !== '') query.set('tenant', scope.tenant);
-  if (scope.principal !== null && scope.principal !== '') query.set('principal', scope.principal);
-  if (scope.authority !== null && scope.authority !== '') query.set('authority', scope.authority);
-  const response = await fetch(
-    `/api/connections${query.size === 0 ? '' : `?${query.toString()}`}`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    },
-  );
+/** POST one action body to the hub API (the session cookie scopes it). */
+async function postAction(body: Record<string, unknown>): Promise<ApiSuccess> {
+  const response = await fetch('/api/connections', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
   const parsed = (await response.json().catch(() => null)) as ApiSuccess | ApiFailure | null;
   if (!response.ok) {
     const failure = parsed as ApiFailure | null;
@@ -65,12 +52,12 @@ function useAction() {
   const [summary, setSummary] = useState<string | null>(null);
 
   const run = useCallback(
-    async (scope: Scope, body: Record<string, unknown>): Promise<boolean> => {
+    async (body: Record<string, unknown>): Promise<boolean> => {
       setPending(true);
       setError(null);
       setSummary(null);
       try {
-        const result = await postAction(scope, body);
+        const result = await postAction(body);
         setSummary(result.summary ?? 'Done.');
         router.refresh();
         return true;
@@ -120,14 +107,12 @@ function StatusLine({
 // ---------------------------------------------------------------------------
 
 export function ActionButton({
-  scope,
   action,
   fields,
   label,
   tone = 'quiet',
   confirmText = null,
 }: {
-  scope: Scope;
   action: string;
   fields: Record<string, string>;
   label: string;
@@ -139,7 +124,7 @@ export function ActionButton({
 
   async function submit(): Promise<void> {
     if (confirmText !== null && !window.confirm(confirmText)) return;
-    await run(scope, { action, ...fields });
+    await run({ action, ...fields });
   }
 
   return (
@@ -166,14 +151,12 @@ export interface InlineField {
 }
 
 export function ActionForm({
-  scope,
   action,
   fixedFields,
   fields,
   submitLabel,
   tone = 'quiet',
 }: {
-  scope: Scope;
   action: string;
   fixedFields: Record<string, string>;
   fields: InlineField[];
@@ -189,7 +172,7 @@ export function ActionForm({
       const value = formData.get(field.name);
       body[field.name] = typeof value === 'string' ? value : '';
     }
-    await run(scope, body);
+    await run(body);
   }
 
   return (
@@ -232,13 +215,12 @@ export function ActionForm({
 // ---------------------------------------------------------------------------
 
 export interface ConnectFormProps {
-  scope: Scope;
   kind: 'channel' | 'source' | 'destination';
   providers: CatalogEntry[];
   title: string;
 }
 
-export function ConnectForm({ scope, kind, providers, title }: ConnectFormProps): ReactNode {
+export function ConnectForm({ kind, providers, title }: ConnectFormProps): ReactNode {
   const { pending, error, summary, run } = useAction();
   const [provider, setProvider] = useState(providers[0]?.key ?? '');
   const needsAuth = kind !== 'channel';
@@ -267,7 +249,7 @@ export function ConnectForm({ scope, kind, providers, title }: ConnectFormProps)
         if (expires !== '') body['oauthExpiresAt'] = new Date(expires).toISOString();
       }
     }
-    await run(scope, body);
+    await run(body);
   }
 
   return (
@@ -400,7 +382,7 @@ export function ConnectForm({ scope, kind, providers, title }: ConnectFormProps)
 // Person creation (supports the identity linking workflow)
 // ---------------------------------------------------------------------------
 
-export function PersonCreateForm({ scope }: { scope: Scope }): ReactNode {
+export function PersonCreateForm(): ReactNode {
   const { pending, error, summary, run } = useAction();
 
   async function submit(formData: FormData): Promise<void> {
@@ -410,7 +392,7 @@ export function PersonCreateForm({ scope }: { scope: Scope }): ReactNode {
     };
     const email = String(formData.get('email') ?? '').trim();
     if (email !== '') body['email'] = email;
-    await run(scope, body);
+    await run(body);
   }
 
   return (

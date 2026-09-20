@@ -10,9 +10,8 @@
 // tenant installation.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../../../lib/context';
-import type { PageSearchParams } from '../../../lib/context';
-import { buildPackageView, publicBrowsingContext } from '../../lib/views';
+import { requirePageScope } from '@/app/lib/page-session';
+import { buildPackageView } from '../../lib/views';
 import { isAgentPackage, isExtensionPackage } from '@/modules/marketplace/contract';
 import {
   EmptyState,
@@ -47,16 +46,13 @@ function ChainView({ chain }: { chain: { state: string; label: string; reached: 
 
 export default async function PackagePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ packageId: string }>;
-  searchParams: Promise<PageSearchParams>;
 }) {
   const { packageId } = await params;
-  const query = await searchParams;
-  const resolution = productContextFromSearchParams(query);
-  const ctx = resolution.ok ? resolution.resolved.context : publicBrowsingContext();
-  const scopeQuery = withProductScope(query);
+  // W058: authenticated routing — the session carries the company scope.
+  const scope = await requirePageScope(`/marketplace/package/${packageId}`);
+  const ctx = scope.context;
   const result = await buildPackageView(ctx, packageId);
 
   if (!result.ok) {
@@ -72,7 +68,7 @@ export default async function PackagePage({
               title="Nothing to show"
               hint="Only published and installable packages are public; a vendor's draft is visible to the vendor and the platform alone."
               action={
-                <Link className="aurum-btn" data-variant="quiet" href={`/marketplace${scopeQuery}`}>
+                <Link className="aurum-btn" data-variant="quiet" href={`/marketplace`}>
                   Back to the catalog
                 </Link>
               }
@@ -88,7 +84,7 @@ export default async function PackagePage({
           <ErrorState
             title="Read failed"
             detail="The package could not be read right now. Nothing changed — try again in a moment."
-            retryHref={`/marketplace/package/${packageId}${scopeQuery}`}
+            retryHref={`/marketplace/package/${packageId}`}
           />
         </div>
       </>
@@ -97,14 +93,8 @@ export default async function PackagePage({
 
   const view = result.view;
   const { pkg, actions, evidence } = view;
-  const backHref = `/marketplace${scopeQuery}`;
+  const backHref = `/marketplace`;
   const actionBase = `/api/product/marketplace/package/${pkg.id}`;
-  const unscopedNotice = resolution.ok ? null : (
-    <div className="aurum-notice">
-      You are inspecting a public listing. Acting on it (installing) needs your company scope —
-      append <code>?tenant=&lt;tenant uuid&gt;</code>.
-    </div>
-  );
 
   const latestRun = evidence.verification.latestRun;
   const hasChecks = latestRun !== null && latestRun.checks.length > 0;
@@ -123,7 +113,6 @@ export default async function PackagePage({
           </span>
         }
       />
-      {unscopedNotice}
 
       <div className="aurum-mkt-detail-grid">
         {/* --- status + chain --- */}
@@ -319,24 +308,12 @@ export default async function PackagePage({
         title="Actions"
         blurb="Exactly what YOUR scope may do with this package right now — the same rules the domain contracts enforce."
       >
-        {!resolution.ok ? (
-          <EmptyState
-            title="Acting needs a company scope"
-            hint="Append ?tenant=<tenant uuid> to install or govern this package."
-            action={
-              <Link className="aurum-btn" data-variant="quiet" href="/marketplace">
-                Back to the catalog
-              </Link>
-            }
-          />
-        ) : (
-          <div className="aurum-mkt-action-grid">
+        <div className="aurum-mkt-action-grid">
             {actions.canSubmit ? (
               <div className="aurum-mkt-action">
                 <h3 className="aurum-mkt-subhead">Submit for verification (vendor)</h3>
                 <ActionForm
                   action={`${actionBase}/submit`}
-                  scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel="Submit to the platform pipeline"
                   note="DRAFT → SUBMITTED. The vendor hands the frozen artifact to the platform; verification and review are not the vendor's to run."
@@ -349,7 +326,6 @@ export default async function PackagePage({
                 <h3 className="aurum-mkt-subhead">Run automated verification (platform)</h3>
                 <ActionForm
                   action={`${actionBase}/verify`}
-                  scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel="Run the deterministic checks"
                   note="SUBMITTED → PENDING_REVIEW or REJECTED. A failed check rejects the package with the evidence recorded."
@@ -362,7 +338,6 @@ export default async function PackagePage({
                 <h3 className="aurum-mkt-subhead">Platform review decision</h3>
                 <ActionForm
                   action={`${actionBase}/review`}
-                  scopeQuery={scopeQuery}
                   fields={[
                     {
                       kind: 'select',
@@ -402,7 +377,6 @@ export default async function PackagePage({
                 <h3 className="aurum-mkt-subhead">Publish (platform)</h3>
                 <ActionForm
                   action={`${actionBase}/publish`}
-                  scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel="Publish to the catalog"
                   confirmPrompt="Publishing lists this version publicly; installation stays separately gated."
@@ -416,7 +390,6 @@ export default async function PackagePage({
                 <h3 className="aurum-mkt-subhead">Make installable (platform)</h3>
                 <ActionForm
                   action={`${actionBase}/make-installable`}
-                  scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel="Clear for installation"
                   confirmPrompt="Tenants will be able to install this version."
@@ -430,7 +403,6 @@ export default async function PackagePage({
                 <h3 className="aurum-mkt-subhead">Install into your company</h3>
                 <ActionForm
                   action={`${actionBase}/install`}
-                  scopeQuery={scopeQuery}
                   fields={[
                     {
                       kind: 'permission-select',
@@ -456,7 +428,6 @@ export default async function PackagePage({
                 <h3 className="aurum-mkt-subhead">Install the agent blueprint</h3>
                 <ActionForm
                   action={`${actionBase}/install`}
-                  scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel="Register the agent in your company"
                   confirmPrompt="I inspected the blueprint's permission scopes and accept them."
@@ -472,7 +443,6 @@ export default async function PackagePage({
               </div>
             ) : null}
           </div>
-        )}
       </Panel>
     </>
   );

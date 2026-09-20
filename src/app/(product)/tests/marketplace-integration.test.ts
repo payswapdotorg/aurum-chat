@@ -49,8 +49,9 @@ import {
   decideApproval,
   setAuthorityPolicy,
 } from '@/modules/actions/contract';
-import { provisionTenant } from '@/modules/organizations/contract';
+import { addTenantMember, provisionTenant } from '@/modules/organizations/contract';
 import { ORGANIZATIONS_AUTHORITY_PROVISION } from '@/modules/organizations/contract';
+import { signUp, switchTenant } from '@/modules/auth/contract';
 import {
   listAgents,
   registerAgent,
@@ -69,7 +70,13 @@ import {
   runManifestVerification,
 } from '@/modules/extensions/contract';
 import type { MarketplacePackage } from '@/modules/marketplace/contract';
-import { isExtensionPackage } from '@/modules/marketplace/contract';
+import {
+  isExtensionPackage,
+  makePackageInstallable,
+  publishPackage,
+  reviewPackage,
+  runAutomatedVerification,
+} from '@/modules/marketplace/contract';
 
 import {
   handleDeveloperAction,
@@ -110,6 +117,10 @@ let vendorCtx: TenantContext;
 let platformCtx: TenantContext;
 let installerCtx: TenantContext;
 let installerDefaultPolicyCtx: TenantContext;
+/** Owner contexts for granting memberships through the organizations contract. */
+let vendorOwnerCtx: TenantContext;
+let installerOwnerCtx: TenantContext;
+let installer2OwnerCtx: TenantContext;
 
 /** Always-succeeding fake agent transport (the builder's isolated environment). */
 class FakeAgentTransport implements AgentRuntimeTransport {
@@ -193,14 +204,45 @@ const BUILDER_AGENT: RegisterAgentInput = {
   permissions: ['observe', 'analyze', 'recommend', 'ask', 'propose'],
 };
 
+/**
+ * W058: the marketplace API authenticates by SESSION COOKIE. The fixture
+ * contexts map to real sessions (role-derived claims); the platform
+ * context — whose 'marketplace:administer' claim is a PLATFORM claim no
+ * tenant role derives — exercises the pipeline at the CONTRACT seam (the
+ * W050 e2e pattern), documented per test.
+ */
+const sessionTokens = new Map<TenantContext, string>();
+
 function request_(ctx: TenantContext, path: string): Request {
+  const token = sessionTokens.get(ctx);
+  if (token === undefined) {
+    throw new Error(
+      'no session fixture for this context — W058: platform claims are not session-representable; use the contract seam',
+    );
+  }
   return new Request(`https://aurum.test${path}`, {
-    headers: {
-      'x-aurum-tenant': ctx.tenantId,
-      'x-aurum-principal': ctx.principalId,
-      'x-aurum-authority': ctx.authority.join(','),
-    },
+    headers: { cookie: `aurum_session=${token}` },
   });
+}
+
+/** Create (once) an authenticated session with `role` inside `tenantId`. */
+async function sessionFor(
+  ctx: TenantContext,
+  ownerCtx: TenantContext,
+  role: 'owner' | 'admin' | 'member',
+): Promise<string> {
+  const existing = sessionTokens.get(ctx);
+  if (existing !== undefined) return existing;
+  const account = await signUp({
+    email: [newId().slice(0, 8), 'mkt', role].join('.') + '@example.invalid',
+    password: ['mkt', role, newId().slice(0, 6)].join('-'),
+    displayName: `Marketplace ${role}`,
+  });
+  await addTenantMember(ownerCtx, { principalId: account.principal.id, role });
+  const switched = await switchTenant(account.token, { tenantId: ctx.tenantId });
+  expect(switched.tenant?.id).toBe(ctx.tenantId);
+  sessionTokens.set(ctx, account.token);
+  return account.token;
 }
 
 let extensionPackage: MarketplacePackage;
@@ -214,27 +256,55 @@ beforeAll(async () => {
     principalId: newId(),
     authority: [ORGANIZATIONS_AUTHORITY_PROVISION],
   };
+  const vendorOwner = newId();
+  const platformOwner = newId();
+  const installerOwner = newId();
+  const installer2Owner = newId();
   const vendorTenant = await provisionTenant(platformProvisioner, {
     name: 'Acme Software',
-    ownerPrincipalId: newId(),
+    ownerPrincipalId: vendorOwner,
   });
   const platformTenant = await provisionTenant(platformProvisioner, {
     name: 'Aurum Platform Ops',
-    ownerPrincipalId: newId(),
+    ownerPrincipalId: platformOwner,
   });
   const installerTenant = await provisionTenant(platformProvisioner, {
     name: 'Northwind Traders',
-    ownerPrincipalId: newId(),
+    ownerPrincipalId: installerOwner,
   });
   const installerDefaultPolicyTenant = await provisionTenant(platformProvisioner, {
     name: 'Initech',
-    ownerPrincipalId: newId(),
+    ownerPrincipalId: installer2Owner,
   });
 
   vendorCtx = member(vendorTenant.id, VENDOR_CLAIMS);
   platformCtx = member(platformTenant.id, PLATFORM_CLAIMS);
   installerCtx = member(installerTenant.id, INSTALLER_CLAIMS);
   installerDefaultPolicyCtx = member(installerDefaultPolicyTenant.id, INSTALLER_CLAIMS);
+
+  // W058 sessions: the API fixtures authenticate by cookie with
+  // ROLE-DERIVED claims. The vendor/installer contexts need admin roles
+  // (their claims include extensions/agents administration); the platform
+  // context keeps its raw claims for the CONTRACT seam only (no tenant
+  // role derives 'marketplace:administer').
+  vendorOwnerCtx = {
+    tenantId: vendorTenant.id,
+    principalId: vendorOwner,
+    authority: [],
+  };
+  installerOwnerCtx = {
+    tenantId: installerTenant.id,
+    principalId: installerOwner,
+    authority: [],
+  };
+  installer2OwnerCtx = {
+    tenantId: installerDefaultPolicyTenant.id,
+    principalId: installer2Owner,
+    authority: [],
+  };
+  await sessionFor(vendorCtx, vendorOwnerCtx, 'admin');
+  await sessionFor(installerCtx, installerOwnerCtx, 'admin');
+  await sessionFor(installerDefaultPolicyCtx, installer2OwnerCtx, 'admin');
 
   // The installer tenants let extension-deployment EXECUTE apply without
   // approval (the default matrix gates it); the second one deliberately
@@ -353,14 +423,21 @@ describe('the publish flow (vendor → platform → catalog)', () => {
     expect(result.status).toBe(400);
   });
 
-  it('a plain member (no submit claim) cannot create packages', async () => {
+  it('the open developer model: any company member may create packages (claims are role-earned)', async () => {
+    // W058: the member session DERIVES 'marketplace:submit' from its
+    // verified membership — the URL no longer decides who is a developer.
+    // The platform claim, however, is never derived for a tenant role.
     const plain = member(vendorCtx.tenantId);
+    await sessionFor(plain, vendorOwnerCtx, 'member');
     const result = await handleDeveloperAction(
       request_(plain, '/api/product/marketplace/developer/create-extension-package'),
       'create-extension-package',
-      { manifestId: '00000000-0000-4000-8000-000000000000' },
+      { manifestId: newId() },
     );
-    expect(result.status).toBe(403);
+    // The claim gate passes (members carry submit); the unknown manifest
+    // answers with the uniform invalid_manifest_ref — no existence leak.
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe('invalid_manifest_ref');
   });
 
   it('submits both packages (DRAFT → SUBMITTED, vendor only)', async () => {
@@ -381,6 +458,7 @@ describe('the publish flow (vendor → platform → catalog)', () => {
     // submit claim, so the claim gate passes and the vendor-ownership
     // rule is what answers.
     const foreignSubmitter = member(installerCtx.tenantId, ['marketplace:submit']);
+    await sessionFor(foreignSubmitter, installerOwnerCtx, 'member');
     const foreign = await handlePackageAction(
       request_(foreignSubmitter, `/api/product/marketplace/package/${extensionPackage.id}/submit`),
       extensionPackage.id,
@@ -391,26 +469,30 @@ describe('the publish flow (vendor → platform → catalog)', () => {
   });
 
   it('runs automated verification (platform) → PENDING_REVIEW with recorded checks', async () => {
+    // W058: 'marketplace:administer' is a PLATFORM claim no tenant role
+    // derives — the pipeline runs at the CONTRACT seam here (the W050 e2e
+    // pattern), and the API path proves the claim gate answers sessions.
     for (const pkg of [extensionPackage, agentPackage]) {
-      const result = await handlePackageAction(
-        request_(platformCtx, `/api/product/marketplace/package/${pkg.id}/verify`),
+      const denied = await handlePackageAction(
+        request_(vendorCtx, `/api/product/marketplace/package/${pkg.id}/verify`),
         pkg.id,
         'verify',
         {},
       );
-      expect(result.status).toBe(200);
-      if (result.status === 200) {
-        expect((result.body['package'] as MarketplacePackage).state).toBe('PENDING_REVIEW');
-        const run = result.body['run'] as { checks: { check: string; outcome: string }[] };
-        expect(run.checks.length).toBe(pkg.kind === 'extension' ? 5 : 4);
-        expect(run.checks.every((check) => check.outcome === 'pass')).toBe(true);
-      }
+      expect(denied.status).toBe(403); // no session derives the platform claim
+
+      const result = await runAutomatedVerification(platformCtx, { packageId: pkg.id });
+      expect(result.package.state).toBe('PENDING_REVIEW');
+      expect(result.run.checks.length).toBe(pkg.kind === 'extension' ? 5 : 4);
+      expect(result.run.checks.every((check) => check.outcome === 'pass')).toBe(true);
     }
   });
 
   it('review requires a reason to reject (honest 400 before the contract)', async () => {
+    // Any authenticated session reaches the body parse; the platform
+    // claim is only checked by the contract afterwards.
     const result = await handlePackageAction(
-      request_(platformCtx, `/api/product/marketplace/package/${extensionPackage.id}/review`),
+      request_(vendorCtx, `/api/product/marketplace/package/${extensionPackage.id}/review`),
       extensionPackage.id,
       'review',
       { decision: 'reject' },
@@ -422,59 +504,51 @@ describe('the publish flow (vendor → platform → catalog)', () => {
   });
 
   it('the vendor cannot review its own package (separation of duties, 409)', async () => {
-    const rogue = member(vendorCtx.tenantId, [...VENDOR_CLAIMS, ...PLATFORM_CLAIMS]);
+    // W058: a session cannot self-assign the platform claim — the API
+    // answers the vendor session with a plain 403 (no administer claim)…
     const result = await handlePackageAction(
-      request_(rogue, `/api/product/marketplace/package/${extensionPackage.id}/review`),
+      request_(vendorCtx, `/api/product/marketplace/package/${extensionPackage.id}/review`),
       extensionPackage.id,
       'review',
       { decision: 'approve' },
     );
-    expect(result.status).toBe(409);
-    if (result.status === 409) {
-      expect(result.body.error).toBe('separation_of_duties');
-    }
+    expect(result.status).toBe(403);
+
+    // …and the CONTRACT keeps the separation-of-duties rule for whoever
+    // legitimately holds the platform claim (the W050 e2e pattern).
+    const rogue = member(vendorCtx.tenantId, [...VENDOR_CLAIMS, ...PLATFORM_CLAIMS]);
+    await expect(
+      reviewPackage(rogue, {
+        packageId: extensionPackage.id,
+        decision: 'approve',
+        reason: 'self-review attempt',
+      }),
+    ).rejects.toMatchObject({ code: 'separation_of_duties' });
   });
 
   it('reviews both packages (approve) and publishes + makes installable', async () => {
+    // W058: the platform pipeline at the CONTRACT seam (no tenant session
+    // derives 'marketplace:administer'; platform reviewers are W068's
+    // surface). The state chain and the fixture freshness are identical.
     for (const pkg of [extensionPackage, agentPackage]) {
-      const reviewed = await handlePackageAction(
-        request_(platformCtx, `/api/product/marketplace/package/${pkg.id}/review`),
-        pkg.id,
-        'review',
-        { decision: 'approve', reason: 'checks passed, permissions justified' },
-      );
-      expect(reviewed.status).toBe(200);
-      if (reviewed.status === 200) {
-        expect((reviewed.body['package'] as MarketplacePackage).state).toBe('APPROVED');
-      }
+      const reviewed = await reviewPackage(platformCtx, {
+        packageId: pkg.id,
+        decision: 'approve',
+        reason: 'checks passed, permissions justified',
+      });
+      expect(reviewed.package.state).toBe('APPROVED');
 
-      const published = await handlePackageAction(
-        request_(platformCtx, `/api/product/marketplace/package/${pkg.id}/publish`),
-        pkg.id,
-        'publish',
-        {},
-      );
-      expect(published.status).toBe(200);
-      if (published.status === 200) {
-        expect((published.body['package'] as MarketplacePackage).state).toBe('PUBLISHED');
-      }
+      const published = await publishPackage(platformCtx, { packageId: pkg.id });
+      expect(published.state).toBe('PUBLISHED');
 
-      const installable = await handlePackageAction(
-        request_(platformCtx, `/api/product/marketplace/package/${pkg.id}/make-installable`),
-        pkg.id,
-        'make-installable',
-        {},
-      );
-      expect(installable.status).toBe(200);
-      if (installable.status === 200) {
-        expect((installable.body['package'] as MarketplacePackage).state).toBe('INSTALLABLE');
-        // Keep the module-level fixtures fresh (the operations above
-        // return NEW package objects — the old ones hold stale states).
-        if (pkg.id === extensionPackage.id) {
-          extensionPackage = installable.body['package'] as MarketplacePackage;
-        } else {
-          agentPackage = installable.body['package'] as MarketplacePackage;
-        }
+      const installable = await makePackageInstallable(platformCtx, { packageId: pkg.id });
+      expect(installable.state).toBe('INSTALLABLE');
+      // Keep the module-level fixtures fresh (the operations above return
+      // NEW package objects — the old ones hold stale states).
+      if (pkg.id === extensionPackage.id) {
+        extensionPackage = installable;
+      } else {
+        agentPackage = installable;
       }
     }
   });
@@ -773,21 +847,26 @@ describe('install, activate, suspend, rollback', () => {
     const createdPkg = created.status === 200 ? (created.body['package'] as MarketplacePackage) : null;
     expect(createdPkg).not.toBe(null);
     extensionPackageV2 = createdPkg!;
-    for (const [action, ctx, body] of [
-      ['submit', vendorCtx, {}],
-      ['verify', platformCtx, {}],
-      ['review', platformCtx, { decision: 'approve' }],
-      ['publish', platformCtx, {}],
-      ['make-installable', platformCtx, {}],
-    ] as const) {
-      const step = await handlePackageAction(
-        request_(ctx, `/api/product/marketplace/package/${extensionPackageV2!.id}/${action}`),
-        extensionPackageV2!.id,
-        action,
-        body,
-      );
-      expect(step.status).toBe(200);
-    }
+    // W058: the vendor submits through its session; the platform steps
+    // run at the contract seam (no session derives the platform claim).
+    const submitted = await handlePackageAction(
+      request_(vendorCtx, `/api/product/marketplace/package/${extensionPackageV2!.id}/submit`),
+      extensionPackageV2!.id,
+      'submit',
+      {},
+    );
+    expect(submitted.status).toBe(200);
+    await runAutomatedVerification(platformCtx, { packageId: extensionPackageV2!.id });
+    await reviewPackage(platformCtx, {
+      packageId: extensionPackageV2!.id,
+      decision: 'approve',
+      reason: 'v2 checks passed',
+    });
+    await publishPackage(platformCtx, { packageId: extensionPackageV2!.id });
+    const installable = await makePackageInstallable(platformCtx, {
+      packageId: extensionPackageV2!.id,
+    });
+    extensionPackageV2 = installable;
 
     // The v1 deployment (the narrowed grant) is the rollback target.
     const v1 = await getCurrentDeployment(installerCtx, { extensionKey: 'invoice-ocr' });
@@ -1064,26 +1143,50 @@ describe('the builder (request → advance → deployed)', () => {
 // The API context seam
 // ---------------------------------------------------------------------------
 
-describe('write context resolution', () => {
-  it('an unscoped request cannot write (missing tenant → 400)', async () => {
+describe('write context resolution (the session-cookie surface, W058)', () => {
+  it('an unauthenticated request cannot write (401, never tenant data)', async () => {
     const result = await handlePackageAction(
       new Request('https://aurum.test/api/product/marketplace/package/x/submit'),
       extensionPackage.id,
       'submit',
       {},
     );
-    expect(result.status).toBe(400);
-    if (result.status === 400) {
-      expect(result.body.error).toBe('missing_tenant');
+    expect(result.status).toBe(401);
+    if (result.status === 401) {
+      expect(result.body.error).toBe('unauthenticated');
     }
   });
 
-  it('the query seam scopes writes too (browser-friendly)', async () => {
-    const url = `https://aurum.test/api/product/marketplace/package/${extensionPackage.id}/submit?tenant=${vendorCtx.tenantId}&principal=${vendorCtx.principalId}&authority=${encodeURIComponent('marketplace:submit')}`;
+  it('a session without an active company cannot write (409)', async () => {
+    const fresh = await signUp({
+      email: [newId().slice(0, 8), 'mkt', 'fresh'].join('.') + '@example.invalid',
+      password: ['mkt', 'fresh', newId().slice(0, 6)].join('-'),
+      displayName: 'Marketplace Fresh',
+    });
+    const result = await handlePackageAction(
+      new Request('https://aurum.test/api/product/marketplace/package/x/submit', {
+        headers: { cookie: `aurum_session=${fresh.token}` },
+      }),
+      extensionPackage.id,
+      'submit',
+      {},
+    );
+    expect(result.status).toBe(409);
+    if (result.status === 409) {
+      expect(result.body.error).toBe('no_active_tenant');
+    }
+  });
+
+  it('the vendor session reaches the domain with the right identity', async () => {
     // This package is already SUBMITTED — the contract refuses with a
-    // 409 invalid_transition, which proves the seam reached the domain
-    // with the right identity (not a 400 scope failure).
-    const result = await handlePackageAction(new Request(url), extensionPackage.id, 'submit', {});
+    // 409 invalid_transition, which proves the session reached the domain
+    // with the right identity (not a 401/409 scope failure).
+    const result = await handlePackageAction(
+      request_(vendorCtx, `/api/product/marketplace/package/${extensionPackage.id}/submit`),
+      extensionPackage.id,
+      'submit',
+      {},
+    );
     expect(result.status).toBe(409);
   });
 });

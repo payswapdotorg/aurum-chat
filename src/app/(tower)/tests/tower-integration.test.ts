@@ -97,6 +97,9 @@ import {
   handleTowerSurfaceGet,
 } from '../lib/api';
 import type { ApiResult } from '../lib/api';
+import { addTenantMember } from '@/modules/organizations/contract';
+import type { TenantRole } from '@/modules/organizations/contract';
+import { resolveSession, signUp, switchTenant } from '@/modules/auth/contract';
 
 const db = getDb();
 
@@ -134,9 +137,31 @@ async function provisionFixture(name: string): Promise<TenantFixture> {
   };
 }
 
-function apiRequest(tenant: string, path = '/api/tower/today'): Request {
+/**
+ * A real session for the API tests (W058): sign up an account, make it a
+ * member of `tenantId` with `role` (granted through the organizations
+ * contract), switch the session to the tenant, return the cookie token.
+ */
+async function memberSession(
+  tenantId: string,
+  inviter: TenantContext,
+  role: TenantRole,
+): Promise<string> {
+  const account = await signUp({
+    email: [newId().slice(0, 8), 'tower', role].join('.') + '@example.invalid',
+    password: ['tower', role, newId().slice(0, 6)].join('-'),
+    displayName: `Tower ${role}`,
+  });
+  await addTenantMember(inviter, { principalId: account.principal.id, role });
+  const switched = await switchTenant(account.token, { tenantId });
+  expect(switched.tenant?.id).toBe(tenantId);
+  return account.token;
+}
+
+/** A Request carrying the session cookie (the only scope source, W058). */
+function sessionRequest(token: string, path = '/api/tower/today'): Request {
   return new Request(`https://tower.test${path}`, {
-    headers: { 'x-aurum-tenant': tenant },
+    headers: { cookie: `aurum_session=${token}` },
   });
 }
 
@@ -612,38 +637,23 @@ describe('the Management Control Tower over a fully seeded tenant', () => {
 
   // -------------------------------------------------------------------------
 
-  it('the decision path enforces the actions contract rules', async () => {
-    // Same principal as the requester → separation of duties.
-    const self = await handleTowerApprovalDecision(
-      apiRequest(acme.tenant.id, `/api/tower/approvals/${directGateRequest.id}/decide`),
-      directGateRequest.id,
-      { decision: 'approve' },
-    );
-    expect(self.status).toBe(403);
-    if (self.status !== 200) expect(self.body.error).toBe('forbidden');
+  it('the decision path enforces the actions contract rules (sessions, W058)', async () => {
+    // Sessions derive authority from the VERIFIED role: a plain member
+    // carries no 'actions:approve' claim, an admin does.
+    const memberToken = await memberSession(acme.tenant.id, acme.owner, 'member');
+    const adminToken = await memberSession(acme.tenant.id, acme.owner, 'admin');
 
-    // No claim → forbidden.
+    // A member (no claim) → forbidden.
     const unclaimed = await handleTowerApprovalDecision(
-      apiRequest(acme.tenant.id, `/api/tower/approvals/${directGateRequest.id}/decide`),
+      sessionRequest(memberToken, `/api/tower/approvals/${directGateRequest.id}/decide`),
       directGateRequest.id,
       { decision: 'approve' },
     );
     expect(unclaimed.status).toBe(403);
 
-    // A different principal WITH the claim decides.
-    const decider = acme.otherWithApprove;
+    // A different principal WITH the role-derived claim decides.
     const decision = await handleTowerApprovalDecision(
-      new Request(
-        `https://tower.test/api/tower/approvals/${directGateRequest.id}/decide`,
-        {
-          method: 'POST',
-          headers: {
-            'x-aurum-tenant': acme.tenant.id,
-            'x-aurum-principal': decider.principalId,
-            'x-aurum-authority': 'actions:approve',
-          },
-        },
-      ),
+      sessionRequest(adminToken, `/api/tower/approvals/${directGateRequest.id}/decide`),
       directGateRequest.id,
       { decision: 'approve', note: 'Go ahead.' },
     );
@@ -657,31 +667,43 @@ describe('the Management Control Tower over a fully seeded tenant', () => {
 
     // First decision wins: re-deciding is a terminal conflict.
     const again = await handleTowerApprovalDecision(
-      new Request(
-        `https://tower.test/api/tower/approvals/${directGateRequest.id}/decide`,
-        {
-          headers: {
-            'x-aurum-tenant': acme.tenant.id,
-            'x-aurum-principal': decider.principalId,
-            'x-aurum-authority': 'actions:approve',
-          },
-        },
-      ),
+      sessionRequest(adminToken, `/api/tower/approvals/${directGateRequest.id}/decide`),
       directGateRequest.id,
       { decision: 'reject' },
     );
     expect(again.status).toBe(409);
 
-    // The approvals view reflects the decision; the cognition gate stays pending.
+    // Separation of duties: a principal cannot decide its OWN request.
+    const adminResolved = await resolveSession(adminToken);
+    expect(adminResolved.status).toBe('valid');
+    if (adminResolved.status !== 'valid') return;
+    const adminCtx = adminResolved.resolved.context!;
+    const ownRequest = await authorizeAction(adminCtx, {
+      actionKind: 'external-communication',
+      authorityLevel: 'EXECUTE',
+      payload: { channel: 'linkedin', draft: 'Hiring a support analyst (2).' },
+      justification: 'Publish another opening.',
+    });
+    const selfDecision = await handleTowerApprovalDecision(
+      sessionRequest(adminToken, `/api/tower/approvals/${ownRequest.id}/decide`),
+      ownRequest.id,
+      { decision: 'approve' },
+    );
+    expect(selfDecision.status).toBe(403);
+
+    // The approvals view reflects the decision; the cognition gate and the
+    // admin's own (undecidable) request stay pending.
     const view = await buildApprovalsView(acme.owner);
-    expect(view.pendingTotal).toBe(1);
-    expect(view.pending[0]?.request.id).toBe(cognitionGateRequest.id);
+    const pendingIds = new Set(view.pending.map((p) => p.request.id));
+    expect(pendingIds.has(cognitionGateRequest.id)).toBe(true);
+    expect(pendingIds.has(ownRequest.id)).toBe(true);
     expect(
       view.recentlyDecided.find((r) => r.id === directGateRequest.id)?.status,
     ).toBe('approved');
   });
 
   it('the API surface returns the view envelope for every surface', async () => {
+    const ownerToken = await memberSession(acme.tenant.id, acme.owner, 'owner');
     for (const surface of [
       'today',
       'goals',
@@ -700,7 +722,7 @@ describe('the Management Control Tower over a fully seeded tenant', () => {
       'approvals',
     ] as const) {
       const result = await handleTowerSurfaceGet(
-        apiRequest(acme.tenant.id, `/api/tower/${surface}`),
+        sessionRequest(ownerToken, `/api/tower/${surface}`),
         surface,
       );
       expect(result.status).toBe(200);
@@ -711,22 +733,38 @@ describe('the Management Control Tower over a fully seeded tenant', () => {
     }
   });
 
-  it('the API surface rejects unknown surfaces and unscoped requests', async () => {
+  it('the API surface rejects unknown surfaces, unauthenticated and unscoped requests', async () => {
+    const ownerToken = await memberSession(acme.tenant.id, acme.owner, 'owner');
     const unknown = await handleTowerSurfaceGet(
-      apiRequest(acme.tenant.id, '/api/tower/dashboards'),
+      sessionRequest(ownerToken, '/api/tower/dashboards'),
       'dashboards',
     );
     expect(unknown.status).toBe(404);
     if (unknown.status !== 404) return;
     expect(unknown.body.error).toBe('unknown_surface');
 
-    const unscoped = await handleTowerSurfaceGet(
+    // W058: no session cookie → 401, never tenant data.
+    const unauthenticated = await handleTowerSurfaceGet(
       new Request('https://tower.test/api/tower/today'),
       'today',
     );
-    expect(unscoped.status).toBe(400);
-    if (unscoped.status !== 400) return;
-    expect(unscoped.body.error).toBe('missing_tenant');
+    expect(unauthenticated.status).toBe(401);
+    if (unauthenticated.status !== 401) return;
+    expect(unauthenticated.body.error).toBe('unauthenticated');
+
+    // A session without an active company → 409 (onboarding territory).
+    const fresh = await signUp({
+      email: [newId().slice(0, 8), 'tower', 'fresh'].join('.') + '@example.invalid',
+      password: ['tower', 'fresh', newId().slice(0, 6)].join('-'),
+      displayName: 'Tower Fresh',
+    });
+    const unscoped = await handleTowerSurfaceGet(
+      sessionRequest(fresh.token, 'today'),
+      'today',
+    );
+    expect(unscoped.status).toBe(409);
+    if (unscoped.status !== 409) return;
+    expect(unscoped.body.error).toBe('no_active_tenant');
   });
 
   it('the registry and the direct builders agree (no drift)', async () => {
@@ -792,17 +830,11 @@ describe('the Management Control Tower over a fully seeded tenant', () => {
 
     // Beta cannot decide Acme's pending request: cross-tenant ids are
     // indistinguishable from missing ones.
+    // Beta's admin session cannot decide Acme's pending request:
+    // cross-tenant ids are indistinguishable from missing ones.
+    const betaAdminToken = await memberSession(beta.tenant.id, beta.owner, 'admin');
     const foreignDecision: ApiResult = await handleTowerApprovalDecision(
-      new Request(
-        `https://tower.test/api/tower/approvals/${cognitionGateRequest.id}/decide`,
-        {
-          headers: {
-            'x-aurum-tenant': beta.tenant.id,
-            'x-aurum-principal': beta.otherWithApprove.principalId,
-            'x-aurum-authority': 'actions:approve',
-          },
-        },
-      ),
+      sessionRequest(betaAdminToken, `/api/tower/approvals/${cognitionGateRequest.id}/decide`),
       cognitionGateRequest.id,
       { decision: 'approve' },
     );

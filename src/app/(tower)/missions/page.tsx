@@ -6,7 +6,7 @@
 // criteria. Active missions are ordered by urgency rank by the contract.
 
 import { buildMissionsView } from '../lib/views/missions';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -14,7 +14,6 @@ import {
   ItemFoot,
   ItemHead,
   ItemText,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -28,14 +27,10 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-export default async function MissionsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildMissionsView(resolution.context);
+export default async function MissionsPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/missions');
+  const view = await buildMissionsView(scope.context);
 
   return (
     <>

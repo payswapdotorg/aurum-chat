@@ -15,10 +15,9 @@
 
 import type { ReactNode } from 'react';
 import {
-  connectionsContextFromSearchParams,
   firstValue,
-  scopeParamsOf,
 } from './lib/context';
+import { requirePageScope } from '@/app/lib/page-session';
 import { buildConnectionsView } from './lib/views';
 import type { IdentityCard } from './lib/views';
 import {
@@ -26,7 +25,6 @@ import {
   ActionForm,
   ConnectForm,
   PersonCreateForm,
-  type Scope,
 } from './components/interaction';
 import {
   DetailGrid,
@@ -34,7 +32,6 @@ import {
   HealthPill,
   HealthReasons,
   Notice,
-  NotScoped,
   Pill,
   SectionCard,
   StatRow,
@@ -49,10 +46,10 @@ export default async function ConnectionsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // W058: authenticated routing — the session carries the company scope
+  // (and the role-derived claims the hub's attest/link actions check).
+  const pageScope = await requirePageScope('/connections');
   const params = await searchParams;
-  const resolution = connectionsContextFromSearchParams(params);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-
   const lookupProvider = firstValue(params['identity_provider']);
   const lookupAccount = firstValue(params['identity_account']);
   const identityLookup =
@@ -60,8 +57,7 @@ export default async function ConnectionsPage({
       ? { provider: lookupProvider, providerAccountId: lookupAccount }
       : null;
 
-  const view = await buildConnectionsView(resolution.context, { identityLookup });
-  const scope = scopeParamsOf(params);
+  const view = await buildConnectionsView(pageScope.context, { identityLookup });
   const now = view.generatedAt;
 
   const connectedChannels = view.channels.cards.filter((card) => card.connection !== null);
@@ -177,7 +173,6 @@ export default async function ConnectionsPage({
                     <div className="action-inline">
                       {card.connection?.status === 'active' ? (
                         <ActionButton
-                          scope={scope}
                           action="channel.setStatus"
                           fields={{ connectionId: card.connection.id, status: 'disabled' }}
                           label="Disconnect"
@@ -186,7 +181,6 @@ export default async function ConnectionsPage({
                         />
                       ) : (
                         <ActionButton
-                          scope={scope}
                           action="channel.setStatus"
                           fields={{ connectionId: card.connection?.id ?? '', status: 'active' }}
                           label="Reconnect"
@@ -203,7 +197,6 @@ export default async function ConnectionsPage({
 
         {availableChannelProviders.length > 0 ? (
           <ConnectForm
-            scope={scope}
             kind="channel"
             providers={availableChannelProviders}
             title={`Connect a channel (${availableChannelProviders.length} available)`}
@@ -309,14 +302,12 @@ export default async function ConnectionsPage({
                     />
                     <div className="action-inline">
                       <ActionButton
-                        scope={scope}
                         action="source.poll"
                         fields={{ sourceId: card.id }}
                         label="Poll now"
                         tone="primary"
                       />
                       <ActionButton
-                        scope={scope}
                         action="source.replay"
                         fields={{ sourceId: card.id }}
                         label="Replay from start"
@@ -324,7 +315,6 @@ export default async function ConnectionsPage({
                       />
                       {card.status === 'active' ? (
                         <ActionButton
-                          scope={scope}
                           action="source.setStatus"
                           fields={{ sourceId: card.id, status: 'disabled' }}
                           label="Disconnect"
@@ -332,7 +322,6 @@ export default async function ConnectionsPage({
                         />
                       ) : (
                         <ActionButton
-                          scope={scope}
                           action="source.setStatus"
                           fields={{ sourceId: card.id, status: 'active' }}
                           label="Reconnect"
@@ -343,7 +332,6 @@ export default async function ConnectionsPage({
                       <summary>Re-authorize (configure)</summary>
                       <div className="disclose-body">
                         <ActionForm
-                          scope={scope}
                           action="source.register"
                           fixedFields={{
                             provider: card.provider,
@@ -371,7 +359,6 @@ export default async function ConnectionsPage({
         )}
 
         <ConnectForm
-          scope={scope}
           kind="source"
           providers={view.catalog.sources}
           title="Connect a source system"
@@ -453,7 +440,6 @@ export default async function ConnectionsPage({
                       card.deliveries.latest.status === 'failed') ? (
                       <div className="action-inline">
                         <ActionButton
-                          scope={scope}
                           action="destination.retry"
                           fields={{ deliveryId: card.deliveries.latest.id }}
                           label="Retry latest delivery"
@@ -464,7 +450,6 @@ export default async function ConnectionsPage({
                     {card.deliveries.latest !== null && card.deliveries.latest.status === 'delivered' ? (
                       <div className="action-inline">
                         <ActionButton
-                          scope={scope}
                           action="destination.replay"
                           fields={{ deliveryId: card.deliveries.latest.id }}
                           label="Re-deliver (replay)"
@@ -475,7 +460,6 @@ export default async function ConnectionsPage({
                     <div className="action-inline">
                       {card.status === 'active' ? (
                         <ActionButton
-                          scope={scope}
                           action="destination.setStatus"
                           fields={{ destinationId: card.id, status: 'disabled' }}
                           label="Disconnect"
@@ -483,7 +467,6 @@ export default async function ConnectionsPage({
                         />
                       ) : (
                         <ActionButton
-                          scope={scope}
                           action="destination.setStatus"
                           fields={{ destinationId: card.id, status: 'active' }}
                           label="Reconnect"
@@ -494,7 +477,6 @@ export default async function ConnectionsPage({
                       <summary>Re-authorize (configure)</summary>
                       <div className="disclose-body">
                         <ActionForm
-                          scope={scope}
                           action="destination.register"
                           fixedFields={{
                             provider: card.provider,
@@ -522,7 +504,6 @@ export default async function ConnectionsPage({
         )}
 
         <ConnectForm
-          scope={scope}
           kind="destination"
           providers={view.catalog.destinations.flatMap((group) => group.entries)}
           title="Connect a destination"
@@ -538,13 +519,6 @@ export default async function ConnectionsPage({
         meta={`discovery window: newest ${view.identities.discoveryWindow} turns per channel`}
       >
         <form className="form-stack" method="get" action="/connections#identities">
-          {scope.tenant !== null ? <input type="hidden" name="tenant" value={scope.tenant} /> : null}
-          {scope.principal !== null ? (
-            <input type="hidden" name="principal" value={scope.principal} />
-          ) : null}
-          {scope.authority !== null ? (
-            <input type="hidden" name="authority" value={scope.authority} />
-          ) : null}
           <div className="field">
             <label htmlFor="identity-lookup-provider">Look up an identity by provider account</label>
             <div className="action-inline">
@@ -580,7 +554,7 @@ export default async function ConnectionsPage({
 
         {view.identities.lookup !== null ? (
           <ul className="rows">
-            <IdentityRow card={view.identities.lookup} scope={scope} now={now} />
+            <IdentityRow card={view.identities.lookup} now={now} />
           </ul>
         ) : null}
 
@@ -592,7 +566,7 @@ export default async function ConnectionsPage({
         ) : (
           <ul className="rows">
             {view.identities.cards.map((card) => (
-              <IdentityRow key={card.id} card={card} scope={scope} now={now} />
+              <IdentityRow key={card.id} card={card} now={now} />
             ))}
           </ul>
         )}
@@ -600,7 +574,7 @@ export default async function ConnectionsPage({
         <details className="disclose">
           <summary>Create a person record (for linking)</summary>
           <div className="disclose-body">
-            <PersonCreateForm scope={scope} />
+            <PersonCreateForm />
           </div>
         </details>
       </SectionCard>
@@ -612,7 +586,7 @@ export default async function ConnectionsPage({
 // One identity row + its verification/linking controls
 // ---------------------------------------------------------------------------
 
-function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; now: string }): ReactNode {
+function IdentityRow({ card, now }: { card: IdentityCard; now: string }): ReactNode {
   return (
     <li className="row" id={`identity-${card.id}`}>
       <div className="row-head">
@@ -651,7 +625,6 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
           {card.status === 'unverified' || card.status === 'pending' ? (
             <div className="action-inline" style={{ marginBottom: 10 }}>
               <ActionButton
-                scope={scope}
                 action="identity.challenge"
                 fields={{ identityId: card.id }}
                 label="Send verification code"
@@ -666,7 +639,6 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
 
           {card.status === 'pending' ? (
             <ActionForm
-              scope={scope}
               action="identity.complete"
               fixedFields={{ identityId: card.id }}
               fields={[
@@ -683,7 +655,6 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
 
           {card.status !== 'verified' ? (
             <ActionForm
-              scope={scope}
               action="identity.attest"
               fixedFields={{ identityId: card.id }}
               fields={[
@@ -700,7 +671,6 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
 
           {card.status === 'verified' && card.subject === null ? (
             <ActionForm
-              scope={scope}
               action="identity.link"
               fixedFields={{ identityId: card.id }}
               fields={[
@@ -718,7 +688,6 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
           {card.subject !== null ? (
             <div className="action-inline" style={{ marginBottom: 10 }}>
               <ActionButton
-                scope={scope}
                 action="identity.detach"
                 fields={{ identityId: card.id }}
                 label="Detach from person"
@@ -729,7 +698,6 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
 
           {card.status === 'verified' ? (
             <ActionForm
-              scope={scope}
               action="identity.revoke"
               fixedFields={{ identityId: card.id }}
               fields={[

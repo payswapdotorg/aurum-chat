@@ -26,8 +26,8 @@ export function DesktopRail(): ReactNode {
   const { status } = useShellState();
   const active = activeAreaId(pathname);
   const scoped =
-    status.phase === 'ready' && status.view.company.ok
-      ? status.view.company.tenant.name
+    status.phase === 'ready' && status.envelope.view.company.ok
+      ? status.envelope.view.company.tenant.name
       : null;
 
   return (

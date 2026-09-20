@@ -102,7 +102,7 @@ export function NotificationEntry({
   }, []);
 
   const notifications =
-    status.phase === 'ready' ? status.view.notifications : null;
+    status.phase === 'ready' ? status.envelope.view.notifications : null;
   const attentionCount = notifications?.attentionCount ?? 0;
 
   const openPanel = () => {

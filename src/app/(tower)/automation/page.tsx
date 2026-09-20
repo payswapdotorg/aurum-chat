@@ -7,7 +7,7 @@
 // findings automation candidates are built from, with their evidence.
 
 import { buildAutomationView } from '../lib/views/automation';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -15,7 +15,6 @@ import {
   ItemFoot,
   ItemHead,
   Notice,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -24,14 +23,10 @@ import { formatConfidence, formatInstant, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AutomationPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildAutomationView(resolution.context);
+export default async function AutomationPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/automation');
+  const view = await buildAutomationView(scope.context);
 
   return (
     <>

@@ -26,15 +26,13 @@ import {
   scoreCommand,
   starterOfCommand,
 } from '../lib/command-registry';
+import * as contextModule from '../lib/context';
 import {
-  productContextFromHeaders,
-  productContextFromSearchParams,
-  resolveProductContext,
-  scopeFromSearch,
-  switchScopeTarget,
-  withProductScope,
-  PRODUCT_OPERATOR_PRINCIPAL,
-} from '../lib/context';
+  clearedSessionCookie,
+  SESSION_COOKIE_NAME,
+  sessionCookie,
+  sessionTokenFromCookieHeader,
+} from '@/app/lib/session-cookie';
 import {
   contextDrawerReducer,
   normalizeContextPayload,
@@ -240,105 +238,53 @@ describe('command search registry', () => {
 // Context seam
 // ---------------------------------------------------------------------------
 
-describe('product context seam', () => {
-  const TENANT = '6F9619FF-8B86-D011-B42D-00C04FC964FF'; // uppercase on purpose
-
-  it('fails honestly without a tenant', () => {
-    const result = resolveProductContext({});
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.failure).toBe('missing_tenant');
+describe('the session cookie contract (the W058 scope carrier)', () => {
+  it('extracts the session token from a Cookie header (first wins)', () => {
+    const header = `other=1; ${SESSION_COOKIE_NAME}=abc123; and=2; ${SESSION_COOKIE_NAME}=second`;
+    expect(sessionTokenFromCookieHeader(header)).toBe('abc123');
+    expect(sessionTokenFromCookieHeader(`${SESSION_COOKIE_NAME}=plain`)).toBe('plain');
   });
 
-  it('rejects non-uuid tenants and principals', () => {
-    expect(resolveProductContext({ tenant: 'globex' })).toMatchObject({
-      ok: false,
-      failure: 'invalid_tenant',
-    });
-    expect(
-      resolveProductContext({ tenant: TENANT, principal: 'me' }),
-    ).toMatchObject({ ok: false, failure: 'invalid_principal' });
+  it('returns null for missing or empty session cookies', () => {
+    expect(sessionTokenFromCookieHeader(null)).toBeNull();
+    expect(sessionTokenFromCookieHeader('')).toBeNull();
+    expect(sessionTokenFromCookieHeader('other=1; more=2')).toBeNull();
+    expect(sessionTokenFromCookieHeader(`${SESSION_COOKIE_NAME}=`)).toBeNull();
   });
 
-  it('resolves a valid context with the well-known operator default', () => {
-    const result = resolveProductContext({ tenant: TENANT });
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.resolved.context.tenantId).toBe(TENANT.toLowerCase());
-      expect(result.resolved.context.principalId).toBe(PRODUCT_OPERATOR_PRINCIPAL);
-      expect(result.resolved.principalExplicit).toBe(false);
-      expect(result.resolved.context.authority).toEqual([]);
-      expect(result.resolved.workspace).toBeNull();
+  it('builds an HttpOnly SameSite=Lax cookie bounded by the session TTL', () => {
+    const cookie = sessionCookie('tok', 1234);
+    expect(cookie.startsWith(`${SESSION_COOKIE_NAME}=tok;`)).toBe(true);
+    expect(cookie).toContain('Path=/');
+    expect(cookie).toContain('HttpOnly');
+    expect(cookie).toContain('SameSite=Lax');
+    expect(cookie).toContain('Max-Age=1234');
+  });
+
+  it('clears the cookie with a zero Max-Age', () => {
+    const cleared = clearedSessionCookie();
+    expect(cleared.startsWith(`${SESSION_COOKIE_NAME}=;`)).toBe(true);
+    expect(cleared).toContain('Max-Age=0');
+  });
+
+  it('the development seam is gone: pages no longer resolve scope from URLs', () => {
+    // The seam functions (resolveProductContext, withProductScope,
+    // scopeFromSearch, switchScopeTarget) were REMOVED with W058 — the
+    // session cookie is the only scope source. This pins the module's
+    // public surface so the seam cannot silently return.
+    for (const gone of [
+      'resolveProductContext',
+      'productContextFromRequest',
+      'productContextFromSearchParams',
+      'productContextFromHeaders',
+      'withProductScope',
+      'scopeFromSearch',
+      'switchScopeTarget',
+      'TENANT_HEADER',
+      'TENANT_PARAM',
+    ]) {
+      expect(Object.keys(contextModule)).not.toContain(gone);
     }
-  });
-
-  it('parses authority claims and normalizes workspace slugs', () => {
-    const result = resolveProductContext({
-      tenant: TENANT,
-      principal: PRODUCT_OPERATOR_PRINCIPAL,
-      authority: 'actions:approve, notifications:administer,, actions:approve',
-      workspace: '  operations  ',
-    });
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.resolved.context.authority).toEqual([
-        'actions:approve',
-        'notifications:administer',
-      ]);
-      expect(result.resolved.workspace).toBe('operations');
-      expect(result.resolved.principalExplicit).toBe(true);
-    }
-  });
-
-  it('reads the same seam from search params and headers', () => {
-    expect(
-      productContextFromSearchParams({ tenant: [TENANT], workspace: 'ops' }),
-    ).toMatchObject({ ok: true });
-    const headers = new Headers();
-    headers.set('x-aurum-tenant', TENANT);
-    expect(productContextFromHeaders(headers)).toMatchObject({ ok: true });
-    const bad = new Headers();
-    bad.set('x-aurum-tenant', 'not-a-uuid');
-    expect(productContextFromHeaders(bad)).toMatchObject({ ok: false });
-  });
-
-  it('withProductScope preserves scope and applies overrides', () => {
-    const params = {
-      tenant: TENANT,
-      principal: '00000000-0000-4000-8000-000000000001',
-      authority: 'actions:approve',
-      workspace: 'ops',
-      q: 'attention', // non-scope params are NOT preserved by scope helpers
-    };
-    expect(withProductScope(params)).toBe(
-      `?tenant=${TENANT}&principal=00000000-0000-4000-8000-000000000001&authority=actions%3Aapprove&workspace=ops`,
-    );
-    expect(withProductScope(params, { workspace: null })).toBe(
-      `?tenant=${TENANT}&principal=00000000-0000-4000-8000-000000000001&authority=actions%3Aapprove`,
-    );
-    expect(withProductScope({})).toBe('');
-  });
-
-  it('scopeFromSearch extracts only the scope parameters', () => {
-    expect(scopeFromSearch('?tenant=t&q=why&principal=p&sort=1')).toBe(
-      '?tenant=t&principal=p',
-    );
-    expect(scopeFromSearch('?q=why')).toBe('');
-  });
-
-  it('switchScopeTarget: workspace switch, clear, and tenant change (drops workspace)', () => {
-    const base = '?tenant=t1&workspace=ops&principal=p';
-    expect(switchScopeTarget(base, { workspace: 'growth' })).toBe(
-      '?tenant=t1&workspace=growth&principal=p',
-    );
-    expect(switchScopeTarget(base, { workspace: null })).toBe(
-      '?tenant=t1&principal=p',
-    );
-    expect(switchScopeTarget(base, { tenant: 't2' })).toBe(
-      '?tenant=t2&principal=p',
-    );
-    expect(switchScopeTarget('?q=why', { tenant: 't9' })).toBe(
-      '?q=why&tenant=t9',
-    );
   });
 });
 

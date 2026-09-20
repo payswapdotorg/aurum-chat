@@ -8,14 +8,13 @@
 // it will be built from.
 
 import { buildOpportunitiesView } from '../lib/views/opportunities';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
   Empty,
   ItemFoot,
   ItemHead,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -24,14 +23,10 @@ import { formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OpportunitiesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildOpportunitiesView(resolution.context);
+export default async function OpportunitiesPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/opportunities');
+  const view = await buildOpportunitiesView(scope.context);
 
   return (
     <>

@@ -155,24 +155,6 @@ export function Notice({
   );
 }
 
-/** The not-scoped state: the tower needs an explicit tenant. */
-export function NotScoped({ detail }: { detail: string }): ReactNode {
-  return (
-    <>
-      <SurfaceHeader
-        title="Not scoped to a tenant"
-        description="The Control Tower reads tenant-scoped state through module contracts, and every contract call carries an explicit TenantContext (no ambient global)."
-      />
-      <Notice>
-        {detail}. Example: append <code>?tenant=&lt;tenant uuid&gt;</code> to the
-        URL. Authentication and sessions are the auth module / public API&apos;s
-        scope (W038) — until then the tower resolves its context from explicit
-        query parameters (<code>?tenant=</code>, optional{' '}
-        <code>?principal=</code>, optional <code>?authority=</code> claims).
-      </Notice>
-    </>
-  );
-}
 
 /** Standard item row pieces used by list-heavy surfaces. */
 export function ItemHead({

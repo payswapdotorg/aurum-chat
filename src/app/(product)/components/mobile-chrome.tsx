@@ -25,8 +25,8 @@ export function MobileTopBar(): ReactNode {
   const { openCommandSearch } = useProductShell();
   const { status } = useShellState();
   const scoped =
-    status.phase === 'ready' && status.view.company.ok
-      ? status.view.company.tenant.name
+    status.phase === 'ready' && status.envelope.view.company.ok
+      ? status.envelope.view.company.tenant.name
       : null;
 
   return (

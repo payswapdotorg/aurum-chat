@@ -7,12 +7,11 @@
 // never authoritative truth).
 
 import { buildEvidenceView } from '../lib/views/evidence';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
   Empty,
-  NotScoped,
   StatTiles,
   SurfaceHeader,
 } from '../components/view-ui';
@@ -20,14 +19,10 @@ import { formatConfidence, formatCount, formatInstant, joinList, titleCase } fro
 
 export const dynamic = 'force-dynamic';
 
-export default async function EvidencePage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildEvidenceView(resolution.context);
+export default async function EvidencePage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/evidence');
+  const view = await buildEvidenceView(scope.context);
 
   return (
     <>

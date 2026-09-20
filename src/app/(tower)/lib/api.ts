@@ -8,11 +8,8 @@
 
 import { decideApproval } from '@/modules/actions/contract';
 import type { ActionRequest } from '@/modules/actions/contract';
-import {
-  towerContextFromHeaders,
-  towerContextFromSearchParams,
-} from './tower-context';
-import type { TowerContextResolution } from './tower-context';
+import { resolveRequestScope } from '@/app/lib/request-session';
+import type { RequestScope } from '@/app/lib/request-session';
 import { buildTowerView, isTowerSurface } from './surfaces';
 import type { TowerSurface } from './surfaces';
 
@@ -21,7 +18,7 @@ export interface ApiOk {
   body: TowerApiEnvelope;
 }
 
-export type ApiErrorStatus = 400 | 403 | 404 | 409 | 500;
+export type ApiErrorStatus = 400 | 401 | 403 | 404 | 409 | 500;
 
 export interface ApiError {
   status: ApiErrorStatus;
@@ -47,21 +44,24 @@ function apiError(
 }
 
 /**
- * Resolve the tower context for an API request: headers first, then
- * query parameters (so a browser fetch can also scope a tenant without
- * custom headers). Header failures win the error message when both fail.
+ * Resolve the tower context for an API request (W058: from the SESSION
+ * COOKIE — the header/query seam is gone). Returns the ready scope or
+ * the 401/409 failure the handlers answer with.
  */
-export function towerContextFromRequest(request: Request): TowerContextResolution {
-  const fromHeaders = towerContextFromHeaders(request.headers);
-  if (fromHeaders.ok) return fromHeaders;
-  const url = new URL(request.url);
-  const query: Record<string, string> = {};
-  for (const key of ['tenant', 'principal', 'authority']) {
-    const value = url.searchParams.get(key);
-    if (value !== null) query[key] = value;
+export async function towerScopeFromRequest(
+  request: Request,
+): Promise<
+  | { ok: true; scope: Extract<RequestScope, { phase: 'ready' }> }
+  | { ok: false; error: ApiError }
+> {
+  const scope = await resolveRequestScope(request);
+  if (scope.phase === 'unauthenticated') {
+    return { ok: false, error: apiError(401, 'unauthenticated', 'sign in to use Aurum') };
   }
-  const fromQuery = towerContextFromSearchParams(query);
-  return fromQuery.ok ? fromQuery : fromHeaders;
+  if (scope.phase === 'no_active_tenant') {
+    return { ok: false, error: apiError(409, 'no_active_tenant', 'choose or create a company first') };
+  }
+  return { ok: true, scope };
 }
 
 /** GET /api/tower/<surface> — build one surface's view. */
@@ -69,10 +69,8 @@ export async function handleTowerSurfaceGet(
   request: Request,
   surface: string,
 ): Promise<ApiResult> {
-  const context = towerContextFromRequest(request);
-  if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
-  }
+  const resolved = await towerScopeFromRequest(request);
+  if (!resolved.ok) return resolved.error;
   if (!isTowerSurface(surface)) {
     return apiError(
       404,
@@ -80,12 +78,12 @@ export async function handleTowerSurfaceGet(
       `'${surface}' is not a tower surface`,
     );
   }
-  const view = await buildTowerView(context.context, surface);
+  const view = await buildTowerView(resolved.scope.context, surface);
   return {
     status: 200,
     body: {
       surface,
-      tenantId: context.context.tenantId,
+      tenantId: resolved.scope.context.tenantId,
       generatedAt: view.generatedAt,
       view,
     },
@@ -127,16 +125,14 @@ export async function handleTowerApprovalDecision(
   requestId: string,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = towerContextFromRequest(request);
-  if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
-  }
+  const resolved = await towerScopeFromRequest(request);
+  if (!resolved.ok) return resolved.error;
   const parsed = parseDecideApprovalBody(body);
   if (!parsed.ok) {
     return apiError(400, 'invalid_body', parsed.error);
   }
   try {
-    const request_: ActionRequest = await decideApproval(context.context, {
+    const request_: ActionRequest = await decideApproval(resolved.scope.context, {
       requestId,
       decision: parsed.value.decision,
       note: parsed.value.note,
@@ -145,7 +141,7 @@ export async function handleTowerApprovalDecision(
       status: 200,
       body: {
         surface: 'approvals-decision',
-        tenantId: context.context.tenantId,
+        tenantId: resolved.scope.context.tenantId,
         generatedAt: request_.decidedAt ?? new Date().toISOString(),
         view: request_,
       },

@@ -8,7 +8,7 @@
 // evaluation (W024) are not delivered at this base.
 
 import { buildAgentsView } from '../lib/views/agents';
-import { resolvePageContext } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -16,7 +16,6 @@ import {
   ItemFoot,
   ItemHead,
   Notice,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -25,14 +24,10 @@ import { formatInstant, formatMinorUnits, joinList, titleCase } from '../lib/for
 
 export const dynamic = 'force-dynamic';
 
-export default async function AgentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildAgentsView(resolution.context);
+export default async function AgentsPage() {
+  // W058: authenticated routing — the session carries the tenant scope.
+  const scope = await requireTowerScope('/agents');
+  const view = await buildAgentsView(scope.context);
 
   return (
     <>

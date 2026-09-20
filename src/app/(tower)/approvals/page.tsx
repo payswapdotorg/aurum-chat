@@ -7,7 +7,7 @@
 // duties enforced by the module, first decision wins, never un-decidable.
 
 import { buildApprovalsView } from '../lib/views/approvals';
-import { resolvePageContext, scopeQuery } from '../lib/page-context';
+import { requireTowerScope } from '../lib/page-context';
 import {
   Badge,
   Card,
@@ -16,7 +16,6 @@ import {
   ItemHead,
   ItemText,
   Notice,
-  NotScoped,
   StatTiles,
   StatusBadge,
   SurfaceHeader,
@@ -26,19 +25,14 @@ import { DecisionForm } from './decision-form';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ApprovalsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const params = await searchParams;
-  const resolution = await resolvePageContext(params);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
-  const view = await buildApprovalsView(resolution.context);
-  const scope = scopeQuery(params);
+export default async function ApprovalsPage() {
+  // W058: authenticated routing — the session carries the tenant scope
+  // (and the role-derived actions:approve claim the decision gate checks).
+  const scope = await requireTowerScope('/approvals');
+  const view = await buildApprovalsView(scope.context);
 
-  const canDecide = resolution.context.authority.includes('actions:approve');
-  const principal = resolution.context.principalId;
+  const canDecide = scope.context.authority.includes('actions:approve');
+  const principal = scope.context.principalId;
 
   return (
     <>
@@ -49,10 +43,10 @@ export default async function ApprovalsPage({
       />
       {canDecide ? null : (
         <Notice>
-          Deciding requires the <code>actions:approve</code> authority claim. Until
-          authentication lands (W038), pass it explicitly:{' '}
-          <code>?authority=actions:approve</code> — the actions contract checks the claim
-          itself; the tower never bypasses it.
+          Deciding requires the <code>actions:approve</code> authority claim,
+          which sessions derive from your verified company role (owners and
+          admins). The actions contract checks the claim itself; the tower
+          never bypasses it.
         </Notice>
       )}
       <StatTiles
@@ -97,9 +91,6 @@ export default async function ApprovalsPage({
                   </ItemFoot>
                   <DecisionForm
                     requestId={request.id}
-                    tenant={scope.tenant}
-                    principal={scope.principal}
-                    authority={scope.authority}
                     disabled={selfRequested}
                     disabledReason={
                       selfRequested
