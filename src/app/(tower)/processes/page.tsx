@@ -21,12 +21,8 @@ import { formatConfidence, formatCount, formatDuration, formatInstant, formatSha
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProcessesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function ProcessesPage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildProcessesView(resolution.context);
 

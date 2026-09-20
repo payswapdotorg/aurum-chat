@@ -5,14 +5,16 @@
 // (module contracts only — lock 31/32), map module errors to HTTP-ish
 // outcomes. No handler logic lives in the route.ts files themselves, so
 // the whole surface is testable without booting Next.js.
+//
+// W058: the context source is the SESSION COOKIE (resolved through the
+// auth contract, which re-verifies the active company's membership) —
+// the x-aurum-* header / ?tenant= query seam is gone. Anonymous requests
+// are 401; a live session without an active company is 409.
 
 import { decideApproval } from '@/modules/actions/contract';
 import type { ActionRequest } from '@/modules/actions/contract';
-import {
-  towerContextFromHeaders,
-  towerContextFromSearchParams,
-} from './tower-context';
-import type { TowerContextResolution } from './tower-context';
+import { resolveSessionRequest } from '@/app/lib/session';
+import type { TenantContext } from '@/infra/tenant';
 import { buildTowerView, isTowerSurface } from './surfaces';
 import type { TowerSurface } from './surfaces';
 
@@ -21,7 +23,7 @@ export interface ApiOk {
   body: TowerApiEnvelope;
 }
 
-export type ApiErrorStatus = 400 | 403 | 404 | 409 | 500;
+export type ApiErrorStatus = 400 | 401 | 403 | 404 | 409 | 500;
 
 export interface ApiError {
   status: ApiErrorStatus;
@@ -46,22 +48,32 @@ function apiError(
   return { status, body: { error, message } };
 }
 
+/** Why an API request could not be scoped (session failures only now). */
+export type TowerContextFailure = 'unauthenticated' | 'no_active_company';
+
+export type TowerContextResolution =
+  | { ok: true; context: TenantContext }
+  | { ok: false; failure: TowerContextFailure; detail: string };
+
 /**
- * Resolve the tower context for an API request: headers first, then
- * query parameters (so a browser fetch can also scope a tenant without
- * custom headers). Header failures win the error message when both fail.
+ * Resolve the tower context for an API request from the session cookie.
+ * Anonymous requests fail uniformly (`unauthenticated` — no leak about
+ * which part failed); a session without an active company is routed to
+ * onboarding by the client (`no_active_company`).
  */
-export function towerContextFromRequest(request: Request): TowerContextResolution {
-  const fromHeaders = towerContextFromHeaders(request.headers);
-  if (fromHeaders.ok) return fromHeaders;
-  const url = new URL(request.url);
-  const query: Record<string, string> = {};
-  for (const key of ['tenant', 'principal', 'authority']) {
-    const value = url.searchParams.get(key);
-    if (value !== null) query[key] = value;
+export async function towerContextFromRequest(request: Request): Promise<TowerContextResolution> {
+  const resolution = await resolveSessionRequest(request);
+  if (resolution.status === 'anonymous') {
+    return { ok: false, failure: 'unauthenticated', detail: 'no session for this request' };
   }
-  const fromQuery = towerContextFromSearchParams(query);
-  return fromQuery.ok ? fromQuery : fromHeaders;
+  if (resolution.status === 'no-company') {
+    return {
+      ok: false,
+      failure: 'no_active_company',
+      detail: 'the session has no active company — complete onboarding first',
+    };
+  }
+  return { ok: true, context: resolution.context };
 }
 
 /** GET /api/tower/<surface> — build one surface's view. */
@@ -69,9 +81,9 @@ export async function handleTowerSurfaceGet(
   request: Request,
   surface: string,
 ): Promise<ApiResult> {
-  const context = towerContextFromRequest(request);
+  const context = await towerContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    return towerSessionError(context.failure, context.detail);
   }
   if (!isTowerSurface(surface)) {
     return apiError(
@@ -90,6 +102,12 @@ export async function handleTowerSurfaceGet(
       view,
     },
   };
+}
+
+/** Map a session-resolution failure to its API outcome. */
+function towerSessionError(failure: TowerContextFailure, detail: string): ApiError {
+  if (failure === 'unauthenticated') return apiError(401, failure, detail);
+  return apiError(409, failure, detail);
 }
 
 /** The decision body of POST /api/tower/approvals/<id>/decide. */
@@ -127,9 +145,9 @@ export async function handleTowerApprovalDecision(
   requestId: string,
   body: unknown,
 ): Promise<ApiResult> {
-  const context = towerContextFromRequest(request);
+  const context = await towerContextFromRequest(request);
   if (!context.ok) {
-    return apiError(400, context.failure, context.detail);
+    return towerSessionError(context.failure, context.detail);
   }
   const parsed = parseDecideApprovalBody(body);
   if (!parsed.ok) {

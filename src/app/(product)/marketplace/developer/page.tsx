@@ -17,13 +17,13 @@
 // claim the developer experience needs instead of pretending.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../../lib/context';
+import { withProductScope } from '../../lib/context';
+import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import type { PageSearchParams } from '../../lib/context';
 import { buildDeveloperView } from '../lib/views';
 import {
   EmptyState,
   ErrorState,
-  NotScoped,
   PageHead,
   Panel,
   StatusPill,
@@ -44,12 +44,9 @@ export default async function DeveloperPage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const params = await searchParams;
-  const resolution = productContextFromSearchParams(params);
-  if (!resolution.ok) {
-    return <NotScoped detail={resolution.detail} />;
-  }
+  const session = await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
-  const view = await buildDeveloperView(resolution.resolved.context);
+  const view = await buildDeveloperView(session.context);
 
   const activeAgents = view.builderAgents.items.filter((agent) => agent.status === 'active');
 

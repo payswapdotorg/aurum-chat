@@ -25,12 +25,8 @@ import { formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function WorkforcePage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function WorkforcePage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildWorkforceView(resolution.context);
 

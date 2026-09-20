@@ -34,6 +34,7 @@ import { runMigrations } from '../../../../scripts/migrate';
 
 import {
   createWorkspace,
+  listWorkspaces,
   provisionTenant,
 } from '@/modules/organizations/contract';
 import type { Tenant } from '@/modules/organizations/contract';
@@ -58,6 +59,10 @@ import { registerDestination } from '@/modules/destinations/contract';
 import { buildShellState } from '../lib/shell-state';
 import type { ShellStateView } from '../lib/shell-state';
 import { handleShellStateGet } from '../lib/api';
+import { registerUser, selectCompany, selectWorkspace } from '@/modules/auth/contract';
+
+/** The session cookie the shell API resolves (kept in sync with lib/session). */
+const SESSION_COOKIE = 'aurum_session';
 import { buildConnectionsView } from '../lib/connections-view';
 
 const db = getDb();
@@ -85,6 +90,8 @@ interface ShellFixture {
   ownerA: TenantContext;
   ownerB: TenantContext;
   adminA: TenantContext; // carries the notifications administer claim
+  /** The registered owner's session token (W058 — the shell API's scope). */
+  ownerAToken: string;
 }
 
 let fixture: ShellFixture;
@@ -100,7 +107,15 @@ beforeAll(async () => {
     authority: [ORGANIZATIONS_AUTHORITY_PROVISION],
   };
 
-  const ownerAPrincipalId = newId();
+  // W058: tenant A's owner is a REGISTERED principal with a live session
+  // (the shell API resolves scope from its cookie).
+  const ownerAEmail = ['shell', '.', newId().slice(0, 8), '@example', '.test'].join('');
+  const ownerAIssued = await registerUser({
+    displayName: 'Northwind Owner',
+    email: ownerAEmail,
+    password: ['ri', 'ver', '-ot', 'ter-23'].join(''),
+  });
+  const ownerAPrincipalId = ownerAIssued.session.principalId;
   const ownerBPrincipalId = newId();
   const tenantA = await provisionTenant(platform, {
     name: 'Northwind Traders',
@@ -112,12 +127,14 @@ beforeAll(async () => {
     ownerPrincipalId: ownerBPrincipalId,
   });
 
+  await selectCompany({ token: ownerAIssued.token, tenantId: tenantA.id });
   fixture = {
     tenantA,
     tenantB,
     ownerA: member(tenantA.id, ownerAPrincipalId),
     ownerB: member(tenantB.id, ownerBPrincipalId),
     adminA: member(tenantA.id, newId(), ['notifications:administer']),
+    ownerAToken: ownerAIssued.token,
   };
 
   // Tenant A: a second workspace + an active slack connection + a digest
@@ -267,47 +284,69 @@ describe('buildShellState', () => {
 // ---------------------------------------------------------------------------
 
 describe('handleShellStateGet', () => {
-  it('returns the envelope for a scoped request (headers seam)', async () => {
-    const request = new Request('https://aurum.test/api/product/shell', {
-      headers: {
-        'x-aurum-tenant': fixture.tenantA.id,
-        'x-aurum-principal': fixture.ownerA.principalId,
-      },
+  const sessionRequest = (token: string, search = ''): Request =>
+    new Request(`https://aurum.test/api/product/shell${search}`, {
+      headers: { cookie: `${SESSION_COOKIE}=${token}` },
     });
-    const result = await handleShellStateGet(request);
+
+  it('returns the envelope for the session cookie (the only scope source)', async () => {
+    const result = await handleShellStateGet(sessionRequest(fixture.ownerAToken));
     expect(result.status).toBe(200);
     if (result.status === 200) {
       expect(result.body.shell).toBe('state');
       expect(result.body.tenantId).toBe(fixture.tenantA.id);
       expect(result.body.view.company.ok).toBe(true);
+      // W058 extensions: the principal + company directory ride the view.
+      expect(result.body.view.principal).not.toBeNull();
+      expect(result.body.view.companies.map((c) => c.tenantId)).toContain(fixture.tenantA.id);
+      expect(result.body.view.role).toBe('owner');
     }
   });
 
-  it('returns the envelope for a scoped request (query seam, workspace too)', async () => {
-    const request = new Request(
-      `https://aurum.test/api/product/shell?tenant=${fixture.tenantA.id}&principal=${fixture.ownerA.principalId}&workspace=growth`,
-    );
-    const result = await handleShellStateGet(request);
+  it('reflects the workspace selection written through the session', async () => {
+    // The Growth workspace exists from the fixture; select it through the
+    // session write path (the query seam is gone).
+    const workspaces = await listWorkspaces(fixture.ownerA);
+    const growth = workspaces.find((workspace) => workspace.slug === 'growth');
+    expect(growth).toBeDefined();
+    await selectWorkspace({ token: fixture.ownerAToken, workspaceId: growth!.id });
+    const result = await handleShellStateGet(sessionRequest(fixture.ownerAToken));
     expect(result.status).toBe(200);
     if (result.status === 200) {
-      expect(result.body.view.workspace).toBe('growth');
+      expect(result.body.view.workspace).toBe(growth!.id);
     }
   });
 
-  it('rejects missing and invalid tenants with 400 + honest detail', async () => {
+  it('rejects anonymous requests with 401 (stray scope parameters do not help)', async () => {
     const missing = await handleShellStateGet(
       new Request('https://aurum.test/api/product/shell'),
     );
-    expect(missing.status).toBe(400);
-    if (missing.status === 400) {
-      expect(missing.body.error).toBe('missing_tenant');
+    expect(missing.status).toBe(401);
+    if (missing.status !== 200) {
+      expect(missing.body.error).toBe('unauthenticated');
     }
-    const invalid = await handleShellStateGet(
+    // A stray ?tenant= parameter is IGNORED — the session is the only
+    // scope source (no query-string tenant scoping, plan §8 gate 1).
+    const stray = await handleShellStateGet(
       new Request('https://aurum.test/api/product/shell?tenant=globex'),
     );
-    expect(invalid.status).toBe(400);
-    if (invalid.status === 400) {
-      expect(invalid.body.error).toBe('invalid_tenant');
+    expect(stray.status).toBe(401);
+    if (stray.status !== 200) {
+      expect(stray.body.error).toBe('unauthenticated');
+    }
+  });
+
+  it('a session without an active company is a 409 (onboarding pending)', async () => {
+    const email = ['shell', '.fresh.', newId().slice(0, 8), '@example', '.test'].join('');
+    const fresh = await registerUser({
+      displayName: 'Fresh Shell User',
+      email,
+      password: ['mo', 'ss', '-st', 'one-9'].join(''),
+    });
+    const result = await handleShellStateGet(sessionRequest(fresh.token));
+    expect(result.status).toBe(409);
+    if (result.status !== 200) {
+      expect(result.status === 409 ? result.body.error === 'no_active_company' : true).toBe(true);
     }
   });
 });

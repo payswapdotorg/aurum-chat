@@ -17,7 +17,6 @@ import { Sheet } from './sheet';
 import { StatusPill } from './states';
 import { sectionHeading } from '../lib/context-drawer';
 import type { ContextSection } from '../lib/context-drawer';
-import { scopeFromSearch } from '../lib/context';
 
 function SectionBody({ section }: { section: ContextSection }): ReactNode {
   return (
@@ -30,20 +29,11 @@ function SectionBody({ section }: { section: ContextSection }): ReactNode {
       ))}
       {section.links.length === 0 ? null : (
         <div className="aurum-ctx-links">
-          {section.links.map((link) => {
-            const scope = scopeFromSearch(
-              typeof window === 'undefined' ? '' : window.location.search,
-            );
-            const href =
-              link.href.includes('?') || scope === ''
-                ? link.href
-                : `${link.href}${scope}`;
-            return (
-              <Link key={link.href} href={href}>
-                {link.label}
-              </Link>
-            );
-          })}
+          {section.links.map((link) => (
+            <Link key={link.href} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
         </div>
       )}
     </section>

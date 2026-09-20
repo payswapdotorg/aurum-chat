@@ -24,12 +24,8 @@ import { formatConfidence, formatInstant, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AutomationPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function AutomationPage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildAutomationView(resolution.context);
 

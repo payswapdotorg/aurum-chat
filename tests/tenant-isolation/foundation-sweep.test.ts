@@ -1,7 +1,8 @@
 // W044 — Tenant Isolation Verification · application-boundary sweep for the
 // L0 foundation modules: organizations (W001), identity (W002), people
 // (W002), events (W003), world (W005), audit (W046, the append-only
-// decision-evidence trail) and simulator (W056, the synthetic company).
+// decision-evidence trail), simulator (W056, the synthetic company) and
+// auth (W058 — principals, sessions and invitations).
 //
 // Two REAL tenants are provisioned through the organizations contract (the
 // platform operation), then every module contract is driven for both tenants
@@ -54,6 +55,14 @@ import {
   revokeVerification,
 } from '@/modules/identity/contract';
 import { recordObservation } from '@/modules/observations/contract';
+import {
+  createInvite,
+  listInvites,
+  redeemInvite,
+  registerUser,
+  selectCompany,
+  signIn,
+} from '@/modules/auth/contract';
 import {
   createEmployee,
   createPerson,
@@ -880,6 +889,74 @@ describe('W044 audit — the append-only decision-evidence trail is tenant-scope
 // ---------------------------------------------------------------------------
 // simulator (W056)
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// auth (W058)
+// ---------------------------------------------------------------------------
+
+describe('W044 auth — sessions and invitations are scope-safe', () => {
+  it('keeps invitation rosters per tenant and disjoint (same email, two companies)', async () => {
+    const email = ['sweep', '.', newId().slice(0, 8), '@example', '.test'].join('');
+    const inA = await createInvite(tenantA.owner, { email });
+    const inB = await createInvite(tenantB.owner, { email });
+    expect(inA.invite.tenantId).toBe(tenantA.tenantId);
+    expect(inB.invite.tenantId).toBe(tenantB.tenantId);
+    expect(inA.code).not.toBe(inB.code);
+
+    const rosterA = await listInvites(tenantA.owner, {});
+    const rosterB = await listInvites(tenantB.owner, {});
+    expect(rosterA.map((invite) => invite.id)).toContain(inA.invite.id);
+    expect(rosterA.map((invite) => invite.id)).not.toContain(inB.invite.id);
+    expect(rosterB.map((invite) => invite.id)).toContain(inB.invite.id);
+    expect(rosterB.map((invite) => invite.id)).not.toContain(inA.invite.id);
+  });
+
+  it('redeems only within the invited company — the other tenant stays untouched', async () => {
+    const email = ['redeem', '.', newId().slice(0, 8), '@example', '.test'].join('');
+    const invite = await createInvite(tenantB.owner, { email });
+    const principal = await registerUser({
+      displayName: 'Sweep Redeemer',
+      email,
+      password: ['gr', 'an', '-se', 'quoia-8'].join(''),
+    });
+    const view = await signIn({ email, password: ['gr', 'an', '-se', 'quoia-8'].join('') });
+    expect(view.session.company).toBeNull();
+    // Redeem the B invite as the B-invited principal: membership appears
+    // ONLY in tenant B's roster.
+    const redeemed = await redeemInvite({ token: principal.token, code: invite.code });
+    expect(redeemed.company!.tenantId).toBe(tenantB.tenantId);
+
+    const rosterA = await listTenantMembers(tenantA.owner);
+    const rosterB = await listTenantMembers(tenantB.owner);
+    expect(rosterA.map((m) => m.principalId)).not.toContain(principal.session.principalId);
+    expect(rosterB.map((m) => m.principalId)).toContain(principal.session.principalId);
+  });
+
+  it('tenant switching cannot cross scope (a non-member cannot select the foreign company)', async () => {
+    // A principal that is a member of tenant A ONLY.
+    const email = ['switcher', '.', newId().slice(0, 8), '@example', '.test'].join('');
+    const password = ['la', 'ke', '-mi', 'rror-3'].join('');
+    const principal = await registerUser({ displayName: 'Sweep Switcher', email, password });
+    await addTenantMember(tenantA.owner, {
+      principalId: principal.session.principalId,
+      role: 'member',
+    });
+    const signed = await signIn({ email, password });
+    await selectCompany({ token: signed.token, tenantId: tenantA.tenantId });
+    const view = await signIn({ email, password });
+    expect(view.session.company!.tenantId).toBe(tenantA.tenantId);
+
+    // Selecting tenant B is refused — uniformly, with no existence leak
+    // about B (company_not_available ≡ not a member).
+    await expect(
+      selectCompany({ token: signed.token, tenantId: tenantB.tenantId }),
+    ).rejects.toMatchObject({ code: 'company_not_available' });
+
+    // The session's scope is unchanged.
+    const still = await signIn({ email, password });
+    expect(still.session.company!.tenantId).toBe(tenantA.tenantId);
+  });
+});
 
 describe('W044 simulator — synthetic companies and hidden ground truth are tenant-scoped', () => {
   // materializeCompany links verified employee channel identities, so the

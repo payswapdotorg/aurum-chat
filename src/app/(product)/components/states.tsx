@@ -188,12 +188,3 @@ export function NotScoped({ detail }: { detail: string }): ReactNode {
 }
 
 /** A quiet scope notice rendered on hub pages that work without a tenant. */
-export function ScopeNotice(): ReactNode {
-  return (
-    <div className="aurum-notice">
-      You are browsing without a company scope. Append{' '}
-      <code>?tenant=&lt;tenant uuid&gt;</code> to make everything below read
-      your company&apos;s live state.
-    </div>
-  );
-}

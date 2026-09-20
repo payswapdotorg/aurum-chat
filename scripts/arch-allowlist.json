@@ -2,6 +2,8 @@
   "tables": [
     "_migrations",
     "tenants",
+    "auth_users",
+    "auth_sessions",
     "marketplace_packages",
     "marketplace_package_verifications",
     "marketplace_package_reviews",

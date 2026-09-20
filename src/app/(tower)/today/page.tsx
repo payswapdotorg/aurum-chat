@@ -23,12 +23,8 @@ import { formatCount, formatConfidence, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TodayPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function TodayPage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildTodayView(resolution.context);
 

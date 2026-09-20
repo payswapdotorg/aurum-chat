@@ -20,12 +20,8 @@ import { formatCount, formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CapabilitiesPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function CapabilitiesPage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildCapabilitiesView(resolution.context);
 

@@ -116,7 +116,16 @@ const TECHNICAL_UNIQUE_COLUMNS = new Set([
  * 256-bit randomness) and semantically an auth ambiguity that must FAIL
  * globally, not resolve per-tenant.
  */
-const GLOBAL_CREDENTIAL_ANCHORS = new Set(['api_keys.key_hash']);
+const GLOBAL_CREDENTIAL_ANCHORS = new Set([
+  'api_keys.key_hash',
+  // W058: the invitation digest — same contract as the api-key digest:
+  // sha-256 of a system-minted random code, never a caller-supplied
+  // business natural key. Its global uniqueness IS the invitation lookup
+  // invariant (a presented code must resolve onto exactly ONE
+  // invitation), so namespacing it by tenant_id would weaken the lookup
+  // instead of hardening it.
+  'auth_invites.token_hash',
+]);
 
 function isSurrogateUuidReference(column: string, type: string): boolean {
   return type === 'uuid' && (column === 'id' || column.endsWith('_id'));

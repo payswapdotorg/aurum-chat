@@ -20,12 +20,8 @@ import { formatConfidence, formatCount, formatInstant, joinList, titleCase } fro
 
 export const dynamic = 'force-dynamic';
 
-export default async function EvidencePage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const resolution = await resolvePageContext(await searchParams);
+export default async function EvidencePage() {
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const view = await buildEvidenceView(resolution.context);
 

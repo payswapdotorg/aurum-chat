@@ -19,6 +19,7 @@
 // thin-adapter discipline the tower follows.
 
 import type { TenantContext } from '@/infra/tenant';
+import type { AuthPrincipal, UserCompany } from '@/modules/auth/contract';
 import { getTenant, listWorkspaces } from '@/modules/organizations/contract';
 import type { Tenant, Workspace } from '@/modules/organizations/contract';
 import {
@@ -75,9 +76,16 @@ export interface ShellStateView {
   generatedAt: string;
   tenantId: string;
   principalId: string;
+  /** The active workspace id (uuid) inside the company; null = tenant default (W058: session selection). */
   workspace: string | null;
   company: CompanySection;
   notifications: NotificationsSection;
+  /** The signed-in principal (W058 — session-sourced, for the account UI). */
+  principal: { displayName: string; email: string } | null;
+  /** The principal's verified companies (W058 — the switcher's data). */
+  companies: UserCompany[];
+  /** The verified role behind the session's derived claims (W058). */
+  role: string | null;
 }
 
 /** Human copy for a notification status. */
@@ -240,10 +248,19 @@ async function buildNotificationsSection(
 /**
  * Compose the shell state for one request. Never throws: every section
  * degrades on its own. `generatedAt` is the assembly time of the view.
+ *
+ * The `extras` (W058) carry the session-resolved principal, company
+ * directory and role — omitted by older callers, they degrade to the
+ * honest empty values.
  */
 export async function buildShellState(
   ctx: TenantContext,
   workspace: string | null,
+  extras: {
+    principal?: AuthPrincipal;
+    companies?: UserCompany[];
+    role?: string;
+  } = {},
 ): Promise<ShellStateView> {
   const [company, notifications] = await Promise.all([
     buildCompanySection(ctx),
@@ -256,5 +273,11 @@ export async function buildShellState(
     workspace,
     company,
     notifications,
+    principal:
+      extras.principal === undefined
+        ? null
+        : { displayName: extras.principal.displayName, email: extras.principal.email },
+    companies: extras.companies ?? [],
+    role: extras.role ?? null,
   };
 }

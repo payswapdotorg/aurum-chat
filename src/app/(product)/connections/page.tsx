@@ -10,15 +10,13 @@
 // components in components/interaction.tsx) POST to /api/connections and
 // refresh this view.
 //
-// The tenant context comes from the documented dev seam (query parameters)
-// until W058 lands authenticated sessions.
+// W058: the tenant context comes from the authenticated session (the
+// auth module re-verifies the active company's membership per request) —
+// the query-parameter seam is gone.
 
 import type { ReactNode } from 'react';
-import {
-  connectionsContextFromSearchParams,
-  firstValue,
-  scopeParamsOf,
-} from './lib/context';
+import { firstValue, scopeParamsOf } from './lib/context';
+import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { buildConnectionsView } from './lib/views';
 import type { IdentityCard } from './lib/views';
 import {
@@ -34,7 +32,6 @@ import {
   HealthPill,
   HealthReasons,
   Notice,
-  NotScoped,
   Pill,
   SectionCard,
   StatRow,
@@ -50,8 +47,7 @@ export default async function ConnectionsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const resolution = connectionsContextFromSearchParams(params);
-  if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
+  const session = await requireAuthenticatedPage();
 
   const lookupProvider = firstValue(params['identity_provider']);
   const lookupAccount = firstValue(params['identity_account']);
@@ -60,7 +56,7 @@ export default async function ConnectionsPage({
       ? { provider: lookupProvider, providerAccountId: lookupAccount }
       : null;
 
-  const view = await buildConnectionsView(resolution.context, { identityLookup });
+  const view = await buildConnectionsView(session.context, { identityLookup });
   const scope = scopeParamsOf(params);
   const now = view.generatedAt;
 

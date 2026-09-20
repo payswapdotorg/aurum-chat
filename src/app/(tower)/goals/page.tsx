@@ -30,7 +30,7 @@ export default async function GoalsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const resolution = await resolvePageContext(params);
+  const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
   const status: GoalStatus = params['status'] === 'archived' ? 'archived' : 'active';
   const view = await buildGoalsView(resolution.context, status);

@@ -10,7 +10,8 @@
 // tenant installation.
 
 import Link from 'next/link';
-import { productContextFromSearchParams, withProductScope } from '../../../lib/context';
+import { withProductScope } from '../../../lib/context';
+import { resolveSession } from '@/app/lib/session';
 import type { PageSearchParams } from '../../../lib/context';
 import { buildPackageView, publicBrowsingContext } from '../../lib/views';
 import { isAgentPackage, isExtensionPackage } from '@/modules/marketplace/contract';
@@ -54,8 +55,11 @@ export default async function PackagePage({
 }) {
   const { packageId } = await params;
   const query = await searchParams;
-  const resolution = productContextFromSearchParams(query);
-  const ctx = resolution.ok ? resolution.resolved.context : publicBrowsingContext();
+  // W058: scope comes from the session; anonymous visitors inspect the
+  // public listing with the claim-less browsing context (read-only).
+  const session = await resolveSession();
+  const scoped = session.status === 'authenticated';
+  const ctx = scoped ? session.context : publicBrowsingContext();
   const scopeQuery = withProductScope(query);
   const result = await buildPackageView(ctx, packageId);
 
@@ -99,10 +103,11 @@ export default async function PackagePage({
   const { pkg, actions, evidence } = view;
   const backHref = `/marketplace${scopeQuery}`;
   const actionBase = `/api/product/marketplace/package/${pkg.id}`;
-  const unscopedNotice = resolution.ok ? null : (
+  const unscopedNotice = scoped ? null : (
     <div className="aurum-notice">
-      You are inspecting a public listing. Acting on it (installing) needs your company scope —
-      append <code>?tenant=&lt;tenant uuid&gt;</code>.
+      You are inspecting a public listing without signing in. Acting on it
+      (installing) needs your company scope — sign in first; the action then
+      carries your session&apos;s verified scope.
     </div>
   );
 
@@ -319,13 +324,13 @@ export default async function PackagePage({
         title="Actions"
         blurb="Exactly what YOUR scope may do with this package right now — the same rules the domain contracts enforce."
       >
-        {!resolution.ok ? (
+        {!scoped ? (
           <EmptyState
             title="Acting needs a company scope"
-            hint="Append ?tenant=<tenant uuid> to install or govern this package."
+            hint="Sign in with a company to install or govern this package — the action then carries your session's verified scope."
             action={
-              <Link className="aurum-btn" data-variant="quiet" href="/marketplace">
-                Back to the catalog
+              <Link className="aurum-btn" data-variant="quiet" href="/signin">
+                Sign in
               </Link>
             }
           />
