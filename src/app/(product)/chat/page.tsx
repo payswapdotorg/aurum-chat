@@ -1,145 +1,72 @@
-// Product shell (W057) — the Chat area.
+// Aurum chat (W060) — the conversation-first entry point of the product.
 //
-// The conversation-first entry point of the product (plan §3 "Employee
-// mode — WhatsApp-like"). The shell's honest scope for W057: the Aurum
-// identity header and the EIGHT canonical discovery starters (plan §3
-// "Chat discovery starters"), selectable into the URL (`/chat?q=<id>`) so
-// the live conversation workflow (W060) inherits a stable input contract.
-// No fake composer, no fake replies — quiet, honest states only.
+// THE EMPLOYEE MODE (plan §3): WhatsApp-like conversation list + message
+// timeline + composer; Aurum answers with evidence and action cards
+// deep-linked into management mode; pending approvals are decidable
+// inline; mobile is a first-class full-screen conversation experience.
 //
-// W058: company scope comes from the signed-in session (the unscoped
-// dev-seam state no longer renders — anonymous visitors are redirected
-// to sign-in, company-less sessions to onboarding).
+// The page is the server half of the workspace: it gates the session
+// (W058 — anonymous → /signin, company-less → /onboarding), builds the
+// initial chat state through the conversations contract (W029), and
+// hands it to the client workspace. Every later read/write flows through
+// /api/product/chat (the session is the only scope source).
+//
+// W057's URL input contract survives: `/chat?q=<starter id>` still
+// selects the starter — now by PREFILLING the composer with the starter
+// question (the live workflow consumes it from there). `/chat?c=<id>`
+// opens a conversation directly (shareable deep links).
 
-import Link from 'next/link';
-import { withProductScope } from '../lib/context';
-import type { PageSearchParams } from '../lib/context';
+import type { Metadata } from 'next';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
-import { CHAT_STARTERS, findStarter, starterHref } from '../lib/chat-starters';
-import { PageHead, StatusPill, WorkingIndicator } from '../components/states';
+import { CHAT_STARTERS, findStarter } from '../lib/chat-starters';
+import { buildChatStateView } from './lib/chat-view';
+import type { ChatStateView } from './lib/chat-types';
+import { ChatWorkspace } from './components/chat-workspace';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Chat — Aurum',
+  description:
+    'Talk with Aurum, your organizational intelligence employee. Evidence-backed answers, action cards, and approvals — in one conversation.',
+};
 
 export default async function ChatPage({
   searchParams,
 }: {
-  searchParams: Promise<PageSearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
   const session = await requireAuthenticatedPage();
-  const scopeQuery = withProductScope(params);
-  const q = Array.isArray(params['q']) ? (params['q'][0] ?? null) : (params['q'] ?? null);
-  const selected = findStarter(q);
+
+  const first = (key: string): string | null => {
+    const value = params[key];
+    if (Array.isArray(value)) return value[0] ?? null;
+    return value ?? null;
+  };
+  const conversationParam = first('c');
+  const starter = findStarter(first('q'));
+
+  // A stale/foreign ?c= degrades to no selection — never a crash, never
+  // an existence leak (the contract's not-found is indistinguishable).
+  let initial: ChatStateView;
+  if (conversationParam !== null && conversationParam !== '') {
+    try {
+      initial = await buildChatStateView(session.context, conversationParam);
+    } catch {
+      initial = await buildChatStateView(session.context, null);
+    }
+  } else {
+    initial = await buildChatStateView(session.context, null);
+  }
 
   return (
-    <>
-      <PageHead
-        title="Chat"
-        description="Talk with Aurum like you would a colleague who happens to know the whole company. Answers are evidence-backed, findings arrive as cards, and consequential actions always pass a human approval gate."
-        meta={
-          <span>
-            Company scope active — Aurum answers from {session.principal.displayName}&apos;s
-            tenant-scoped state.
-          </span>
-        }
-      />
-
-      <section className="aurum-chat-card" aria-labelledby="aurum-chat-identity-title">
-        <div className="aurum-chat-identity">
-          <span className="aurum-chat-avatar" aria-hidden="true">
-            A
-          </span>
-          <div>
-            <h2 id="aurum-chat-identity-title" className="aurum-chat-name">
-              Aurum
-            </h2>
-            <p className="aurum-chat-role">
-              Organizational intelligence employee · on your company&apos;s side
-            </p>
-          </div>
-          <div style={{ marginLeft: 'auto' }}>
-            <StatusPill tone="positive">on duty</StatusPill>
-          </div>
-        </div>
-
-        {selected === null ? (
-          <>
-            <p className="aurum-item-text" style={{ marginBottom: 6 }}>
-              Start with a question — Aurum answers with evidence, follows up on
-              its own unknowns, and can walk you to any finding:
-            </p>
-            <div className="aurum-starter-grid">
-              {CHAT_STARTERS.map((starter) => (
-                <Link
-                  key={starter.id}
-                  href={starterHref(starter, scopeQuery)}
-                  className="aurum-starter"
-                >
-                  <span className="aurum-starter-q">{starter.question}</span>
-                  <span className="aurum-starter-hint">{starter.hint}</span>
-                </Link>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="aurum-pending-question" role="status">
-              “{selected.question}”
-            </div>
-            <p className="aurum-item-text">
-              Good question. The live conversation experience picks this
-              selection up from here — it reads the same{' '}
-              <code className="aurum-mono">?q={selected.id}</code> you see in the
-              address bar, so nothing is lost between the shell and the chat.
-            </p>
-            <p style={{ marginTop: 14 }}>
-              <WorkingIndicator label="Aurum will answer here" />
-            </p>
-            <p style={{ marginTop: 14 }}>
-              <Link className="aurum-btn" data-variant="quiet" href={`/chat${scopeQuery}`}>
-                Pick a different question
-              </Link>
-            </p>
-          </>
-        )}
-      </section>
-
-      <section className="aurum-panel">
-        <h2 className="aurum-panel-title">How Aurum answers</h2>
-        <p className="aurum-panel-blurb">
-          The conversation is a channel; the company intelligence loop is the
-          product core. That has three consequences you can feel in chat:
-        </p>
-        <ul className="aurum-item-list">
-          <li>
-            <div className="aurum-item-head">
-              <span className="aurum-item-title">Evidence first</span>
-            </div>
-            <p className="aurum-item-text">
-              Every consequential answer carries its observations and reasoning —
-              “show me why” is always one question away.
-            </p>
-          </li>
-          <li>
-            <div className="aurum-item-head">
-              <span className="aurum-item-title">Findings as cards</span>
-            </div>
-            <p className="aurum-item-text">
-              Goals, unknowns, missions, risks, opportunities and recommendations
-              arrive as actionable cards, deep-linked into management mode.
-            </p>
-          </li>
-          <li>
-            <div className="aurum-item-head">
-              <span className="aurum-item-title">Humans decide</span>
-            </div>
-            <p className="aurum-item-text">
-              Aurum proposes; the authority gate disposes. Consequential actions
-              wait for your approval — always.
-            </p>
-          </li>
-        </ul>
-      </section>
-    </>
+    <ChatWorkspace
+      tenantId={session.context.tenantId}
+      principalName={session.principal.displayName}
+      starters={CHAT_STARTERS}
+      initial={initial}
+      starterQuery={starter === null ? null : starter.id}
+    />
   );
 }
