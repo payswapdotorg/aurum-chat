@@ -118,6 +118,64 @@ export const LEARNING_DESTINATIONS: readonly {
   },
 ];
 
+/**
+ * The interventions surface's keyboard destinations (W063): capability
+ * gaps, acquisition alternatives and the agent/workforce lifecycle —
+ * the intervention journey (plan §2 Journey I), keyboard-reachable by
+ * name.
+ */
+export const INTERVENTION_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'interventions',
+    title: 'Interventions — capability gaps & agent lifecycle',
+    subtitle:
+      'Compare train/reassign/hire/automate/recruit/install/outsource; decide proposals, activate agents and teams, track outcomes',
+    href: '/interventions',
+    keywords: [
+      'interventions',
+      'intervention',
+      'capability',
+      'capabilities',
+      'gaps',
+      'alternatives',
+      'compare',
+      'train',
+      'reassign',
+      'hire',
+      'automate',
+      'recruit',
+      'install',
+      'outsource',
+      'proposal',
+      'proposals',
+      'approval',
+      'approve',
+      'activation',
+      'activate',
+      'agents',
+      'agent',
+      'teams',
+      'team',
+      'topology',
+      'budget',
+      'workforce',
+      'lifecycle',
+      'retain',
+      'modify',
+      'terminate',
+      'termination',
+      'outcomes',
+      'automation',
+    ],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -187,6 +245,21 @@ export function buildShellCommands(): ShellCommand[] {
   for (const destination of LEARNING_DESTINATIONS) {
     commands.push({
       id: `learning:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'people',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W063 — the interventions surface's destination (capability gaps,
+  // acquisition alternatives and the agent/workforce lifecycle;
+  // keyboard-reachable by name).
+  for (const destination of INTERVENTION_DESTINATIONS) {
+    commands.push({
+      id: `interventions:${destination.id}`,
       title: destination.title,
       subtitle: destination.subtitle,
       group: 'Navigate',

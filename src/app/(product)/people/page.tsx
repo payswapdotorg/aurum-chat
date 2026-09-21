@@ -2,8 +2,8 @@
 //
 // The people hub: workforce and agents (management mode) plus the
 // employee-facing learning/contribution experience (W062 — the Learning
-// surface) and the capability/agent interventions that arrive with their
-// work items (W063). Honest structural hub — no invented data.
+// surface) and the capability/agent interventions surface (W063).
+// Honest structural hub — no invented data.
 
 import Link from 'next/link';
 import { withProductScope } from '../lib/context';
@@ -71,25 +71,27 @@ export default async function PeoplePage({
 
       <div style={{ marginTop: 18 }}>
         <Panel
-          title="Coming to this area"
-          blurb="The people experience grows here as its surfaces land:"
+          title="Capability and agent interventions"
+          blurb="Where the company is short, the compared ways to close the gap, and the full agent/workforce lifecycle — decided by humans, tracked to outcomes."
         >
-          <ul className="aurum-item-list">
-            <li>
-              <p className="aurum-item-text">
-                <strong>Capability interventions</strong> — compare training,
-                reassignment, hiring, automation and agent recruitment against a
-                measured gap, with explicit uncertainty.
-              </p>
-            </li>
-            <li>
-              <p className="aurum-item-text">
-                <strong>Employment decisions stay human</strong> — Aurum surfaces
-                alternatives and evidence; it never autonomously terminates, and
-                human-impacting recommendations always carry their caveats.
-              </p>
-            </li>
-          </ul>
+          <div className="aurum-hub-grid">
+            <Link className="aurum-hub-card" href="/interventions">
+              <span className="aurum-hub-label">
+                <ShellGlyph name="people" size={16} />
+                Interventions
+              </span>
+              <span className="aurum-hub-tagline">
+                Compare train, reassignment, hiring, automation, agent recruitment, installs and
+                outsourcing against a measured gap; decide proposals, activate agents and teams,
+                and track what the interventions moved.
+              </span>
+              <span className="aurum-hub-note">management experience</span>
+            </Link>
+          </div>
+          <p className="aurum-learn-separation" role="note" style={{ marginTop: 14 }}>
+            Employment decisions stay human-authorized — Aurum surfaces alternatives, uncertainty
+            and evidence; it never autonomously terminates or disciplines a human employee.
+          </p>
         </Panel>
       </div>
     </>
