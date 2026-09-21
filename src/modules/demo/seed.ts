@@ -1408,7 +1408,10 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
   });
 
   // --- journey H: two BYOA accounts (no provider privileged) -------------
-  const llmAuthority = [...ownerAuthority, 'llm:administer'];
+  // W066 folded 'llm:administer' into the owner claim set (the AI/BYOA
+  // product surface manages accounts through the session), so the owner
+  // authority already carries it — no harness-only override needed anymore.
+  const llmAuthority = ownerAuthority;
   await ensureAnchor(
     managerCtx(llmAuthority),
     counters,
