@@ -3566,3 +3566,207 @@ a.aurum-explain-row-meta {
   border-radius: var(--radius-s);
   padding: 8px 12px;
 }
+/* ===========================================================================
+   Developer / API / MCP Console (W067) — the /developer surface's styles.
+   Scoped under aurum-dev-*; the same ShareNet-dominant system the shell
+   defines (warm off-white canvas, soft graphite, hairlines, status pills,
+   progressive disclosure, restrained motion — no new chrome vocabulary).
+   =========================================================================== */
+
+.aurum-dev-keys,
+.aurum-dev-webhooks,
+.aurum-dev-deliveries,
+.aurum-dev-activity-feed,
+.aurum-dev-mcp-tools {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aurum-dev-key,
+.aurum-dev-webhook,
+.aurum-dev-delivery,
+.aurum-dev-activity {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: 12px 16px 14px;
+}
+
+.aurum-dev-key-controls {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* The one-time raw-key reveal: quiet, high-contrast, unmissable. */
+
+.aurum-dev-reveal {
+  margin-top: 10px;
+  border: 1px solid #bce3cf;
+  background: var(--surface);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-start;
+}
+
+.aurum-dev-reveal-key {
+  display: block;
+  padding: 8px 10px;
+  background: var(--canvas);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  font-size: 12.5px;
+  word-break: break-all;
+  user-select: all;
+}
+
+.aurum-dev-reveal-note {
+  font-size: 11.5px;
+  color: var(--muted-ink);
+  line-height: 1.5;
+}
+
+/* Scope visibility: the route table grouped by capability family. */
+
+.aurum-dev-scopes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aurum-dev-scope-count {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-dev-operations {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aurum-dev-operation {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12.5px;
+  flex-wrap: wrap;
+}
+
+.aurum-dev-operation-method {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-deep);
+  min-width: 52px;
+}
+
+.aurum-dev-operation-name {
+  color: var(--muted-ink);
+  font-size: 11.5px;
+}
+
+/* Webhook deliveries + the attempt evidence trail. */
+
+.aurum-dev-attempts {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: 12px 14px;
+}
+
+.aurum-dev-attempt-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aurum-dev-attempt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aurum-dev-attempt-no {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  min-width: 26px;
+}
+
+.aurum-dev-attempt-meta {
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-dev-envelope {
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  overflow-x: auto;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.aurum-dev-envelope code {
+  font-family: var(--mono);
+  white-space: pre;
+}
+
+/* MCP connection instructions: two quiet steps + the tool catalog. */
+
+.aurum-dev-mcp-guide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.aurum-dev-mcp-step {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: 12px 14px;
+}
+
+.aurum-dev-mcp-tool {
+  border-top: 1px solid var(--line);
+  padding: 9px 0 7px;
+}
+
+.aurum-dev-mcp-tools > .aurum-dev-mcp-tool:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Small screens: action rows go full-width and the guide stacks. */
+
+@media (max-width: 560px) {
+  .aurum-ai-action-inline {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .aurum-dev-mcp-guide {
+    grid-template-columns: 1fr;
+  }
+}

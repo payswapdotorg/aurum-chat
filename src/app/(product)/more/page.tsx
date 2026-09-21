@@ -117,7 +117,7 @@ export default async function MorePage({
 
       <Panel title="Platform tools" blurb="Developer and AI configuration surfaces:">
         <div className="aurum-hub-grid">
-          <div className="aurum-hub-card">
+          <Link className="aurum-hub-card" href="/developer">
             <span className="aurum-hub-label">
               <ShellGlyph name="developer" size={16} />
               Developer · API · MCP
@@ -126,8 +126,8 @@ export default async function MorePage({
               API keys and scopes, webhooks, MCP connection instructions,
               integration activity.
             </span>
-            <span className="aurum-hub-note">coming to this area</span>
-          </div>
+            <span className="aurum-hub-note">developer console</span>
+          </Link>
           <Link className="aurum-hub-card" href="/ai">
             <span className="aurum-hub-label">
               <ShellGlyph name="spark" size={16} />
