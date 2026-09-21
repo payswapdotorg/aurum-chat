@@ -36,7 +36,6 @@ import { MarketplaceError, createPackage, listReviewQueue } from '@/modules/mark
 import { ApiError, createApiKey } from '@/modules/api/contract';
 import { listGoals } from '@/modules/goals/contract';
 import { getActionRequest } from '@/modules/actions/contract';
-import { LlmError, registerAiProviderAccount } from '@/modules/llm/contract';
 
 let report: DemoSeedReport;
 
@@ -189,34 +188,6 @@ describe('claim-gated operations per role', () => {
     await expect(
       createApiKey(ctx(employee), { label: 'should-not-exist', scopes: ['goals:read'] }),
     ).rejects.toBeInstanceOf(ApiError);
-  });
-
-  it('the manager session configures AI provider accounts (W066: llm:administer rides the session); the employee cannot', async () => {
-    const manager = await signInPersona('manager');
-    expect(manager.authority).toContain('llm:administer');
-    const registered = await registerAiProviderAccount(ctx(manager), {
-      provider: 'mistral',
-      label: 'Meridian Mistral (session demo)',
-      credentialRef: 'secret-store://demo/mistral-meridian-session',
-      scopes: ['analysis'],
-      capabilities: ['text-generation'],
-      maxDataClassification: 'internal',
-      priority: 2,
-    });
-    expect(registered.created).toBe(true);
-
-    const employee = await signInPersona('employee');
-    await expect(
-      registerAiProviderAccount(ctx(employee), {
-        provider: 'groq',
-        label: 'should-not-exist',
-        credentialRef: 'secret-store://demo/groq-session-refused',
-        scopes: ['analysis'],
-        capabilities: ['text-generation'],
-        maxDataClassification: 'internal',
-        priority: 3,
-      }),
-    ).rejects.toBeInstanceOf(LlmError);
   });
 
   it('the manager decides the pending approval — and the request shows the decision', async () => {

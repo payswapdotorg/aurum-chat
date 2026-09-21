@@ -14,16 +14,13 @@
 //     exactly what the matrix predicts (the integration tests prove it
 //     against the real contracts, not against this table).
 //   * harness-only capabilities are real authority claims in the domain
-//     ('marketplace:administer') that never ride a tenant session at this
-//     base — W058's interim model excludes them on purpose ("platform
-//     claims never ride a tenant session"), and the authority-matrix work
-//     item will fold them in later. The harness uses them through explicit
-//     contract contexts while SEEDING only. The matrix says so honestly
-//     instead of pretending a browser session can carry them.
-//     ('llm:administer' lived here until W066 delivered the AI/BYOA product
-//     surface: configuring AI providers is a TENANT-level management
-//     action — plan §8 gate 8 — so the claim now rides owner/admin
-//     sessions with the rest of the management set.)
+//     ('marketplace:administer', 'llm:administer') that never ride a
+//     tenant session at this base — W058's interim model excludes them on
+//     purpose ("platform claims never ride a tenant session"), and the
+//     authority-matrix work item will fold them in later. The harness
+//     uses them through explicit contract contexts while SEEDING only.
+//     The matrix says so honestly instead of pretending a browser
+//     session can carry them.
 //   * open capabilities need no claims — every verified tenant member
 //     reads/acts there.
 //
@@ -146,9 +143,9 @@ export const DEMO_CAPABILITIES: readonly DemoCapability[] = [
     id: 'configure-ai',
     label: 'Configure AI providers (BYOA)',
     description:
-      'Register tenant-owned AI provider accounts, scopes, budgets and availability (the AI/BYOA surface — /ai).',
+      'Register tenant-owned AI provider accounts, scopes, budgets and availability (the AI/BYOA surface).',
     requiredClaims: ['llm:administer'],
-    claimSource: 'tenant-role',
+    claimSource: 'harness-only',
   },
 ];
 
@@ -178,7 +175,7 @@ export const DEMO_ROLES: readonly DemoRole[] = [
     id: 'manager',
     label: 'Manager',
     description:
-      'The company\u2019s operations lead (tenant owner): sees every intelligence surface, decides approvals, administers policies, configures the company\u2019s AI accounts and invites the team.',
+      'The company\u2019s operations lead (tenant owner): sees every intelligence surface, decides approvals, administers policies and invites the team.',
     tenantRole: 'owner',
     capabilities: [
       'chat',
@@ -190,7 +187,6 @@ export const DEMO_ROLES: readonly DemoRole[] = [
       'contribute-knowledge',
       'approve-actions',
       'administer-policies',
-      'configure-ai',
     ],
   },
   {

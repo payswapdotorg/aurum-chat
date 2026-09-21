@@ -25,13 +25,6 @@ import type { TenantRole } from '@/modules/organizations/contract';
  * platform-governed). The platform claim `marketplace:administer`
  * (package review) is deliberately absent: platform claims never ride a
  * tenant session, exactly like `organizations:provision`.
- *
- * `llm:administer` (W066 completion of the interim set): the llm module's
- * own management claim for AI provider accounts and availability —
- * attaching external AI endpoints to a tenant is a management action (the
- * llm contract gates on exactly this string). It is TENANT-level like its
- * siblings; the list originally shipped without it, which made every
- * session unable to manage BYOA accounts.
  */
 export const MANAGEMENT_CLAIMS: readonly string[] = [
   'actions:approve',
@@ -40,7 +33,6 @@ export const MANAGEMENT_CLAIMS: readonly string[] = [
   'extensions:administer',
   'identity:attest',
   'identity:link',
-  'llm:administer',
   'rewards:administer',
   'marketplace:submit',
   'api:administer',
