@@ -99,3 +99,27 @@ LEARNING MOAT (per ADR-0016/0017/0018/0019)
   W013 + W041 + W051 + W052 + W054 → W055 Quality Measurement
   W053 + W054 + W055 → W056 Longitudinal Company Simulator (per LONGITUDINAL-BENCHMARK.md)
 ```
+
+
+## Post-W070 journey / deployment hardening
+
+```text
+W057 + W060 → W071 WhatsApp-like Conversation Fidelity
+W061 + W065 + W071 → W072 Conversational Intelligence Continuity
+W062 + W072 → W073 Chat-based Learning Requests
+W063 + W072 → W074 Conversational Interventions / Approval Continuity
+W064 + W066 + W067 + W071 → W075 Natural Capability Discovery
+W070 + W071 + W072 + W073 + W074 + W075 → W076 Real Browser Journey / Visual Conformance
+W069 → W077 Free-Tier Deployment Instantiation
+W076 + W077 → W078 Post-Deployment Smoke / Operations Proof
+```
+
+### Three-worker waves
+
+```text
+Wave 1:  W071 | W075 | W077
+Wave 2:  W072 | W073 | W074
+Wave 3:  W076 | W078 | Tech Lead integration/reconciliation
+```
+
+Ownership rule: W071 owns chat presentation/interaction chrome; W072 owns the reusable conversational-card/context contract; W073 owns learning surfaces; W074 owns intervention surfaces; W075 owns navigation/discovery; W077 owns deployment/infra; W076/W078 own verification. Do not concurrently edit the same primitive outside these ownership boundaries.
