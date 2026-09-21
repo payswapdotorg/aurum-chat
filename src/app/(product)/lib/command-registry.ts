@@ -83,6 +83,41 @@ export const INTELLIGENCE_DESTINATIONS: readonly {
   },
 ];
 
+/**
+ * The learning surface's keyboard destination (W062): knowledge
+ * requests, contributions and rewards — the employee learning journey
+ * (plan §2 Journey F), keyboard-reachable by name.
+ */
+export const LEARNING_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'learning',
+    title: 'Learning — knowledge requests & contributions',
+    subtitle:
+      'Answer Aurum’s targeted questions; see contribution acknowledgement and reward status',
+    href: '/learning',
+    keywords: [
+      'learning',
+      'missions',
+      'knowledge',
+      'questions',
+      'requests',
+      'answer',
+      'ask',
+      'contribution',
+      'contributions',
+      'acknowledgement',
+      'rewards',
+      'evidence',
+    ],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -142,6 +177,20 @@ export function buildShellCommands(): ShellCommand[] {
       subtitle: destination.subtitle,
       group: 'Navigate',
       icon: 'intelligence',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W062 — the learning surface's destination (knowledge requests,
+  // contributions and rewards; keyboard-reachable by name).
+  for (const destination of LEARNING_DESTINATIONS) {
+    commands.push({
+      id: `learning:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'people',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
     });
