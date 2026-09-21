@@ -56,13 +56,12 @@ const REPO_ROOT = fileURLToPath(new URL('../../..', import.meta.url));
  * The frozen, documented exceptions (dependency-surface gaps this work
  * item reports under DEVIATIONS — see the file header). Keys are
  * `rule @ route-pattern`.
+ *
+ * W071 removed the former `single-h1 @ /chat` exception: the conversation
+ * surface now renders exactly one screen-reader-only h1 ("Chat with
+ * Aurum"), recorded here per the fix protocol above.
  */
 const DOCUMENTED_EXCEPTIONS: readonly { key: string; owner: string; why: string }[] = [
-  {
-    key: 'single-h1 @ /chat',
-    owner: 'W060 (Aurum chat)',
-    why: 'the conversation surface renders no page heading (an sr-only h1 would satisfy the rule)',
-  },
   {
     key: 'single-h1 @ /connections',
     owner: 'W059 (connection hub)',

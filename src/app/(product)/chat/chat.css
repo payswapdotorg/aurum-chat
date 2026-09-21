@@ -1,33 +1,47 @@
 /* ============================================================================
-   Aurum chat (W060) — the conversation surface's entire stylesheet.
-   Scoped under `.aurum-chat-app` inside the product shell (`.aurum-shell`
-   owns the tokens; the root layout stays untouched — the connections-hub
-   precedent).
+   Aurum chat (W060 base, W071 conversation fidelity) — the conversation
+   surface's entire stylesheet. Scoped under `.aurum-chat-app` inside the
+   product shell (`.aurum-shell` owns the tokens; the root layout stays
+   untouched — the connections-hub precedent).
 
-   VISUAL DIRECTION (frozen 2026-09-18): ShareNet defines the visual
-   language — warm off-white canvas, soft graphite typography, restrained
-   neutrals, subtle teal/green accents, hairline borders, status pills,
-   quiet states, restrained motion. WhatsApp defines the INTERACTION
-   MODEL only — conversation list, message bubbles with compact
-   timestamps/statuses, unread states, typing/working indicator, compact
-   composer. No WhatsApp colors or chrome; no glassmorphism; zero
-   gradients; gold/amber never dominates.
+   VISUAL DIRECTION (frozen 2026-09-18, corrected 2026-09-21 §2): ShareNet
+   defines the visual language — warm off-white canvas, soft graphite
+   typography, restrained neutrals, subtle teal/green accents, hairline
+   borders, status pills, quiet states, restrained motion. WhatsApp defines
+   the INTERACTION MODEL only — ONE messenger window (conversation list
+   pane + thread pane), message bubbles with compact timestamps and
+   delivery state, day separators, unread treatment, a working indicator,
+   a compact multiline composer, and one pane at a time on mobile with a
+   back transition. No WhatsApp colors, chrome or branding; no
+   glassmorphism; zero gradients; gold/amber never dominates (it appears
+   only in warning/degraded states).
    ========================================================================== */
 
-/* The chat workspace is an APP surface, not a document surface: widen the
-   shell's content column a little while it is open (scoped to pages that
-   actually render the chat app). */
+/* W071 — while the messenger is open it is the dominant surface: widen the
+   shell's content column and tighten the shell's frame padding. Scoped to
+   pages that actually render the chat app (`:has` guard — the shell's own
+   stylesheet and every other surface are untouched). */
 .aurum-shell:has(.aurum-chat-app) .aurum-main-inner {
-  max-width: 1180px;
+  max-width: 1360px;
 }
+
+/* ---- the messenger window ---- */
 
 .aurum-chat-app {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  /* App-like height: the panes scroll internally, not the page. */
-  height: calc(100dvh - 196px);
-  min-height: 460px;
+  grid-template-columns: 1fr; /* mobile: one pane at a time */
+  gap: 0;
+  /* App-like height: the panes scroll internally, never the page.
+     Mobile frame: topbar (56) + main padding (24) + bottom-nav
+     clearance (72) + safe area — the window ends at the nav's edge. */
+  height: calc(100dvh - 152px - env(safe-area-inset-bottom, 0px));
+  min-height: 420px;
+  /* ONE window: the list and the thread are internal panes of a single
+     bordered surface (not two floating cards) — the messenger read. */
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  overflow: hidden;
 }
 
 /* ---- conversation list pane ---- */
@@ -36,27 +50,113 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-l);
-  overflow: hidden;
 }
 
 .aurum-chat-listhead {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 12px 12px 10px 14px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
 
-.aurum-chat-listhead .aurum-chat-name {
-  font-size: 15px;
+.aurum-chat-listhead-id {
+  flex: 1;
+  min-width: 0;
 }
 
+.aurum-chat-listhead .aurum-chat-name {
+  font-size: 15px;
+  margin: 0;
+}
+
+/* The contact status line (the WhatsApp header pattern, ShareNet voice):
+   a small presence dot + "on duty". */
 .aurum-chat-listhead .aurum-chat-role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11.5px;
+  color: var(--pos-text);
+  margin: 1px 0 0;
+}
+
+.aurum-chat-listhead .aurum-presence-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+}
+
+/* The new-conversation affordance — a compact 44px compose control in the
+  list header (the messenger's new-chat button), not a banner. */
+.aurum-chat-newchat {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.aurum-chat-newchat:hover {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.aurum-chat-newchat[aria-current='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+/* The search/filter affordance (client-side over the loaded list). */
+.aurum-chat-search {
+  position: relative;
+  padding: 10px 12px;
+}
+
+.aurum-chat-search input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px 8px 34px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.aurum-chat-search input::placeholder {
+  color: var(--faint-ink);
+}
+
+.aurum-chat-search input:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 0;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.aurum-chat-search-icon {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  color: var(--faint-ink);
+  pointer-events: none;
 }
 
 .aurum-chat-list {
@@ -79,14 +179,18 @@
   border-radius: 999px;
 }
 
+/* One conversation row: avatar + (title/time, preview) + unread badge. */
 .aurum-chat-convo {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   text-align: left;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 10px;
+  min-height: 68px;
   cursor: pointer;
   font: inherit;
   color: inherit;
@@ -105,6 +209,26 @@
 .aurum-chat-convo:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: -2px;
+}
+
+.aurum-chat-convo-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--graphite);
+  color: #f9f8f7;
+  font-weight: 700;
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+}
+
+.aurum-chat-convo-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
 .aurum-chat-convo-top {
@@ -132,7 +256,6 @@
 }
 
 .aurum-chat-convo-preview {
-  margin-top: 3px;
   font-size: 12.5px;
   color: var(--muted-ink);
   white-space: nowrap;
@@ -140,19 +263,13 @@
   text-overflow: ellipsis;
 }
 
-.aurum-chat-convo-foot {
-  margin-top: 5px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.aurum-chat-convo-count {
-  font-size: 11px;
+.aurum-chat-convo-preview-empty {
+  font-style: italic;
   color: var(--faint-ink);
 }
 
 .aurum-chat-unread {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -182,43 +299,9 @@
   color: var(--muted-ink);
 }
 
-/* The "new conversation" affordance at the top of the list. */
-.aurum-chat-newconv {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  cursor: pointer;
-  font: inherit;
-  transition: border-color 120ms ease, background-color 120ms ease;
-}
-
-.aurum-chat-newconv:hover {
-  border-color: var(--accent);
-  background: var(--bg);
-}
-
-.aurum-chat-newconv[aria-current='true'] {
-  border-style: solid;
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.aurum-chat-newconv .aurum-chat-convo-title {
-  color: var(--accent-ink);
-}
-
-.aurum-chat-newconv .aurum-chat-convo-count {
-  display: block;
-  margin-top: 3px;
-}
-
-/* Compact starter chips inside the list pane (the mobile first-run
-   discovery surface — hidden on desktop, where the full starter grid
-   lives in the thread pane). */
+/* Compact starter chips inside the list pane — the first-run discovery
+   surface on mobile, shown only until the first conversation exists
+   (progressive disclosure; desktop's welcome state owns the full grid). */
 .aurum-chat-pane-starters {
   display: none;
 }
@@ -240,6 +323,12 @@
   font: inherit;
 }
 
+.aurum-chat-welcome-signed {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
 /* ---- thread pane ---- */
 
 .aurum-chat-thread {
@@ -248,17 +337,23 @@
   min-height: 0;
   min-width: 0;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-l);
-  overflow: hidden;
 }
 
 .aurum-chat-thread-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--line);
+}
+
+/* The thread header's contact block (the WhatsApp pattern): avatar +
+   title + live status — "working…" while a turn executes, presence
+   otherwise. */
+.aurum-chat-avatar.aurum-chat-avatar-sm {
+  width: 38px;
+  height: 38px;
+  font-size: 15px;
 }
 
 .aurum-chat-back {
@@ -290,26 +385,51 @@
   text-overflow: ellipsis;
 }
 
-.aurum-chat-thread-title span {
+.aurum-chat-thread-status {
   display: block;
   font-size: 11.5px;
   color: var(--muted-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+.aurum-chat-thread-status[data-working='true'] {
+  color: var(--accent-ink);
+}
+
+/* Management chrome stays available but visually secondary: the Evidence
+   deep link is a quiet ghost control, never a primary action. */
 .aurum-chat-thread-link {
   flex: none;
   font-size: 12px;
   font-weight: 600;
-  color: var(--accent-ink);
+  color: var(--muted-ink);
   text-decoration: none;
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 6px 12px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
   background: var(--bg);
 }
 
 .aurum-chat-thread-link:hover {
   border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* The reconnect strip — the poll/degradation state, calm and inline. */
+.aurum-chat-conn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--warn-soft);
+  color: var(--warn-text);
+  font-size: 12px;
 }
 
 /* ---- timeline ---- */
@@ -318,7 +438,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 16px 10px;
+  padding: 16px 14px 12px;
   background: var(--bg);
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
@@ -336,7 +456,7 @@
 .aurum-chat-day {
   display: flex;
   justify-content: center;
-  margin: 10px 0 14px;
+  margin: 12px 0 10px;
 }
 
 .aurum-chat-day span {
@@ -351,9 +471,21 @@
   padding: 3px 12px;
 }
 
+/* ---- messages (runs, bubbles, metadata) ---- */
+
+/* Consecutive same-side messages form a run: tight spacing inside the
+   run, a breath between runs — the messenger rhythm. */
 .aurum-chat-msg {
   display: flex;
-  margin: 2px 0;
+  margin: 1px 0;
+}
+
+.aurum-chat-msg[data-group-first='true'] {
+  margin-top: 10px;
+}
+
+.aurum-chat-msg[data-group-last='true'] {
+  margin-bottom: 6px;
 }
 
 .aurum-chat-msg[data-side='member'] {
@@ -368,18 +500,30 @@
   max-width: min(78%, 560px);
   border: 1px solid var(--line);
   border-radius: var(--radius-l);
-  padding: 9px 13px 6px;
+  padding: 8px 12px 5px;
   background: var(--surface);
 }
 
 .aurum-chat-msg[data-side='member'] .aurum-chat-bubble {
   background: var(--accent-soft);
   border-color: var(--accent);
-  border-bottom-right-radius: 4px;
 }
 
-.aurum-chat-msg[data-side='aurum'] .aurum-chat-bubble {
-  border-bottom-left-radius: 4px;
+/* The tail corner renders ONLY on the last bubble of a run. */
+.aurum-chat-msg[data-side='member'][data-group-last='true'] .aurum-chat-bubble {
+  border-bottom-right-radius: 5px;
+}
+
+.aurum-chat-msg[data-side='member']:not([data-group-last='true']) .aurum-chat-bubble {
+  border-bottom-right-radius: 7px;
+}
+
+.aurum-chat-msg[data-side='aurum'][data-group-last='true'] .aurum-chat-bubble {
+  border-bottom-left-radius: 5px;
+}
+
+.aurum-chat-msg[data-side='aurum']:not([data-group-last='true']) .aurum-chat-bubble {
+  border-bottom-left-radius: 7px;
 }
 
 .aurum-chat-msg[data-pending='true'] .aurum-chat-bubble {
@@ -392,6 +536,7 @@
   color: var(--ink);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  margin: 0;
 }
 
 .aurum-chat-msg[data-side='member'] .aurum-chat-bubble-text {
@@ -415,12 +560,21 @@
 .aurum-chat-status {
   display: inline-flex;
   align-items: center;
+  gap: 3px;
 }
 
 .aurum-chat-working-row {
   display: flex;
   justify-content: flex-start;
   margin: 10px 0 4px;
+}
+
+.aurum-chat-working-note {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-l);
+  border-bottom-left-radius: 5px;
+  padding: 8px 13px;
 }
 
 /* ---- answer cards (inside Aurum messages) ---- */
@@ -507,8 +661,8 @@
   border: 1px solid var(--accent);
   background: var(--accent-soft);
   border-radius: var(--radius-s);
-  padding: 6px 12px;
-  min-height: 32px;
+  padding: 8px 12px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
 }
@@ -524,8 +678,8 @@
   background: var(--bg);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-s);
-  padding: 6px 12px;
-  min-height: 32px;
+  padding: 8px 12px;
+  min-height: 44px;
   cursor: pointer;
 }
 
@@ -625,10 +779,10 @@
 
 .aurum-chat-composer {
   border-top: 1px solid var(--line);
-  padding: 12px 14px;
+  padding: 10px 14px;
   background: var(--surface);
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .aurum-chat-composer-row {
@@ -729,7 +883,7 @@
   background: var(--risk-soft);
   border: 1px solid var(--risk);
   border-radius: var(--radius-s);
-  padding: 8px 12px;
+  padding: 6px 10px;
 }
 
 .aurum-chat-retry {
@@ -741,86 +895,84 @@
   background: transparent;
   border: 1px solid var(--risk);
   border-radius: var(--radius-s);
+  min-height: 36px;
   padding: 4px 10px;
   cursor: pointer;
 }
 
-/* ---- the no-conversation state (Aurum identity + discovery starters) ---- */
-
-.aurum-chat-empty {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-l);
-  overflow: hidden;
-}
-
-.aurum-chat-empty-head {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--line);
-}
-
-.aurum-chat-empty-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 18px 20px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
-}
-
-.aurum-chat-empty-body .aurum-starter-grid {
-  margin: 0;
-}
-
 /* ---- responsive: the WhatsApp-like mode switch ---- */
 
-/* Desktop: both panes always visible. */
+/* Desktop: both panes always visible, split by an internal hairline; the
+   window fills the shell frame (topbar hidden, footer below). */
 @media (min-width: 920px) {
-  .aurum-chat-app {
-    grid-template-columns: 316px minmax(0, 1fr);
-    height: calc(100dvh - 168px);
+  .aurum-shell:has(.aurum-chat-app) .aurum-main {
+    padding: 18px 24px 12px;
   }
+
+  .aurum-chat-app {
+    grid-template-columns: 330px minmax(0, 1fr);
+    /* Desktop frame: main padding (18 + 12) + the shell footer (~48). */
+    height: calc(100dvh - 78px);
+    min-height: 460px;
+  }
+
+  .aurum-chat-thread {
+    border-left: 1px solid var(--line);
+  }
+
   .aurum-chat-app[data-mobile-view='list'] .aurum-chat-listpane,
   .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-listpane {
     display: flex;
   }
+
   .aurum-chat-app[data-mobile-view='list'] .aurum-chat-thread,
-  .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-thread,
-  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-empty,
-  .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-empty {
+  .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-thread {
     display: flex;
   }
 }
 
-/* Mobile: one pane at a time — the conversation-first experience. */
+/* Mobile: one pane at a time — the conversation-first experience, with a
+   restrained slide+fade entrance when a pane enters (back navigation
+   included). The window ends where the fixed bottom navigation begins. */
 @media (max-width: 919.98px) {
+  .aurum-shell:has(.aurum-chat-app) .aurum-main {
+    padding: 12px 10px;
+  }
+
   .aurum-chat-app {
-    height: calc(100dvh - 208px);
+    height: calc(100dvh - 152px - env(safe-area-inset-bottom, 0px));
     min-height: 420px;
   }
+
   .aurum-chat-app[data-mobile-view='thread'] .aurum-chat-listpane {
     display: none;
   }
-  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-thread,
-  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-empty {
+
+  .aurum-chat-app[data-mobile-view='list'] .aurum-chat-thread {
     display: none;
   }
+
   .aurum-chat-back {
     display: grid;
     place-items: center;
   }
+
   .aurum-chat-bubble {
     max-width: 86%;
   }
+
   .aurum-chat-cards {
     max-width: 100%;
   }
+
+  .aurum-chat-thread {
+    animation: aurum-chat-enter-right 200ms ease;
+  }
+
+  .aurum-chat-listpane {
+    animation: aurum-chat-enter-left 200ms ease;
+  }
+
   .aurum-chat-pane-starter {
     display: block;
     width: 100%;
@@ -832,17 +984,19 @@
     background: var(--bg);
     border: 1px solid var(--line);
     border-radius: 999px;
-    padding: 8px 14px;
-    min-height: 40px;
+    padding: 10px 14px;
+    min-height: 44px;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   .aurum-chat-pane-starter:hover {
     border-color: var(--accent);
     background: var(--accent-soft);
   }
+
   .aurum-chat-pane-starters {
     display: grid;
     gap: 6px;
@@ -851,10 +1005,29 @@
   }
 }
 
+@keyframes aurum-chat-enter-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes aurum-chat-enter-left {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+}
+
 /* Reduced motion: the working dots already respect the shell's global
-   reduce rule; the send pulse follows it too. */
+   reduce rule; the send pulse and the pane transitions follow it too. */
 @media (prefers-reduced-motion: reduce) {
   .aurum-chat-send[data-busy='true'] .aurum-chat-send-icon {
+    animation: none;
+  }
+
+  .aurum-chat-thread,
+  .aurum-chat-listpane {
     animation: none;
   }
 }

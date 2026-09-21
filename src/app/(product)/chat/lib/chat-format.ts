@@ -120,6 +120,59 @@ export function deliveryStatusLabel(message: ChatMessageView): string {
 }
 
 // ---------------------------------------------------------------------------
+// Conversation filtering (the list pane's search affordance — W071)
+// ---------------------------------------------------------------------------
+
+/**
+ * Filter the loaded conversation list for the search field. The chat state
+ * carries the most recent threads (CHAT_LIST_LIMIT), so the filter runs
+ * client-side over exactly what the list renders — title and preview text,
+ * case-insensitively. An empty/whitespace query is "no filter": every
+ * conversation shows (the WhatsApp search box behavior).
+ */
+export function filterConversations(
+  conversations: readonly ConversationListItemView[],
+  query: string,
+): ConversationListItemView[] {
+  const needle = query.trim().toLowerCase();
+  if (needle === '') return [...conversations];
+  return conversations.filter((conversation) => {
+    const title = conversation.title.toLowerCase();
+    const preview = conversation.preview?.toLowerCase() ?? '';
+    return title.includes(needle) || preview.includes(needle);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Bubble grouping (consecutive same-side runs — W071 message rhythm)
+// ---------------------------------------------------------------------------
+
+/** Which run-position flags a bubble carries (drives spacing + tail radius). */
+export interface BubbleGroup {
+  /** First bubble of a consecutive same-side run (larger gap above). */
+  first: boolean;
+  /** Last bubble of a run (the only bubble that renders the tail corner). */
+  last: boolean;
+}
+
+/**
+ * Derive the run position of one message from its timeline neighbors:
+ * a run is a consecutive streak of same-side messages. `previous`/`next`
+ * are the RENDERED neighbors — pass undefined where the run must break
+ * (start/end of the timeline, or across a day separator, which the
+ * workspace already knows). Pure and total: undefined edges break runs.
+ */
+export function bubbleGroup(
+  previous: ChatMessageView | undefined,
+  message: ChatMessageView,
+  next: ChatMessageView | undefined,
+): BubbleGroup {
+  const first = previous === undefined || previous.side !== message.side;
+  const last = next === undefined || next.side !== message.side;
+  return { first, last };
+}
+
+// ---------------------------------------------------------------------------
 // Unread / new activity (client-side last-seen state)
 // ---------------------------------------------------------------------------
 
