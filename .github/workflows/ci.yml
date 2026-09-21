@@ -1,0 +1,81 @@
+# CI (W069 — plan §7: "GitHub Actions for CI" and the deployment pipeline
+# step "CI: typecheck + test + arch + lint + migration smoke").
+#
+# The four repository gates run on every pull request and push, then the
+# real-provider stage exercises the deployment path itself: a REAL
+# PostgreSQL server (service container, the same node-postgres backend
+# Neon uses — "real external PostgreSQL") takes the full migration set,
+# and a REAL Redis server (the same ioredis backend Upstash speaks —
+# "real queue/worker execution") carries the worker integration suite.
+# The real-provider tests skip automatically when the URLs are absent, so
+# local gate runs never require servers.
+#
+# Browser E2E joins this pipeline with W070 (the plan assigns the journey
+# matrix there); this workflow is the quality + deployment smoke spine.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aurum_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      AURUM_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/aurum_ci
+      AURUM_TEST_REDIS_URL: redis://localhost:6379
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck (tsc --noEmit)
+        run: bun run typecheck
+
+      - name: Lint (eslint)
+        run: bun run lint
+
+      - name: Architecture gate (module boundaries + tenant scoping)
+        run: bun run arch
+
+      - name: Unit + integration tests (embedded PostgreSQL)
+        run: bun run test
+
+      - name: Migration smoke against real PostgreSQL
+        run: bun run migrate
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/aurum_ci
+
+      - name: Real-provider integration suite (real PostgreSQL + real Redis)
+        run: bun run test

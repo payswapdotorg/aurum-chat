@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["iad1"],
+  "buildCommand": "bun run vercel:build",
+  "crons": [
+    {
+      "path": "/api/worker",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
