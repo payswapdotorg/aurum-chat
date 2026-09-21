@@ -177,6 +177,12 @@ export interface ChatCard {
   meta: string[];
   /** The tower deep link. */
   href: string;
+  /**
+   * The deep link's affordance label (W061 — proactive briefing cards
+   * deep-link into the product intelligence workflow, not management
+   * mode). Null/absent renders the canonical 'Open in management mode'.
+   */
+  linkLabel?: string | null;
   /** The human decision affordance (approval cards only). */
   decision:
     | { requestId: string; status: 'pending' | 'approved' | 'rejected' }
@@ -403,6 +409,7 @@ export function normalizeChatCard(value: unknown): ChatCard | null {
     tone: pillTone(value['tone']),
     meta: normalizeLines(value['meta']),
     href,
+    linkLabel: boundedText(value['linkLabel'], 80),
     decision,
     context: normalizeContext(value['context']),
   };

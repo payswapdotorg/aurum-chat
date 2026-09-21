@@ -48,6 +48,41 @@ export const MARKETPLACE_DESTINATIONS: readonly {
   },
 ];
 
+/**
+ * The intelligence area's keyboard destinations (W061). The area hub is
+ * already a PRODUCT_AREAS command; the Today briefing is the workflow's
+ * primary surface, so Cmd/Ctrl+K reaches it by name ("today", "briefing",
+ * "findings") without a second navigation list.
+ */
+export const INTELLIGENCE_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'briefing',
+    title: 'Intelligence — Today’s briefing',
+    subtitle: 'What Aurum found on its own: severity, why it matters, what’s next',
+    href: '/intelligence',
+    keywords: [
+      'today',
+      'briefing',
+      'findings',
+      'proactive',
+      'attention',
+      'intelligence',
+      'chain',
+      'goals',
+      'unknowns',
+      'missions',
+      'risks',
+      'opportunities',
+    ],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -93,6 +128,20 @@ export function buildShellCommands(): ShellCommand[] {
       subtitle: destination.subtitle,
       group: 'Navigate',
       icon: 'marketplace',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W061 — the intelligence area's Today briefing destination (the
+  // product-mode discovery workflow; keyboard-reachable by name).
+  for (const destination of INTELLIGENCE_DESTINATIONS) {
+    commands.push({
+      id: `intelligence:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'intelligence',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
     });

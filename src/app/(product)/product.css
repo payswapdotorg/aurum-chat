@@ -848,6 +848,419 @@ body:has(.aurum-shell) {
   color: var(--faint-ink);
 }
 
+/* ---- intelligence workflow (W061: Today briefing + the navigable chain) ---- */
+
+/* The chain rail — the six navigable steps, wrapping on small screens. */
+
+.aurum-intel-chain {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.aurum-intel-chain-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 12px 5px 6px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-intel-chain-step[data-active="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.aurum-intel-chain-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.aurum-intel-chain-step[data-active="true"] .aurum-intel-chain-index {
+  background: var(--accent);
+  color: #fff;
+}
+
+.aurum-intel-chain-name {
+  font-weight: 600;
+}
+
+.aurum-intel-chain-count {
+  font-size: 11px;
+  color: var(--faint-ink);
+}
+
+.aurum-intel-chain-step[data-active="true"] .aurum-intel-chain-count {
+  color: var(--accent-ink);
+}
+
+/* The paired reading aids — always visible (the work item's acceptance). */
+
+.aurum-intel-whynext {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.aurum-intel-why,
+.aurum-intel-next {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.aurum-intel-next {
+  border-color: #bfe3d3;
+  background: #fbfefd;
+}
+
+.aurum-intel-aid-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint-ink);
+  margin-bottom: 4px;
+}
+
+.aurum-intel-next .aurum-intel-aid-label {
+  color: var(--accent-ink);
+}
+
+.aurum-intel-why p,
+.aurum-intel-next p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  max-width: 88ch;
+}
+
+/* The proactive findings feed (Today's briefing). */
+
+.aurum-intel-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.aurum-intel-finding {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.aurum-intel-finding[data-kind="risk"],
+.aurum-intel-finding[data-kind="capability-gap"],
+.aurum-intel-finding[data-kind="contradiction"] {
+  border-left: 3px solid var(--warn);
+}
+
+.aurum-intel-finding[data-kind="unknown"] {
+  border-left: 3px solid var(--accent);
+}
+
+.aurum-intel-finding[data-kind="opportunity"] {
+  border-left: 3px solid var(--pos);
+}
+
+.aurum-intel-finding-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-intel-finding-kind {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint-ink);
+}
+
+.aurum-intel-finding-when {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--faint-ink);
+}
+
+.aurum-intel-finding-title {
+  margin: 8px 0 0;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.aurum-intel-finding-title a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.aurum-intel-finding-title a:hover {
+  color: var(--accent-ink);
+  border-bottom-color: var(--accent);
+}
+
+.aurum-intel-finding-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.aurum-intel-finding-foot {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--faint-ink);
+}
+
+.aurum-intel-finding-foot a {
+  color: var(--muted-ink);
+}
+
+/* The generic chain rows (unknowns, missions, gaps, evidence, beliefs). */
+
+.aurum-intel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aurum-intel-list > li {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+
+.aurum-intel-list > li:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.aurum-intel-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-intel-row-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+a.aurum-intel-row-title {
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+a.aurum-intel-row-title:hover {
+  color: var(--accent-ink);
+  border-bottom-color: var(--accent);
+}
+
+.aurum-intel-row-text {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  max-width: 88ch;
+}
+
+.aurum-intel-row-foot {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--faint-ink);
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.aurum-intel-row-meta {
+  font-size: 12px;
+  color: var(--muted-ink);
+}
+
+.aurum-intel-row-links {
+  margin-top: 4px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+}
+
+.aurum-intel-inline-link {
+  color: var(--accent-ink);
+  text-decoration: none;
+  border-bottom: 1px solid #bfe3d3;
+  font-size: inherit;
+}
+
+.aurum-intel-inline-link:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* Decided gap candidates inside a discovery run. */
+
+.aurum-intel-candidates {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.aurum-intel-candidate {
+  border-top: 1px dashed var(--line-strong);
+  padding: 10px 0 4px;
+}
+
+.aurum-intel-candidate[data-disposition="promoted"] .aurum-intel-row-title {
+  color: var(--ink);
+}
+
+.aurum-intel-candidate[data-disposition="dismissed"] .aurum-intel-row-title,
+.aurum-intel-candidate[data-disposition="already_covered"] .aurum-intel-row-title {
+  color: var(--muted-ink);
+  font-weight: 500;
+}
+
+/* The goal summary block and its metric lines. */
+
+.aurum-intel-goal {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-intel-metrics {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.aurum-intel-metrics > li {
+  background: var(--fill);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The attention two-block layout and the situation stats. */
+
+.aurum-intel-attention {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.aurum-intel-subhead {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aurum-intel-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.aurum-intel-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: var(--fill);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 6px 12px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-intel-stat strong {
+  font-size: 14px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The mission confidence progress (a flat bar — no gradient chrome). */
+
+.aurum-intel-progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--fill);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  margin: 6px 0 2px;
+}
+
+.aurum-intel-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 160ms ease;
+}
+
+/* The deliver affordance + degradation note. */
+
+.aurum-intel-deliver {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* 44px+ touch target on the workflow's primary write (mobile-first). */
+.aurum-intel-deliver .aurum-btn {
+  min-height: 44px;
+  padding: 10px 18px;
+}
+
+.aurum-intel-deliver-hint {
+  font-size: 12px;
+  color: var(--faint-ink);
+  max-width: 60ch;
+}
+
+.aurum-intel-degraded {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--warn-text);
+}
+
 /* ---- chat area (the conversation entry point) ---- */
 
 .aurum-chat-card {
@@ -1541,6 +1954,24 @@ body:has(.aurum-shell) {
   }
   .aurum-page-head h1 {
     font-size: 22px;
+  }
+}
+
+/* ---- small screens: the intelligence workflow stacks ---- */
+
+@media (max-width: 720px) {
+  .aurum-intel-whynext,
+  .aurum-intel-finding-body,
+  .aurum-intel-attention {
+    grid-template-columns: 1fr;
+  }
+  .aurum-intel-finding-when {
+    margin-left: 0;
+    width: 100%;
+  }
+  .aurum-intel-deliver {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

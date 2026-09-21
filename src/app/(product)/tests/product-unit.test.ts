@@ -160,6 +160,9 @@ describe('command search registry', () => {
     expect(commands.filter((c) => c.id.startsWith('tower:'))).toHaveLength(15);
     expect(commands.filter((c) => c.id.startsWith('starter:'))).toHaveLength(8);
     expect(commands.filter((c) => c.id.startsWith('action:'))).toHaveLength(2);
+    // W061: the intelligence area's Today briefing destination rides the
+    // same registry (keyboard-discoverable exactly once).
+    expect(commands.filter((c) => c.id.startsWith('intelligence:'))).toHaveLength(1);
     const ids = new Set(commands.map((command) => command.id));
     expect(ids.size).toBe(commands.length);
   });
@@ -188,9 +191,19 @@ describe('command search registry', () => {
     const attention = filterShellCommands(commands, 'attention').map(
       (r) => r.command.id,
     );
-    // Exact title of a starter beats substring matches.
-    expect(attention[0]).toBe('starter:attention');
+    // W061: the Today briefing command keyword-matches 'attention' exactly
+    // (score 4) and precedes the starters in registry order, so it leads;
+    // the starter (its 'attention' keyword also scores 4) follows, and both
+    // beat the substring-only notifications action.
+    expect(attention[0]).toBe('intelligence:briefing');
+    expect(attention[1]).toBe('starter:attention');
     expect(attention).toContain('action:notifications');
+
+    // The Today briefing is keyboard-reachable by name (W061's destination).
+    const briefing = filterShellCommands(commands, 'briefing').map(
+      (r) => r.command.id,
+    );
+    expect(briefing[0]).toBe('intelligence:briefing');
   });
 
   it('scoring: exact beats prefix beats word beats substring; no match is 0', () => {
