@@ -77,6 +77,8 @@ export interface TodayFindingItem {
   statement: string;
   executionId: string;
   detectedAt: string;
+  /** The goals the finding affects (W061 — the workflow drill-down link). */
+  affectedGoalIds: string[];
 }
 
 export interface TodayDiscovery {
@@ -224,6 +226,7 @@ export async function buildTodayView(ctx: TenantContext): Promise<TodayView> {
       statement: finding.statement,
       executionId: finding.executionId,
       detectedAt: finding.detectedAt,
+      affectedGoalIds: [...finding.affectedGoalIds],
     })),
     discovery:
       latestRun === undefined

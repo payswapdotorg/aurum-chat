@@ -4,6 +4,11 @@
 // right now, assembled live from the module contracts (approvals gate,
 // missions, unknowns, live cognition, loop findings, discovery, goals,
 // evidence). Derived intelligence only (lock 34).
+//
+// W061 — the discoverable workflow: the mission, unknown, goal, finding
+// and discovery rows now drill DOWN into the product intelligence
+// workflow's chain pages (goal → gap → unknown → mission → evidence →
+// belief), so Today is a workflow entry, not a dead-end report.
 
 import { buildTodayView } from '../lib/views/today';
 import { resolvePageContext } from '../lib/page-context';
@@ -125,6 +130,7 @@ export default async function TodayPage() {
                     confidence {formatConfidence(mission.currentConfidence)} →{' '}
                     {formatConfidence(mission.targetConfidence)}
                   </span>
+                  <a href={`/intelligence/missions/${mission.id}`}>open the mission in the workflow</a>
                   <span className="mono">{mission.id}</span>
                 </ItemFoot>
               </li>
@@ -143,6 +149,7 @@ export default async function TodayPage() {
                 <ItemHead title={unknown.question} />
                 <ItemFoot>
                   <span>recorded {formatInstant(unknown.recordedAt)}</span>
+                  <a href={`/intelligence/unknowns/${unknown.id}`}>open the unknown in the workflow</a>
                   <span className="mono">{unknown.id}</span>
                 </ItemFoot>
               </li>
@@ -189,6 +196,13 @@ export default async function TodayPage() {
                 <ItemHead title={finding.statement} badges={<StatusBadge status={finding.kind} />} />
                 <ItemFoot>
                   <span>detected {formatInstant(finding.detectedAt)}</span>
+                  {finding.affectedGoalIds[0] === undefined ? (
+                    <a href="/intelligence">open the intelligence workflow</a>
+                  ) : (
+                    <a href={`/intelligence/goals/${finding.affectedGoalIds[0]}`}>
+                      open the affected goal's chain
+                    </a>
+                  )}
                   <span className="mono">{finding.executionId}</span>
                 </ItemFoot>
               </li>
@@ -215,6 +229,7 @@ export default async function TodayPage() {
             </p>
             <ItemFoot>
               <span>run {formatInstant(view.discovery.recordedAt)}</span>
+              <a href="/intelligence">open Today's briefing in the workflow</a>
               <span className="mono">{view.discovery.runId}</span>
             </ItemFoot>
           </>

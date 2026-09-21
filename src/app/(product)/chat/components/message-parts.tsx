@@ -211,7 +211,9 @@ export function MessageCard({ card, actions }: { card: ChatCard; actions?: CardA
       )}
       <div className="aurum-chat-card-actions">
         <Link className="aurum-chat-card-open" href={card.href}>
-          Open in management mode
+          {card.linkLabel === null || card.linkLabel === undefined
+            ? 'Open in management mode'
+            : card.linkLabel}
           <Glyph d={OPEN_GLYPH_D} size={13} label="open" />
         </Link>
         {card.context === null ? null : (
