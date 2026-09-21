@@ -1,9 +1,9 @@
 // Product shell (W057) — the People area.
 //
 // The people hub: workforce and agents (management mode) plus the
-// employee-facing learning/contribution experiences that arrive with their
-// work items (missions/contributions/rewards W062; capability and agent
-// interventions W063). Honest structural hub — no invented data.
+// employee-facing learning/contribution experience (W062 — the Learning
+// surface) and the capability/agent interventions that arrive with their
+// work items (W063). Honest structural hub — no invented data.
 
 import Link from 'next/link';
 import { withProductScope } from '../lib/context';
@@ -50,17 +50,31 @@ export default async function PeoplePage({
 
       <div style={{ marginTop: 18 }}>
         <Panel
+          title="Learning and contributions"
+          blurb="Aurum asks employees targeted questions; answers become evidence, acknowledgements and rewards under the company’s explicit policy."
+        >
+          <div className="aurum-hub-grid">
+            <Link className="aurum-hub-card" href="/learning">
+              <span className="aurum-hub-label">
+                <ShellGlyph name="people" size={16} />
+                Learning
+              </span>
+              <span className="aurum-hub-tagline">
+                Open knowledge requests, learning missions with progress, contribution
+                acknowledgement and reward status.
+              </span>
+              <span className="aurum-hub-note">employee experience</span>
+            </Link>
+          </div>
+        </Panel>
+      </div>
+
+      <div style={{ marginTop: 18 }}>
+        <Panel
           title="Coming to this area"
           blurb="The people experience grows here as its surfaces land:"
         >
           <ul className="aurum-item-list">
-            <li>
-              <p className="aurum-item-text">
-                <strong>Learning contributions</strong> — Aurum asks employees
-                targeted questions in their channel; answers become evidence,
-                acknowledgments and rewards under explicit policy.
-              </p>
-            </li>
             <li>
               <p className="aurum-item-text">
                 <strong>Capability interventions</strong> — compare training,

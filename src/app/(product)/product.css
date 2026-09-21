@@ -2610,3 +2610,176 @@ textarea.aurum-mkt-input {
     padding: 3px 6px 3px 4px;
   }
 }
+
+/* ---- learning surface (W062: knowledge requests, contributions, rewards) ---- */
+
+/* The question line of an open knowledge request — the loudest text of
+   the surface (it is what an employee reads first), still restrained. */
+
+.aurum-learn-question {
+  font-weight: 650;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+/* Progressive disclosure (ShareNet's quiet detail pattern): the answer
+   form lives inside a native <details> — no JS needed to reveal it. */
+
+.aurum-learn-disclose {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.aurum-learn-disclose > summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-deep);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  list-style: none;
+}
+
+.aurum-learn-disclose > summary::-webkit-details-marker {
+  display: none;
+}
+
+.aurum-learn-disclose > summary::before {
+  content: '+';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-weight: 700;
+}
+
+.aurum-learn-disclose[open] > summary::before {
+  content: '−';
+}
+
+.aurum-learn-disclose > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.aurum-learn-disclose > *:not(summary) {
+  margin: 0 14px 14px;
+}
+
+/* The answer form (the marketplace action-form discipline). */
+
+.aurum-learn-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.aurum-learn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.aurum-learn-field-label {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.aurum-learn-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: #fff;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.aurum-learn-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+textarea.aurum-learn-input {
+  resize: vertical;
+}
+
+.aurum-learn-hint {
+  font-size: 11.5px;
+  color: var(--muted-ink);
+  line-height: 1.45;
+}
+
+.aurum-learn-form-actions {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.aurum-learn-form-actions .aurum-learn-hint {
+  flex: 1 1 220px;
+  padding-top: 12px;
+}
+
+.aurum-learn-link {
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  text-underline-offset: 2px;
+}
+
+.aurum-learn-link:hover {
+  text-decoration-color: var(--accent);
+}
+
+/* The ask trigger (the mission page's planner request). */
+
+.aurum-learn-ask {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+/* The compensation-separation note — quiet, always visible on reward
+   panels (the acceptance's final clause, in product copy). */
+
+.aurum-learn-separation {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--muted-ink);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* Small screens: the answer form's actions stack, the question wraps. */
+
+@media (max-width: 560px) {
+  .aurum-learn-form-actions {
+    flex-direction: column;
+  }
+
+  .aurum-learn-form-actions .aurum-learn-hint {
+    padding-top: 0;
+  }
+}
