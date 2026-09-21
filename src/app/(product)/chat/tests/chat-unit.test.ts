@@ -30,14 +30,18 @@ import {
   CARD_HREFS,
 } from '../lib/chat-types';
 import {
+  bubbleGroup,
   bubbleTimeLabel,
   conversationActivity,
   dayLabel,
+  deliveryStatusLabel,
+  filterConversations,
   previewText,
   relativeActivityLabel,
   sideForDirection,
   speakerLabel,
 } from '../lib/chat-format';
+import type { ChatMessageView } from '../lib/chat-types';
 import {
   loadSeenMap,
   markSeen,
@@ -508,6 +512,21 @@ describe('parseTurnPayload', () => {
 // Formatting (client-safe pure)
 // ---------------------------------------------------------------------------
 
+/** A minimal timeline message view (W071 formatting/grouping tests). */
+function messageFixture(overrides: Partial<ChatMessageView> = {}): ChatMessageView {
+  return {
+    id: 'm0',
+    side: 'member',
+    speaker: 'You',
+    text: 'what needs my attention?',
+    sentAt: '2026-10-12T10:00:00.000Z',
+    starterId: null,
+    answer: null,
+    pending: false,
+    ...overrides,
+  };
+}
+
 describe('chat-format', () => {
   it('renders compact bubble timestamps', () => {
     expect(bubbleTimeLabel('2026-10-12T09:05:00.000Z')).toMatch(/^\d{2}:\d{2}$/);
@@ -552,6 +571,100 @@ describe('chat-format', () => {
     expect(conversationActivity(conversation, '2026-10-12T11:00:00.000Z')).toBe('unread');
     expect(conversationActivity(conversation, '2026-10-12T12:30:00.000Z')).toBeNull();
     expect(conversationActivity({ ...conversation, lastMessageAt: null }, null)).toBeNull();
+  });
+
+  it('labels delivery state compactly (sending vs sent)', () => {
+    expect(deliveryStatusLabel({ ...messageFixture(), pending: true })).toBe('sending');
+    expect(deliveryStatusLabel(messageFixture())).toBe('sent');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// W071 — the conversation-list search filter
+// ---------------------------------------------------------------------------
+
+describe('filterConversations', () => {
+  const conversations = [
+    {
+      id: 'c1',
+      title: 'Freshness goal drift',
+      lastMessageAt: '2026-10-12T12:00:00.000Z',
+      messageCount: 4,
+      preview: 'You: how are we doing against our goals?',
+    },
+    {
+      id: 'c2',
+      title: 'Customs broker question',
+      lastMessageAt: '2026-10-11T09:00:00.000Z',
+      messageCount: 2,
+      preview: 'Aurum: the carrier data contradicts the broker',
+    },
+    {
+      id: 'c3',
+      title: 'Untitled conversation',
+      lastMessageAt: null,
+      messageCount: 0,
+      preview: null,
+    },
+  ];
+
+  it('an empty or whitespace query is no filter — every conversation shows', () => {
+    expect(filterConversations(conversations, '')).toEqual(conversations);
+    expect(filterConversations(conversations, '   ')).toEqual(conversations);
+  });
+
+  it('matches titles and previews case-insensitively', () => {
+    expect(filterConversations(conversations, 'freshness').map((c) => c.id)).toEqual(['c1']);
+    expect(filterConversations(conversations, 'CUSTOMS').map((c) => c.id)).toEqual(['c2']);
+    // preview text is searchable too
+    expect(filterConversations(conversations, 'goals').map((c) => c.id)).toEqual(['c1']);
+    expect(filterConversations(conversations, 'contradicts').map((c) => c.id)).toEqual(['c2']);
+  });
+
+  it('no match yields the empty list (the quiet no-result state)', () => {
+    expect(filterConversations(conversations, 'zzz')).toEqual([]);
+  });
+
+  it('does not mutate the input and returns a fresh array', () => {
+    const snapshot = [...conversations];
+    const out = filterConversations(conversations, '');
+    expect(out).not.toBe(conversations);
+    expect(conversations).toEqual(snapshot);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// W071 — bubble run grouping (consecutive same-side messages)
+// ---------------------------------------------------------------------------
+
+describe('bubbleGroup', () => {
+  const memberA = messageFixture({ id: 'm1' });
+  const memberB = messageFixture({ id: 'm2' });
+  const aurumA = messageFixture({ id: 'm3', side: 'aurum' });
+  const aurumB = messageFixture({ id: 'm4', side: 'aurum' });
+
+  it('a lone message is both first and last of its run', () => {
+    expect(bubbleGroup(undefined, memberA, undefined)).toEqual({ first: true, last: true });
+  });
+
+  it('the message that opens a run is first; the one that closes it is last', () => {
+    expect(bubbleGroup(undefined, memberA, memberB)).toEqual({ first: true, last: false });
+    expect(bubbleGroup(memberA, memberB, undefined)).toEqual({ first: false, last: true });
+    expect(bubbleGroup(memberA, memberB, aurumA)).toEqual({ first: false, last: true });
+  });
+
+  it('a side change breaks the run in both directions', () => {
+    // the last member message before an Aurum reply closes its run
+    expect(bubbleGroup(memberA, memberB, aurumA)).toEqual({ first: false, last: true });
+    // and the Aurum reply opens its own
+    expect(bubbleGroup(memberB, aurumA, aurumB)).toEqual({ first: true, last: false });
+    // the trailing Aurum message closes it
+    expect(bubbleGroup(aurumA, aurumB, undefined)).toEqual({ first: false, last: true });
+  });
+
+  it('middle messages of a run are neither first nor last', () => {
+    const memberC = messageFixture({ id: 'm5' });
+    expect(bubbleGroup(memberA, memberB, memberC)).toEqual({ first: false, last: false });
   });
 });
 

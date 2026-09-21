@@ -1263,20 +1263,11 @@ a.aurum-intel-row-title:hover {
 
 /* ---- chat area (the conversation entry point) ---- */
 
-.aurum-chat-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-l);
-  padding: 26px;
-  margin-bottom: 16px;
-}
-
-.aurum-chat-identity {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 18px;
-}
+/* W071: the former `.aurum-chat-card` and `.aurum-chat-identity` blocks
+   lived here from the W057 chat area — both were dead (the chat surface
+   styles its own cards in chat/chat.css, which the nested layout loads
+   after this file; no other surface used them). Removed surgically; the
+   chat-owned base pieces below remain shared. */
 
 .aurum-chat-avatar {
   width: 44px;

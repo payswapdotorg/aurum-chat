@@ -1,13 +1,15 @@
 'use client';
 
-// Aurum chat (W060) — the timeline's rendering parts (client).
+// Aurum chat (W060 base, W071 fidelity) — the timeline's rendering parts
+// (client).
 //
 // Presentational components only; all logic lives in the pure libs
-// (chat-types guards, chat-format) and the workspace component. The
-// WhatsApp-like density comes from the bubble structure — compact
-// timestamp + delivery status inside each bubble, day separators between
-// turns — while the visual language stays ShareNet-dominant (scoped in
-// chat.css).
+// (chat-types guards, chat-format — including the W071 bubble-run
+// grouping) and the workspace component. The WhatsApp-like density comes
+// from the bubble structure — compact timestamp + delivery state inside
+// each member bubble, consecutive same-side runs grouped with a tail
+// corner on the run's last bubble, day separators between turns — while
+// the visual language stays ShareNet-dominant (scoped in chat.css).
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
@@ -23,6 +25,7 @@ import {
   dayLabel,
   deliveryStatusLabel,
 } from '../lib/chat-format';
+import type { BubbleGroup } from '../lib/chat-format';
 
 // ---------------------------------------------------------------------------
 // A tiny local glyph set (the shell's icons stay shell-owned)
@@ -62,6 +65,13 @@ export { Glyph };
 export const SEND_GLYPH_D = 'M12 19V5M5 12l7-7 7 7';
 export const BACK_GLYPH_D = 'm15 18-6-6 6-6';
 export const OPEN_GLYPH_D = 'M7 17 17 7M9 7h8v8';
+/** The new-message glyph (chat bubble + plus — the new-conversation affordance, W071). */
+export const COMPOSE_GLYPH_D =
+  'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z M11.5 7.5v5 M9 10h5';
+/** The magnifier (the conversation search affordance, W071). */
+export const SEARCH_GLYPH_D = 'M21 21l-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z';
+/** The single check (delivery state on the member's own bubbles, W071). */
+export const CHECK_GLYPH_D = 'M20 6 9 17l-5-5';
 
 // ---------------------------------------------------------------------------
 // Working indicator (the streaming/working state)
@@ -71,10 +81,9 @@ export function WorkingRow(): ReactNode {
   return (
     <div className="aurum-chat-working-row">
       <span
-        className="aurum-working"
+        className="aurum-working aurum-chat-working-note"
         role="status"
         aria-live="polite"
-        style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 'var(--radius-l)', padding: '8px 13px' }}
       >
         <span className="aurum-working-dots" aria-hidden="true">
           <span />
@@ -93,27 +102,47 @@ export function WorkingRow(): ReactNode {
 
 export function MessageBubble({
   message,
+  group,
   actions,
 }: {
   message: ChatMessageView;
+  /** Run-position flags (W071 rhythm — spacing + the tail corner). */
+  group?: BubbleGroup;
   actions?: CardActions;
 }): ReactNode {
   const time = bubbleTimeLabel(message.sentAt);
+  const run = group ?? { first: true, last: true };
   return (
-    <div className="aurum-chat-msg" data-side={message.side} data-pending={message.pending}>
+    <div
+      className="aurum-chat-msg"
+      data-side={message.side}
+      data-pending={message.pending}
+      data-group-first={run.first ? 'true' : undefined}
+      data-group-last={run.last ? 'true' : undefined}
+    >
       <div className="aurum-chat-bubble">
         {message.text === '' ? null : (
-          <p className="aurum-chat-bubble-text">{message.text}</p>
+          <p className="aurum-chat-bubble-text">
+            {/* The timeline is a live log — announce the speaker per turn. */}
+            <span className="aurum-sr-only">{message.speaker}: </span>
+            {message.text}
+          </p>
         )}
         {message.answer === null ? null : (
           <AnswerExtras answer={message.answer} actions={actions} />
         )}
         <span className="aurum-chat-bubble-meta">
-          {message.side === 'aurum' ? (
-            <span className="aurum-chat-status">{message.speaker}</span>
-          ) : (
-            <span className="aurum-chat-status">{deliveryStatusLabel(message)}</span>
-          )}
+          {message.side === 'member' ? (
+            <span
+              className="aurum-chat-status"
+              data-delivery={message.pending ? 'sending' : 'sent'}
+            >
+              {message.pending ? null : (
+                <Glyph d={CHECK_GLYPH_D} size={12} label="delivered" />
+              )}
+              {deliveryStatusLabel(message)}
+            </span>
+          ) : null}
           <span suppressHydrationWarning>{time}</span>
         </span>
       </div>

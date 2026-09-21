@@ -1,23 +1,31 @@
 'use client';
 
-// Aurum chat (W060) — the conversation workspace (the surface's client
-// root).
+// Aurum chat (W060 base, W071 fidelity) — the conversation workspace (the
+// surface's client root).
 //
-// THE WHATSAPP-LIKE INTERACTION MODEL (plan §3, employee mode):
-//   * a conversation list with unread/new-activity badges (client-side
+// THE WHATSAPP-LIKE INTERACTION MODEL (frozen plan §2, employee mode):
+//   * ONE messenger window: the conversation list pane and the thread pane
+//     are internal panes of a single surface (chat.css owns the window);
+//   * the list pane carries the Aurum contact identity (avatar/name/
+//     presence), the new-conversation compose control and the
+//     search/filter affordance, one row per conversation (avatar, title,
+//     preview, activity time) with unread/new-activity badges (client-side
 //     last-seen state — the conversations domain is append-only by
 //     design, so read state is a viewer concern);
-//   * a message timeline with compact timestamps, delivery status and
-//     day separators;
+//   * a message timeline with compact timestamps, delivery state and day
+//     separators; consecutive same-side messages group into runs
+//     (bubbleGroup drives spacing + the tail corner);
 //   * a compact composer (Enter sends, Shift+Enter newlines, retry-safe
 //     sends through a client-minted idempotency id);
 //   * streaming/working states — the member's bubble renders
 //     optimistically, the working indicator runs while the workflow
-//     executes, and the evidence-backed reply lands as bubbles + cards;
+//     executes, the thread header's status switches to "working…", and
+//     the evidence-backed reply lands as bubbles + cards;
 //   * action cards deep-linked into management mode with "Why this?"
 //     opening the shell's context drawer, and pending approvals decidable
 //     inline (Journey E — without leaving the conversation);
-//   * mobile: one pane at a time (conversation-first), 44px+ targets.
+//   * mobile: one pane at a time (conversation-first) with a restrained
+//     slide+fade transition and back navigation, 44px+ targets.
 //
 // All data flows through the /api/product/chat surface (the session is
 // the only scope source — W058); the component never touches module
@@ -41,6 +49,8 @@ import type {
 } from '../lib/chat-types';
 import {
   conversationActivity,
+  bubbleGroup,
+  filterConversations,
   relativeActivityLabel,
 } from '../lib/chat-format';
 import {
@@ -52,10 +62,12 @@ import {
 } from '../lib/seen-state';
 import {
   BACK_GLYPH_D,
+  COMPOSE_GLYPH_D,
   DaySeparator,
   Glyph,
   MessageBubble,
   needsDaySeparator,
+  SEARCH_GLYPH_D,
   SEND_GLYPH_D,
   WorkingRow,
 } from './message-parts';
@@ -104,12 +116,16 @@ export function ChatWorkspace({
   const [pendingStarterId, setPendingStarterId] = useState<string | null>(starterQuery);
   const [seen, setSeen] = useState<SeenMap>({});
   const [draft, setDraft] = useState('');
+  /** The conversation-list search/filter query (client-side, W071). */
+  const [search, setSearch] = useState('');
   const [sending, setSending] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<ChatMessageView | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
   const [decided, setDecided] = useState<Record<string, 'approved' | 'rejected'>>({});
   const [deciding, setDeciding] = useState<string | null>(null);
   const [pollFailed, setPollFailed] = useState(false);
+  /** Whether the selected thread's timeline is being fetched right now. */
+  const [opening, setOpening] = useState(false);
 
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
@@ -339,13 +355,23 @@ export function ChatWorkspace({
   );
 
   // --- selection -------------------------------------------------------------
-  const selectConversation = useCallback((conversationId: string | null): void => {
-    setSelectedId(conversationId);
-    selectedRef.current = conversationId;
-    setThreadOpen(true);
-    stickToBottom.current = true;
-    setSendError(null);
-  }, []);
+  const selectConversation = useCallback(
+    (conversationId: string | null): void => {
+      setSelectedId(conversationId);
+      selectedRef.current = conversationId;
+      setThreadOpen(true);
+      stickToBottom.current = true;
+      setSendError(null);
+      // FIDELITY (W071): opening a conversation is immediate — the
+      // selected thread's timeline is fetched NOW. The 12s poll remains
+      // the background activity stream (unread/new), never the open path.
+      setOpening(true);
+      void refresh(conversationId).finally(() => {
+        if (selectedRef.current === conversationId) setOpening(false);
+      });
+    },
+    [refresh],
+  );
 
   /** Mobile: back to the conversation list (the thread stays selected). */
   const backToList = useCallback((): void => {
@@ -364,56 +390,100 @@ export function ChatWorkspace({
     [state.generatedAt, pendingMessage, sending],
   );
   const thread = state.thread !== null && state.thread.id === selectedId ? state.thread : null;
-  const mobileView = selectedId !== null || threadOpen ? 'thread' : 'list';
+  // W071 fix: the mobile view follows the OPEN PANE alone. (Deriving it
+  // from `selectedId !== null` made back navigation impossible — once a
+  // conversation was selected, the list could never return. The thread
+  // stays selected behind the list; desktop shows both panes regardless.)
+  const mobileView = threadOpen ? 'thread' : 'list';
+  const visibleConversations = useMemo(
+    () => filterConversations(state.conversations, search),
+    [state.conversations, search],
+  );
+  /** The timeline's rendered bubbles (stored + the optimistic one, in order). */
+  const rendered = useMemo(
+    () => (pendingMessage === null ? messages : [...messages, pendingMessage]),
+    [messages, pendingMessage],
+  );
 
   return (
     <div className="aurum-chat-app" data-mobile-view={mobileView}>
+      {/* The surface's single h1 (a11y: one heading per document — the
+          messenger is an app surface, so the heading stays screen-reader
+          only while the identity lives in the list/thread headers). */}
+      <h1 className="aurum-sr-only">Chat with Aurum</h1>
+
       {/* ---- the conversation list pane ---- */}
       <nav className="aurum-chat-listpane" aria-label="Conversations">
         <div className="aurum-chat-listhead">
           <span className="aurum-chat-avatar" aria-hidden="true">
             A
           </span>
-          <div>
+          <div className="aurum-chat-listhead-id">
             <h2 className="aurum-chat-name">Aurum</h2>
-            <p className="aurum-chat-role">
-              Organizational intelligence employee
+            <p className="aurum-chat-role" data-presence="onduty">
+              <span className="aurum-presence-dot" aria-hidden="true" />
+              On duty · evidence-backed
             </p>
           </div>
+          <button
+            type="button"
+            className="aurum-chat-newchat"
+            onClick={() => selectConversation(null)}
+            aria-current={selectedId === null ? 'true' : undefined}
+            aria-label="Start a new conversation"
+            title="New conversation"
+          >
+            <Glyph d={COMPOSE_GLYPH_D} label="new conversation" />
+          </button>
         </div>
 
-        {/* compact starters — the mobile first-run discovery surface */}
-        <div className="aurum-chat-pane-starters">
-          {starters.slice(0, 4).map((starter) => (
-            <button
-              key={starter.id}
-              type="button"
-              className="aurum-chat-pane-starter"
-              onClick={() => useStarter(starter.question)}
-            >
-              {starter.question}
-            </button>
-          ))}
+        {/* The search/filter affordance (client-side over the loaded
+            list — the WhatsApp search box pattern). */}
+        <div className="aurum-chat-search">
+          <label className="aurum-sr-only" htmlFor="aurum-chat-search">
+            Search conversations
+          </label>
+          <span className="aurum-chat-search-icon" aria-hidden="true">
+            <Glyph d={SEARCH_GLYPH_D} size={15} label="search" />
+          </span>
+          <input
+            id="aurum-chat-search"
+            type="search"
+            value={search}
+            placeholder="Search conversations"
+            autoComplete="off"
+            onChange={(event) => setSearch(event.target.value)}
+          />
         </div>
+
+        {/* Compact starters — the first-run discovery surface (mobile's
+            list pane only, and only until the first conversation exists). */}
+        {state.conversations.length === 0 ? (
+          <div className="aurum-chat-pane-starters">
+            {starters.slice(0, 4).map((starter) => (
+              <button
+                key={starter.id}
+                type="button"
+                className="aurum-chat-pane-starter"
+                onClick={() => useStarter(starter.question)}
+              >
+                {starter.question}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         <ul className="aurum-chat-list">
-          <li>
-            <button
-              type="button"
-              className="aurum-chat-newconv"
-              onClick={() => selectConversation(null)}
-              aria-current={selectedId === null ? 'true' : undefined}
-            >
-              <span className="aurum-chat-convo-title">New conversation with Aurum</span>
-              <span className="aurum-chat-convo-count">asks with evidence</span>
-            </button>
-          </li>
           {state.conversations.length === 0 ? (
             <li className="aurum-chat-listempty">
               No conversations yet — ask Aurum anything about the company.
             </li>
+          ) : visibleConversations.length === 0 ? (
+            <li className="aurum-chat-listempty">
+              No conversations match “{search.trim()}”.
+            </li>
           ) : (
-            state.conversations.map((conversation) => {
+            visibleConversations.map((conversation) => {
               const activity = conversationActivity(
                 conversation,
                 seenFor(seen, tenantId, conversation.id),
@@ -426,26 +496,29 @@ export function ChatWorkspace({
                     aria-current={conversation.id === selectedId ? 'true' : undefined}
                     onClick={() => selectConversation(conversation.id)}
                   >
-                    <span className="aurum-chat-convo-top">
-                      <span className="aurum-chat-convo-title">{conversation.title}</span>
-                      <span className="aurum-chat-convo-when" suppressHydrationWarning>
-                        {relativeActivityLabel(conversation.lastMessageAt, now)}
-                      </span>
+                    <span className="aurum-chat-convo-avatar" aria-hidden="true">
+                      A
                     </span>
-                    {conversation.preview === null ? null : (
-                      <span className="aurum-chat-convo-preview">{conversation.preview}</span>
-                    )}
-                    <span className="aurum-chat-convo-foot">
-                      <span className="aurum-chat-convo-count">
-                        {conversation.messageCount} message
-                        {conversation.messageCount === 1 ? '' : 's'}
-                      </span>
-                      {activity === null ? null : (
-                        <span className="aurum-chat-unread" data-activity={activity}>
-                          {activity === 'new' ? 'New' : 'Unread'}
+                    <span className="aurum-chat-convo-body">
+                      <span className="aurum-chat-convo-top">
+                        <span className="aurum-chat-convo-title">{conversation.title}</span>
+                        <span className="aurum-chat-convo-when" suppressHydrationWarning>
+                          {relativeActivityLabel(conversation.lastMessageAt, now)}
                         </span>
+                      </span>
+                      {conversation.preview === null ? (
+                        <span className="aurum-chat-convo-preview aurum-chat-convo-preview-empty">
+                          No messages yet
+                        </span>
+                      ) : (
+                        <span className="aurum-chat-convo-preview">{conversation.preview}</span>
                       )}
                     </span>
+                    {activity === null ? null : (
+                      <span className="aurum-chat-unread" data-activity={activity}>
+                        {activity === 'new' ? 'New' : 'Unread'}
+                      </span>
+                    )}
                   </button>
                 </li>
               );
@@ -465,18 +538,26 @@ export function ChatWorkspace({
           >
             <Glyph d={BACK_GLYPH_D} label="back" />
           </button>
+          <span className="aurum-chat-avatar aurum-chat-avatar-sm" aria-hidden="true">
+            A
+          </span>
           <div className="aurum-chat-thread-title">
             <strong>{thread === null ? 'Aurum' : thread.title}</strong>
-            <span>
-              {thread === null
-                ? 'Evidence-backed answers · cards link into management mode'
-                : `${thread.messages.length} message${thread.messages.length === 1 ? '' : 's'} · signed in as ${principalName}`}
+            <span className="aurum-chat-thread-status" data-working={sending}>
+              {sending ? 'Aurum is working…' : 'On duty · evidence-backed answers'}
             </span>
           </div>
           <Link className="aurum-chat-thread-link" href="/evidence">
             Evidence
           </Link>
         </header>
+
+        {/* The poll/degradation state — calm, inline, never a modal. */}
+        {pollFailed ? (
+          <div className="aurum-chat-conn" role="status">
+            Reconnecting — showing the last known conversation state…
+          </div>
+        ) : null}
 
         <div
           className="aurum-chat-timeline"
@@ -485,39 +566,73 @@ export function ChatWorkspace({
           role="log"
           aria-label="Message timeline"
         >
-          {thread === null ? (
-            <div className="aurum-chat-welcome">
-              <p className="aurum-chat-welcome-hint">
-                Start with a question — Aurum answers from live company
-                state, cites its evidence, and walks you to any finding:
-              </p>
-              <div className="aurum-starter-grid">
-                {starters.map((starter) => (
-                  <button
-                    key={starter.id}
-                    type="button"
-                    className="aurum-starter"
-                    onClick={() => useStarter(starter.question)}
-                  >
-                    <span className="aurum-starter-q">{starter.question}</span>
-                    <span className="aurum-starter-hint">{starter.hint}</span>
-                  </button>
-                ))}
+          {thread === null && pendingMessage === null ? (
+            selectedId === null ? (
+              <div className="aurum-chat-welcome">
+                <p className="aurum-chat-welcome-hint">
+                  Start with a question — Aurum answers from live company
+                  state, cites its evidence, and walks you to any finding:
+                </p>
+                <div className="aurum-starter-grid">
+                  {starters.map((starter) => (
+                    <button
+                      key={starter.id}
+                      type="button"
+                      className="aurum-starter"
+                      onClick={() => useStarter(starter.question)}
+                    >
+                      <span className="aurum-starter-q">{starter.question}</span>
+                      <span className="aurum-starter-hint">{starter.hint}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="aurum-chat-welcome-signed">
+                  Signed in as {principalName} — messages stay scoped to your
+                  company.
+                </p>
               </div>
-            </div>
+            ) : opening ? (
+              <div className="aurum-chat-opening" role="status">
+                <span className="aurum-working-dots" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                Opening conversation…
+              </div>
+            ) : (
+              <div className="aurum-chat-opening" role="status">
+                Couldn’t open this conversation yet — retrying automatically.
+              </div>
+            )
           ) : (
             <>
-              {messages.map((message, index) => (
-                <div key={message.id}>
-                  {needsDaySeparator(messages[index - 1], message, now) ? (
-                    <DaySeparator message={message} now={now} />
-                  ) : null}
-                  <MessageBubble message={message} actions={cardActions} />
-                </div>
-              ))}
-              {pendingMessage === null ? null : (
-                <MessageBubble message={pendingMessage} />
-              )}
+              {rendered.map((message, index) => {
+                const previous = rendered[index - 1] as ChatMessageView | undefined;
+                const next = rendered[index + 1] as ChatMessageView | undefined;
+                // Day separators break a run: the message after a
+                // separator opens a new one, and the message before it
+                // closes its own.
+                const separatedBefore = needsDaySeparator(previous, message, now);
+                const separatedAfter =
+                  next !== undefined && needsDaySeparator(message, next, now);
+                return (
+                  <div key={message.id}>
+                    {separatedBefore ? (
+                      <DaySeparator message={message} now={now} />
+                    ) : null}
+                    <MessageBubble
+                      message={message}
+                      group={bubbleGroup(
+                        separatedBefore ? undefined : previous,
+                        message,
+                        separatedAfter ? undefined : next,
+                      )}
+                      actions={cardActions}
+                    />
+                  </div>
+                );
+              })}
               {sending ? <WorkingRow /> : null}
               {messages.length === 0 && pendingMessage === null ? (
                 <div className="aurum-chat-listempty">
@@ -579,7 +694,7 @@ export function ChatWorkspace({
           </div>
           <span className="aurum-chat-hint">
             <kbd>Enter</kbd> sends · <kbd>Shift</kbd>+<kbd>Enter</kbd> adds a
-            line {pollFailed ? '· reconnecting…' : '· answers are evidence-backed'}
+            line
           </span>
         </form>
       </section>
