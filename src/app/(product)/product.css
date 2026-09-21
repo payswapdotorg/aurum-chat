@@ -2783,3 +2783,133 @@ textarea.aurum-learn-input {
     padding-top: 0;
   }
 }
+
+/* ---- interventions surface (W063: capability gaps, acquisition
+       alternatives, agent/team lifecycle, workforce honesty) ---- */
+
+/* The vocabulary rows (the seven compared acquisition words) — the
+   comparison axis stays calm: label + pill + the three counts. */
+
+.aurum-int-vocab-row {
+  padding: 8px 0;
+}
+
+/* The comparison table's rows ride the intelligence row classes; the
+   recruit alternative's proposed scopes render as a quiet foot line. */
+
+.aurum-int-compare-row .aurum-intel-row-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+/* The choice groups (radio/checkbox sets) inside the intervention
+   forms — a calm column of 44px+ targets, focus treatment from the
+   shell's global rules. */
+
+.aurum-int-form-choices {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+  margin: 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-int-form-choices legend {
+  padding: 0 6px;
+}
+
+.aurum-int-form-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 6px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.aurum-int-form-choice:hover {
+  background: var(--surface);
+}
+
+.aurum-int-form-choice:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.aurum-int-form-choice input {
+  accent-color: var(--accent-deep);
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* The roster editor (the compose form's member rows): the include
+   checkbox, the slug and the team-role input share one calm row. */
+
+.aurum-int-form-roster {
+  gap: 8px;
+}
+
+.aurum-int-form-member {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aurum-int-form-member .aurum-int-form-choice {
+  flex: 0 0 auto;
+  min-width: 160px;
+}
+
+.aurum-int-form-member .aurum-learn-input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+/* The budget pair (amount + currency) — two fields side by side on
+   wide screens, stacked on small ones. */
+
+.aurum-int-form-pair {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.aurum-int-form-pair .aurum-learn-field {
+  flex: 1 1 160px;
+}
+
+/* The settle trigger — a quiet block that keeps the pump explainable
+   next to its button. */
+
+.aurum-int-settle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 6px;
+}
+
+/* Small screens: the choice groups, roster rows and pairs stack. */
+
+@media (max-width: 560px) {
+  .aurum-int-form-member {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .aurum-int-form-member .aurum-int-form-choice {
+    min-width: 0;
+  }
+
+  .aurum-int-form-pair {
+    flex-direction: column;
+  }
+}
