@@ -95,6 +95,26 @@ export default async function MorePage({
         </p>
       </Panel>
 
+      <Panel
+        title="Explainability & audit"
+        blurb="The causal evidence view (product mode): reconstruct any consequential answer or decision end to end."
+      >
+        <div className="aurum-hub-grid">
+          <Link className="aurum-hub-card" href="/explain">
+            <span className="aurum-hub-label">
+              <ShellGlyph name="tower" size={16} />
+              Evidence &amp; audit
+            </span>
+            <span className="aurum-hub-tagline">
+              Explain a decision: input, evidence, source reliability and freshness,
+              retained conflicts, beliefs, missions, policy, approval, execution,
+              outcome and learning — one causal chain.
+            </span>
+            <span className="aurum-hub-note">product mode</span>
+          </Link>
+        </div>
+      </Panel>
+
       <Panel title="Platform tools" blurb="Developer and AI configuration surfaces:">
         <div className="aurum-hub-grid">
           <div className="aurum-hub-card">
