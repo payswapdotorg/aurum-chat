@@ -22,6 +22,7 @@ import {
   nextCommandIndex,
 } from '../lib/command-registry';
 import type { ShellCommand } from '../lib/command-registry';
+import { COMMAND_SUGGESTIONS } from '../lib/capability-hub';
 import { dispatchOpenNotifications } from '../lib/shell-events';
 
 export function CommandSearch(): ReactNode {
@@ -126,7 +127,7 @@ export function CommandSearch(): ReactNode {
             aria-autocomplete="list"
             autoComplete="off"
             spellCheck={false}
-            placeholder="Search areas, management surfaces, questions…"
+            placeholder="Try “connect WhatsApp”, “add an AI provider”, “install a capability”…"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -138,8 +139,29 @@ export function CommandSearch(): ReactNode {
         </div>
         {results.length === 0 ? (
           <div className="aurum-cmdk-empty">
-            Nothing matches “{query}”. Try a product area, a management
-            surface, or a question for Aurum.
+            <p>
+              Nothing matches “{query}”. Describe what you want to do — try
+              one of these:
+            </p>
+            {/* W075: task-language suggestions instead of a taxonomy
+                dead end — every suggestion sets a real query that has
+                real results (unit-locked against the registry). */}
+            <div className="aurum-cmdk-suggest" role="group" aria-label="Suggested searches">
+              {COMMAND_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion.query}
+                  type="button"
+                  className="aurum-cmdk-suggest-chip"
+                  onClick={() => {
+                    setQuery(suggestion.query);
+                    setSelected(0);
+                    requestAnimationFrame(() => inputRef.current?.focus());
+                  }}
+                >
+                  {suggestion.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <ul className="aurum-cmdk-list" id={listId} role="listbox" aria-label="Commands">

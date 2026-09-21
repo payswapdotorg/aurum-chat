@@ -62,7 +62,11 @@ import {
 import { MCP_AUDIT_EVENT_TYPE } from '@/mcp/audit';
 import { MCP_AUTHORITY_ENV, MCP_PRINCIPAL_ID_ENV, MCP_TENANT_ID_ENV } from '@/mcp/config';
 import { AURUM_MCP_TOOLS } from '@/mcp/registry';
-import { DEVELOPER_DESTINATIONS, buildShellCommands } from '../../lib/command-registry';
+import {
+  DEVELOPER_DESTINATIONS,
+  buildShellCommands,
+  filterShellCommands,
+} from '../../lib/command-registry';
 
 // ---------------------------------------------------------------------------
 // The vocabularies (totals: every domain value has human copy)
@@ -593,10 +597,22 @@ describe('the developer console in the shell command registry', () => {
   });
 
   it('is findable by its obvious keywords', () => {
-    const ids = commands
-      .filter((command) => command.title.toLowerCase().includes('developer'))
-      .map((command) => command.id);
-    expect(ids).toContain('developer:console');
+    // W075: the command's LABEL is task language ("Integrate Aurum —
+    // API, webhooks, MCP"); "developer" survives as a KEYWORD (module
+    // words are search terms, not labels). A user typing "developer",
+    // "api" or "mcp" still finds the console.
+    const byKeyword = commands.filter(
+      (command) =>
+        command.id === 'developer:console' &&
+        command.keywords.includes('developer'),
+    );
+    expect(byKeyword).toHaveLength(1);
+    for (const query of ['developer', 'api', 'mcp', 'integrate']) {
+      const matches = filterShellCommands(commands, query).map(
+        (entry) => entry.command.id,
+      );
+      expect(matches, `query '${query}'`).toContain('developer:console');
+    }
   });
 
   it('keeps every command id unique after the registration', () => {
