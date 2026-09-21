@@ -65,8 +65,9 @@ export { Glyph };
 export const SEND_GLYPH_D = 'M12 19V5M5 12l7-7 7 7';
 export const BACK_GLYPH_D = 'm15 18-6-6 6-6';
 export const OPEN_GLYPH_D = 'M7 17 17 7M9 7h8v8';
-/** The compose pencil (the new-conversation affordance, W071). */
-export const COMPOSE_GLYPH_D = 'M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z';
+/** The new-message glyph (chat bubble + plus — the new-conversation affordance, W071). */
+export const COMPOSE_GLYPH_D =
+  'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z M11.5 7.5v5 M9 10h5';
 /** The magnifier (the conversation search affordance, W071). */
 export const SEARCH_GLYPH_D = 'M21 21l-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z';
 /** The single check (delivery state on the member's own bubbles, W071). */
