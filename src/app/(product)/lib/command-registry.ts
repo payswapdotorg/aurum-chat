@@ -217,6 +217,7 @@ export const AI_DESTINATIONS: readonly {
 ];
 
 /**
+/**
  * The evidence/audit surface's keyboard destination (W065): the causal
  * evidence view — reconstruct any consequential answer or decision
  * (input → evidence → belief → mission → policy → approval → execution →
@@ -264,6 +265,48 @@ export const EVIDENCE_DESTINATIONS: readonly {
       'trail',
       'accountability',
       'show me why',
+    ],
+  },
+];
+
+/**
+ * The developer console's keyboard destinations (W067): API keys and
+ * scopes, webhooks, MCP connection instructions and the integration
+ * event feed (plan §2 Journey L), keyboard-reachable by name — the
+ * platform-tool half of the More page's promise, now delivered.
+ */
+export const DEVELOPER_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'console',
+    title: 'Developer — API, keys, webhooks & MCP',
+    subtitle:
+      'Create, rotate and revoke API keys; inspect scopes; manage webhooks and delivery evidence; connect over MCP',
+    href: '/developer',
+    keywords: [
+      'developer',
+      'api',
+      'keys',
+      'key',
+      'scopes',
+      'scope',
+      'webhook',
+      'webhooks',
+      'mcp',
+      'model',
+      'context',
+      'protocol',
+      'integration',
+      'console',
+      'rotate',
+      'revoke',
+      'bearer',
+      'token',
     ],
   },
 ];
@@ -385,6 +428,21 @@ export function buildShellCommands(): ShellCommand[] {
       subtitle: destination.subtitle,
       group: 'Navigate',
       icon: 'spark',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W067 — the developer console destination (API keys/scopes, webhooks,
+  // MCP connection, integration activity; keyboard-reachable by name —
+  // the platform-tool half of the More page's promise, now delivered).
+  for (const destination of DEVELOPER_DESTINATIONS) {
+    commands.push({
+      id: `developer:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'developer',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
     });
