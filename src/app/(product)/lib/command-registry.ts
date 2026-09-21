@@ -216,6 +216,58 @@ export const AI_DESTINATIONS: readonly {
   },
 ];
 
+/**
+ * The evidence/audit surface's keyboard destination (W065): the causal
+ * evidence view — reconstruct any consequential answer or decision
+ * (input → evidence → belief → mission → policy → approval → execution →
+ * outcome → learning), plan §2 Journey K, keyboard-reachable by name.
+ */
+export const EVIDENCE_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'explain',
+    title: 'Evidence & audit — explain a decision',
+    subtitle:
+      'Reconstruct any consequential answer or decision: sources, conflicts, policy, approvals, outcomes and learning',
+    href: '/explain',
+    keywords: [
+      'evidence',
+      'audit',
+      'explain',
+      'explainability',
+      'why',
+      'reconstruct',
+      'reconstruction',
+      'decision',
+      'decisions',
+      'chain',
+      'causal',
+      'provenance',
+      'sources',
+      'freshness',
+      'reliability',
+      'contradiction',
+      'contradictions',
+      'conflict',
+      'policy',
+      'approval',
+      'approvals',
+      'execution',
+      'outcome',
+      'outcomes',
+      'learning',
+      'trail',
+      'accountability',
+      'show me why',
+    ],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -289,6 +341,20 @@ export function buildShellCommands(): ShellCommand[] {
       subtitle: destination.subtitle,
       group: 'Navigate',
       icon: 'people',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W065 — the evidence/audit surface's destination (the causal
+  // explainability view; keyboard-reachable by name).
+  for (const destination of EVIDENCE_DESTINATIONS) {
+    commands.push({
+      id: `evidence:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'tower',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
     });
