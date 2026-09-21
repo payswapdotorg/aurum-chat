@@ -29,6 +29,12 @@ import {
 } from '@/modules/auth/contract';
 import { AuthError } from '@/modules/auth/contract';
 import type { AuthenticatedSession } from '@/modules/auth/contract';
+import { getAurumDb, getDatabaseUrl } from '@/infra/config';
+import {
+  demoPersonaPassword,
+  demoPersonaSpec,
+} from '@/modules/demo/contract';
+import type { DemoPersonaSpec } from '@/modules/demo/contract';
 import { sessionCookieHeader } from './cookies';
 
 export interface AuthApiResult {
@@ -182,6 +188,73 @@ export async function handleSignIn(request: Request): Promise<AuthApiResult> {
     );
   } catch (error) {
     return mapAuthApiError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Quick access (demo personas) — post-W070 UX hardening
+// ---------------------------------------------------------------------------
+
+/**
+ * Is the demo quick-access surface available in this runtime? Fail-closed
+ * with the seed gate's two environment rules: a production runtime never
+ * offers demo credentials, and a production-like backend (DATABASE_URL /
+ * AURUM_DB=postgres) can never hold the seeded demo world — so the panel
+ * is not even offered there. When the runtime qualifies but the demo world
+ * is not seeded, the actions still fail honestly through the real auth
+ * contract (see handleQuickSignIn).
+ */
+export function quickSignInAvailable(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  if (getDatabaseUrl() !== undefined) return false;
+  if (getAurumDb() === 'postgres') return false;
+  return true;
+}
+
+/** POST /api/auth/quick-sign-in — one-tap sign-in for a seeded demo persona. */
+export async function handleQuickSignIn(request: Request): Promise<AuthApiResult> {
+  if (!quickSignInAvailable()) {
+    return fail(404, 'not_available', 'quick sign-in is not available in this environment');
+  }
+  const body = await readJson(request);
+  const persona = body['persona'];
+  if (typeof persona !== 'string' || persona === '') {
+    return fail(400, 'invalid_input', 'persona must be a non-empty string');
+  }
+  let spec: DemoPersonaSpec;
+  try {
+    spec = demoPersonaSpec(persona as DemoPersonaSpec['role']);
+  } catch {
+    return fail(400, 'invalid_persona', 'unknown demo persona');
+  }
+  try {
+    // The REAL credential path — no auth bypass: the server resolves the
+    // seeded demo persona's fixed credentials (the documented non-production
+    // fixture of the W068 harness) and drives the same signIn contract the
+    // password form uses, so sessions, cookies and authority are identical.
+    const issued = await signIn({
+      email: spec.email,
+      password: demoPersonaPassword(),
+    });
+    const session = await authenticateSession({ token: issued.token });
+    return ok(
+      { session: sessionBody(session), persona: spec.role },
+      { setCookie: sessionCookieHeader(issued.token) },
+    );
+  } catch (error) {
+    const mapped = mapAuthApiError(error);
+    if (mapped.status === 401) {
+      // The demo personas are documented public fixtures of a non-production
+      // harness — an honest seeding hint here is not an account-existence
+      // leak (the password form's uniform wording policy still applies to
+      // every real account).
+      return fail(
+        401,
+        'invalid_credentials',
+        'the demo persona could not be signed in — the demo world may not be seeded in this environment (bun run seed:demo)',
+      );
+    }
+    return mapped;
   }
 }
 
