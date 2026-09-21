@@ -1,11 +1,18 @@
-// Product shell (W057) — the More area.
+// Product shell (W057 → W075) — the More area.
 //
-// The everything-else index: the full management-mode surface set (the
-// Control Tower), the platform tools (developer console, AI providers —
-// their product surfaces arrive with their work items), what Aurum is, and
-// the shell's keyboard & accessibility reference. "All major product areas
-// discoverable" gets its guarantee here: every destination in one honest
-// list, each link scope-preserving.
+// W075 — NATURAL CAPABILITY DISCOVERY: the More page is the capability
+// hub of the measurement frame `Chat → Search/More → capability hub`
+// (plan §4). It is now grouped by USER INTENT — capability families
+// ("Connect your systems", "Choose the AI Aurum uses", "Extend Aurum's
+// capabilities"…), never by Aurum's internal module taxonomy — and every
+// entry is rendered from the single intent registry
+// (`../lib/capability-hub`), the same source the command search and the
+// contextual prompts derive from. "All major product areas
+// discoverable" gets its guarantee here: the COMPLETE index, each link
+// scope-preserving — the chat conversation, the working surfaces, the
+// platform tools, the fifteen management-mode surfaces of the Control
+// Tower, and the honest "when Aurum needs something you haven't set up"
+// prompts.
 //
 // W058: the account section — who is signed in, the company switch
 // entry, invitations, and sign-out.
@@ -15,12 +22,12 @@ import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import {
-  governanceSurfaces,
-  overviewSurfaces,
-  towerLinksByGroup,
-} from '../lib/navigation';
+  CAPABILITY_FAMILIES,
+  CAPABILITY_PROMPTS,
+} from '../lib/capability-hub';
 import { PageHead, Panel } from '../components/states';
 import { ShellGlyph } from '../components/icons';
+import { CapabilityPromptList } from '../components/capability-prompts';
 import { SignOutButton } from '@/app/(auth)/components/sign-out-button';
 
 export const dynamic = 'force-dynamic';
@@ -33,14 +40,52 @@ export default async function MorePage({
   const params = await searchParams;
   const session = await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
-  const groups = towerLinksByGroup();
 
   return (
     <>
       <PageHead
         title="More"
-        description="Management mode, platform tools, and the shell itself — everything the product surface exposes, in one place."
+        description="Everything Aurum does, grouped by what you came here to do — and the paths that unblock it when something is missing."
       />
+
+      {/* The intent families: the capability hub. One registry
+          (capability-hub) renders every family; the management-mode
+          family (the Control Tower bridge) is derived from the same
+          navigation registry the rail uses, so nothing can drift. */}
+      {CAPABILITY_FAMILIES.map((family) => (
+        <Panel key={family.id} title={family.heading} blurb={family.blurb}>
+          <div className="aurum-hub-grid">
+            {family.entries.map((entry) => (
+              <Link
+                key={entry.id}
+                href={`${entry.href}${scopeQuery}`}
+                className="aurum-hub-card"
+              >
+                <span className="aurum-hub-label">
+                  <ShellGlyph name={entry.icon} size={16} />
+                  {entry.label}
+                </span>
+                <span className="aurum-hub-tagline">{entry.summary}</span>
+                {entry.note === null ? null : (
+                  <span className="aurum-hub-note">{entry.note}</span>
+                )}
+              </Link>
+            ))}
+          </div>
+        </Panel>
+      ))}
+
+      {/* W075 — the contextual prompts: when a capability is missing and
+          blocks the conversation, the unblocking path is listed here —
+          the same prompts the chat experience's context drawer and the
+          command search suggestions carry. No dead ends: a blocked
+          moment has an entry point. */}
+      <Panel
+        title="When Aurum can’t do something yet"
+        blurb="The blocked moments, and the path that fixes each one:"
+      >
+        <CapabilityPromptList prompts={CAPABILITY_PROMPTS} />
+      </Panel>
 
       <Panel
         title="Account"
@@ -63,82 +108,6 @@ export default async function MorePage({
             Company &amp; invitations
           </Link>
           <SignOutButton label="Sign out" />
-        </div>
-      </Panel>
-
-      <Panel
-        title="Management mode — the Control Tower"
-        blurb="The fifteen intelligence and governance surfaces, always available as drill-down destinations. Derived intelligence, never authoritative source state."
-      >
-        <div className="aurum-hub-grid">
-          {groups.flatMap((group) =>
-            group.links.map((surface) => (
-              <Link
-                key={surface.surface}
-                href={`${surface.href}${scopeQuery}`}
-                className="aurum-hub-card"
-              >
-                <span className="aurum-hub-label">
-                  <ShellGlyph name="tower" size={16} />
-                  {surface.label}
-                </span>
-                <span className="aurum-hub-tagline">{surface.tagline}</span>
-                <span className="aurum-hub-note">{group.heading}</span>
-              </Link>
-            )),
-          )}
-        </div>
-        <p className="aurum-panel-blurb" style={{ marginTop: 12, marginBottom: 0 }}>
-          {overviewSurfaces().length + governanceSurfaces().length} of these
-          surfaces also live one click away in Intelligence, People, and the
-          command search (⌘K).
-        </p>
-      </Panel>
-
-      <Panel
-        title="Explainability & audit"
-        blurb="The causal evidence view (product mode): reconstruct any consequential answer or decision end to end."
-      >
-        <div className="aurum-hub-grid">
-          <Link className="aurum-hub-card" href="/explain">
-            <span className="aurum-hub-label">
-              <ShellGlyph name="tower" size={16} />
-              Evidence &amp; audit
-            </span>
-            <span className="aurum-hub-tagline">
-              Explain a decision: input, evidence, source reliability and freshness,
-              retained conflicts, beliefs, missions, policy, approval, execution,
-              outcome and learning — one causal chain.
-            </span>
-            <span className="aurum-hub-note">product mode</span>
-          </Link>
-        </div>
-      </Panel>
-
-      <Panel title="Platform tools" blurb="Developer and AI configuration surfaces:">
-        <div className="aurum-hub-grid">
-          <Link className="aurum-hub-card" href="/developer">
-            <span className="aurum-hub-label">
-              <ShellGlyph name="developer" size={16} />
-              Developer · API · MCP
-            </span>
-            <span className="aurum-hub-tagline">
-              API keys and scopes, webhooks, MCP connection instructions,
-              integration activity.
-            </span>
-            <span className="aurum-hub-note">developer console</span>
-          </Link>
-          <Link className="aurum-hub-card" href="/ai">
-            <span className="aurum-hub-label">
-              <ShellGlyph name="spark" size={16} />
-              AI providers (BYOA)
-            </span>
-            <span className="aurum-hub-tagline">
-              Your own AI accounts: routing, availability, cost, hot-swap. No
-              provider is architecturally privileged.
-            </span>
-            <span className="aurum-hub-note">management surface</span>
-          </Link>
         </div>
       </Panel>
 

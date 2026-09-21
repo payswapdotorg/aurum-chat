@@ -12,6 +12,16 @@ import { CHAT_STARTERS } from './chat-starters';
 import type { ChatStarter } from './chat-starters';
 import { PRODUCT_AREAS, towerSurfaceLinks } from './navigation';
 import type { ShellIcon } from './navigation';
+import { capabilityEntries, capabilityEntry } from './capability-hub';
+
+// W075 — TASK LANGUAGE: the destination commands below say what the
+// user wants to DO, not which module implements it (plan §4: "no
+// capability should require a user to know Aurum's internal module
+// names"). The labels and task keywords are derived from the capability
+// hub registry (lib/capability-hub.ts) so the command search, the More
+// hub and the contextual prompts share one intent source. Internal
+// module words ("marketplace", "BYOA", "MCP") live on as KEYWORDS —
+// they are search terms, not labels.
 
 /**
  * The marketplace area's keyboard destinations (W064). The area's hub
@@ -27,24 +37,36 @@ export const MARKETPLACE_DESTINATIONS: readonly {
 }[] = [
   {
     id: 'browse',
-    title: 'Marketplace — browse',
+    title: 'Find a capability to install',
     subtitle: 'The governed catalog: extensions and agent packages',
     href: '/marketplace',
-    keywords: ['marketplace', 'catalog', 'extensions', 'packages', 'install'],
+    keywords: [
+      'marketplace',
+      'catalog',
+      'extensions',
+      'packages',
+      'install',
+      'apps',
+      'capability',
+      'capabilities',
+      'browse',
+      'find',
+      'add',
+    ],
   },
   {
     id: 'installed',
-    title: 'Marketplace — installed',
+    title: 'Review what you’ve installed',
     subtitle: 'Govern what your company runs: activate, suspend, rollback',
     href: '/marketplace/installed',
-    keywords: ['marketplace', 'installed', 'extensions', 'govern', 'rollback', 'suspend'],
+    keywords: ['marketplace', 'installed', 'extensions', 'govern', 'rollback', 'suspend', 'review'],
   },
   {
     id: 'developer',
-    title: 'Marketplace — developer',
+    title: 'Build and publish a package',
     subtitle: 'Build extensions, publish packages, review submissions',
     href: '/marketplace/developer',
-    keywords: ['marketplace', 'developer', 'builder', 'publish', 'review', 'submit'],
+    keywords: ['marketplace', 'developer', 'builder', 'publish', 'review', 'submit', 'build', 'package'],
   },
 ];
 
@@ -63,7 +85,7 @@ export const INTELLIGENCE_DESTINATIONS: readonly {
 }[] = [
   {
     id: 'briefing',
-    title: 'Intelligence — Today’s briefing',
+    title: 'Read today’s briefing',
     subtitle: 'What Aurum found on its own: severity, why it matters, what’s next',
     href: '/intelligence',
     keywords: [
@@ -79,6 +101,7 @@ export const INTELLIGENCE_DESTINATIONS: readonly {
       'missions',
       'risks',
       'opportunities',
+      'read',
     ],
   },
 ];
@@ -97,7 +120,7 @@ export const LEARNING_DESTINATIONS: readonly {
 }[] = [
   {
     id: 'learning',
-    title: 'Learning — knowledge requests & contributions',
+    title: 'Answer a question Aurum asked you',
     subtitle:
       'Answer Aurum’s targeted questions; see contribution acknowledgement and reward status',
     href: '/learning',
@@ -133,7 +156,7 @@ export const INTERVENTION_DESTINATIONS: readonly {
 }[] = [
   {
     id: 'interventions',
-    title: 'Interventions — capability gaps & agent lifecycle',
+    title: 'Fix a capability gap — train, hire, automate or recruit',
     subtitle:
       'Compare train/reassign/hire/automate/recruit/install/outsource; decide proposals, activate agents and teams, track outcomes',
     href: '/interventions',
@@ -190,7 +213,7 @@ export const AI_DESTINATIONS: readonly {
 }[] = [
   {
     id: 'byoa',
-    title: 'AI providers — accounts, routing & hot-swap',
+    title: 'Add your own AI provider',
     subtitle:
       'Your own AI accounts: add, verify, revoke; availability, policy, cost, latency, provider swap proof',
     href: '/ai',
@@ -212,6 +235,12 @@ export const AI_DESTINATIONS: readonly {
       'hotswap',
       'swap',
       'keys',
+      'add',
+      'connect',
+      'account',
+      'accounts',
+      'no model',
+      'no suitable model',
     ],
   },
 ];
@@ -232,7 +261,7 @@ export const EVIDENCE_DESTINATIONS: readonly {
 }[] = [
   {
     id: 'explain',
-    title: 'Evidence & audit — explain a decision',
+    title: 'Explain a decision',
     subtitle:
       'Reconstruct any consequential answer or decision: sources, conflicts, policy, approvals, outcomes and learning',
     href: '/explain',
@@ -284,7 +313,7 @@ export const DEVELOPER_DESTINATIONS: readonly {
 }[] = [
   {
     id: 'console',
-    title: 'Developer — API, keys, webhooks & MCP',
+    title: 'Integrate Aurum — API, webhooks, MCP',
     subtitle:
       'Create, rotate and revoke API keys; inspect scopes; manage webhooks and delivery evidence; connect over MCP',
     href: '/developer',
@@ -302,6 +331,7 @@ export const DEVELOPER_DESTINATIONS: readonly {
       'context',
       'protocol',
       'integration',
+      'integrate',
       'console',
       'rotate',
       'revoke',
@@ -327,12 +357,42 @@ export interface ShellCommand {
 }
 
 /**
+ * W075 — task keywords from the capability hub: a user typing a TASK
+ * ("whatsapp", "invite", "integrate") into the command search finds the
+ * area that does it, without knowing the area's name. The merge happens
+ * ONLY for areas with no more-specific destination command on the same
+ * href — the task language for /intelligence and /marketplace lives on
+ * their own destination commands, so the specific surface keeps its rank.
+ */
+function hubKeywords(href: string, specificHrefs: ReadonlySet<string>): string[] {
+  if (specificHrefs.has(href)) return [];
+  const entry = capabilityEntries().find((candidate) => candidate.href === href);
+  return entry === undefined ? [] : entry.keywords;
+}
+
+/**
  * Every command in the shell. The scope query (`?tenant=...`, from
  * `scopeFromSearch`) is appended to navigate targets at USE time so the
  * command list itself stays independent of the current URL.
  */
 export function buildShellCommands(): ShellCommand[] {
   const commands: ShellCommand[] = [];
+
+  // Hrefs that already carry a dedicated, more-specific command (the
+  // working-surface destinations, the tower surfaces, the account
+  // entry). Area commands whose href is in this set keep their plain
+  // area keywords — the specific command owns the task language.
+  const specificHrefs = new Set<string>([
+    ...MARKETPLACE_DESTINATIONS.map((destination) => destination.href),
+    ...INTELLIGENCE_DESTINATIONS.map((destination) => destination.href),
+    ...LEARNING_DESTINATIONS.map((destination) => destination.href),
+    ...EVIDENCE_DESTINATIONS.map((destination) => destination.href),
+    ...INTERVENTION_DESTINATIONS.map((destination) => destination.href),
+    ...AI_DESTINATIONS.map((destination) => destination.href),
+    ...DEVELOPER_DESTINATIONS.map((destination) => destination.href),
+    ...towerSurfaceLinks().map((link) => link.href),
+    capabilityEntry('company').href,
+  ]);
 
   for (const area of PRODUCT_AREAS) {
     commands.push({
@@ -341,7 +401,13 @@ export function buildShellCommands(): ShellCommand[] {
       subtitle: area.tagline,
       group: 'Navigate',
       icon: area.icon,
-      keywords: [area.id, 'go', 'open', ...(area.mode === 'management' ? ['tower', 'management'] : [])],
+      keywords: [
+        area.id,
+        'go',
+        'open',
+        ...hubKeywords(area.href, specificHrefs),
+        ...(area.mode === 'management' ? ['tower', 'management'] : []),
+      ],
       target: { kind: 'navigate', href: area.href },
     });
   }
@@ -445,6 +511,22 @@ export function buildShellCommands(): ShellCommand[] {
       icon: 'developer',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W075 — the account destination (company setup & invitations): the
+  // last hub entry the command search was missing — "invite" and
+  // "company" now find it, task-language first.
+  {
+    const company = capabilityEntry('company');
+    commands.push({
+      id: `account:${company.id}`,
+      title: company.label,
+      subtitle: company.summary,
+      group: 'Navigate',
+      icon: company.icon,
+      keywords: company.keywords,
+      target: { kind: 'navigate', href: company.href },
     });
   }
 

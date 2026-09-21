@@ -15,6 +15,8 @@ import Link from 'next/link';
 import { useProductShell } from './product-shell-provider';
 import { Sheet } from './sheet';
 import { StatusPill } from './states';
+import { ContextDrawerNextSteps } from './capability-prompts';
+import { CAPABILITY_PROMPTS } from '../lib/capability-hub';
 import { sectionHeading } from '../lib/context-drawer';
 import type { ContextSection } from '../lib/context-drawer';
 
@@ -65,6 +67,11 @@ export function ContextDrawer(): ReactNode {
           section={section}
         />
       ))}
+      {/* W075: the contextual capability prompts — when something is
+          missing (a connection, a model, a capability), the unblocking
+          path is one link away, from the same registry the More hub and
+          the command search render. */}
+      <ContextDrawerNextSteps prompts={CAPABILITY_PROMPTS} />
     </Sheet>
   );
 }
