@@ -2,6 +2,8 @@
 //
 // Backends: `memory` (default, dev/test) or `redis` when REDIS_URL is set
 // (ioredis, imported lazily so the memory path stays dependency-free).
+// W069 adds `depth` (observable queue length) for the worker seam and
+// /api/health — read-only bookkeeping, never domain state.
 
 import type Redis from 'ioredis';
 import { getRedisUrl } from './config';
@@ -9,11 +11,14 @@ import { getRedisUrl } from './config';
 export interface QueuePort {
   enqueue(name: string, message: unknown): Promise<void>;
   dequeue(name: string): Promise<unknown | null>;
+  /** Current number of waiting messages (0 for unknown/empty queues). */
+  depth(name: string): Promise<number>;
 }
 
 interface QueueBackend {
   enqueue(name: string, message: unknown): Promise<void>;
   dequeue(name: string): Promise<unknown | null>;
+  depth(name: string): Promise<number>;
 }
 
 function memoryQueueBackend(): QueueBackend {
@@ -28,6 +33,9 @@ function memoryQueueBackend(): QueueBackend {
       const message = lists.get(name)?.shift();
       return message === undefined ? null : message;
     },
+    async depth(name) {
+      return lists.get(name)?.length ?? 0;
+    },
   };
 }
 
@@ -40,6 +48,9 @@ function redisQueueBackend(client: Redis): QueueBackend {
     async dequeue(name) {
       const raw = await client.lpop(key(name));
       return raw === null ? null : (JSON.parse(raw) as unknown);
+    },
+    async depth(name) {
+      return client.llen(key(name));
     },
   };
 }
@@ -64,6 +75,7 @@ export function getQueue(): QueuePort {
   queuePort ??= {
     enqueue: async (name, message) => (await ensureBackend()).enqueue(name, message),
     dequeue: async (name) => (await ensureBackend()).dequeue(name),
+    depth: async (name) => (await ensureBackend()).depth(name),
   };
   return queuePort;
 }
