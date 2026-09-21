@@ -124,6 +124,8 @@ export function ChatWorkspace({
   const [decided, setDecided] = useState<Record<string, 'approved' | 'rejected'>>({});
   const [deciding, setDeciding] = useState<string | null>(null);
   const [pollFailed, setPollFailed] = useState(false);
+  /** Whether the selected thread's timeline is being fetched right now. */
+  const [opening, setOpening] = useState(false);
 
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
@@ -353,13 +355,23 @@ export function ChatWorkspace({
   );
 
   // --- selection -------------------------------------------------------------
-  const selectConversation = useCallback((conversationId: string | null): void => {
-    setSelectedId(conversationId);
-    selectedRef.current = conversationId;
-    setThreadOpen(true);
-    stickToBottom.current = true;
-    setSendError(null);
-  }, []);
+  const selectConversation = useCallback(
+    (conversationId: string | null): void => {
+      setSelectedId(conversationId);
+      selectedRef.current = conversationId;
+      setThreadOpen(true);
+      stickToBottom.current = true;
+      setSendError(null);
+      // FIDELITY (W071): opening a conversation is immediate — the
+      // selected thread's timeline is fetched NOW. The 12s poll remains
+      // the background activity stream (unread/new), never the open path.
+      setOpening(true);
+      void refresh(conversationId).finally(() => {
+        if (selectedRef.current === conversationId) setOpening(false);
+      });
+    },
+    [refresh],
+  );
 
   /** Mobile: back to the conversation list (the thread stays selected). */
   const backToList = useCallback((): void => {
@@ -378,7 +390,11 @@ export function ChatWorkspace({
     [state.generatedAt, pendingMessage, sending],
   );
   const thread = state.thread !== null && state.thread.id === selectedId ? state.thread : null;
-  const mobileView = selectedId !== null || threadOpen ? 'thread' : 'list';
+  // W071 fix: the mobile view follows the OPEN PANE alone. (Deriving it
+  // from `selectedId !== null` made back navigation impossible — once a
+  // conversation was selected, the list could never return. The thread
+  // stays selected behind the list; desktop shows both panes regardless.)
+  const mobileView = threadOpen ? 'thread' : 'list';
   const visibleConversations = useMemo(
     () => filterConversations(state.conversations, search),
     [state.conversations, search],
@@ -550,30 +566,45 @@ export function ChatWorkspace({
           role="log"
           aria-label="Message timeline"
         >
-          {thread === null ? (
-            <div className="aurum-chat-welcome">
-              <p className="aurum-chat-welcome-hint">
-                Start with a question — Aurum answers from live company
-                state, cites its evidence, and walks you to any finding:
-              </p>
-              <div className="aurum-starter-grid">
-                {starters.map((starter) => (
-                  <button
-                    key={starter.id}
-                    type="button"
-                    className="aurum-starter"
-                    onClick={() => useStarter(starter.question)}
-                  >
-                    <span className="aurum-starter-q">{starter.question}</span>
-                    <span className="aurum-starter-hint">{starter.hint}</span>
-                  </button>
-                ))}
+          {thread === null && pendingMessage === null ? (
+            selectedId === null ? (
+              <div className="aurum-chat-welcome">
+                <p className="aurum-chat-welcome-hint">
+                  Start with a question — Aurum answers from live company
+                  state, cites its evidence, and walks you to any finding:
+                </p>
+                <div className="aurum-starter-grid">
+                  {starters.map((starter) => (
+                    <button
+                      key={starter.id}
+                      type="button"
+                      className="aurum-starter"
+                      onClick={() => useStarter(starter.question)}
+                    >
+                      <span className="aurum-starter-q">{starter.question}</span>
+                      <span className="aurum-starter-hint">{starter.hint}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="aurum-chat-welcome-signed">
+                  Signed in as {principalName} — messages stay scoped to your
+                  company.
+                </p>
               </div>
-              <p className="aurum-chat-welcome-signed">
-                Signed in as {principalName} — messages stay scoped to your
-                company.
-              </p>
-            </div>
+            ) : opening ? (
+              <div className="aurum-chat-opening" role="status">
+                <span className="aurum-working-dots" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                Opening conversation…
+              </div>
+            ) : (
+              <div className="aurum-chat-opening" role="status">
+                Couldn’t open this conversation yet — retrying automatically.
+              </div>
+            )
           ) : (
             <>
               {rendered.map((message, index) => {

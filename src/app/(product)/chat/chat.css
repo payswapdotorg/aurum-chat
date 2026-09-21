@@ -91,31 +91,30 @@
 }
 
 /* The new-conversation affordance — a compact 44px compose control in the
-  list header (the messenger's new-chat button), not a banner. */
+  list header (the messenger's new-chat button), not a banner. Accent-
+  tinted so it reads as an ACTION (new), never as an edit affordance. */
 .aurum-chat-newchat {
   flex: none;
   width: 44px;
   height: 44px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
+  border: 1px solid var(--accent);
   border-radius: var(--radius-s);
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   cursor: pointer;
   transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
 }
 
 .aurum-chat-newchat:hover {
-  border-color: var(--accent);
-  color: var(--accent-ink);
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent-soft) 70%, var(--accent) 15%);
 }
 
 .aurum-chat-newchat[aria-current='true'] {
+  background: var(--accent);
   border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent-ink);
+  color: #f9f8f7;
 }
 
 /* The search/filter affordance (client-side over the loaded list). */
@@ -228,6 +227,9 @@
   flex: 1;
   min-width: 0;
   display: grid;
+  /* The track must be allowed to shrink below the no-wrap content width,
+     or the preview/title overflow the row instead of ellipsizing. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
 }
 
@@ -575,6 +577,16 @@
   border-radius: var(--radius-l);
   border-bottom-left-radius: 5px;
   padding: 8px 13px;
+}
+
+/* The opening/quiet note — the calm in-flight and couldn't-load states. */
+.aurum-chat-opening {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 2px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
 }
 
 /* ---- answer cards (inside Aurum messages) ---- */
