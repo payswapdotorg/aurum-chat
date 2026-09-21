@@ -369,3 +369,29 @@ Acceptance:
 - no dead-end pages;
 - every architecture capability has a discoverable user route.
 
+
+## Post-W070 journey / deployment hardening
+
+### W071 — WhatsApp-like Conversation Fidelity
+Dependencies: W057, W060. Restore the full conversational product feel while preserving the ShareNet-dominant visual system. The chat must read as a modern messaging application through conversation-list hierarchy, Aurum identity/status header, message bubble hierarchy, compact metadata/read state, new conversation, composer ergonomics, mobile list/thread transition and quiet chat-specific states. No WhatsApp branding, colors or proprietary assets.
+
+### W072 — Conversational Intelligence Continuity
+Dependencies: W061, W065, W071. Make unknowns, missions, risks, opportunities, capabilities, approvals and evidence appear as reusable conversational cards with Open, Why and action affordances. Preserve the originating conversation/context across drill-downs and return to chat.
+
+### W073 — Chat-based Learning Requests
+Dependencies: W062, W072. Let Aurum ask targeted employee knowledge questions in chat, capture answers as evidence/contributions, acknowledge contributions, surface reward/recognition state and keep mission progress linked without compensation/performance semantics leakage.
+
+### W074 — Conversational Interventions and Approval Continuity
+Dependencies: W063, W072. Surface capability-gap alternatives, agent/workforce/automation proposals, human approval, activation and outcome state in the conversation while preserving detailed intervention surfaces and human decision authority.
+
+### W075 — Natural Capability Discovery
+Dependencies: W064, W066, W067, W071. Make all user-facing capabilities discoverable from Chat, More, command search or contextual prompts using task-oriented language. Critical capabilities may not be command-search-only.
+
+### W076 — Real Browser Journey and Visual Conformance
+Dependencies: W070, W071, W072, W073, W074, W075. Add real browser automation over the built/hosted app for desktop and mobile, with screenshot/console/network/accessibility verification. Prove the ShareNet-dominant shell and WhatsApp-like conversation fidelity in addition to functional journeys.
+
+### W077 — Free-Tier Deployment Instantiation
+Dependencies: W069. Create the real Vercel `aurum-chat` project and provision/connect Neon PostgreSQL, Upstash Redis, Vercel Blob, Resend and GitHub CI. Wire normal cognition to durable workflow/queue execution where available, retaining cron/HTTP only as bounded recovery. Verify environment separation, health/readiness, secrets and non-commercial Hobby guardrails.
+
+### W078 — Post-Deployment Smoke and Operations Proof
+Dependencies: W076, W077. Prove the hosted dogfood environment through real authentication, onboarding, chat, seeded journeys, durable execution retry/idempotency, health/readiness, queue/worker observability and release/rollback checks.
