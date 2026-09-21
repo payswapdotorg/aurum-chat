@@ -119,12 +119,11 @@ export const LEARNING_DESTINATIONS: readonly {
 ];
 
 /**
- * The interventions surface's keyboard destinations (W063): capability
- * gaps, acquisition alternatives and the agent/workforce lifecycle —
- * the intervention journey (plan §2 Journey I), keyboard-reachable by
- * name.
+ * The AI-providers surface's keyboard destination (W066): BYOA accounts,
+ * model availability, routing policy, cost/latency and hot-swap
+ * verification (plan §2 Journey H), keyboard-reachable by name.
  */
-export const INTERVENTION_DESTINATIONS: readonly {
+export const AI_DESTINATIONS: readonly {
   id: string;
   title: string;
   subtitle: string;
@@ -132,46 +131,29 @@ export const INTERVENTION_DESTINATIONS: readonly {
   keywords: string[];
 }[] = [
   {
-    id: 'interventions',
-    title: 'Interventions — capability gaps & agent lifecycle',
+    id: 'byoa',
+    title: 'AI providers — accounts, routing & hot-swap',
     subtitle:
-      'Compare train/reassign/hire/automate/recruit/install/outsource; decide proposals, activate agents and teams, track outcomes',
-    href: '/interventions',
+      'Your own AI accounts: add, verify, revoke; availability, policy, cost, latency, provider swap proof',
+    href: '/ai',
     keywords: [
-      'interventions',
-      'intervention',
-      'capability',
-      'capabilities',
-      'gaps',
-      'alternatives',
-      'compare',
-      'train',
-      'reassign',
-      'hire',
-      'automate',
-      'recruit',
-      'install',
-      'outsource',
-      'proposal',
-      'proposals',
-      'approval',
-      'approve',
-      'activation',
-      'activate',
-      'agents',
-      'agent',
-      'teams',
-      'team',
-      'topology',
+      'ai',
+      'byoa',
+      'provider',
+      'providers',
+      'llm',
+      'model',
+      'models',
+      'routing',
+      'priority',
       'budget',
-      'workforce',
-      'lifecycle',
-      'retain',
-      'modify',
-      'terminate',
-      'termination',
-      'outcomes',
-      'automation',
+      'availability',
+      'cost',
+      'latency',
+      'hot-swap',
+      'hotswap',
+      'swap',
+      'keys',
     ],
   },
 ];
@@ -254,16 +236,16 @@ export function buildShellCommands(): ShellCommand[] {
     });
   }
 
-  // W063 — the interventions surface's destination (capability gaps,
-  // acquisition alternatives and the agent/workforce lifecycle;
-  // keyboard-reachable by name).
-  for (const destination of INTERVENTION_DESTINATIONS) {
+  // W066 — the AI-providers destination (BYOA accounts, routing, cost,
+  // hot-swap; keyboard-reachable by name — the platform-tool half of the
+  // More page's promise, now delivered).
+  for (const destination of AI_DESTINATIONS) {
     commands.push({
-      id: `interventions:${destination.id}`,
+      id: `ai:${destination.id}`,
       title: destination.title,
       subtitle: destination.subtitle,
       group: 'Navigate',
-      icon: 'people',
+      icon: 'spark',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
     });
