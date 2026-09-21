@@ -143,9 +143,10 @@ describe('the demo capability matrix', () => {
     }
   });
 
-  it('the manager sees the approval and policy capabilities', () => {
+  it('the manager sees the approval, policy and AI-configuration capabilities', () => {
     expect(roleSeesCapability('manager', 'approve-actions')).toBe(true);
     expect(roleSeesCapability('manager', 'administer-policies')).toBe(true);
+    expect(roleSeesCapability('manager', 'configure-ai')).toBe(true);
     expect(roleSeesCapability('manager', 'platform-review')).toBe(false);
   });
 

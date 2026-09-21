@@ -2783,3 +2783,440 @@ textarea.aurum-learn-input {
     padding-top: 0;
   }
 }
+
+/* ===========================================================================
+   AI/BYOA & Provider Routing UX (W066) — the /ai surface's styles.
+   Scoped under aurum-ai-*; the same ShareNet-dominant system the shell
+   defines (warm off-white canvas, soft graphite, hairlines, status pills,
+   progressive disclosure, restrained motion — no new chrome vocabulary).
+   =========================================================================== */
+
+.aurum-ai-accounts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aurum-ai-account {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: 14px 16px 16px;
+}
+
+.aurum-ai-account-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aurum-ai-account-title {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.aurum-ai-provider-tag {
+  font-size: 11px;
+}
+
+.aurum-ai-routing-position {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-ai-account-meta {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.aurum-ai-account-meta-sub {
+  margin-top: 3px;
+  color: var(--muted-ink);
+  font-size: 11.5px;
+}
+
+/* Per-model availability rows inside an account card. */
+
+.aurum-ai-models {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+}
+
+.aurum-ai-model {
+  padding: 9px 0 7px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-ai-model:last-child {
+  border-bottom: none;
+}
+
+.aurum-ai-model-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aurum-ai-model-meta {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted-ink);
+  line-height: 1.5;
+}
+
+.aurum-ai-model-none {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted-ink);
+}
+
+/* The per-account controls cluster (test / revoke / configure). */
+
+.aurum-ai-account-controls {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aurum-ai-action-inline {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aurum-ai-test-target select.aurum-mkt-input {
+  min-width: 220px;
+  min-height: 44px;
+}
+
+.aurum-ai-availability {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.aurum-ai-hold-form {
+  flex: 1 1 260px;
+  min-width: 240px;
+}
+
+/* Inline status lines (pending/error/ok) after buttons. */
+
+.aurum-ai-status {
+  font-size: 12px;
+  line-height: 1.45;
+  border-radius: var(--radius-s);
+  padding: 4px 8px;
+}
+
+.aurum-ai-status-error {
+  background: var(--risk-soft);
+  color: var(--risk-text);
+}
+
+.aurum-ai-status-ok {
+  background: var(--pos-soft);
+  color: var(--pos-text);
+}
+
+/* Structured action results (verified / failed / gated, hot-swap). */
+
+.aurum-ai-result {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 10px 12px;
+  background: var(--surface);
+  font-size: 12.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aurum-ai-result strong {
+  color: var(--ink);
+}
+
+.aurum-ai-result span {
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.aurum-ai-result-ok {
+  border-color: #bce3cf;
+}
+
+.aurum-ai-result-fail {
+  border-color: #f4c1bd;
+}
+
+.aurum-ai-result-meta {
+  color: var(--muted-ink) !important;
+  font-size: 11.5px;
+}
+
+/* The routing-order list (the tenant's own preference, made legible). */
+
+.aurum-ai-routing-order {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  overflow: hidden;
+}
+
+.aurum-ai-routing-order > li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12.5px;
+}
+
+.aurum-ai-routing-order > li:last-child {
+  border-bottom: none;
+}
+
+.aurum-ai-routing-order > li[data-active='false'] {
+  background: var(--fill);
+}
+
+.aurum-ai-routing-order > li[data-active='false'] .aurum-ai-routing-label {
+  text-decoration: line-through;
+  text-decoration-color: var(--faint-ink);
+}
+
+.aurum-ai-routing-position {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.aurum-ai-routing-label {
+  color: var(--ink);
+}
+
+.aurum-ai-routing-meta {
+  color: var(--muted-ink);
+  font-size: 11.5px;
+}
+
+.aurum-ai-notes {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-ai-notes li {
+  padding: 8px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-s);
+  color: var(--muted-ink);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+/* The registry catalog. */
+
+.aurum-ai-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aurum-ai-catalog-provider {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: 10px 14px 12px;
+}
+
+.aurum-ai-catalog-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.aurum-ai-catalog-models {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.aurum-ai-catalog-models > li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.aurum-ai-catalog-models > li:first-child {
+  border-top: none;
+}
+
+.aurum-ai-catalog-model-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aurum-ai-catalog-model-meta {
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+/* The usage table (cost & latency). */
+
+.aurum-ai-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  overflow-x: auto;
+  background: var(--surface);
+}
+
+.aurum-ai-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12.5px;
+  min-width: 620px;
+}
+
+.aurum-ai-table th,
+.aurum-ai-table td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.aurum-ai-table thead th {
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--muted-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.aurum-ai-table tbody tr:last-child th,
+.aurum-ai-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* The execution evidence feed. */
+
+.aurum-ai-executions {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aurum-ai-execution {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  padding: 8px 12px;
+  font-size: 12.5px;
+}
+
+.aurum-ai-execution-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.aurum-ai-execution-title {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.aurum-ai-execution-kind {
+  color: var(--muted-ink);
+  font-size: 11.5px;
+}
+
+.aurum-ai-execution-meta {
+  margin: 4px 0 0;
+  color: var(--muted-ink);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+/* Hot-swap specifics. */
+
+.aurum-ai-targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.aurum-ai-test-note {
+  margin: 0 0 12px;
+  font-size: 11.5px;
+  color: var(--muted-ink);
+}
+
+.aurum-ai-subhead {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.aurum-ai-verification-detail {
+  border-color: #bce3cf;
+}
+
+/* Small screens: the routing position drops out of the corner, targets
+   stack (the grid already handles it), and the table scrolls horizontally
+   inside its wrap — never the page. */
+
+@media (max-width: 560px) {
+  .aurum-ai-routing-position {
+    margin-left: 0;
+  }
+
+  .aurum-ai-test-target select.aurum-mkt-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .aurum-ai-action-inline {
+    width: 100%;
+  }
+}

@@ -118,6 +118,46 @@ export const LEARNING_DESTINATIONS: readonly {
   },
 ];
 
+/**
+ * The AI-providers surface's keyboard destination (W066): BYOA accounts,
+ * model availability, routing policy, cost/latency and hot-swap
+ * verification (plan §2 Journey H), keyboard-reachable by name.
+ */
+export const AI_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'byoa',
+    title: 'AI providers — accounts, routing & hot-swap',
+    subtitle:
+      'Your own AI accounts: add, verify, revoke; availability, policy, cost, latency, provider swap proof',
+    href: '/ai',
+    keywords: [
+      'ai',
+      'byoa',
+      'provider',
+      'providers',
+      'llm',
+      'model',
+      'models',
+      'routing',
+      'priority',
+      'budget',
+      'availability',
+      'cost',
+      'latency',
+      'hot-swap',
+      'hotswap',
+      'swap',
+      'keys',
+    ],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -191,6 +231,21 @@ export function buildShellCommands(): ShellCommand[] {
       subtitle: destination.subtitle,
       group: 'Navigate',
       icon: 'people',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W066 — the AI-providers destination (BYOA accounts, routing, cost,
+  // hot-swap; keyboard-reachable by name — the platform-tool half of the
+  // More page's promise, now delivered).
+  for (const destination of AI_DESTINATIONS) {
+    commands.push({
+      id: `ai:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'spark',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
     });

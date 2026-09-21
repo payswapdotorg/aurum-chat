@@ -108,7 +108,7 @@ export default async function MorePage({
             </span>
             <span className="aurum-hub-note">coming to this area</span>
           </div>
-          <div className="aurum-hub-card">
+          <Link className="aurum-hub-card" href="/ai">
             <span className="aurum-hub-label">
               <ShellGlyph name="spark" size={16} />
               AI providers (BYOA)
@@ -117,8 +117,8 @@ export default async function MorePage({
               Your own AI accounts: routing, availability, cost, hot-swap. No
               provider is architecturally privileged.
             </span>
-            <span className="aurum-hub-note">coming to this area</span>
-          </div>
+            <span className="aurum-hub-note">management surface</span>
+          </Link>
         </div>
       </Panel>
 
