@@ -597,6 +597,19 @@ export function scoreCommand(command: ShellCommand, query: string): number {
   for (const word of words) {
     if (word.startsWith(q)) return 4;
   }
+  // W075 — MULTI-WORD TASK QUERIES: a user types a task phrase
+  // ("connect whatsapp", "add ai", "integrate with your tools"). The
+  // command matches when EVERY word of the query appears somewhere in
+  // the title, subtitle or keywords (AND semantics; single-word
+  // behavior above is unchanged). Ranks with the substring tier —
+  // task phrases are real queries, not noise.
+  const tokens = q.split(/\s+/).filter((token) => token !== '');
+  if (tokens.length > 1) {
+    const everyTokenMatches = tokens.every((token) =>
+      haystacks.some((hay) => hay.includes(token)),
+    );
+    if (everyTokenMatches) return 5;
+  }
   return 0;
 }
 
