@@ -363,11 +363,15 @@ describe('composeAnswerParts', () => {
     expect(why?.lines[0]).toContain('renegotiation timing');
   });
 
-  it('inefficiency composes capability gaps as risk cards', () => {
+  it('inefficiency composes capability gaps as capability cards with alternatives (W072)', () => {
     const parts = composeAnswerParts('inefficiency', answerDataFixture());
-    const risk = parts.cards.find((card) => card.kind === 'risk');
-    expect(risk?.title).toContain('Customs brokerage');
-    expect(risk?.statusLabel).toBe('No active supply');
+    const capability = parts.cards.find((card) => card.kind === 'capability');
+    expect(capability?.title).toContain('Customs brokerage');
+    expect(capability?.statusLabel).toBe('No active supply');
+    expect(capability?.href).toBe('/capabilities');
+    // The alternatives are always visible on a capability card (W017).
+    const alternatives = capability?.context?.sections.find((s) => s.kind === 'detail');
+    expect(alternatives?.title).toBe('Alternatives exist');
   });
 
   it('improve composes recommendations from pending action requests', () => {
@@ -375,6 +379,11 @@ describe('composeAnswerParts', () => {
     expect(parts.cards[0]?.kind).toBe('recommendation');
     expect(parts.cards[0]?.title).toBe('Employee messaging');
     expect(parts.cards[0]?.href).toBe('/recommendations');
+    // W072 — the recommendation card carries its evidence/context (the
+    // proposal + the policy evaluation), like every consequential kind.
+    expect(parts.cards[0]?.context).not.toBeNull();
+    const policy = parts.cards[0]?.context?.sections.find((s) => s.kind === 'policy');
+    expect(policy?.lines.join(' ')).toContain('Gate outcome');
   });
 
   it('why cites observations and surfaces retained contradictions', () => {
@@ -383,6 +392,13 @@ describe('composeAnswerParts', () => {
     expect(parts.citations[0]?.href).toBe('/evidence');
     expect(parts.cards[0]?.kind).toBe('risk');
     expect(parts.cards[0]?.title).toContain('broker says');
+    // W072 — the immutable records also render as evidence cards with
+    // their provenance (source, channel, confidence).
+    const evidence = parts.cards.find((card) => card.kind === 'evidence');
+    expect(evidence?.id).toBe('55555555-5555-4555-8555-555555555555');
+    expect(evidence?.title).toContain('freshness.sample');
+    expect(evidence?.meta.join(' ')).toContain('ingestion');
+    expect(evidence?.context?.sections.some((s) => s.kind === 'evidence')).toBe(true);
   });
 
   it('changed lists observations newest first with citations', () => {

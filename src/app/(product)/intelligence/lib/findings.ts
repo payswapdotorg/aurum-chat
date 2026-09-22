@@ -11,7 +11,11 @@
 //     capability-gap statements the risk-opportunity-capability-analysis
 //     stage recorded, each with its evidence and affected goals;
 //   * retained contradictions (W007 epistemics) — two pieces of evidence
-//     that disagree and are both kept (lock 12).
+//     that disagree and are both kept (lock 12);
+//   * live open opportunities (W015, W072) — the opportunity engine's
+//     current open set, so opportunity status reaches the conversation
+//     and not only the management hub (a pursued/dismissed transition
+//     changes the digest, delivering the movement itself).
 //
 // Everything is DERIVED intelligence read through module contracts only
 // (lock 31/32/34): nothing is persisted here, no finding is invented, and
@@ -37,6 +41,8 @@ import type {
 import type { CandidateUrgency } from '@/modules/attention/contract';
 import { listContradictions } from '@/modules/epistemics/contract';
 import type { Contradiction } from '@/modules/epistemics/contract';
+import { listOpportunities } from '@/modules/opportunities/contract';
+import type { Opportunity } from '@/modules/opportunities/contract';
 import { collectTraceFindings } from '../../chat/lib/answers';
 import type { TraceFindingLite } from '../../chat/lib/answers';
 import type { PillTone } from '../../lib/states';
@@ -46,7 +52,11 @@ import type { PillTone } from '../../lib/states';
 // ---------------------------------------------------------------------------
 
 /** Where a proactive finding came from (the discovery feed's provenance). */
-export type FindingSource = 'discovery' | 'analysis' | 'contradiction';
+export type FindingSource =
+  | 'discovery'
+  | 'analysis'
+  | 'contradiction'
+  | 'opportunity';
 
 /**
  * A proactive finding's kind — the domain vocabulary it derives from. The
@@ -284,6 +294,45 @@ export function contradictionFinding(contradiction: Contradiction): ProactiveFin
   };
 }
 
+/**
+ * One LIVE open opportunity (W015) as a proactive finding (W072 —
+ * "opportunity status" enters the conversation, not only the
+ * management hub). The opportunity module's records are versioned
+ * intelligence with derived confidence and an estimated value; the
+ * finding carries the recommended next action as what-Aurum-needs-next,
+ * and a status change (pursued/dismissed) leaves the open set — which
+ * changes the findings digest, so the movement itself is delivered as
+ * a new briefing turn.
+ */
+export function opportunityFinding(opportunity: Opportunity): ProactiveFinding {
+  const content = opportunity.content;
+  const affectedGoalIds = content.affectedGoals.map((goal) => goal.goalId);
+  return {
+    id: opportunity.id,
+    kind: 'opportunity',
+    source: 'opportunity',
+    title: clip(content.title, 160),
+    whyThisMatters: clip(content.description, 400),
+    whatNext: clip(
+      content.recommendedNextAction.statement === ''
+        ? 'Weigh the opportunity against affected goals — turn it into a recommendation when it clears policy.'
+        : content.recommendedNextAction.statement,
+      400,
+    ),
+    severity: findingSeverity(null),
+    impact: null,
+    informationValue: null,
+    missionId: null,
+    detectedAt: opportunity.updatedAt,
+    href:
+      affectedGoalIds[0] !== undefined
+        ? `/intelligence/goals/${affectedGoalIds[0]}`
+        : '/intelligence',
+    evidenceObservationIds: [...content.evidence.observationIds],
+    affectedGoalIds,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // The composition (contract reads, quietly degrading per family)
 // ---------------------------------------------------------------------------
@@ -293,6 +342,9 @@ export const DISCOVERY_SCAN_RUNS = 5;
 
 /** How many recent executions the briefing scans for analysis findings. */
 export const FINDING_SCAN_EXECUTIONS = 12;
+
+/** How many live open opportunities the briefing carries (W072). */
+export const OPPORTUNITY_SCAN_LIMIT = 4;
 
 /** The briefing's finding cap (a Today view, not an archive). */
 export const MAX_FINDINGS = 8;
@@ -369,6 +421,18 @@ export async function buildProactiveFindings(
   if (contradictions !== null) {
     for (const contradiction of contradictions) {
       findings.push(contradictionFinding(contradiction));
+    }
+  }
+
+  // Family 4 — live open opportunities (W015, W072): the opportunity
+  // engine's current open set enters the briefing, so opportunity
+  // status reaches the conversation and not only the management hub.
+  const opportunities = await safeFamily('opportunities', degraded, () =>
+    listOpportunities(ctx, { status: 'open', limit: OPPORTUNITY_SCAN_LIMIT }),
+  );
+  if (opportunities !== null) {
+    for (const opportunity of opportunities) {
+      findings.push(opportunityFinding(opportunity));
     }
   }
 

@@ -16,6 +16,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { StatusPill, EmptyState } from '../../components/states';
 import type { PillTone } from '../../lib/states';
+import { withChatReturn } from '../../chat/lib/chat-types';
 import type {
   BeliefItem,
   EvidenceItem,
@@ -25,6 +26,14 @@ import type {
   AcquisitionRow,
 } from '../lib/views';
 import type { ProactiveFinding } from '../lib/findings';
+
+// W072 — CONVERSATIONAL CONTINUITY ON THE CHAIN: every component below
+// accepts an optional `back` return link (guarded `/chat?c=…`, read by
+// the page from the `back` query parameter). Internal drill-down links
+// carry it forward, so a reader who walks the chain from a chat card
+// keeps the way back to the originating conversation at every hop —
+// the workflow never strands them. Null (the default, and always on
+// direct visits) renders exactly the pre-W072 links.
 
 // ---------------------------------------------------------------------------
 // Small helpers
@@ -84,7 +93,14 @@ export function ChainRail({
 // The finding row (Today's briefing unit — why + next ALWAYS visible)
 // ---------------------------------------------------------------------------
 
-export function FindingRow({ finding }: { finding: ProactiveFinding }): ReactNode {
+export function FindingRow({
+  finding,
+  back = null,
+}: {
+  finding: ProactiveFinding;
+  /** The guarded conversation return link (W072 continuity). */
+  back?: string | null;
+}): ReactNode {
   return (
     <article className="aurum-intel-finding" data-kind={finding.kind}>
       <div className="aurum-intel-finding-head">
@@ -98,14 +114,16 @@ export function FindingRow({ finding }: { finding: ProactiveFinding }): ReactNod
                 ? 'Capability gap'
                 : finding.kind === 'risk'
                   ? 'Risk finding'
-                  : 'Opportunity finding'}
+                  : finding.source === 'opportunity'
+                    ? 'Opportunity — live record'
+                    : 'Opportunity finding'}
         </span>
         <span className="aurum-intel-finding-when" suppressHydrationWarning>
           {dateLabel(finding.detectedAt)}
         </span>
       </div>
       <h3 className="aurum-intel-finding-title">
-        <Link href={finding.href}>{finding.title}</Link>
+        <Link href={withChatReturn(finding.href, back)}>{finding.title}</Link>
       </h3>
       <div className="aurum-intel-finding-body">
         <div className="aurum-intel-why">
@@ -118,7 +136,7 @@ export function FindingRow({ finding }: { finding: ProactiveFinding }): ReactNod
           {finding.missionId === null ? null : (
             <Link
               className="aurum-intel-inline-link"
-              href={`/intelligence/missions/${finding.missionId}`}
+              href={withChatReturn(`/intelligence/missions/${finding.missionId}`, back)}
             >
               Open the learning mission
             </Link>
@@ -129,11 +147,11 @@ export function FindingRow({ finding }: { finding: ProactiveFinding }): ReactNod
         {finding.impact === null ? null : <>Decision impact {percent(finding.impact)} · </>}
         {finding.informationValue === null ? null : <>Information value {percent(finding.informationValue)} · </>}
         {finding.evidenceObservationIds.length === 0 ? null : (
-          <Link href="/evidence">{finding.evidenceObservationIds.length} evidence link(s)</Link>
+          <Link href={withChatReturn('/evidence', back)}>{finding.evidenceObservationIds.length} evidence link(s)</Link>
         )}
         {finding.affectedGoalIds[0] === undefined ? null : (
           <>
-            {' '}· <Link href={`/intelligence/goals/${finding.affectedGoalIds[0]!}`}>open the goal chain</Link>
+            {' '}· <Link href={withChatReturn(`/intelligence/goals/${finding.affectedGoalIds[0]!}`, back)}>open the goal chain</Link>
           </>
         )}
       </p>
@@ -152,11 +170,18 @@ const MISSION_TONE: Record<string, PillTone> = {
   low: 'neutral',
 };
 
-export function MissionLinkRow({ mission }: { mission: MissionRow }): ReactNode {
+export function MissionLinkRow({
+  mission,
+  back = null,
+}: {
+  mission: MissionRow;
+  /** The guarded conversation return link (W072 continuity). */
+  back?: string | null;
+}): ReactNode {
   return (
     <li className="aurum-intel-row">
       <div className="aurum-intel-row-head">
-        <Link className="aurum-intel-row-title" href={mission.href}>
+        <Link className="aurum-intel-row-title" href={withChatReturn(mission.href, back)}>
           {mission.title}
         </Link>
         <StatusPill tone={MISSION_TONE[mission.urgency] ?? 'neutral'}>
@@ -172,11 +197,18 @@ export function MissionLinkRow({ mission }: { mission: MissionRow }): ReactNode 
   );
 }
 
-export function UnknownLinkRow({ unknown }: { unknown: UnknownRow }): ReactNode {
+export function UnknownLinkRow({
+  unknown,
+  back = null,
+}: {
+  unknown: UnknownRow;
+  /** The guarded conversation return link (W072 continuity). */
+  back?: string | null;
+}): ReactNode {
   return (
     <li className="aurum-intel-row">
       <div className="aurum-intel-row-head">
-        <Link className="aurum-intel-row-title" href={unknown.href}>
+        <Link className="aurum-intel-row-title" href={withChatReturn(unknown.href, back)}>
           {unknown.question}
         </Link>
         <StatusPill tone={unknown.status === 'open' ? 'warning' : 'positive'}>
@@ -192,7 +224,14 @@ export function UnknownLinkRow({ unknown }: { unknown: UnknownRow }): ReactNode 
   );
 }
 
-export function GapRunBlock({ run }: { run: GapRunRow }): ReactNode {
+export function GapRunBlock({
+  run,
+  back = null,
+}: {
+  run: GapRunRow;
+  /** The guarded conversation return link (W072 continuity). */
+  back?: string | null;
+}): ReactNode {
   return (
     <li className="aurum-intel-row">
       <div className="aurum-intel-row-head">
@@ -232,12 +271,12 @@ export function GapRunBlock({ run }: { run: GapRunRow }): ReactNode {
             </p>
             <p className="aurum-intel-row-links">
               {candidate.unknownId === null ? null : (
-                <Link className="aurum-intel-inline-link" href={`/intelligence/unknowns/${candidate.unknownId}`}>
+                <Link className="aurum-intel-inline-link" href={withChatReturn(`/intelligence/unknowns/${candidate.unknownId}`, back)}>
                   Open the unknown
                 </Link>
               )}
               {candidate.missionId === null ? null : (
-                <Link className="aurum-intel-inline-link" href={`/intelligence/missions/${candidate.missionId}`}>
+                <Link className="aurum-intel-inline-link" href={withChatReturn(`/intelligence/missions/${candidate.missionId}`, back)}>
                   Open the mission
                 </Link>
               )}
@@ -250,7 +289,14 @@ export function GapRunBlock({ run }: { run: GapRunRow }): ReactNode {
   );
 }
 
-export function EvidenceRow({ evidence }: { evidence: EvidenceItem }): ReactNode {
+export function EvidenceRow({
+  evidence,
+  back = null,
+}: {
+  evidence: EvidenceItem;
+  /** The guarded conversation return link (W072 continuity). */
+  back?: string | null;
+}): ReactNode {
   return (
     <li className="aurum-intel-row">
       <div className="aurum-intel-row-head">
@@ -262,7 +308,7 @@ export function EvidenceRow({ evidence }: { evidence: EvidenceItem }): ReactNode
       <p className="aurum-intel-row-foot">
         Observed {dateLabel(evidence.observedAt)}
         {evidence.confidence === null ? '' : ` · confidence ${percent(evidence.confidence)}`} ·{' '}
-        <Link href="/evidence">evidence surface</Link>
+        <Link href={withChatReturn('/evidence', back)}>evidence surface</Link>
       </p>
     </li>
   );

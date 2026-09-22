@@ -49,6 +49,7 @@ import type { Observation } from '@/modules/observations/contract';
 import { recordClaim } from '@/modules/epistemics/contract';
 import type { Claim } from '@/modules/epistemics/contract';
 import { registerContradiction } from '@/modules/epistemics/contract';
+import { convertSignals, reviseOpportunity } from '@/modules/opportunities/contract';
 import { runGoalGapDiscovery } from '@/modules/attention/contract';
 import type { DiscoveryRun } from '@/modules/attention/contract';
 import { runNextStage, startExecution } from '@/modules/cognition/contract';
@@ -565,4 +566,103 @@ describe('the intelligence workflow over a fully seeded chain', () => {
       expect(stray.body.intelligence).toBe('briefing-delivery');
     }
   });
+// ---------------------------------------------------------------------------
+// W072 — live opportunities enter the briefing (opportunity status in chat)
+// ---------------------------------------------------------------------------
+
+describe('W072 — live open opportunities enter the proactive findings', () => {
+  it('seeds an opportunity and finds it in the briefing feed with its chain links', async () => {
+    // Convert one signal into a live open opportunity (the real engine).
+    const run = await convertSignals(acme.owner, {
+      trigger: { kind: 'manual' },
+      candidates: [
+        {
+          title: 'Expand wholesale freshness program to DACH grocers',
+          description:
+            'Two DACH grocers asked for the same freshness reporting the flagship accounts get — the same evidence pipeline serves them.',
+          signalOrigin: 'external',
+          evidence: { observationIds: [observations[0]!.id] },
+          estimatedValue: { amount: 24000000, currency: 'EUR' },
+          affectedGoals: [{ goalId: goal.id }],
+          recommendedNextAction: {
+            kind: 'recommend',
+            statement: 'Weigh the expansion against the freshness goal — recommend it to management when the evidence clears policy.',
+          },
+        },
+      ],
+      actor: { kind: 'person', label: 'Ops Lead' },
+    });
+    const converted = run.candidates.find(
+      (candidate) => candidate.disposition === 'converted',
+    );
+    expect(converted?.createdOpportunityId).toBeDefined();
+    const opportunityId = converted!.createdOpportunityId!;
+
+    // The finding feed carries it as a live opportunity finding.
+    const composed = await buildProactiveFindings(acme.owner);
+    const finding = composed.findings.find(
+      (candidate) => candidate.source === 'opportunity' && candidate.id === opportunityId,
+    );
+    expect(finding).toBeDefined();
+    expect(finding!.kind).toBe('opportunity');
+    expect(finding!.whyThisMatters).toContain('DACH grocers');
+    expect(finding!.whatNext).toContain('recommend');
+    expect(finding!.href).toBe(`/intelligence/goals/${goal.id}`);
+    expect(finding!.affectedGoalIds).toContain(goal.id);
+    expect(finding!.evidenceObservationIds).toContain(observations[0]!.id);
+
+    // The briefing delivery renders it as an opportunity card with
+    // evidence/context (the W072 acceptance) and a digest that MOVES
+    // when the opportunity's status changes.
+    const first = await deliverFindingsToChat(acme.owner);
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    expect(first.findingCount).toBeGreaterThan(composed.findings.length - 1);
+
+    // Pursue the opportunity — a status transition leaves the open set.
+    const pursued = await reviseOpportunity(acme.owner, {
+      opportunityId,
+      status: 'pursued',
+      actor: { kind: 'person', label: 'Ops Lead' },
+      rationale: 'management decided to act',
+    });
+    expect(pursued.content.status).toBe('pursued');
+
+    // The feed no longer carries it, and the digest changed — the
+    // movement itself is what a re-delivery reports.
+    const after = await buildProactiveFindings(acme.owner);
+    expect(
+      after.findings.find((candidate) => candidate.id === opportunityId),
+    ).toBeUndefined();
+    const second = await deliverFindingsToChat(acme.owner);
+    expect(second.ok).toBe(true);
+    if (!second.ok) return;
+    expect(second.digest).not.toBe(first.digest);
+    expect(second.delivered).toBe(true);
+  });
+
+  it('the delivered opportunity card carries evidence/context through the timeline guard', async () => {
+    // The latest delivery (the post-pursuit digest) parses through the
+    // chat timeline's own guard.
+    const outcome = await deliverFindingsToChat(acme.owner);
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    const messages = await listMessages(acme.owner, {
+      conversationId: outcome.conversationId,
+      order: 'desc',
+      limit: 1,
+    });
+    const latest = messages[0];
+    expect(latest).toBeDefined();
+    const parsed = parseTurnPayload(latest!.payload);
+    expect(parsed.answer).not.toBeNull();
+    for (const card of parsed.answer?.cards ?? []) {
+      // W072: every consequential card — the briefing's included — has
+      // evidence/context after the renderer's guarantee.
+      expect(card.context).not.toBeNull();
+      expect(card.context?.sections.length ?? 0).toBeGreaterThan(0);
+    }
+  });
+});
+
 });

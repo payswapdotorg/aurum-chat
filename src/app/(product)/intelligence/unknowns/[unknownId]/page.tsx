@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { EmptyState, ErrorState, PageHead, Panel, StatusPill } from '../../../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../../../chat/components/chat-return-link';
 import { buildUnknownView } from '../../lib/views';
 import type { UnknownView } from '../../lib/views';
 import {
@@ -42,10 +43,15 @@ function dateLabel(iso: string): string {
 
 export default async function UnknownPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ unknownId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { unknownId } = await params;
+  // W072 — the guarded return link when this step was opened from a
+  // chat card or a chain hop (`?back=/chat?c=…`).
+  const back = chatReturnFromSearchParams(await searchParams);
   const session = await requireAuthenticatedPage();
 
   let view: UnknownView;
@@ -73,6 +79,7 @@ export default async function UnknownPage({
         }.`}
         meta={
           <>
+            <ChatReturnLink back={back} />
             <Link href="/intelligence">← Intelligence</Link>
             {' · '}
             <Link href="/unknowns">Unknowns surface (management mode)</Link>
@@ -151,7 +158,7 @@ export default async function UnknownPage({
         ) : (
           <ul className="aurum-intel-list">
             {view.missions.map((mission) => (
-              <MissionLinkRow key={mission.id} mission={mission} />
+              <MissionLinkRow key={mission.id} mission={mission} back={back} />
             ))}
           </ul>
         )}
@@ -169,7 +176,7 @@ export default async function UnknownPage({
         ) : (
           <ul className="aurum-intel-list">
             {view.evidence.map((evidence) => (
-              <EvidenceRow key={evidence.id} evidence={evidence} />
+              <EvidenceRow key={evidence.id} evidence={evidence} back={back} />
             ))}
           </ul>
         )}

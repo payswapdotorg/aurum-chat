@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { ErrorState, PageHead, Panel, StatusPill } from '../../../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../../../chat/components/chat-return-link';
 import { buildGoalChainView } from '../../lib/views';
 import type { GoalChainView } from '../../lib/views';
 import {
@@ -47,10 +48,16 @@ function dateLabel(iso: string): string {
 
 export default async function GoalChainPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ goalId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { goalId } = await params;
+  // W072 — the guarded return link when this chain was opened from a
+  // chat card (`?back=/chat?c=…`): the way home renders in the head, and
+  // the chain's own drill-downs carry it forward.
+  const back = chatReturnFromSearchParams(await searchParams);
   const session = await requireAuthenticatedPage();
 
   let view: GoalChainView;
@@ -84,6 +91,7 @@ export default async function GoalChainPage({
         description={`The intelligence chain for this goal — priority ${goal.priority}, horizon ends ${dateLabel(goal.horizonEnd)}, owner ${goal.ownerLabel}.`}
         meta={
           <>
+            <ChatReturnLink back={back} />
             <Link href="/intelligence">← Intelligence</Link>
             {' · '}
             <Link href="/goals">Goals surface (management mode)</Link>
@@ -147,7 +155,7 @@ export default async function GoalChainPage({
         ) : (
           <ul className="aurum-intel-list">
             {view.gaps.map((run) => (
-              <GapRunBlock key={run.id} run={run} />
+              <GapRunBlock key={run.id} run={run} back={back} />
             ))}
           </ul>
         )}
@@ -165,7 +173,7 @@ export default async function GoalChainPage({
         ) : (
           <ul className="aurum-intel-list">
             {view.unknowns.map((unknown) => (
-              <UnknownLinkRow key={unknown.id} unknown={unknown} />
+              <UnknownLinkRow key={unknown.id} unknown={unknown} back={back} />
             ))}
           </ul>
         )}
@@ -183,7 +191,7 @@ export default async function GoalChainPage({
         ) : (
           <ul className="aurum-intel-list">
             {view.missions.map((mission) => (
-              <MissionLinkRow key={mission.id} mission={mission} />
+              <MissionLinkRow key={mission.id} mission={mission} back={back} />
             ))}
           </ul>
         )}
@@ -201,7 +209,7 @@ export default async function GoalChainPage({
         ) : (
           <ul className="aurum-intel-list">
             {view.evidence.map((evidence) => (
-              <EvidenceRow key={evidence.id} evidence={evidence} />
+              <EvidenceRow key={evidence.id} evidence={evidence} back={back} />
             ))}
           </ul>
         )}

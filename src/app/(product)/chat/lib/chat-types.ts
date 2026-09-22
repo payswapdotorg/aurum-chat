@@ -9,10 +9,20 @@
 //
 // PRODUCT-SURFACE-DEPLOYMENT-PLAN §3 (employee mode): Aurum behaves like a
 // persistent organizational employee — answers are evidence-backed, the
-// seven consequential card kinds arrive INSIDE messages, and every card
+// consequential card kinds arrive INSIDE messages, and every card
 // deep-links into management mode (the Control Tower). Chat is a channel;
 // the answer payloads are derived intelligence, never authoritative state
 // (ARCHITECTURE.md §1, lock 10/34).
+//
+// W072 — CONVERSATIONAL INTELLIGENCE CONTINUITY: this file is also the
+// reusable card/context contract Wave-2 workers build against. The W060
+// seven kinds are widened into the unified nine-kind model (capabilities
+// and evidence join), every card carries evidence/context (the renderer
+// synthesizes the honest fallback when a stored payload lacks one), and
+// the return-link grammar (`chatReturnLink` / `withChatReturn` /
+// `normalizeChatReturnLink`) keeps drill-downs returnable to the
+// originating conversation — `/chat?c=<conversation>` plus the message
+// anchor — without ever making the transcript domain truth.
 
 import type { PillTone } from '../../lib/states';
 
@@ -73,8 +83,9 @@ export function chatIntentLabel(intent: ChatIntent): string {
 }
 
 // ---------------------------------------------------------------------------
-// Cards — the seven consequential kinds (W060 acceptance), deep-linked into
-// the Control Tower's management surfaces
+// Cards — the unified consequential kinds (W060's seven + W072's
+// capability and evidence), deep-linked into the Control Tower's
+// management surfaces
 // ---------------------------------------------------------------------------
 
 export type ChatCardKind =
@@ -84,7 +95,13 @@ export type ChatCardKind =
   | 'risk'
   | 'opportunity'
   | 'recommendation'
-  | 'approval';
+  | 'approval'
+  // W072 — the unified conversational-card model widens the W060 seven
+  // with the two remaining consequential families of the intelligence
+  // workflow: capabilities (W017 supply/demand, gap alternatives) and
+  // evidence (the immutable observation records every answer rests on).
+  | 'capability'
+  | 'evidence';
 
 export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'goal',
@@ -94,6 +111,8 @@ export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'opportunity',
   'recommendation',
   'approval',
+  'capability',
+  'evidence',
 ];
 
 /** The tower surface each card kind deep-links into (management mode). */
@@ -105,7 +124,17 @@ export const CARD_HREFS: Record<ChatCardKind, string> = {
   opportunity: '/opportunities',
   recommendation: '/recommendations',
   approval: '/approvals',
+  capability: '/capabilities',
+  evidence: '/evidence',
 };
+
+/**
+ * The consequential kinds (W072): every kind in the unified card model is
+ * consequential — each one deep-links into a management or intelligence
+ * surface and therefore owes the reader evidence/context and a return
+ * path into the conversation (frozen plan §5 W072 acceptance).
+ */
+export const CONSEQUENTIAL_CARD_KINDS: readonly ChatCardKind[] = CHAT_CARD_KINDS;
 
 export function isChatCardKind(value: unknown): value is ChatCardKind {
   return (
@@ -130,6 +159,10 @@ export function chatCardKindLabel(kind: ChatCardKind): string {
       return 'Recommendation';
     case 'approval':
       return 'Approval';
+    case 'capability':
+      return 'Capability';
+    case 'evidence':
+      return 'Evidence';
   }
 }
 
@@ -189,6 +222,82 @@ export interface ChatCard {
     | null;
   /** Context-drawer payload for the "Why this" affordance. */
   context: ChatCardContext | null;
+}
+
+// ---------------------------------------------------------------------------
+// Conversational continuity (W072) — the return-link grammar
+//
+// THE CONTRACT (frozen plan §5 W072): a card may carry the reader away
+// from the conversation (into an intelligence workflow page, a tower
+// surface, the explainability reconstruction), but the conversation is
+// never lost: the drill-down href carries the return link as ONE query
+// parameter, and every surface that renders a "back to the conversation"
+// affordance reads it through the same guard. Chat stays a CHANNEL —
+// the return link is derived from the conversation id, never stored as
+// domain truth (ARCHITECTURE-LOCK 35: PostgreSQL is authoritative; the
+// transcript's message ids are transcript concerns, not domain state).
+// ---------------------------------------------------------------------------
+
+/** The query parameter drill-down hrefs carry the return link under. */
+export const CHAT_RETURN_PARAM = 'back';
+
+/** The DOM id prefix of one timeline message (the deep-link anchor). */
+export const CHAT_MESSAGE_ANCHOR_PREFIX = 'm-';
+
+/** The anchor id of one message (stable — the message row's DOM id). */
+export function chatMessageAnchor(messageId: string): string {
+  return `${CHAT_MESSAGE_ANCHOR_PREFIX}${messageId}`;
+}
+
+/**
+ * The stable return link into the conversation (W072): `/chat?c=<id>`
+ * plus, where supported, the exact-message anchor. Pure and
+ * deterministic — the same conversation/message always yields the same
+ * link, so a drill-down opened from a card can always go home.
+ */
+export function chatReturnLink(conversationId: string, messageId?: string | null): string {
+  const base = `/chat?c=${encodeURIComponent(conversationId)}`;
+  if (messageId === undefined || messageId === null || messageId === '') return base;
+  return `${base}#${chatMessageAnchor(messageId)}`;
+}
+
+/** The maximum accepted length of an encoded return link. */
+export const MAX_CHAT_RETURN_LENGTH = 300;
+
+/**
+ * Guard a `back` parameter value (raw, undecoded): it must decode to an
+ * INTERNAL CHAT path — exactly `/chat` before any query or hash.
+ * Anything else (foreign paths, absolute URLs, protocol-relative
+ * mischief, look-alike paths such as `/chatty`, oversized junk) is
+ * refused (null) and the surface simply renders no return affordance.
+ * A return link can only ever send a reader back to a conversation.
+ */
+export function normalizeChatReturnLink(value: unknown): string | null {
+  if (typeof value !== 'string' || value === '') return null;
+  if (value.length > MAX_CHAT_RETURN_LENGTH) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    return null;
+  }
+  if (decoded.includes('://') || decoded.includes('\\')) return null;
+  if (decoded.startsWith('//')) return null;
+  const path = decoded.split(/[?#]/, 1)[0] ?? '';
+  if (path !== '/chat') return null;
+  return decoded;
+}
+
+/**
+ * Append the return link to a drill-down href under `CHAT_RETURN_PARAM`
+ * (merging with an existing query when the href carries one). Null
+ * return link or a foreign href → the href unchanged. Pure.
+ */
+export function withChatReturn(href: string, returnLink: string | null): string {
+  if (returnLink === null || returnLink === '') return href;
+  if (!href.startsWith('/')) return href;
+  const separator = href.includes('?') ? '&' : '?';
+  return `${href}${separator}${CHAT_RETURN_PARAM}=${encodeURIComponent(returnLink)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -378,6 +487,59 @@ function normalizeContext(value: unknown): ChatCardContext | null {
   };
 }
 
+/**
+ * The honest fallback context of one consequential card kind (W072
+ * acceptance: "every consequential chat card has evidence/context").
+ *
+ * Builders attach rich, record-specific context; this is the RENDERER'S
+ * GUARANTEE for stored payloads whose context is missing, foreign or
+ * legacy-shaped — a card without context does not render a dead "Why
+ * this?" affordance, it renders the honest default: what the kind IS,
+ * where the evidence lives, and how the decision trail is reached. The
+ * fallback never invents record specifics — it states the kind's
+ * semantics and links the surfaces that own the truth.
+ */
+export function fallbackCardContext(kind: ChatCardKind): ChatCardContext {
+  return {
+    subtitle: `${chatCardKindLabel(kind)} — derived intelligence; the owning surface is the source of truth`,
+    sections: [
+      {
+        kind: 'why',
+        title: 'Why this matters',
+        lines: [
+          KIND_WHY_LINES[kind],
+          'This card was recorded before its full context was captured — the surfaces below carry the complete record.',
+        ],
+        links: [],
+      },
+      {
+        kind: 'evidence',
+        title: 'Evidence and reasoning',
+        lines: [
+          'Every consequential card rests on immutable observations and a recorded decision cycle.',
+        ],
+        links: [
+          { label: 'Open the Evidence surface', href: '/evidence' },
+          { label: 'Open the reconstruction surface', href: '/explain' },
+        ],
+      },
+    ],
+  };
+}
+
+/** The kind's one-line semantics (the fallback context's "why" line). */
+const KIND_WHY_LINES: Record<ChatCardKind, string> = {
+  goal: 'A goal is management\u2019s declared direction — Aurum evaluates progress against it from live evidence.',
+  unknown: 'An unknown is a consequential question the company cannot yet answer — closing it is first-class work.',
+  mission: 'A learning mission is the goal-driven, budget-bounded effort that closes a knowledge gap.',
+  risk: 'A risk is an exposure the analysis stage recorded against affected goals, with its evidence retained.',
+  opportunity: 'An opportunity is an evidence-backed chance to advance a goal, with value and confidence estimates.',
+  recommendation: 'A recommendation is a consequential action Aurum proposed — it waits at the human authority gate.',
+  approval: 'An approval is a human decision explicitly required before anything consequential executes.',
+  capability: 'A capability is what the company can do today — supply and demand, with alternatives when short.',
+  evidence: 'Evidence is the immutable observation record every answer and decision ultimately rests on.',
+};
+
 /** Defensive read of a stored card; null when the shape is not a card. */
 export function normalizeChatCard(value: unknown): ChatCard | null {
   if (!isRecord(value)) return null;
@@ -411,7 +573,10 @@ export function normalizeChatCard(value: unknown): ChatCard | null {
     href,
     linkLabel: boundedText(value['linkLabel'], 80),
     decision,
-    context: normalizeContext(value['context']),
+    // W072 acceptance — evidence/context on EVERY consequential card:
+    // a stored payload without usable context degrades to the honest
+    // fallback, never to a context-less card.
+    context: normalizeContext(value['context']) ?? fallbackCardContext(kind),
   };
 }
 

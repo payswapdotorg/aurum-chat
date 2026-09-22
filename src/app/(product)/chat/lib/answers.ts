@@ -17,6 +17,14 @@
 //   learning    → captured knowledge entries + active missions
 //   open        → free text: a composite state summary + an honest note
 //
+// W072 — THE UNIFIED CARD MODEL: the composer now emits the full
+// nine-kind set — capability gaps render as CAPABILITY cards (their own
+// consequential kind, alternatives always visible) and the evidence
+// trail renders EVIDENCE cards alongside citations. Every builder
+// attaches record-specific evidence/context (the renderer guarantees
+// the fallback for legacy payloads), and the workflow's execution id
+// powers the message-level explainability loop.
+//
 // The composed payload (headline/bullets/cards/citations) is what the
 // workflow stores on the outbound turn; the TEXT rendering can optionally
 // be naturalized through the LLM gateway (W034, workflow.ts) — but the
@@ -381,6 +389,109 @@ export function riskGapCard(gap: CapabilityGap): ChatCard {
   };
 }
 
+/**
+ * One capability's supply/demand state as a capability card (W072's
+ * unified model — capabilities are their own consequential kind, not a
+ * risk presentation): the same W017 gap analysis, the alternatives
+ * always visible, drilled into the Capabilities surface.
+ */
+export function capabilityCard(gap: CapabilityGap): ChatCard {
+  const statusLabel =
+    gap.status === 'uncovered'
+      ? 'No active supply'
+      : gap.status === 'level_shortfall'
+        ? 'Level shortfall'
+        : gap.status === 'capacity_shortfall'
+          ? 'Capacity shortfall'
+          : 'Covered';
+  return {
+    kind: 'capability',
+    id: gap.capability.id,
+    title: gap.capability.name,
+    statusLabel,
+    tone: gap.status === 'covered' ? 'positive' : 'warning',
+    meta: [
+      `${plural(gap.activeRequirementCount, 'active requirement')}`,
+      `${plural(gap.unmet.length, 'unmet requirement')}`,
+      `${plural(gap.activeSupplyCount, 'active supply')} today`,
+    ],
+    href: CARD_HREFS.capability,
+    decision: null,
+    context: context(
+      [
+        {
+          kind: 'why',
+          title: 'Why this matters',
+          lines: [
+            `${gap.activeRequirementCount} active requirement(s) need this capability; ${gap.unmet.length} are currently unmet.`,
+          ],
+          links: [],
+        },
+        {
+          kind: 'detail',
+          title: 'Alternatives exist',
+          lines: [
+            'Train, reassign, hire, automate, recruit, install or outsource — compare them in the Capabilities surface before anything touches people (human decisions stay human).',
+          ],
+          links: [
+            { label: 'Open Capabilities', href: '/capabilities' },
+            { label: 'Open Workforce', href: '/workforce' },
+          ],
+        },
+      ],
+      'Capability (W017) — what the company can do today, supply and demand',
+    ),
+  };
+}
+
+/**
+ * One immutable observation record as an evidence card (W072's unified
+ * model): the provenance a consequential answer rests on — source,
+ * channel, confidence — drilled into the Evidence surface.
+ */
+export function evidenceCard(observation: Observation): ChatCard {
+  const sourceLabel =
+    observation.source.label ??
+    (observation.source.id
+      ? `${observation.source.kind} ${observation.source.id.slice(0, 8)}`
+      : observation.source.kind);
+  return {
+    kind: 'evidence',
+    id: observation.id,
+    title: clip(`${observation.kind} · ${sourceLabel}`, 140),
+    statusLabel: 'Immutable record',
+    tone: 'neutral',
+    meta: [
+      `Observed ${dateLabel(observation.observedAt)} via ${observation.channel}`,
+      `Confidence ${(observation.confidence.value * 100).toFixed(0)}% (${observation.confidence.method})`,
+    ],
+    href: CARD_HREFS.evidence,
+    decision: null,
+    context: context(
+      [
+        {
+          kind: 'summary',
+          title: 'The record',
+          lines: [
+            clip(`${observation.kind} from ${sourceLabel}, observed ${dateLabel(observation.observedAt)} via ${observation.channel}.`, 400),
+            'Observations are immutable (W004) — this record cannot be edited after the fact, only superseded by newer evidence.',
+          ],
+          links: [],
+        },
+        {
+          kind: 'evidence',
+          title: 'Confidence',
+          lines: [
+            `${(observation.confidence.value * 100).toFixed(0)}% — ${observation.confidence.method}${observation.confidence.basis === null ? '' : ` (${clip(observation.confidence.basis, 200)})`}`,
+          ],
+          links: [{ label: 'Open the Evidence surface', href: '/evidence' }],
+        },
+      ],
+      'Evidence (W004) — the immutable observation record every answer rests on',
+    ),
+  };
+}
+
 /** One loop-recorded analysis finding, located on its trace. */
 export interface TraceFindingLite {
   kind: RecordedAnalysisFinding['kind'];
@@ -392,18 +503,27 @@ export interface TraceFindingLite {
 }
 
 export function traceFindingCard(finding: TraceFindingLite): ChatCard {
-  const isRisk = finding.kind !== 'opportunity';
+  const isRisk = finding.kind === 'risk';
+  const isCapabilityGap = finding.kind === 'capability-gap';
   return {
-    kind: isRisk ? 'risk' : 'opportunity',
+    kind: isCapabilityGap ? 'capability' : isRisk ? 'risk' : 'opportunity',
     id: finding.executionId,
     title: clip(finding.statement, 140),
-    statusLabel: isRisk ? 'Risk finding' : 'Opportunity finding',
-    tone: isRisk ? 'warning' : 'positive',
+    statusLabel: isCapabilityGap
+      ? 'Capability-gap finding'
+      : isRisk
+        ? 'Risk finding'
+        : 'Opportunity finding',
+    tone: finding.kind === 'opportunity' ? 'positive' : 'warning',
     meta: [
       `Detected ${dateLabel(finding.detectedAt)}`,
       `${plural(finding.evidenceObservationIds.length, 'evidence reference')}`,
     ],
-    href: isRisk ? CARD_HREFS.risk : CARD_HREFS.opportunity,
+    href: isCapabilityGap
+      ? CARD_HREFS.capability
+      : isRisk
+        ? CARD_HREFS.risk
+        : CARD_HREFS.opportunity,
     decision: null,
     context: context(
       [
@@ -695,7 +815,10 @@ export function composeAnswerParts(
         ],
         note: degradedNote,
         cards: [
-          ...openGaps.slice(0, 5).map(riskGapCard),
+          // W072 — capabilities are their own consequential kind: the
+          // gap analysis renders as capability cards (alternatives
+          // always visible), risks stay risk cards.
+          ...openGaps.slice(0, 5).map(capabilityCard),
           ...efficiencyFindings.slice(0, 4).map(traceFindingCard),
         ],
         citations: [],
@@ -734,7 +857,13 @@ export function composeAnswerParts(
           'Ask “Show me why” about any card to open its context: evidence, related goals, policy.',
         ],
         note: degradedNote,
-        cards: data.contradictions.slice(0, 3).map(riskContradictionCard),
+        cards: [
+          ...data.contradictions.slice(0, 3).map(riskContradictionCard),
+          // W072 — evidence is its own consequential kind: the immutable
+          // records an evidence-and-reasoning answer rests on render as
+          // cards with their provenance, not only as citation pills.
+          ...data.observations.slice(0, 3).map(evidenceCard),
+        ],
         citations: data.observations.slice(0, 6).map(observationCitation),
         relatedGoalIds: [],
       };

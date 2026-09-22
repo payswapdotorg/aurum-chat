@@ -1043,3 +1043,65 @@
     animation: none;
   }
 }
+
+/* ---- W072: conversational intelligence continuity ---- */
+
+/* The message anchor target: a return link may address one exact
+   message (`/chat?c=<id>#m-<message>`). The landed message carries a
+   soft accent ring so the reader sees where they came back to —
+   restrained (ShareNet): a hairline accent, no flash animation. */
+.aurum-chat-msg:target {
+  position: relative;
+}
+
+.aurum-chat-msg:target::after {
+  content: '';
+  position: absolute;
+  inset: -4px -6px;
+  border: 1px solid var(--accent);
+  border-radius: calc(var(--radius) + 4px);
+  pointer-events: none;
+}
+
+/* The message-level explainability affordance (W072): "Why this
+   answer?" opens the cognition reconstruction and carries the way
+   back. Quiet tertiary link — the drawer button stays the primary
+   "why" affordance, this one goes deeper (the full causal chain). */
+.aurum-chat-explain {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted-ink);
+  text-decoration: none;
+}
+
+.aurum-chat-explain:hover {
+  color: var(--accent-ink);
+}
+
+/* The card-level explainability affordance (W072): approval and
+   recommendation cards are reconstructable action requests — "Explain
+   decision" opens the full proposal→policy→decision chain. Same
+   tertiary weight as "Why this?", distinct from the Open affordance. */
+.aurum-chat-card-explain {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-ink);
+  text-decoration: none;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  padding: 8px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.aurum-chat-card-explain:hover {
+  border-color: var(--graphite);
+  color: var(--ink);
+}
