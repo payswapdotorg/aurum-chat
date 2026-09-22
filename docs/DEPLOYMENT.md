@@ -250,7 +250,7 @@ never secrets; the sections above remain the general runbook.
 | --- | --- | --- |
 | Vercel project | `aurum-chat` — `prj_PljFx5DnZ1MCqQ5bA1uK6G1o8gFy` (team `ekonplacidegmailcom's projects`, `team_4KOoA5CgtYaOF85yFXPeMXLt`) | live |
 | Git connection | GitHub `payswapdotorg/aurum-chat`, production branch `main` | connected |
-| Production deployment | <https://aurum-chat-livid.vercel.app> — `dpl_4CCXFBvoCdDZxsaogF2Av2AY8whV` | READY |
+| Production deployment | <https://aurum-chat-livid.vercel.app> — `dpl_6ctDToEHfxwk5GDae1hB7LFxKmkV` (main @ `c6757c8`, promoted 2026-09-22 re-entry; first promotion: `dpl_4CCXFBvoCdDZxsaogF2Av2AY8whV` from the branch SHA `15c3dbb`) | READY |
 | Vercel Blob store | `aurum-chat-blob` — `store_NMK2PD6WFdeI3khy` (iad1, private) | connected (production + preview) |
 | Resend | sending-restricted API key, From `Aurum <onboarding@resend.dev>` | verified with a live delivery (2026-09-22) |
 | Cron | `0 3 * * *` → `/api/worker` (daily sweep; platform authenticates with `CRON_SECRET`) | registered against the production deployment |
@@ -334,6 +334,24 @@ deferred: routing the loop through a workflow engine would touch W013
 semantics, and the frozen plan wires them only "where they improve durable
 execution" — the queue + inline request-driven pump + cron sweep already
 implement the corrected model.
+
+### Re-entry verification (2026-09-22, verify-and-report)
+
+The branch was re-entered after the squash-merge of PR #87 (main `c6757c8`).
+All five gates re-run verbatim on `work/w077-deployment-instantiation`:
+install/typecheck/lint/arch clean; test suite 4054 passed / 6 skipped / 0
+failed (the count above the Wave-1 4008/5 baseline is W071 + W077 test
+files on the branch base). Live state re-verified through the Vercel API:
+project, git connection, Blob store, encrypted env sets unchanged; both
+provider gaps re-confirmed open (no Neon database resource or
+`DATABASE_URL`; the packet's Upstash endpoint still NXDOMAIN). One real
+defect found and fixed forward: the PR #87 merge to main triggered no
+production deployment (production still served the pre-merge branch SHA),
+so main was promoted to production through the deploy API
+(`dpl_6ctDToEHfxwk5GDae1hB7LFxKmkV`, READY; git-main alias attached).
+Cron state is not readable through any API path this deployment token can
+reach (v1 crons endpoints → 404) — the `vercel.json` schedule stands as
+the record.
 
 ## 12. Rollback
 
