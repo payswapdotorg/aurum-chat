@@ -1,28 +1,28 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/navigation-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/navigation-mobile.spec.ts",
   "title": "the bottom navigation carries the five areas with active treatment",
   "project": "mobile",
   "steps": [
     {
-      "at": "2026-09-22T07:29:26.338Z",
+      "at": "2026-09-22T14:26:25.377Z",
       "step": "sign in as the manager on the mobile viewport",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:28.536Z",
+      "at": "2026-09-22T14:26:26.386Z",
       "step": "the five areas in plan order with short labels",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:28.583Z",
+      "at": "2026-09-22T14:26:26.407Z",
       "step": "navigate to Intelligence through the bottom nav",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:29.952Z",
+      "at": "2026-09-22T14:26:27.492Z",
       "step": "screenshot: mobile — the Intelligence area from the bottom nav",
       "url": "http://localhost:3105/intelligence",
       "shot": "docs/productization-evidence/W076/screens/navigation-mobile__the-bottom-navigation-carries-the-five-areas-with-active-tre__mobile-the-intelligence-area-from-the-bottom-nav.png"

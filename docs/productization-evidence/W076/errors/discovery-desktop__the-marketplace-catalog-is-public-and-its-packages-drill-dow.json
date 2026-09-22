@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/discovery-desktop.spec.ts",
   "title": "the marketplace catalog is public and its packages drill down",
   "project": "desktop",
   "violationCount": 0,

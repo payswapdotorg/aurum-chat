@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/chat-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/chat-mobile.spec.ts",
   "title": "a composer turn runs the real workflow on mobile and the reply lands",
   "project": "mobile",
   "violationCount": 0,

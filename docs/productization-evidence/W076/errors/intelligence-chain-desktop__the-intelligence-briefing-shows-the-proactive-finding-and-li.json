@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
   "title": "the intelligence briefing shows the proactive finding and links the chain",
   "project": "desktop",
   "violationCount": 0,

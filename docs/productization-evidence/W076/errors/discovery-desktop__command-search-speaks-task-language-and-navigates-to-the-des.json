@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/discovery-desktop.spec.ts",
   "title": "command search speaks task language and navigates to the destination",
   "project": "desktop",
   "violationCount": 0,

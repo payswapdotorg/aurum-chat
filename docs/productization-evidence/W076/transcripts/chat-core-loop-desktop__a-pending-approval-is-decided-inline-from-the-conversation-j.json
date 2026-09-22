@@ -1,30 +1,30 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
   "title": "a pending approval is decided inline from the conversation (Journey E, chat-first)",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:38.034Z",
+      "at": "2026-09-22T14:25:07.718Z",
       "step": "open the conversation and ask for attention",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:38.792Z",
+      "at": "2026-09-22T14:25:08.283Z",
       "step": "approve the employee-messaging request with the card button",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:38.874Z",
+      "at": "2026-09-22T14:25:08.587Z",
       "step": "the decision is acknowledged in place",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:41.051Z",
+      "at": "2026-09-22T14:25:10.766Z",
       "step": "screenshot: the inline approval — decided inside the thread",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": "docs/productization-evidence/W076/screens/chat-core-loop-desktop__a-pending-approval-is-decided-inline-from-the-conversation-j__the-inline-approval-decided-inside-the-thread.png"
     }
   ]

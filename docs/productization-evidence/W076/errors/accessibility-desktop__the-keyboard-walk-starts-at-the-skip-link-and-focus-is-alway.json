@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/accessibility-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/accessibility-desktop.spec.ts",
   "title": "the keyboard walk starts at the skip link and focus is always visible",
   "project": "desktop",
   "violationCount": 0,

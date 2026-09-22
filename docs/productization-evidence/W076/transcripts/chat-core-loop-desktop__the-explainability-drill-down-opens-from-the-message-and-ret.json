@@ -1,36 +1,36 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
   "title": "the explainability drill-down opens from the message and returns to the thread",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:43.434Z",
+      "at": "2026-09-22T14:25:13.203Z",
       "step": "open the conversation and ask for attention",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:44.673Z",
+      "at": "2026-09-22T14:25:14.332Z",
       "step": "follow the Why-this-answer link (Journey K from chat)",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:46.291Z",
+      "at": "2026-09-22T14:25:17.995Z",
       "step": "screenshot: the explainability trace of the chat answer",
-      "url": "http://localhost:3105/explain/execution/9e91fb5c-71ed-49ec-8d91-ed5ebce58d40?back=%2Fchat%3Fc%3D06951c91-ae25-48f0-b5c0-88dc745153b1%23m-75f4496a-b1b3-4849-9b63-7df0108b7e00",
+      "url": "http://localhost:3105/explain/execution/bb8795a7-3c5c-4a6a-8c5f-23040971f32f?back=%2Fchat%3Fc%3D2584ed7c-5026-40a3-809f-5e4e8f76dc28%23m-43660448-1a4d-4879-987e-89642fb5f810",
       "shot": "docs/productization-evidence/W076/screens/chat-core-loop-desktop__the-explainability-drill-down-opens-from-the-message-and-ret__the-explainability-trace-of-the-chat-answer.png"
     },
     {
-      "at": "2026-09-22T07:26:46.291Z",
+      "at": "2026-09-22T14:25:17.995Z",
       "step": "return to the conversation through the W072 return link",
-      "url": "http://localhost:3105/explain/execution/9e91fb5c-71ed-49ec-8d91-ed5ebce58d40?back=%2Fchat%3Fc%3D06951c91-ae25-48f0-b5c0-88dc745153b1%23m-75f4496a-b1b3-4849-9b63-7df0108b7e00",
+      "url": "http://localhost:3105/explain/execution/bb8795a7-3c5c-4a6a-8c5f-23040971f32f?back=%2Fchat%3Fc%3D2584ed7c-5026-40a3-809f-5e4e8f76dc28%23m-43660448-1a4d-4879-987e-89642fb5f810",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:46.570Z",
+      "at": "2026-09-22T14:25:18.240Z",
       "step": "a DIRECT deep-link load lands on the exact message (:target)",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1#m-75f4496a-b1b3-4849-9b63-7df0108b7e00",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28#m-43660448-1a4d-4879-987e-89642fb5f810",
       "shot": null
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/navigation-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/navigation-mobile.spec.ts",
   "title": "command search opens from the mobile top bar and closes on Escape",
   "project": "mobile",
   "violationCount": 0,

@@ -1,0 +1,43 @@
+{
+  "spec": "/home/z/aurum/tests/browser/desktop/w074-chat-interventions-desktop.spec.ts",
+  "title": "the proactive recommendation arrives in the thread with the comparison and the human gate",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T14:26:03.690Z",
+      "step": "sign in as the manager",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:04.553Z",
+      "step": "the messenger mount fires the interventions sweep",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:04.627Z",
+      "step": "open the interventions conversation from the list",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:04.988Z",
+      "step": "the proposal card waits at the human gate with its comparison",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:05.014Z",
+      "step": "the capability-gap card and the citations ride the same turn",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:05.196Z",
+      "step": "screenshot: the intervention proposal — the comparison at the human gate",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": "docs/productization-evidence/W076/screens/w074-chat-interventions-desktop__the-proactive-recommendation-arrives-in-the-thread-with-the-__the-intervention-proposal-the-comparison-at-the-human-gate.png"
+    }
+  ]
+}

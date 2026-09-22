@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/discovery-desktop.spec.ts",
   "title": "the developer console is discoverable from More (Journey L)",
   "project": "desktop",
   "violationCount": 0,

@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/onboarding-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/onboarding-desktop.spec.ts",
   "title": "the sign-in page offers the seeded demo personas through quick access",
   "project": "desktop",
   "violationCount": 0,

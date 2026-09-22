@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/accessibility-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/accessibility-desktop.spec.ts",
   "title": "the command-search dialog obeys Escape and returns focus to its opener",
   "project": "desktop",
   "violationCount": 0,

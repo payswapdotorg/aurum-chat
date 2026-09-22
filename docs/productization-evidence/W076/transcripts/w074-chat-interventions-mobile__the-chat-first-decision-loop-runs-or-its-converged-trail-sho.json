@@ -1,0 +1,31 @@
+{
+  "spec": "/home/z/aurum/tests/browser/mobile/w074-chat-interventions-mobile.spec.ts",
+  "title": "the chat-first decision loop runs (or its converged trail shows) on mobile",
+  "project": "mobile",
+  "steps": [
+    {
+      "at": "2026-09-22T14:26:34.778Z",
+      "step": "sign in and open the interventions conversation (mobile)",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:36.192Z",
+      "step": "the converged outcome trail is in the thread",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:36.768Z",
+      "step": "screenshot: mobile — the converged intervention trail, in the thread",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": "docs/productization-evidence/W076/screens/w074-chat-interventions-mobile__the-chat-first-decision-loop-runs-or-its-converged-trail-sho__mobile-the-converged-intervention-trail-in-the-thread.png"
+    },
+    {
+      "at": "2026-09-22T14:26:36.768Z",
+      "step": "the proposal drill-down returns through the W072 link",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    }
+  ]
+}

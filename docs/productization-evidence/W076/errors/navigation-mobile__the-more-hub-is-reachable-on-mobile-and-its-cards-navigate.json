@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/navigation-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/navigation-mobile.spec.ts",
   "title": "the More hub is reachable on mobile and its cards navigate",
   "project": "mobile",
   "violationCount": 0,

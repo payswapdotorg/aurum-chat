@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/onboarding-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/onboarding-desktop.spec.ts",
   "title": "the composer is keyboard-first (focusable, typed, and cleared by UI state)",
   "project": "desktop",
   "violationCount": 0,

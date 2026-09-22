@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
   "title": "a composer turn runs the real workflow: optimistic bubble → working → cards",
   "project": "desktop",
   "violationCount": 0,

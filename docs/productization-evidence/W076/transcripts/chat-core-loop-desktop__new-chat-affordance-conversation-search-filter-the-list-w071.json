@@ -1,22 +1,22 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
   "title": "new-chat affordance + conversation search filter the list (W071 controls)",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:49.134Z",
+      "at": "2026-09-22T14:25:19.484Z",
       "step": "start a new conversation from the list head",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:49.519Z",
+      "at": "2026-09-22T14:25:19.845Z",
       "step": "screenshot: the new-conversation welcome state",
       "url": "http://localhost:3105/chat",
       "shot": "docs/productization-evidence/W076/screens/chat-core-loop-desktop__new-chat-affordance-conversation-search-filter-the-list-w071__the-new-conversation-welcome-state.png"
     },
     {
-      "at": "2026-09-22T07:26:49.519Z",
+      "at": "2026-09-22T14:25:19.845Z",
       "step": "the search affordance filters the conversation list",
       "url": "http://localhost:3105/chat",
       "shot": null

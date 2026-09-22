@@ -1,42 +1,42 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
   "title": "the unknown and the mission open through their own links",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:27:19.836Z",
+      "at": "2026-09-22T14:25:35.908Z",
       "step": "open the goal page from the briefing",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:23.019Z",
+      "at": "2026-09-22T14:25:37.063Z",
       "step": "open the promoted unknown",
-      "url": "http://localhost:3105/intelligence/goals/cbeabcd6-2fbf-44d1-8273-022951b8783e",
+      "url": "http://localhost:3105/intelligence/goals/955711f6-cda5-44e1-bb53-22cf12068b93",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:24.172Z",
+      "at": "2026-09-22T14:25:38.726Z",
       "step": "screenshot: the unknown — consequence and the closing mission",
-      "url": "http://localhost:3105/intelligence/unknowns/a979bc5f-09c3-414b-a783-56147f073706",
+      "url": "http://localhost:3105/intelligence/unknowns/ea1b3cf1-5bed-4af9-8fd0-3566369da33a",
       "shot": "docs/productization-evidence/W076/screens/intelligence-chain-desktop__the-unknown-and-the-mission-open-through-their-own-links__the-unknown-consequence-and-the-closing-mission.png"
     },
     {
-      "at": "2026-09-22T07:27:24.172Z",
+      "at": "2026-09-22T14:25:38.726Z",
       "step": "open the mission",
-      "url": "http://localhost:3105/intelligence/unknowns/a979bc5f-09c3-414b-a783-56147f073706",
+      "url": "http://localhost:3105/intelligence/unknowns/ea1b3cf1-5bed-4af9-8fd0-3566369da33a",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:25.524Z",
+      "at": "2026-09-22T14:25:40.733Z",
       "step": "screenshot: the mission — the knowledge objective",
-      "url": "http://localhost:3105/intelligence/missions/1c337a75-ccee-4255-8837-950ae86c697c",
+      "url": "http://localhost:3105/intelligence/missions/82e0db97-6e79-48f9-bfed-2a84e01331f9",
       "shot": "docs/productization-evidence/W076/screens/intelligence-chain-desktop__the-unknown-and-the-mission-open-through-their-own-links__the-mission-the-knowledge-objective.png"
     },
     {
-      "at": "2026-09-22T07:27:25.524Z",
+      "at": "2026-09-22T14:25:40.733Z",
       "step": "the chain links upward (no dead end)",
-      "url": "http://localhost:3105/intelligence/missions/1c337a75-ccee-4255-8837-950ae86c697c",
+      "url": "http://localhost:3105/intelligence/missions/82e0db97-6e79-48f9-bfed-2a84e01331f9",
       "shot": null
     }
   ]

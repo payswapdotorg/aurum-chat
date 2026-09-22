@@ -1,16 +1,16 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/navigation-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/navigation-mobile.spec.ts",
   "title": "management mode (Today) keeps its own shell on mobile",
   "project": "mobile",
   "steps": [
     {
-      "at": "2026-09-22T07:29:35.508Z",
+      "at": "2026-09-22T14:26:30.177Z",
       "step": "open Today — the management-mode area",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:36.936Z",
+      "at": "2026-09-22T14:26:31.322Z",
       "step": "screenshot: mobile — management mode (the tower shell)",
       "url": "http://localhost:3105/today",
       "shot": "docs/productization-evidence/W076/screens/navigation-mobile__management-mode-today-keeps-its-own-shell-on-mobile__mobile-management-mode-the-tower-shell.png"
