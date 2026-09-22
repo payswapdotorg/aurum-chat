@@ -242,18 +242,23 @@ describe('no capability is command-search-only', () => {
   });
 
   it('the chat cards still deep-link their management destinations (the contextual-action frame)', () => {
-    // The W060 card kinds widened by W072 into the unified nine-kind
-    // model (capabilities and evidence join) — the "Chat → contextual
-    // action → detail surface" frame. Worker A owns the chat surface;
-    // the card href contract is the seam this wave builds around.
+    // The W060 card kinds widened by W072 (capability, evidence) and
+    // W073 (the learning kinds) into the unified twelve-kind model —
+    // the "Chat → contextual action → detail surface" frame. The card
+    // href contract is the seam this wave builds around; the seven W060
+    // management destinations remain untouched and every card
+    // destination stays multi-frame reachable.
     expect(Object.keys(CARD_HREFS).sort()).toEqual([
       'approval',
       'capability',
+      'contribution',
       'evidence',
       'goal',
+      'knowledge-request',
       'mission',
       'opportunity',
       'recommendation',
+      'reward',
       'risk',
       'unknown',
     ]);

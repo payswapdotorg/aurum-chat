@@ -84,8 +84,10 @@ export function chatIntentLabel(intent: ChatIntent): string {
 
 // ---------------------------------------------------------------------------
 // Cards — the unified consequential kinds (W060's seven + W072's
-// capability and evidence), deep-linked into the Control Tower's
-// management surfaces
+// capability and evidence + W073's learning kinds), deep-linked into
+// the Control Tower's management and Learning surfaces. W073 landed
+// the learning kinds through the shared contract's extension pattern —
+// the same union/array/hrefs/label/guard machinery, no parallel layer.
 // ---------------------------------------------------------------------------
 
 export type ChatCardKind =
@@ -101,7 +103,11 @@ export type ChatCardKind =
   // workflow: capabilities (W017 supply/demand, gap alternatives) and
   // evidence (the immutable observation records every answer rests on).
   | 'capability'
-  | 'evidence';
+  | 'evidence'
+  // W073 — chat-based learning requests (learning surfaces as cards).
+  | 'knowledge-request'
+  | 'contribution'
+  | 'reward';
 
 export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'goal',
@@ -113,6 +119,10 @@ export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'approval',
   'capability',
   'evidence',
+  // W073 — chat-based learning requests.
+  'knowledge-request',
+  'contribution',
+  'reward',
 ];
 
 /** The tower surface each card kind deep-links into (management mode). */
@@ -126,6 +136,10 @@ export const CARD_HREFS: Record<ChatCardKind, string> = {
   approval: '/approvals',
   capability: '/capabilities',
   evidence: '/evidence',
+  // W073 — the supporting Learning surface owns the learning evidence chain.
+  'knowledge-request': '/learning',
+  contribution: '/learning',
+  reward: '/learning',
 };
 
 /**
@@ -135,6 +149,30 @@ export const CARD_HREFS: Record<ChatCardKind, string> = {
  * path into the conversation (frozen plan §5 W072 acceptance).
  */
 export const CONSEQUENTIAL_CARD_KINDS: readonly ChatCardKind[] = CHAT_CARD_KINDS;
+
+/** The learning kinds (W073) — cards the chat learning lane renders. */
+export const LEARNING_CARD_KINDS: readonly ChatCardKind[] = [
+  'knowledge-request',
+  'contribution',
+  'reward',
+];
+
+/** Is this card kind one of the W073 learning kinds? */
+export function isLearningCardKind(value: unknown): value is ChatCardKind {
+  return (
+    typeof value === 'string' && (LEARNING_CARD_KINDS as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * The stable conversation return link (the W072 continuity seam — every
+ * management/product surface that opens a detail from a conversation links
+ * BACK to the same thread with this shape; W073 consumes it and lands the
+ * single definition here so the two surfaces cannot drift).
+ */
+export function chatConversationHref(conversationId: string): string {
+  return `/chat?c=${encodeURIComponent(conversationId)}`;
+}
 
 export function isChatCardKind(value: unknown): value is ChatCardKind {
   return (
@@ -163,6 +201,13 @@ export function chatCardKindLabel(kind: ChatCardKind): string {
       return 'Capability';
     case 'evidence':
       return 'Evidence';
+    // W073 — chat-based learning requests.
+    case 'knowledge-request':
+      return 'Knowledge request';
+    case 'contribution':
+      return 'Contribution';
+    case 'reward':
+      return 'Reward';
   }
 }
 
@@ -538,6 +583,9 @@ const KIND_WHY_LINES: Record<ChatCardKind, string> = {
   approval: 'An approval is a human decision explicitly required before anything consequential executes.',
   capability: 'A capability is what the company can do today — supply and demand, with alternatives when short.',
   evidence: 'Evidence is the immutable observation record every answer and decision ultimately rests on.',
+  'knowledge-request': 'A knowledge request asks an employee what they know — the answer becomes evidence and a recognized contribution.',
+  contribution: 'A contribution is knowledge an employee gave through chat — acknowledged, traceable, and separate from people decisions.',
+  reward: 'A reward recognizes a knowledge contribution under the company’s explicit reward policy — never a compensation signal.',
 };
 
 /** Defensive read of a stored card; null when the shape is not a card. */

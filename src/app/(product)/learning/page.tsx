@@ -59,6 +59,8 @@ import {
 import type { ContributionStatus } from '@/modules/contributions/contract';
 import { AnswerForm } from './components/answer-form';
 import type { RewardKind, RewardStatus } from '@/modules/rewards/contract';
+import { learningChatHref } from './lib/chat-requests';
+import type { LearningChatLinkage } from './lib/chat-requests';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,7 +114,15 @@ function MissionRowView({ mission }: { mission: LearningMissionRow }) {
   );
 }
 
-function RequestRow({ request }: { request: KnowledgeRequestRow }) {
+function RequestRow({
+  request,
+  chat,
+}: {
+  request: KnowledgeRequestRow;
+  /** W073 — the learning conversation's linkage, when it exists. */
+  chat: LearningChatLinkage | null;
+}) {
+  const inChat = chat !== null && chat.askPlanIds.includes(request.planId);
   return (
     <li className="aurum-intel-row aurum-learn-request">
       <div className="aurum-intel-row-head">
@@ -136,6 +146,26 @@ function RequestRow({ request }: { request: KnowledgeRequestRow }) {
       <p className="aurum-intel-row-foot">
         {request.askPolicy === null ? '' : askPolicyNote(request.askPolicy)}
       </p>
+      {chat === null ? null : (
+        <p className="aurum-intel-row-foot aurum-learn-chatlink">
+          {inChat ? (
+            <>
+              Aurum also asked this in the conversation —{' '}
+              <Link className="aurum-learn-link" href={learningChatHref(chat)}>
+                answer it in the chat
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              <Link className="aurum-learn-link" href={learningChatHref(chat)}>
+                Answer in the chat instead
+              </Link>{' '}
+              — it lands in the same conversation, with the same acknowledgement.
+            </>
+          )}
+        </p>
+      )}
       <details className="aurum-learn-disclose">
         <summary>Answer this question</summary>
         <AnswerForm planId={request.planId} />
@@ -275,9 +305,18 @@ export default async function LearningPage() {
         ) : (
           <ul className="aurum-intel-list aurum-learn-list">
             {view.requests.map((request) => (
-              <RequestRow key={request.planId} request={request} />
+              <RequestRow key={request.planId} request={request} chat={view.chat} />
             ))}
           </ul>
+        )}
+        {view.chat === null ? null : (
+          <p className="aurum-intel-row-foot aurum-learn-chatlink" style={{ marginTop: 10 }}>
+            Aurum asks these questions in the conversation too —{' '}
+            <Link className="aurum-learn-link" href={learningChatHref(view.chat)}>
+              open the “Aurum learning” thread
+            </Link>
+            . Employees can complete them right there, without this page.
+          </p>
         )}
       </Panel>
 
@@ -380,6 +419,16 @@ export default async function LearningPage() {
             {rewardSummary.committedByCurrency
               .map((row) => moneyLabel(row.amount, row.currency))
               .join(' · ') || 'nothing'}
+          </p>
+        )}
+        {view.chat === null ? null : (
+          <p className="aurum-intel-row-foot aurum-learn-chatlink" style={{ marginTop: 8 }}>
+            The same acknowledgements and reward state are visible in the Aurum
+            conversation —{' '}
+            <Link className="aurum-learn-link" href={learningChatHref(view.chat)}>
+              open the thread
+            </Link>
+            .
           </p>
         )}
         <p className="aurum-learn-separation" role="note">

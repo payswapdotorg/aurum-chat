@@ -2917,6 +2917,100 @@ textarea.aurum-learn-input {
   }
 }
 
+/* ---- W073: chat-based learning requests (the learning lane's chat
+       pieces — the answer-mode banner, the chat return links) ---- */
+
+/* The composer's answer-mode banner (the WhatsApp reply pattern): a
+   quiet quoted strip above the input, ShareNet-restrained — hairline,
+   surface background, no gradient chrome. */
+
+.aurum-learn-answer-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.aurum-learn-answer-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.aurum-learn-answer-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-ink);
+}
+
+.aurum-learn-answer-question {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.aurum-learn-answer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aurum-learn-answer-field {
+  min-width: 0;
+}
+
+.aurum-learn-answer-select {
+  min-height: 44px;
+  max-width: 100%;
+  font-size: 12px;
+}
+
+.aurum-learn-answer-cancel {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-ink);
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.aurum-learn-answer-cancel:hover {
+  border-color: var(--graphite);
+  color: var(--ink);
+}
+
+.aurum-learn-answer-hint {
+  font-size: 11px;
+  color: var(--faint-ink);
+}
+
+/* The Learning page's chat return links (W073 — the stable /chat?c= seam):
+   quiet footnotes, never competing with the surface's own actions. */
+
+.aurum-learn-chatlink {
+  color: var(--muted-ink);
+}
+
 /* ---- interventions surface (W063: capability gaps, acquisition
        alternatives, agent/team lifecycle, workforce honesty) ---- */
 
