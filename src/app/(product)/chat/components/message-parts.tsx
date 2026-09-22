@@ -19,13 +19,19 @@ import type {
   ChatCard,
   ChatMessageView,
 } from '../lib/chat-types';
-import { chatCardKindLabel, chatMessageAnchor, withChatReturn } from '../lib/chat-types';
+import {
+  chatCardKindLabel,
+  chatMessageAnchor,
+  isLearningCardKind,
+  withChatReturn,
+} from '../lib/chat-types';
 import {
   answerExplainHref,
   cardDrillHref,
   cardExplainHref,
   isPendingDecisionCard,
 } from '../lib/cards';
+import { LearningMessageCard } from './learning/learning-cards';
 import {
   bubbleTimeLabel,
   dayLabel,
@@ -81,6 +87,11 @@ export const COMPOSE_GLYPH_D =
 export const SEARCH_GLYPH_D = 'M21 21l-4.3-4.3M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z';
 /** The single check (delivery state on the member's own bubbles, W071). */
 export const CHECK_GLYPH_D = 'M20 6 9 17l-5-5';
+/** The answer affordance (chat bubble + pencil — W073 learning lane). */
+export const ANSWER_GLYPH_D =
+  'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z M12 7h-3v3h3v3h2v-3h3V9h-3V6h-2v1Z';
+/** The cancel affordance (the answer-mode banner, W073 learning lane). */
+export const CANCEL_GLYPH_D = 'M18 6 6 18M6 6l12 12';
 
 // ---------------------------------------------------------------------------
 // Working indicator (the streaming/working state)
@@ -253,6 +264,11 @@ export interface CardActions {
   onOpenContext: (card: ChatCard, returnTo: string | null) => void;
   /** Decide a pending approval (approve/reject through the actions contract). */
   onDecide: (card: ChatCard, decision: 'approve' | 'reject') => void;
+  /**
+   * Enter composer answer mode for a knowledge request (W073 learning
+   * lane — the card's plan id rides the shared card model's `id`).
+   */
+  onAnswer?: (card: ChatCard) => void;
 }
 
 export function MessageCard({
@@ -265,6 +281,12 @@ export function MessageCard({
   /** The message's stable return link (W072 continuity). */
   returnTo?: string | null;
 }): ReactNode {
+  // W073 — the learning kinds render through the learning lane's own
+  // component (consumption of the shared card model; the one learning
+  // affordance is the knowledge-request's composer answer mode).
+  if (isLearningCardKind(card.kind)) {
+    return <LearningMessageCard card={card} actions={actions} returnTo={returnTo} />;
+  }
   const decided = actions === undefined ? undefined : actions.decided[card.decision?.requestId ?? ''];
   const isPending = isPendingDecisionCard(card) && decided === undefined;
   const explainHref = cardExplainHref(card);
