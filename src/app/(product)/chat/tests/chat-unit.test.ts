@@ -379,6 +379,11 @@ describe('composeAnswerParts', () => {
     expect(parts.cards[0]?.kind).toBe('recommendation');
     expect(parts.cards[0]?.title).toBe('Employee messaging');
     expect(parts.cards[0]?.href).toBe('/recommendations');
+    // W072 — the recommendation card carries its evidence/context (the
+    // proposal + the policy evaluation), like every consequential kind.
+    expect(parts.cards[0]?.context).not.toBeNull();
+    const policy = parts.cards[0]?.context?.sections.find((s) => s.kind === 'policy');
+    expect(policy?.lines.join(' ')).toContain('Gate outcome');
   });
 
   it('why cites observations and surfaces retained contradictions', () => {
@@ -387,6 +392,13 @@ describe('composeAnswerParts', () => {
     expect(parts.citations[0]?.href).toBe('/evidence');
     expect(parts.cards[0]?.kind).toBe('risk');
     expect(parts.cards[0]?.title).toContain('broker says');
+    // W072 — the immutable records also render as evidence cards with
+    // their provenance (source, channel, confidence).
+    const evidence = parts.cards.find((card) => card.kind === 'evidence');
+    expect(evidence?.id).toBe('55555555-5555-4555-8555-555555555555');
+    expect(evidence?.title).toContain('freshness.sample');
+    expect(evidence?.meta.join(' ')).toContain('ingestion');
+    expect(evidence?.context?.sections.some((s) => s.kind === 'evidence')).toBe(true);
   });
 
   it('changed lists observations newest first with citations', () => {

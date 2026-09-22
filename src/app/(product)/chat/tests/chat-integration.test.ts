@@ -791,4 +791,66 @@ describe('tenant isolation', () => {
       ownerAView.conversations.find((c) => c.id === result.conversationId),
     ).toBeUndefined();
   });
+
+
+});
+
+// ---------------------------------------------------------------------------
+// W072 — conversational intelligence continuity (composition guarantees)
+// ---------------------------------------------------------------------------
+
+describe('W072 — continuity at the composition level', () => {
+  it('every card of every composed answer carries evidence/context and a deep link', async () => {
+    // One turn per card-bearing intent; every card the workflow can emit
+    // passes the W072 acceptance (evidence/context, destination).
+    for (const [starterId, text, mustHaveCards] of [
+      ['attention', 'What needs my attention?', true],
+      ['unknowns', 'What do we not know?', true],
+      ['goals', 'How are our goals?', true],
+      // The Journey E test earlier in this file already decided the
+      // fixture's only pending request — 'improve' is honestly card-free
+      // by the time this describe runs (its cards' context guarantee is
+      // proven by the unit suite's recommendationCard composition).
+      ['improve', 'Any recommendations?', false],
+      ['why', 'Show me the evidence', true],
+      // This fixture seeds no capability requirements, so the
+      // inefficiency answer is honestly card-free — its guarantee is
+      // conditional (never a context-less card), not non-empty.
+      ['inefficiency', 'Where are we inefficient?', false],
+    ] as const) {
+      const result = await runChatTurn(fixture.ownerA, { displayName: 'Northwind Manager' }, {
+        conversationId: null,
+        text,
+        starterId,
+        clientMessageId: null,
+      });
+      if (mustHaveCards) {
+        expect(result.answer.cards.length).toBeGreaterThan(0);
+      }
+      for (const card of result.answer.cards) {
+        expect(card.context).not.toBeNull();
+        expect(card.context?.sections.length ?? 0).toBeGreaterThan(0);
+        expect(card.href).toMatch(/^\//);
+      }
+      // The explainability anchor of the whole answer is the execution.
+      expect(result.answer.executionId).toBe(result.executionId);
+    }
+  });
+
+
+
+  it('the why answer renders evidence cards for the immutable records it rests on', async () => {
+    const result = await runChatTurn(fixture.ownerA, { displayName: 'Northwind Manager' }, {
+      conversationId: null,
+      text: 'Show me why — what is the evidence?',
+      starterId: 'why',
+      clientMessageId: null,
+    });
+    const evidence = result.answer.cards.find((card) => card.kind === 'evidence');
+    expect(evidence).toBeDefined();
+    expect(evidence!.href).toBe('/evidence');
+    expect(evidence!.statusLabel).toBe('Immutable record');
+    const summary = evidence!.context?.sections.find((s) => s.kind === 'summary');
+    expect(summary?.lines.join(' ')).toContain('immutable');
+  });
 });

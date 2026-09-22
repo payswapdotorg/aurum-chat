@@ -400,3 +400,189 @@ describe('enrichCardContextLinks (the drawer inherits the return context)', () =
     expect(enrichCardContextLinks(context, null)).toEqual(context);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 5 — the rendered timeline (the continuity guarantees in the DOM)
+// ---------------------------------------------------------------------------
+
+import { createElement } from 'react';
+import { renderToReadableStream } from 'react-dom/server';
+import { ProductShellProvider } from '../../components/product-shell-provider';
+import { ChatWorkspace } from '../components/chat-workspace';
+import { CHAT_STARTERS } from '../../lib/chat-starters';
+import type { ChatMessageView, ChatStateView } from '../lib/chat-types';
+
+const CONVERSATION_ID = 'aaaaaaaa-1111-4111-8111-111111111111';
+const MEMBER_MESSAGE_ID = 'bbbbbbbb-2222-4222-8222-222222222222';
+const AURUM_MESSAGE_ID = 'cccccccc-3333-4333-8333-333333333333';
+const EXECUTION_ID = 'eeeeeeee-4444-4444-8444-444444444444';
+
+/** A thread whose Aurum reply carries cards, a citation and an execution. */
+function continuityThreadState(): ChatStateView {
+  const reply: ChatMessageView = {
+    id: AURUM_MESSAGE_ID,
+    side: 'aurum',
+    speaker: 'Aurum',
+    text: 'Two items need you.',
+    sentAt: '2026-10-14T09:05:00.000',
+    starterId: null,
+    answer: {
+      intent: 'attention',
+      mode: 'deterministic',
+      headline: 'Here’s what needs your attention right now.',
+      bullets: [],
+      note: null,
+      cards: [
+        {
+          kind: 'approval',
+          id: 'req-approve-1',
+          title: 'Employee messaging',
+          statusLabel: 'Needs your decision',
+          tone: 'warning',
+          meta: ['Authority: ASK'],
+          href: '/approvals',
+          linkLabel: null,
+          decision: { requestId: 'req-approve-1', status: 'pending' },
+          context: {
+            subtitle: 'Pending action request (W009)',
+            sections: [
+              {
+                kind: 'approval',
+                title: 'What is being asked',
+                lines: ['Ask June about the customs broker change.'],
+                links: [
+                  { label: 'Open Approvals (management mode)', href: '/approvals' },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          kind: 'unknown',
+          id: 'u-1',
+          title: 'Renegotiation timing',
+          statusLabel: 'Open',
+          tone: 'warning',
+          meta: [],
+          href: '/intelligence/unknowns/u-1',
+          linkLabel: 'Open the intelligence workflow',
+          decision: null,
+          context: {
+            subtitle: null,
+            sections: [
+              {
+                kind: 'why',
+                title: 'Why this matters',
+                lines: ['Without the reason, renegotiation timing is a guess.'],
+                links: [],
+              },
+            ],
+          },
+        },
+      ],
+      citations: [
+        {
+          kind: 'observation',
+          id: 'obs-1',
+          label: 'freshness.sample · Roastery WMS',
+          detail: 'Observed October 12',
+          href: '/evidence',
+        },
+      ],
+      executionId: EXECUTION_ID,
+    },
+    pending: false,
+  };
+  const member: ChatMessageView = {
+    id: MEMBER_MESSAGE_ID,
+    side: 'member',
+    speaker: 'You',
+    text: 'What needs my attention?',
+    sentAt: '2026-10-14T09:00:00.000',
+    starterId: 'attention',
+    answer: null,
+    pending: false,
+  };
+  return {
+    generatedAt: '2026-10-14T09:06:00.000',
+    conversations: [
+      {
+        id: CONVERSATION_ID,
+        title: 'Freshness goal drift',
+        lastMessageAt: '2026-10-14T09:05:00.000',
+        messageCount: 2,
+        preview: 'Aurum: Two items need you.',
+      },
+    ],
+    thread: { id: CONVERSATION_ID, title: 'Freshness goal drift', messages: [member, reply] },
+  };
+}
+
+async function renderWorkspace(initial: ChatStateView): Promise<string> {
+  const element = createElement(
+    ProductShellProvider,
+    null,
+    createElement(ChatWorkspace, {
+      tenantId: 'tenant-a',
+      principalName: 'Ops Lead',
+      starters: CHAT_STARTERS,
+      initial,
+      starterQuery: null,
+    }),
+  );
+  const stream = await renderToReadableStream(element);
+  return await new Response(stream).text();
+}
+
+describe('the rendered timeline carries the continuity contract', () => {
+  it('every message renders its stable anchor id (return links land on the exact message)', async () => {
+    const html = await renderWorkspace(continuityThreadState());
+    expect(html).toContain(`id="m-${MEMBER_MESSAGE_ID}"`);
+    expect(html).toContain(`id="m-${AURUM_MESSAGE_ID}"`);
+  });
+
+  it('card Open links carry the conversation return link (?back=)', async () => {
+    const html = await renderWorkspace(continuityThreadState());
+    const back = encodeURIComponent(
+      `/chat?c=${CONVERSATION_ID}#m-${AURUM_MESSAGE_ID}`,
+    );
+    // The approval card drills into management mode with the way home.
+    expect(html).toContain(`href="/approvals?back=${back}"`);
+    // The workflow card drills into the intelligence surface with it too.
+    expect(html).toContain(`href="/intelligence/unknowns/u-1?back=${back}"`);
+    // The label override still renders (W061's product-mode links).
+    expect(html).toContain('Open the intelligence workflow');
+  });
+
+  it('the message-level explainability link opens the reconstruction and returns', async () => {
+    const html = await renderWorkspace(continuityThreadState());
+    const back = encodeURIComponent(
+      `/chat?c=${CONVERSATION_ID}#m-${AURUM_MESSAGE_ID}`,
+    );
+    expect(html).toContain('Why this answer?');
+    expect(html).toContain(`href="/explain/execution/${EXECUTION_ID}?back=${back}"`);
+  });
+
+  it('approval cards offer the decision reconstruction (Explain decision)', async () => {
+    const html = await renderWorkspace(continuityThreadState());
+    const back = encodeURIComponent(
+      `/chat?c=${CONVERSATION_ID}#m-${AURUM_MESSAGE_ID}`,
+    );
+    expect(html).toContain('Explain decision');
+    expect(html).toContain(`href="/explain/action/req-approve-1?back=${back}"`);
+    // Non-action cards do not render the action-request reconstruction.
+    expect(html).not.toContain('href="/explain/action/u-1');
+  });
+
+  it('citations carry the return link; the Why-this affordance stays present', async () => {
+    const html = await renderWorkspace(continuityThreadState());
+    const back = encodeURIComponent(
+      `/chat?c=${CONVERSATION_ID}#m-${AURUM_MESSAGE_ID}`,
+    );
+    expect(html).toContain(`href="/evidence?back=${back}"`);
+    expect(html.match(/class="aurum-chat-card-why"/g)?.length).toBe(2);
+    // The inline decision affordance renders on the pending approval.
+    expect(html).toContain('data-decision="approve"');
+    expect(html).toContain('data-decision="reject"');
+  });
+});
