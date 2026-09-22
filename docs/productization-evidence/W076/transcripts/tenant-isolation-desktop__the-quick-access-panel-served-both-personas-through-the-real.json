@@ -1,0 +1,13 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/tenant-isolation-desktop.spec.ts",
+  "title": "the quick-access panel served both personas through the real auth flow",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:28:38.402Z",
+      "step": "the panel lists both personas before either signs in",
+      "url": "about:blank",
+      "shot": null
+    }
+  ]
+}

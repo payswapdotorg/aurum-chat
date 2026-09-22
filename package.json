@@ -15,7 +15,8 @@
     "vercel:build": "bun run migrate && next build",
     "db:dev": "tsx scripts/dev-db.ts",
     "seed:demo": "tsx scripts/seed-demo-harness.ts",
-    "mcp": "tsx src/mcp/server.ts"
+    "mcp": "tsx src/mcp/server.ts",
+    "browser:journeys": "node node_modules/@playwright/test/cli.js test -c playwright.config.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.57.0",
     "@types/node": "^26.5.1",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",

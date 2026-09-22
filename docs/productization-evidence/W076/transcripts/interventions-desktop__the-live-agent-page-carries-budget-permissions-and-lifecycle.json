@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/interventions-desktop.spec.ts",
+  "title": "the live agent page carries budget, permissions and lifecycle onward",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:40.777Z",
+      "step": "open the live agent from the interventions home",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:43.820Z",
+      "step": "screenshot: the agent page — budget, permissions, lifecycle",
+      "url": "http://localhost:3105/interventions/agents/5379877a-0b57-4a6b-990e-bb63acca824d",
+      "shot": "docs/productization-evidence/W076/screens/interventions-desktop__the-live-agent-page-carries-budget-permissions-and-lifecycle__the-agent-page-budget-permissions-lifecycle.png"
+    }
+  ]
+}

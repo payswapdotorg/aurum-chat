@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/interventions-desktop.spec.ts",
+  "title": "the recruitment proposal shows compared alternatives at the human gate",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:35.739Z",
+      "step": "open the proposal from the interventions home",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:38.679Z",
+      "step": "screenshot: the proposal — alternatives, waiting at the gate",
+      "url": "http://localhost:3105/interventions/proposals/b8862f02-df92-4370-a7c3-fbcbc31d89a8",
+      "shot": "docs/productization-evidence/W076/screens/interventions-desktop__the-recruitment-proposal-shows-compared-alternatives-at-the-__the-proposal-alternatives-waiting-at-the-gate.png"
+    }
+  ]
+}

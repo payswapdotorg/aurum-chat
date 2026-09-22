@@ -1,0 +1,13 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "title": "the mobile chrome exists in the DOM for narrow viewports (desktop-width sanity)",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:10.396Z",
+      "step": "the responsive chrome is present in the document",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    }
+  ]
+}

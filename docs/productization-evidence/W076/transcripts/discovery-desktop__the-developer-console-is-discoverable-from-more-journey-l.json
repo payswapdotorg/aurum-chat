@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "title": "the developer console is discoverable from More (Journey L)",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:04.410Z",
+      "step": "open the developer console from the hub",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:07.916Z",
+      "step": "screenshot: the developer console — keys, webhooks, MCP",
+      "url": "http://localhost:3105/developer",
+      "shot": "docs/productization-evidence/W076/screens/discovery-desktop__the-developer-console-is-discoverable-from-more-journey-l__the-developer-console-keys-webhooks-mcp.png"
+    }
+  ]
+}

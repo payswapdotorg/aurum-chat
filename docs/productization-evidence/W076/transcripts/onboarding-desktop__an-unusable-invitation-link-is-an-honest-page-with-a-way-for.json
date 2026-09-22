@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/onboarding-desktop.spec.ts",
+  "title": "an unusable invitation link is an honest page with a way forward (no dead ends)",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:49.909Z",
+      "step": "follow a dead invitation link",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:51.651Z",
+      "step": "screenshot: dead invite code — the honest dead-end page",
+      "url": "http://localhost:3105/invite/not-a-live-code",
+      "shot": "docs/productization-evidence/W076/screens/onboarding-desktop__an-unusable-invitation-link-is-an-honest-page-with-a-way-for__dead-invite-code-the-honest-dead-end-page.png"
+    }
+  ]
+}

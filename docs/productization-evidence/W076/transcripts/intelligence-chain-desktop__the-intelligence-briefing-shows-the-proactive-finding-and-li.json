@@ -1,0 +1,37 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
+  "title": "the intelligence briefing shows the proactive finding and links the chain",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:10.640Z",
+      "step": "sign in as the manager and open Intelligence",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:15.522Z",
+      "step": "the shell stays ShareNet around the briefing",
+      "url": "http://localhost:3105/intelligence",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:16.078Z",
+      "step": "screenshot: the intelligence briefing",
+      "url": "http://localhost:3105/intelligence",
+      "shot": "docs/productization-evidence/W076/screens/intelligence-chain-desktop__the-intelligence-briefing-shows-the-proactive-finding-and-li__the-intelligence-briefing.png"
+    },
+    {
+      "at": "2026-09-22T07:27:16.078Z",
+      "step": "follow the goal link into the chain",
+      "url": "http://localhost:3105/intelligence",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:17.266Z",
+      "step": "screenshot: the goal page — gaps, unknown, mission",
+      "url": "http://localhost:3105/intelligence/goals/cbeabcd6-2fbf-44d1-8273-022951b8783e",
+      "shot": "docs/productization-evidence/W076/screens/intelligence-chain-desktop__the-intelligence-briefing-shows-the-proactive-finding-and-li__the-goal-page-gaps-unknown-mission.png"
+    }
+  ]
+}

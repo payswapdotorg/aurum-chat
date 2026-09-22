@@ -1,0 +1,31 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "title": "the More hub groups capabilities by user intent, not module names",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:26:49.889Z",
+      "step": "sign in as the manager and open More",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:54.439Z",
+      "step": "the intent families render with their capability cards",
+      "url": "http://localhost:3105/more",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:54.612Z",
+      "step": "the shell stays ShareNet around the hub",
+      "url": "http://localhost:3105/more",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:55.234Z",
+      "step": "screenshot: the More hub — the capability index",
+      "url": "http://localhost:3105/more",
+      "shot": "docs/productization-evidence/W076/screens/discovery-desktop__the-more-hub-groups-capabilities-by-user-intent-not-module-n__the-more-hub-the-capability-index.png"
+    }
+  ]
+}

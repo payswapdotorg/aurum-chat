@@ -9,6 +9,13 @@
 // notification entry opens). While it loads, the switcher and the bell
 // render their quiet skeletons — the shell's loading pattern doing real
 // work, not a decoration.
+//
+// PUBLIC PAGES (W076): anonymous visitors legitimately browse the public
+// marketplace catalog — the shell layout resolves the session and passes
+// `authenticated: false` there, so this provider never issues the
+// session-scoped fetch (which produced a 401 and a console error on every
+// public page load). The chrome renders the honest "no company" quiet
+// state instead.
 
 import {
   createContext,
@@ -40,6 +47,19 @@ export interface ShellStateApi {
 
 const ShellStateContext = createContext<ShellStateApi | null>(null);
 
+/** The chrome view for sessions that are not company-scoped (public pages). */
+const ANONYMOUS_SHELL_VIEW: ShellStateView = {
+  generatedAt: '',
+  tenantId: '',
+  principalId: '',
+  workspace: null,
+  company: { ok: false, reason: 'unavailable' },
+  notifications: { ok: false, reason: null, items: [], totalShown: 0, attentionCount: 0 },
+  principal: null,
+  companies: [],
+  role: null,
+};
+
 /**
  * Fetch the shell state. `searchOverride` (a raw '?…' string) lets a caller
  * that has just navigated pass the NEW scope explicitly — client-side
@@ -70,8 +90,17 @@ async function fetchShellState(searchOverride?: string): Promise<ShellStateView>
   return envelope.view;
 }
 
-export function ShellStateProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<ShellStateStatus>({ phase: 'loading' });
+export function ShellStateProvider({
+  children,
+  authenticated = true,
+}: {
+  children: ReactNode;
+  /** False on public pages for anonymous sessions — no session-scoped fetch. */
+  authenticated?: boolean;
+}) {
+  const [status, setStatus] = useState<ShellStateStatus>(
+    authenticated ? { phase: 'loading' } : { phase: 'ready', view: ANONYMOUS_SHELL_VIEW },
+  );
   const generation = useRef(0);
 
   const refresh = useCallback((searchOverride?: string) => {
@@ -94,13 +123,14 @@ export function ShellStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!authenticated) return; // public/anonymous: no session-scoped chrome state exists
     refresh();
     const onShellRefresh = () => refresh();
     window.addEventListener(SHELL_REFRESH_EVENT, onShellRefresh);
     return () => {
       window.removeEventListener(SHELL_REFRESH_EVENT, onShellRefresh);
     };
-  }, [refresh]);
+  }, [refresh, authenticated]);
 
   const api = useMemo<ShellStateApi>(
     () => ({ status, refresh }),

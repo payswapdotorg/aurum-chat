@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/onboarding-desktop.spec.ts",
+  "title": "the composer is keyboard-first (focusable, typed, and cleared by UI state)",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:28:27.322Z",
+      "step": "focus the composer with the keyboard only",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:28:27.973Z",
+      "step": "screenshot: composer with a draft (employee)",
+      "url": "http://localhost:3105/chat",
+      "shot": "docs/productization-evidence/W076/screens/onboarding-desktop__the-composer-is-keyboard-first-focusable-typed-and-cleared-b__composer-with-a-draft-employee.png"
+    }
+  ]
+}
