@@ -310,6 +310,7 @@ describe('capability coverage', () => {
     const instruments = CAPABILITY_ROUTES.filter((capability) => capability.instrument);
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'demo',
+      'deployment-smoke',
       'journey-proof',
       'quality',
       'simulator',
