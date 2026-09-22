@@ -140,6 +140,8 @@ export function ChatWorkspace({
   const [sendError, setSendError] = useState<string | null>(null);
   const [decided, setDecided] = useState<Record<string, 'approved' | 'rejected'>>({});
   const [deciding, setDeciding] = useState<string | null>(null);
+  /** W074 — the intervention proposal currently being activated. */
+  const [intervening, setIntervening] = useState<string | null>(null);
   const [pollFailed, setPollFailed] = useState(false);
   /** Whether the selected thread's timeline is being fetched right now. */
   const [opening, setOpening] = useState(false);
@@ -234,6 +236,37 @@ export function ChatWorkspace({
     void (async (): Promise<void> => {
       try {
         const response = await fetch('/api/product/learning/chat/deliver', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: '{}',
+        });
+        if (!response.ok) return;
+        const body = (await response.json()) as { delivered?: boolean };
+        if (cancelled || body.delivered !== true) return;
+        await refresh(selectedRef.current);
+      } catch {
+        // quiet — never block the messenger on the proactive sweep
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refresh]);
+
+  // --- W074: Aurum surfaces its capability-gap recommendations ----------
+  // When the messenger opens, the interventions sweep delivers the
+  // tenant's awaiting recruitment proposals into the persistent "Aurum
+  // interventions" conversation as recommendation messages (idempotent
+  // per proposal), and converges decided ones with their outcome
+  // messages — the manager understands and decides them right here,
+  // without discovering the Interventions route first. The same quiet
+  // discipline as the learning sweep: a failure degrades to no
+  // proactive recommendations this visit.
+  useEffect(() => {
+    let cancelled = false;
+    void (async (): Promise<void> => {
+      try {
+        const response = await fetch('/api/product/interventions/chat/deliver', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: '{}',
@@ -488,6 +521,88 @@ export function ChatWorkspace({
     [],
   );
 
+  // --- W074: intervention decisions (the proposal gate, inline) -------------
+  // The SAME authority gate the Interventions surface drives: the vote
+  // goes through the actions contract (claim-gated, separation of
+  // duties), the settle lands on the proposal, and the OUTCOME message
+  // returns to THIS thread — the refresh brings it in so the manager
+  // sees the decision's consequence where they made it.
+  const decideIntervention = useCallback(
+    async (card: ChatCard, decision: 'approve' | 'reject'): Promise<void> => {
+      if (card.decision === null) return;
+      const requestId = card.decision.requestId;
+      setDeciding(requestId);
+      try {
+        const conversationId = state.thread?.id ?? selectedRef.current;
+        const response = await fetch(
+          `/api/product/interventions/chat/proposals/${encodeURIComponent(card.id)}/decide`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ decision, conversationId }),
+          },
+        );
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as
+            | { message?: string; error?: string }
+            | null;
+          throw new Error(
+            body?.message ?? body?.error ?? `decision failed (HTTP ${response.status})`,
+          );
+        }
+        setDecided((current) => ({
+          ...current,
+          [requestId]: decision === 'approve' ? 'approved' : 'rejected',
+        }));
+        // The outcome message returns to the originating thread — pull
+        // the refreshed timeline so it lands in view.
+        await refresh(conversationId);
+      } catch (cause) {
+        setSendError(cause instanceof Error ? cause.message : 'decision failed');
+      } finally {
+        setDeciding(null);
+      }
+    },
+    [state.thread?.id, refresh],
+  );
+
+  // --- W074: intervention activation (the approved recruit, inline) ----------
+  // Registers the agent with exactly the scopes the approved comparison
+  // proposed; the activation outcome message (the agent card + its
+  // lifecycle context) returns to THIS thread.
+  const activateIntervention = useCallback(
+    async (card: ChatCard): Promise<void> => {
+      setIntervening(card.id);
+      try {
+        const conversationId = state.thread?.id ?? selectedRef.current;
+        const response = await fetch(
+          `/api/product/interventions/chat/proposals/${encodeURIComponent(card.id)}/activate`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ conversationId }),
+          },
+        );
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as
+            | { message?: string; error?: string }
+            | null;
+          throw new Error(
+            body?.message ?? body?.error ?? `activation failed (HTTP ${response.status})`,
+          );
+        }
+        // The activation outcome returns to the originating thread —
+        // pull the refreshed timeline so the agent card lands in view.
+        await refresh(conversationId);
+      } catch (cause) {
+        setSendError(cause instanceof Error ? cause.message : 'activation failed');
+      } finally {
+        setIntervening(null);
+      }
+    },
+    [state.thread?.id, refresh],
+  );
+
   /** W073 — enter composer answer mode for a knowledge request. */
   const beginAnswer = useCallback((card: ChatCard): void => {
     setAnswerTarget({ planId: card.id, question: card.title });
@@ -504,6 +619,7 @@ export function ChatWorkspace({
     () => ({
       decided,
       deciding,
+      intervening,
       onOpenContext: (card, returnTo) => {
         if (card.context === null) return;
         // W072 — the drawer is part of the conversation: its section
@@ -524,11 +640,17 @@ export function ChatWorkspace({
       onDecide: (card, decision) => {
         void decide(card, decision);
       },
+      onDecideIntervention: (card, decision) => {
+        void decideIntervention(card, decision);
+      },
+      onActivateIntervention: (card) => {
+        void activateIntervention(card);
+      },
       onAnswer: (card) => {
         beginAnswer(card);
       },
     }),
-    [openContext, decided, deciding, decide, beginAnswer],
+    [openContext, decided, deciding, intervening, decide, decideIntervention, activateIntervention, beginAnswer],
   );
 
   // --- selection -------------------------------------------------------------
