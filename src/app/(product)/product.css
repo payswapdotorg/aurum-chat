@@ -3011,6 +3011,73 @@ textarea.aurum-learn-input {
   color: var(--muted-ink);
 }
 
+/* ---- W074: conversational interventions & approval continuity (the
+       intervention lane's chat pieces — the comparison block, the
+       activation affordance, the safeguard notes) ---- */
+
+/* The proposal card's comparison list: the same meta-line body the
+   shared card model renders, with a hairline between the compared
+   alternatives so a manager can scan the acquisition vocabulary
+   (train / reassign / hire / automate / recruit / install / outsource)
+   at a glance. ShareNet-restrained — hairlines, no chrome. */
+
+.aurum-intv-comparison {
+  margin-top: 8px;
+  gap: 0;
+}
+
+.aurum-intv-comparison li {
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.aurum-intv-comparison li:first-child {
+  border-top: none;
+  padding-top: 0;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* The Activate affordance (the approved recruit, inline): the same
+   44px+ decide-button body with the positive accent — activating is
+   the constructive step of the chain. */
+
+.aurum-intv-activate {
+  border-color: var(--accent-deep);
+  background: var(--accent-deep);
+  color: #f9f8f7;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aurum-intv-activate:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+/* The human-employment safeguard note (lock 20/21): quieter than the
+   card's decision note but always present at every consequential step —
+   a hairline-left annotation, never a warning banner. */
+
+.aurum-intv-safeguard {
+  margin-top: 8px;
+  padding-left: 8px;
+  border-left: 2px solid var(--line-strong);
+  color: var(--muted-ink);
+}
+
+/* Small screens: the safeguard stays legible; the comparison rows keep
+   their scannable rhythm without horizontal scroll (the lines wrap,
+   overflow-wrap is inherited from the shared card meta rules). */
+
+@media (max-width: 560px) {
+  .aurum-intv-comparison li {
+    padding: 6px 0;
+  }
+}
+
 /* ---- interventions surface (W063: capability gaps, acquisition
        alternatives, agent/team lifecycle, workforce honesty) ---- */
 

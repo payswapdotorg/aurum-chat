@@ -58,10 +58,11 @@ import {
 // ---------------------------------------------------------------------------
 
 describe('the unified consequential card model (W072)', () => {
-  it('covers the W060 seven plus capability, evidence and the learning kinds', () => {
-    // Station integration: W073's learning kinds joined the unified model
-    // through the contract's extension pattern — the consequential
-    // guarantee below applies to them exactly as to the W060/W072 kinds.
+  it('covers the W060 seven plus capability, evidence, the learning kinds and the intervention kinds', () => {
+    // Station integration: W073's learning kinds and W074's intervention
+    // kinds joined the unified model through the contract's extension
+    // pattern — the consequential guarantee below applies to them
+    // exactly as to the W060/W072 kinds.
     expect([...CHAT_CARD_KINDS]).toEqual([
       'goal',
       'unknown',
@@ -75,6 +76,8 @@ describe('the unified consequential card model (W072)', () => {
       'knowledge-request',
       'contribution',
       'reward',
+      'intervention-proposal',
+      'intervention-agent',
     ]);
     // Every kind in the unified model is consequential (W072 acceptance).
     expect([...CONSEQUENTIAL_CARD_KINDS]).toEqual([...CHAT_CARD_KINDS]);

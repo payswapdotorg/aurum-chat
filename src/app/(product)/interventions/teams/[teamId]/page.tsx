@@ -28,6 +28,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { EmptyState, ErrorState, PageHead, Panel, StatusPill } from '../../../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../../../chat/components/chat-return-link';
+import { withChatReturn } from '../../../chat/lib/chat-types';
+import type { PageSearchParams } from '../../../lib/context';
 import { buildTeamView } from '../../lib/views';
 import type { TeamView } from '../../lib/views';
 import {
@@ -52,10 +55,17 @@ export const metadata: Metadata = {
 
 export default async function TeamPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ teamId: string }>;
+  searchParams: Promise<PageSearchParams>;
 }) {
   const { teamId } = await params;
+  // W072/W074 — the guarded return link when the team was opened from a
+  // chat card drill-down (`?back=/chat?c=…`): the conversation is never
+  // lost when the deeper management work begins.
+  const search = await searchParams;
+  const back = chatReturnFromSearchParams(search);
   const session = await requireAuthenticatedPage();
 
   let view: TeamView;
@@ -75,6 +85,7 @@ export default async function TeamPage({
         description="A team of agents as one organizational actor — its roster topology, shared objectives, budget envelope and escalation rules, with a gated lifecycle and an outcome timeline."
         meta={
           <>
+            <ChatReturnLink back={back} />{' '}
             <StatusPill tone={teamStatusTone(team.status)}>{teamStatusLabel(team.status)}</StatusPill>{' '}
             · version {team.version} · composed {dateLabel(team.createdAt)} · updated{' '}
             {dateLabel(team.updatedAt)}
@@ -88,7 +99,7 @@ export default async function TeamPage({
         </p>
       )}
       <p className="aurum-intel-row-foot" style={{ marginBottom: 18 }}>
-        <Link className="aurum-learn-link" href="/interventions">
+        <Link className="aurum-learn-link" href={withChatReturn('/interventions', back)}>
           ← All interventions
         </Link>
       </p>

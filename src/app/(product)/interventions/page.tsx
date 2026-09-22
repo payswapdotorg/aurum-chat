@@ -32,7 +32,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { EmptyState, ErrorState, PageHead, Panel, StatusPill } from '../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../chat/components/chat-return-link';
+import { withChatReturn } from '../chat/lib/chat-types';
+import type { PageSearchParams } from '../lib/context';
 import { buildInterventionsHomeView } from './lib/views';
+import {
+  interventionsChatHref,
+  interventionsChatLinkage,
+} from './lib/chat-interventions';
 import type {
   AgentRow,
   AssessmentRow,
@@ -123,13 +130,13 @@ function GapRowView({ gap }: { gap: GapRow }) {
   );
 }
 
-function ProposalRowView({ proposal }: { proposal: ProposalRow }) {
+function ProposalRowView({ proposal, back }: { proposal: ProposalRow; back: string | null }) {
   return (
     <li className="aurum-intel-row">
       <div className="aurum-intel-row-head">
         <Link
           className="aurum-intel-row-title"
-          href={`/interventions/proposals/${proposal.id}`}
+          href={withChatReturn(`/interventions/proposals/${proposal.id}`, back)}
         >
           {proposal.title}
         </Link>
@@ -145,7 +152,10 @@ function ProposalRowView({ proposal }: { proposal: ProposalRow }) {
       </p>
       {proposal.awaitingDecision ? (
         <p className="aurum-intel-row-foot">
-          <Link className="aurum-learn-link" href={`/interventions/proposals/${proposal.id}`}>
+          <Link
+            className="aurum-learn-link"
+            href={withChatReturn(`/interventions/proposals/${proposal.id}`, back)}
+          >
             Decide this proposal
           </Link>{' '}
           — a human decision is holding it.
@@ -155,11 +165,14 @@ function ProposalRowView({ proposal }: { proposal: ProposalRow }) {
   );
 }
 
-function TeamRowView({ team }: { team: TeamRow }) {
+function TeamRowView({ team, back }: { team: TeamRow; back: string | null }) {
   return (
     <li className="aurum-intel-row">
       <div className="aurum-intel-row-head">
-        <Link className="aurum-intel-row-title" href={`/interventions/teams/${team.id}`}>
+        <Link
+          className="aurum-intel-row-title"
+          href={withChatReturn(`/interventions/teams/${team.id}`, back)}
+        >
           {team.displayName ?? team.slug}
         </Link>
         <StatusPill tone={teamStatusTone(team.status)}>
@@ -175,11 +188,14 @@ function TeamRowView({ team }: { team: TeamRow }) {
   );
 }
 
-function AgentRowView({ agent }: { agent: AgentRow }) {
+function AgentRowView({ agent, back }: { agent: AgentRow; back: string | null }) {
   return (
     <li className="aurum-intel-row">
       <div className="aurum-intel-row-head">
-        <Link className="aurum-intel-row-title" href={`/interventions/agents/${agent.id}`}>
+        <Link
+          className="aurum-intel-row-title"
+          href={withChatReturn(`/interventions/agents/${agent.id}`, back)}
+        >
           {agent.displayName ?? agent.slug}
         </Link>
         <StatusPill tone={agent.status === 'active' ? 'positive' : 'neutral'}>
@@ -288,18 +304,48 @@ function OutcomeRowView({ outcome }: { outcome: OutcomeRow }) {
 // The page
 // ---------------------------------------------------------------------------
 
-export default async function InterventionsPage() {
+export default async function InterventionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<PageSearchParams>;
+}) {
+  const params = await searchParams;
+  // W072/W074 — the guarded return link when the surface was opened
+  // from a chat card (`?back=/chat?c=…`): the conversation is never
+  // lost when the deeper management work begins.
+  const back = chatReturnFromSearchParams(params);
   const session = await requireAuthenticatedPage();
   const view = await buildInterventionsHomeView(session.context);
   const summary = view.outcomeSummary;
+  // W074 — the same governance truth from both surfaces: which
+  // recommendations also live in the persistent interventions
+  // conversation (quiet; a tenant without one shows no dead link).
+  const chatLinkage = await interventionsChatLinkage(session.context).catch(() => null);
 
   return (
     <>
       <PageHead
         title="Interventions"
         description="Where the company is short, what could close the gap, and the full lifecycle of the agents and teams that do the work — compared with evidence and uncertainty, decided by humans."
-        meta={<>Generated {dateLabel(view.generatedAt)}</>}
+        meta={<>
+          <ChatReturnLink back={back} />
+          Generated {dateLabel(view.generatedAt)}
+        </>}
       />
+
+      {chatLinkage === null ? null : (
+        <p className="aurum-intel-row-foot" style={{ marginBottom: 14 }}>
+          <Link className="aurum-learn-chatlink" href={interventionsChatHref(chatLinkage)}>
+            These recommendations also live in your Aurum chat
+          </Link>{' '}
+          — {chatLinkage.recommendationProposalIds.length} recommendation
+          {chatLinkage.recommendationProposalIds.length === 1 ? '' : 's'} delivered,
+          {' '}{chatLinkage.decidedProposalIds.length} decided
+          {chatLinkage.decidedProposalIds.length === 1 ? '' : 's'},
+          {' '}{chatLinkage.activatedProposalIds.length} activated
+          {chatLinkage.activatedProposalIds.length === 1 ? '' : 's'} in the thread.
+        </p>
+      )}
 
       {/* The seven-word comparison axis. */}
       <Panel
@@ -354,7 +400,7 @@ export default async function InterventionsPage() {
         ) : (
           <ul className="aurum-intel-list">
             {view.proposals.map((proposal) => (
-              <ProposalRowView key={proposal.id} proposal={proposal} />
+              <ProposalRowView key={proposal.id} proposal={proposal} back={back} />
             ))}
           </ul>
         )}
@@ -377,7 +423,7 @@ export default async function InterventionsPage() {
         ) : (
           <ul className="aurum-intel-list">
             {view.teams.map((team) => (
-              <TeamRowView key={team.id} team={team} />
+              <TeamRowView key={team.id} team={team} back={back} />
             ))}
           </ul>
         )}
@@ -404,7 +450,7 @@ export default async function InterventionsPage() {
         ) : (
           <ul className="aurum-intel-list">
             {view.agents.map((agent) => (
-              <AgentRowView key={agent.id} agent={agent} />
+              <AgentRowView key={agent.id} agent={agent} back={back} />
             ))}
           </ul>
         )}

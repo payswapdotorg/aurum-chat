@@ -27,6 +27,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { EmptyState, PageHead, Panel, StatusPill } from '../../../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../../../chat/components/chat-return-link';
+import { withChatReturn } from '../../../chat/lib/chat-types';
+import type { PageSearchParams } from '../../../lib/context';
 import { buildProposalView } from '../../lib/views';
 import type { ProposalAlternativeRow, ProposalView } from '../../lib/views';
 import {
@@ -90,10 +93,18 @@ function AlternativeRowView({ alternative }: { alternative: ProposalAlternativeR
 
 export default async function ProposalPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ proposalId: string }>;
+  searchParams: Promise<PageSearchParams>;
 }) {
   const { proposalId } = await params;
+  // W072/W074 — the guarded return link when the proposal was opened
+  // from a chat recommendation card (`?back=/chat?c=…`): the manager
+  // jumps into the deep comparison and always keeps the way back to
+  // the thread where the recommendation arrived.
+  const search = await searchParams;
+  const back = chatReturnFromSearchParams(search);
   const session = await requireAuthenticatedPage();
 
   let view: ProposalView;
@@ -113,6 +124,7 @@ export default async function ProposalPage({
         description={`The compared ways to close the ${proposal.capability.name} gap — cost, timeline and expected contribution per alternative, decided by a human.`}
         meta={
           <>
+            <ChatReturnLink back={back} />{' '}
             <StatusPill tone={proposalStatusTone(proposal.status)}>
               {proposalStatusLabel(proposal.status)}
             </StatusPill>{' '}
@@ -125,7 +137,10 @@ export default async function ProposalPage({
         {proposal.rationale}
       </p>
       <p className="aurum-intel-row-foot" style={{ marginBottom: 18 }}>
-        <Link className="aurum-learn-link" href="/interventions">
+        <Link
+          className="aurum-learn-link"
+          href={withChatReturn('/interventions', back)}
+        >
           ← All interventions
         </Link>
       </p>

@@ -85,6 +85,12 @@ export function toConversationItem(
  * for every still-pending approval card so the timeline never offers an
  * Approve/Reject affordance that was already decided. Bounded and
  * quiet: an unreadable request leaves the card exactly as recorded.
+ *
+ * W074 — the intervention-proposal cards join the same refresh: a
+ * proposal decided on the Interventions surface (or through the generic
+ * chat approval card) updates its card here from the SAME authoritative
+ * action request — the thread and the detail surface show one
+ * governance truth.
  */
 async function refreshApprovalCards(
   ctx: TenantContext,
@@ -94,7 +100,10 @@ async function refreshApprovalCards(
   for (const message of messages) {
     if (message.answer === null) continue;
     for (const card of message.answer.cards) {
-      if (card.kind === 'approval' && card.decision?.status === 'pending') {
+      if (
+        (card.kind === 'approval' || card.kind === 'intervention-proposal') &&
+        card.decision?.status === 'pending'
+      ) {
         pendingIds.add(card.decision.requestId);
       }
     }
@@ -114,7 +123,10 @@ async function refreshApprovalCards(
   for (const message of messages) {
     if (message.answer === null) continue;
     for (const card of message.answer.cards) {
-      if (card.kind === 'approval' && card.decision !== null) {
+      if (
+        (card.kind === 'approval' || card.kind === 'intervention-proposal') &&
+        card.decision !== null
+      ) {
         const request = requests.get(card.decision.requestId);
         if (request === undefined || request.status === 'pending') continue;
         card.decision = {

@@ -22,6 +22,7 @@ import type {
 import {
   chatCardKindLabel,
   chatMessageAnchor,
+  isInterventionCardKind,
   isLearningCardKind,
   withChatReturn,
 } from '../lib/chat-types';
@@ -32,6 +33,7 @@ import {
   isPendingDecisionCard,
 } from '../lib/cards';
 import { LearningMessageCard } from './learning/learning-cards';
+import { InterventionMessageCard } from './interventions/intervention-cards';
 import {
   bubbleTimeLabel,
   dayLabel,
@@ -269,6 +271,26 @@ export interface CardActions {
    * lane — the card's plan id rides the shared card model's `id`).
    */
   onAnswer?: (card: ChatCard) => void;
+  /**
+   * Decide a pending intervention proposal from the thread (W074 — the
+   * SAME authority gate the Interventions surface drives: decideApproval
+   * + settle, then the outcome message returns to this thread). The
+   * card's `id` carries the proposal id; the decision payload's
+   * requestId keys the spinner state.
+   */
+  onDecideIntervention?: (card: ChatCard, decision: 'approve' | 'reject') => void;
+  /**
+   * Activate an approved proposal's recruit alternative from the thread
+   * (W074 — registerAgent with the proposed scopes, then the activation
+   * outcome message returns to this thread). The card's `id` carries
+   * the proposal id and keys the activating state.
+   */
+  onActivateIntervention?: (card: ChatCard) => void;
+  /**
+   * The proposal id currently being activated (W074 spinner state —
+   * null when no activation is in flight).
+   */
+  intervening?: string | null;
 }
 
 export function MessageCard({
@@ -286,6 +308,13 @@ export function MessageCard({
   // affordance is the knowledge-request's composer answer mode).
   if (isLearningCardKind(card.kind)) {
     return <LearningMessageCard card={card} actions={actions} returnTo={returnTo} />;
+  }
+  // W074 — the intervention kinds render through the intervention lane's
+  // own component (the same consumption pattern): the proposal card's
+  // inline human decision + activation affordances, the agent card's
+  // lifecycle context, the safeguard notes at every consequential step.
+  if (isInterventionCardKind(card.kind)) {
+    return <InterventionMessageCard card={card} actions={actions} returnTo={returnTo} />;
   }
   const decided = actions === undefined ? undefined : actions.decided[card.decision?.requestId ?? ''];
   const isPending = isPendingDecisionCard(card) && decided === undefined;
