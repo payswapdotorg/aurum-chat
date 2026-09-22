@@ -81,7 +81,7 @@ export function LearningMessageCard({
           <button
             type="button"
             className="aurum-chat-card-why"
-            onClick={() => actions?.onOpenContext(card)}
+            onClick={() => actions?.onOpenContext(card, returnTo)}
           >
             Why this?
           </button>

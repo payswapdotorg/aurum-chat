@@ -583,6 +583,9 @@ const KIND_WHY_LINES: Record<ChatCardKind, string> = {
   approval: 'An approval is a human decision explicitly required before anything consequential executes.',
   capability: 'A capability is what the company can do today — supply and demand, with alternatives when short.',
   evidence: 'Evidence is the immutable observation record every answer and decision ultimately rests on.',
+  'knowledge-request': 'A knowledge request asks an employee what they know — the answer becomes evidence and a recognized contribution.',
+  contribution: 'A contribution is knowledge an employee gave through chat — acknowledged, traceable, and separate from people decisions.',
+  reward: 'A reward recognizes a knowledge contribution under the company’s explicit reward policy — never a compensation signal.',
 };
 
 /** Defensive read of a stored card; null when the shape is not a card. */
