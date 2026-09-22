@@ -75,6 +75,13 @@ export function chatIntentLabel(intent: ChatIntent): string {
 // ---------------------------------------------------------------------------
 // Cards — the seven consequential kinds (W060 acceptance), deep-linked into
 // the Control Tower's management surfaces
+//
+// W073 EXTENSION (the shared card/context contract's extension pattern):
+// learning surfaces are expressed as instances of the SAME card model, not
+// a parallel type layer — the three learning kinds ride the exact same
+// union/array/hrefs/label/guard machinery the seven consequential kinds
+// ride (added by Wave-2 Worker B; Worker A's W072 continuity extensions
+// merge alongside without structural rewrites).
 // ---------------------------------------------------------------------------
 
 export type ChatCardKind =
@@ -84,7 +91,11 @@ export type ChatCardKind =
   | 'risk'
   | 'opportunity'
   | 'recommendation'
-  | 'approval';
+  | 'approval'
+  // W073 — chat-based learning requests (learning surfaces as cards).
+  | 'knowledge-request'
+  | 'contribution'
+  | 'reward';
 
 export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'goal',
@@ -94,6 +105,10 @@ export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'opportunity',
   'recommendation',
   'approval',
+  // W073 — chat-based learning requests.
+  'knowledge-request',
+  'contribution',
+  'reward',
 ];
 
 /** The tower surface each card kind deep-links into (management mode). */
@@ -105,7 +120,35 @@ export const CARD_HREFS: Record<ChatCardKind, string> = {
   opportunity: '/opportunities',
   recommendation: '/recommendations',
   approval: '/approvals',
+  // W073 — the supporting Learning surface owns the learning evidence chain.
+  'knowledge-request': '/learning',
+  contribution: '/learning',
+  reward: '/learning',
 };
+
+/** The learning kinds (W073) — cards the chat learning lane renders. */
+export const LEARNING_CARD_KINDS: readonly ChatCardKind[] = [
+  'knowledge-request',
+  'contribution',
+  'reward',
+];
+
+/** Is this card kind one of the W073 learning kinds? */
+export function isLearningCardKind(value: unknown): value is ChatCardKind {
+  return (
+    typeof value === 'string' && (LEARNING_CARD_KINDS as readonly string[]).includes(value)
+  );
+}
+
+/**
+ * The stable conversation return link (the W072 continuity seam — every
+ * management/product surface that opens a detail from a conversation links
+ * BACK to the same thread with this shape; W073 consumes it and lands the
+ * single definition here so the two surfaces cannot drift).
+ */
+export function chatConversationHref(conversationId: string): string {
+  return `/chat?c=${encodeURIComponent(conversationId)}`;
+}
 
 export function isChatCardKind(value: unknown): value is ChatCardKind {
   return (
@@ -130,6 +173,13 @@ export function chatCardKindLabel(kind: ChatCardKind): string {
       return 'Recommendation';
     case 'approval':
       return 'Approval';
+    // W073 — chat-based learning requests.
+    case 'knowledge-request':
+      return 'Knowledge request';
+    case 'contribution':
+      return 'Contribution';
+    case 'reward':
+      return 'Reward';
   }
 }
 

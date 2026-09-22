@@ -60,6 +60,8 @@ import {
   seenFor,
   type SeenMap,
 } from '../lib/seen-state';
+import { AnswerBanner } from './learning/answer-banner';
+import type { AnswerStrength } from '../../learning/lib/form';
 import {
   BACK_GLYPH_D,
   COMPOSE_GLYPH_D,
@@ -89,6 +91,19 @@ interface TurnResponse {
   conversationId: string;
   error?: string;
   message?: string;
+}
+
+/** The 409 body of an already-answered knowledge request (W073). */
+interface AnswerConflictBody {
+  conversationId?: string;
+  message?: string;
+  error?: string;
+}
+
+/** Which open knowledge request the composer is answering (W073). */
+interface AnswerTarget {
+  planId: string;
+  question: string;
 }
 
 function newClientId(): string {
@@ -126,6 +141,10 @@ export function ChatWorkspace({
   const [pollFailed, setPollFailed] = useState(false);
   /** Whether the selected thread's timeline is being fetched right now. */
   const [opening, setOpening] = useState(false);
+  /** W073 — the knowledge request the composer is answering (answer mode). */
+  const [answerTarget, setAnswerTarget] = useState<AnswerTarget | null>(null);
+  /** W073 — the answer's stated certainty (the honest three). */
+  const [answerConfidence, setAnswerConfidence] = useState<AnswerStrength>('medium');
 
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
@@ -201,6 +220,35 @@ export function ChatWorkspace({
     return () => window.clearInterval(timer);
   }, [refresh]);
 
+  // --- W073: Aurum asks its open knowledge questions ---------------------
+  // When the messenger opens, the learning sweep delivers the tenant's
+  // open knowledge requests into the persistent "Aurum learning"
+  // conversation (idempotent per plan) — the employee completes them
+  // right here, without discovering the Learning route first. Quiet by
+  // design: a failure degrades to no proactive asks this visit (the
+  // poll remains the background activity stream).
+  useEffect(() => {
+    let cancelled = false;
+    void (async (): Promise<void> => {
+      try {
+        const response = await fetch('/api/product/learning/chat/deliver', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: '{}',
+        });
+        if (!response.ok) return;
+        const body = (await response.json()) as { delivered?: boolean };
+        if (cancelled || body.delivered !== true) return;
+        await refresh(selectedRef.current);
+      } catch {
+        // quiet — never block the messenger on the proactive sweep
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refresh]);
+
   // --- URL sync (?c= — shareable, no navigation) --------------------------
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -228,10 +276,90 @@ export function ChatWorkspace({
       node.scrollHeight - node.scrollTop - node.clientHeight < 80;
   }, []);
 
+  // --- W073: answering a knowledge request from the thread ------------------
+  // The composer's answer mode (entered from a knowledge-request card):
+  // the next send is captured as the ANSWER through the same domain
+  // workflow the Learning surface drives — evidence, acknowledgement,
+  // reward state, mission progress — and Aurum's acknowledgement lands
+  // in this same conversation. A 409 is the honest first-write-wins
+  // outcome (the request was already answered); the thread is refreshed
+  // so the recorded state shows instead of a dead end.
+  const sendAnswer = useCallback(
+    async (text: string): Promise<void> => {
+      const target = answerTarget;
+      if (target === null || sending) return;
+      const optimistic: ChatMessageView = {
+        id: `pending-answer-${target.planId}`,
+        side: 'member',
+        speaker: 'You',
+        text,
+        sentAt: new Date().toISOString(),
+        starterId: null,
+        answer: null,
+        pending: true,
+      };
+      setPendingMessage(optimistic);
+      setDraft('');
+      setSendError(null);
+      setSending(true);
+      stickToBottom.current = true;
+      try {
+        const response = await fetch(
+          `/api/product/learning/chat/requests/${encodeURIComponent(target.planId)}/answer`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              conversationId: selectedRef.current,
+              text,
+              confidence: answerConfidence,
+            }),
+          },
+        );
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as
+            | AnswerConflictBody
+            | null;
+          if (response.status === 409) {
+            setAnswerTarget(null);
+            const conflictId =
+              typeof body?.conversationId === 'string' ? body.conversationId : null;
+            await refresh(conflictId ?? selectedRef.current);
+            throw new Error(
+              body?.message ??
+                'this knowledge request was already answered — showing its recorded state',
+            );
+          }
+          throw new Error(
+            body?.message ?? body?.error ?? `the answer failed (HTTP ${response.status})`,
+          );
+        }
+        const body = (await response.json()) as TurnResponse;
+        const conversationId = body.conversationId;
+        setSelectedId(conversationId);
+        selectedRef.current = conversationId;
+        setAnswerTarget(null);
+        setPendingMessage(null);
+        await refresh(conversationId);
+      } catch (cause) {
+        setPendingMessage(null);
+        setDraft(text);
+        setSendError(cause instanceof Error ? cause.message : 'the answer failed');
+      } finally {
+        setSending(false);
+      }
+    },
+    [answerTarget, answerConfidence, sending, refresh],
+  );
+
   // --- sending --------------------------------------------------------------
   const send = useCallback(async (): Promise<void> => {
     const text = draft.trim();
     if (text === '' || sending) return;
+    if (answerTarget !== null) {
+      await sendAnswer(text);
+      return;
+    }
     const clientMessageId = newClientId();
     const starterId = pendingStarterId;
     const optimistic: ChatMessageView = {
@@ -280,7 +408,7 @@ export function ChatWorkspace({
     } finally {
       setSending(false);
     }
-  }, [draft, sending, refresh, pendingStarterId]);
+  }, [draft, sending, refresh, pendingStarterId, answerTarget, sendAnswer]);
 
   const onComposerKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -333,6 +461,18 @@ export function ChatWorkspace({
     [],
   );
 
+  /** W073 — enter composer answer mode for a knowledge request. */
+  const beginAnswer = useCallback((card: ChatCard): void => {
+    setAnswerTarget({ planId: card.id, question: card.title });
+    setThreadOpen(true);
+    composerRef.current?.focus();
+  }, []);
+
+  /** W073 — leave composer answer mode. */
+  const cancelAnswer = useCallback((): void => {
+    setAnswerTarget(null);
+  }, []);
+
   const cardActions: CardActions = useMemo(
     () => ({
       decided,
@@ -350,8 +490,11 @@ export function ChatWorkspace({
       onDecide: (card, decision) => {
         void decide(card, decision);
       },
+      onAnswer: (card) => {
+        beginAnswer(card);
+      },
     }),
-    [openContext, decided, deciding, decide],
+    [openContext, decided, deciding, decide, beginAnswer],
   );
 
   // --- selection -------------------------------------------------------------
@@ -662,6 +805,14 @@ export function ChatWorkspace({
               </button>
             </div>
           )}
+          {answerTarget === null ? null : (
+            <AnswerBanner
+              question={answerTarget.question}
+              confidence={answerConfidence}
+              onConfidenceChange={setAnswerConfidence}
+              onCancel={cancelAnswer}
+            />
+          )}
           <div className="aurum-chat-composer-row">
             <label className="aurum-sr-only" htmlFor="aurum-chat-input">
               Message Aurum
@@ -672,7 +823,11 @@ export function ChatWorkspace({
               className="aurum-chat-input"
               rows={1}
               value={draft}
-              placeholder="Ask about goals, unknowns, risks, approvals…"
+              placeholder={
+                answerTarget === null
+                  ? 'Ask about goals, unknowns, risks, approvals…'
+                  : 'Type your answer — recorded as evidence for the mission…'
+              }
               disabled={sending}
               onChange={(event) => {
                 setDraft(event.target.value);
@@ -693,8 +848,17 @@ export function ChatWorkspace({
             </button>
           </div>
           <span className="aurum-chat-hint">
-            <kbd>Enter</kbd> sends · <kbd>Shift</kbd>+<kbd>Enter</kbd> adds a
-            line
+            {answerTarget === null ? (
+              <>
+                <kbd>Enter</kbd> sends · <kbd>Shift</kbd>+<kbd>Enter</kbd> adds a
+                line
+              </>
+            ) : (
+              <>
+                Answering a knowledge request · <kbd>Enter</kbd> records your
+                answer · <kbd>Shift</kbd>+<kbd>Enter</kbd> adds a line
+              </>
+            )}
           </span>
         </form>
       </section>

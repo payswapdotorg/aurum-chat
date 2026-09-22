@@ -56,6 +56,8 @@ import type {
 import { listRewards, summarizeRewards } from '@/modules/rewards/contract';
 import type { Reward, RewardKind, RewardStatus, RewardSummary } from '@/modules/rewards/contract';
 import { moneyLabel, percentLabel } from './labels';
+import { learningChatLinkage } from './chat-requests';
+import type { LearningChatLinkage } from './chat-requests';
 
 // ---------------------------------------------------------------------------
 // Row shapes (serialized server → page; labels resolved at render)
@@ -170,6 +172,12 @@ export interface LearningHomeView {
   rewards: RewardRow[];
   /** The reward rollup. */
   rewardSummary: RewardSummary | null;
+  /**
+   * W073 — the learning conversation's linkage (the stable `/chat?c=`
+   * return link, plus which asks/acknowledgements live in the thread),
+   * or null when no learning conversation exists yet.
+   */
+  chat: LearningChatLinkage | null;
   /** Which read families failed (honest degradation, never silence). */
   degraded: string[];
 }
@@ -399,7 +407,7 @@ async function openRequests(
 export async function buildLearningHomeView(ctx: TenantContext): Promise<LearningHomeView> {
   const degraded: string[] = [];
 
-  const [requests, missionsRead, contributionsRead, rewardsRead, contributionSummary, rewardSummary] =
+  const [requests, missionsRead, contributionsRead, rewardsRead, contributionSummary, rewardSummary, chatLinkage] =
     await Promise.all([
       openRequests(ctx, degraded),
       safe('missions', degraded, () => listMissions(ctx, { limit: 24 })),
@@ -407,7 +415,11 @@ export async function buildLearningHomeView(ctx: TenantContext): Promise<Learnin
       safe('rewards', degraded, () => listRewards(ctx, { limit: 12 })),
       safe('contributions', degraded, () => summarizeContributions(ctx, {})),
       safe('rewards', degraded, () => summarizeRewards(ctx, {})),
+      // W073 — the learning conversation's linkage (quietly optional).
+      safe('learning-chat', degraded, () => learningChatLinkage(ctx)),
     ]);
+
+  const chat = chatLinkage ?? null;
 
   const missions = (missionsRead ?? []).map(toMissionRow);
   const active = missions.filter((mission) => mission.status === 'active');
@@ -440,6 +452,7 @@ export async function buildLearningHomeView(ctx: TenantContext): Promise<Learnin
     contributionSummary,
     rewards: rewards.slice(0, HOME_ROW_LIMIT),
     rewardSummary,
+    chat,
     degraded: [...new Set(degraded)],
   };
 }
