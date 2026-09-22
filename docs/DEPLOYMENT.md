@@ -17,7 +17,7 @@ domain architecture never changes when a provider changes.
 | ---------------- | -------------------------- | --------------------------------------- | ------------------------- |
 | Web + API host   | Vercel Hobby               | Next.js App Router (`src/app`)          | —                         |
 | Domain truth     | Neon PostgreSQL            | `src/infra/db.ts` (node-postgres Pool)  | `DATABASE_URL`            |
-| Queue/cache/lock | Upstash Redis              | `src/infra/{queue,cache,lock}.ts`       | `REDIS_URL`               |
+| Queue/cache/lock | Upstash Redis              | `src/infra/{queue,cache,lock}.ts`       | `REDIS_URL`, or the W077 REST seam (`UPSTASH_REDIS_REST_URL`/`_TOKEN`, alias `KV_REST_API_URL`/`_TOKEN`) |
 | Cognition worker | Vercel cron + HTTP seam    | `src/infra/worker.ts` + `/api/worker`   | —                         |
 | Object storage   | Vercel Blob                | `src/infra/blob.ts` (@vercel/blob SDK)  | `BLOB_READ_WRITE_TOKEN`   |
 | Email            | Resend                     | `src/infra/email.ts` (REST via fetch)   | `RESEND_API_KEY`          |
@@ -109,8 +109,12 @@ time (below), are idempotent, and are safe on every deployment.
    takes a few seconds (health checks tolerate it; worker retries cover
    it).
 2. **Upstash**: create a Redis database in the same region as the Vercel
-   project (`iad1` in `vercel.json`); copy the `redis://` URL (the
-   ioredis-compatible protocol) for `REDIS_URL`.
+   project (`iad1` in `vercel.json`). Either wire works — copy the
+   `redis://` URL (the ioredis-compatible protocol) for `REDIS_URL`, or
+   the REST endpoint + token for `UPSTASH_REDIS_REST_URL`/
+   `UPSTASH_REDIS_REST_TOKEN` (W077's redis-over-HTTP transport — the one
+   Upstash per-database tokens expose; also what the Vercel Upstash
+   integration names `KV_REST_API_URL`/`KV_REST_API_TOKEN`).
 3. **Vercel**: import the GitHub repo; the framework (Next.js) and
    `vercel.json` apply (build command `bun run vercel:build` = migrate
    + next build; region `iad1`; daily worker cron). Set the environment
@@ -147,7 +151,8 @@ See `.env.example` for the annotated list. Production essentials:
 | Variable                | Purpose                                                | Enforced                                  |
 | ----------------------- | ------------------------------------------------------ | ----------------------------------------- |
 | `DATABASE_URL`          | external PostgreSQL (Neon) — domain truth              | **refusal** to serve production without  |
-| `REDIS_URL`             | Upstash redis (queue/cache/lock)                       | warning when missing (memory fallback)   |
+| `REDIS_URL`             | Upstash redis over the redis protocol (queue/cache/lock) | warning when missing (memory fallback) |
+| `UPSTASH_REDIS_REST_URL`/`_TOKEN` | Upstash redis over HTTPS (W077 REST seam; alias `KV_REST_API_URL`/`_TOKEN`) | warning when no redis seam at all (memory fallback) |
 | `RESEND_API_KEY`        | transactional email                                    | warning when missing (memory fallback)   |
 | `BLOB_READ_WRITE_TOKEN`| object storage                                         | warning when missing (memory fallback)   |
 | `WORKER_TOKEN`          | auth for `/api/worker`                                 | **refusal** to serve production without  |
@@ -204,6 +209,13 @@ The real-provider tests activate with:
 AURUM_TEST_DATABASE_URL=postgres://... AURUM_TEST_REDIS_URL=redis://... bun run test
 ```
 
+The redis-over-HTTP transport has the same opt-in against a live Upstash
+REST database:
+
+```bash
+AURUM_TEST_REDIS_REST_URL=https://<db>.upstash.io AURUM_TEST_REDIS_REST_TOKEN=... bun run test
+```
+
 A quick manual end-to-end against real servers:
 
 ```bash
@@ -225,3 +237,120 @@ DATABASE_URL=postgres://... REDIS_URL=redis://... bun run worker --once
 4. Nothing in the domain architecture changes: PostgreSQL stays the only
    domain truth (lock 35), the worker seam and contracts are untouched
    (lock 36).
+
+## 11. W077 instantiation record (as-deployed, 2026-09-22)
+
+The free-tier dogfood environment is instantiated on the connected Vercel
+account (Hobby). This section is the as-deployed record — identifiers only,
+never secrets; the sections above remain the general runbook.
+
+### Live resources
+
+| Resource | Identifier | State |
+| --- | --- | --- |
+| Vercel project | `aurum-chat` — `prj_PljFx5DnZ1MCqQ5bA1uK6G1o8gFy` (team `ekonplacidegmailcom's projects`, `team_4KOoA5CgtYaOF85yFXPeMXLt`) | live |
+| Git connection | GitHub `payswapdotorg/aurum-chat`, production branch `main` | connected |
+| Production deployment | <https://aurum-chat-livid.vercel.app> — `dpl_4CCXFBvoCdDZxsaogF2Av2AY8whV` | READY |
+| Vercel Blob store | `aurum-chat-blob` — `store_NMK2PD6WFdeI3khy` (iad1, private) | connected (production + preview) |
+| Resend | sending-restricted API key, From `Aurum <onboarding@resend.dev>` | verified with a live delivery (2026-09-22) |
+| Cron | `0 3 * * *` → `/api/worker` (daily sweep; platform authenticates with `CRON_SECRET`) | registered against the production deployment |
+| CI | `.github/workflows/ci.yml` — gates + migration smoke + real-provider suite | runs on every PR |
+
+Project env vars (all `encrypted`, values live only in the Vercel
+environment): `BLOB_READ_WRITE_TOKEN` and `RESEND_API_KEY` and `WORKER_TOKEN`
+(production + preview), `CRON_SECRET` (production). Preview deployments were
+verified through the CLI pipeline; the project's default preview SSO
+protection was lifted (PATCH `ssoProtection: null`) so PR previews are
+reachable for journey verification — re-enable it in project settings if
+preview traffic should stay Vercel-account-gated.
+
+### Open provider gaps — exact operator steps
+
+Production health is intentionally `status: error` (HTTP 503) until the
+domain-truth database exists: the deployment REFUSES to serve on the
+embedded runtime (lock 35), by design. Two canonical resources could not be
+created through any API path reachable with the provided credentials:
+
+1. **Neon PostgreSQL (production database + preview branches).** No Neon API
+   key was provided, and no Neon marketplace integration is configured on
+   the Vercel account — creating one is an OAuth consent only the account
+   owner can complete.
+   *Operator step (~2 minutes):* Vercel dashboard → `aurum-chat` → Storage →
+   add a Neon PostgreSQL database (complete the integration consent), create
+   the production database, then set `DATABASE_URL` (the pooled connection
+   string, `sslmode=require`) for the production target — or hand a Neon API
+   key to a deployment worker. Redeploy (`vercel deploy --prod`, or any push
+   to `main`): the build command runs the migration runner against the new
+   database and `/api/health` flips to `status: ok`. Neon branches for
+   preview/staging follow the §3 matrix afterwards.
+2. **Upstash Redis (queue/cache/lock).** The REST endpoint provided in the
+   W077 packet (`meet-ewe-145933.upstash.io`) does not exist in public DNS —
+   NXDOMAIN from the authoritative Upstash nameservers: the database was
+   deleted or the URL is mistyped, and a per-database REST token cannot
+   provision a replacement. (An Upstash marketplace integration exists on
+   the account, but it has no database resource attached and exposes no
+   buyer-side creation path.)
+   *Operator step (~2 minutes):* create an Upstash Redis (Free) database in
+   `iad1` (Upstash console or the Vercel Storage tab), then set
+   `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (or
+   `KV_REST_API_URL` + `KV_REST_API_TOKEN`) for production + preview. No
+   code change is needed — W077 landed the full redis-over-HTTP transport
+   behind the queue/cache/lock ports (`src/infra/redis-rest.ts` + the REST
+   backends); `/api/health` relabels queue/cache/lock to `redis` and the
+   durability warning disappears. If the instance also exposes a `redis://`
+   URL, `REDIS_URL` selects the same backends over the TCP protocol instead.
+
+While the gaps are open the deployment stays honest: `/api/health` reports
+`db: embedded` with the production refusal, queue/cache/lock run on the
+legal in-process memory backend with the durability warning, and email
+(Resend) plus object storage (Vercel Blob) are real and verified.
+
+Resend free-tier constraint: the provided key is sending-restricted and no
+sending domain is verified, so `onboarding@resend.dev` delivers only to the
+account owner's address. To send to arbitrary recipients, verify a domain at
+resend.com and set `EMAIL_FROM`.
+
+### Execution model as instantiated (the W077 binding correction)
+
+Normal cognition is request/event-driven and already wired that way:
+`src/app/(product)/chat/lib/workflow.ts` pumps the bounded W013 stages
+inline within the member's send request (`runChatTurn`), persisting every
+stage — the daily cron is NOT the cognition trigger. Durable fan-out runs
+`event → queue → idempotent consumer`: the queue port (memory until Upstash
+lands) plus the `POST /api/worker` push seam, which accepts the
+`{"jobs":[...]}` deliveries a platform queue consumer makes and runs them
+through the identical core path — verified live on the production
+deployment (an invalid envelope is dead-lettered with a precise reason, no
+side effects). The `vercel.json` daily 03:00 UTC cron sweep stays as the
+bounded, idempotent recovery mechanism (find stuck work, re-enqueue through
+the same path) — never a hidden reasoning loop, never domain truth
+(`CognitionExecution` + PostgreSQL remain authoritative).
+
+Managed Vercel Queues could not be created through any API path exposed to
+the deployment token (`/v1/queues` and variants → 404; the CLI ships no
+queue commands) — the consumer seam a managed queue would deliver to is
+live and token-authenticated. Vercel Workflows adoption is deliberately
+deferred: routing the loop through a workflow engine would touch W013
+semantics, and the frozen plan wires them only "where they improve durable
+execution" — the queue + inline request-driven pump + cron sweep already
+implement the corrected model.
+
+## 12. Rollback
+
+1. **Bad production deployment (code-level):** roll forward with a fix to
+   `main` (the Git connection auto-deploys), or promote any earlier READY
+   deployment: dashboard → Deployments → ⋯ → *Promote to Production*, or
+   `vercel redeploy dpl_<known-good-uid> --token <token>`.
+2. **Bad environment variable:** dashboard → project → Settings →
+   Environment Variables → edit/remove, then redeploy. The Blob store can
+   be detached the same way (Storage → store → Disconnect); its objects are
+   disposable artifacts, never domain state.
+3. **Bad data/migration:** migrations are additive and idempotent
+   (`_migrations`-recorded). For a destructive case, restore the Neon
+   database to a branch/snapshot taken before the change (Neon branching is
+   the free-tier backup mechanism) and redeploy.
+4. **Whole environment:** the project is disposable by design — delete the
+   Vercel project (dashboard or `DELETE /v9/projects/{id}`), the Blob store
+   (`DELETE /v1/storage/stores/blob/{id}`), and re-run this runbook from
+   §4. Nothing in the repository holds provider state: every resource is
+   re-creatable from code plus this file.

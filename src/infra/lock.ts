@@ -2,14 +2,18 @@
 //
 // Backends: `memory` (default, dev/test) or `redis` when REDIS_URL is set
 // (ioredis, imported lazily so the memory path stays dependency-free).
+// W077 adds the redis-over-HTTP transport (Upstash REST —
+// UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN) as the second
+// redis option, behind the same port semantics.
 //
 // Acquire resolves to an opaque token; releasing requires the SAME token, so
-// a caller can never release a lock it does not own. The redis backend uses
+// a caller can never release a lock it does not own. The redis backends use
 // SET NX PX plus a compare-and-delete Lua script; the memory backend mirrors
 // the same semantics in-process.
 
 import type Redis from 'ioredis';
 import { getRedisUrl } from './config';
+import { getRedisRestClient, type RedisRestClient } from './redis-rest';
 import { now } from './clock';
 import { newId } from './ids';
 
@@ -63,6 +67,21 @@ function redisLockBackend(client: Redis): LockBackend {
   };
 }
 
+function redisRestLockBackend(client: RedisRestClient): LockBackend {
+  const key = (k: string) => `aurum:lock:${k}`;
+  return {
+    async acquire(k, ttlMs) {
+      const token = newId();
+      const ok = await client.command(['SET', key(k), token, 'PX', Math.ceil(ttlMs), 'NX']);
+      return ok === 'OK' ? token : null;
+    },
+    async release(k, token) {
+      const result = await client.command(['EVAL', RELEASE_SCRIPT, '1', key(k), token]);
+      return Number(result) === 1;
+    },
+  };
+}
+
 let lockPort: LockPort | null = null;
 let backendPromise: Promise<LockBackend> | null = null;
 let redisClient: Redis | null = null;
@@ -70,10 +89,14 @@ let redisClient: Redis | null = null;
 function ensureBackend(): Promise<LockBackend> {
   backendPromise ??= (async () => {
     const url = getRedisUrl();
-    if (url === undefined) return memoryLockBackend();
-    const { default: RedisCtor } = await import('ioredis');
-    redisClient = new RedisCtor(url);
-    return redisLockBackend(redisClient);
+    if (url !== undefined) {
+      const { default: RedisCtor } = await import('ioredis');
+      redisClient = new RedisCtor(url);
+      return redisLockBackend(redisClient);
+    }
+    const rest = getRedisRestClient();
+    if (rest !== null) return redisRestLockBackend(rest);
+    return memoryLockBackend();
   })();
   return backendPromise;
 }

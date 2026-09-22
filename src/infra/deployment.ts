@@ -33,14 +33,15 @@
 //   * PostgreSQL is domain truth — production MUST run on the external
 //     postgres backend (DATABASE_URL). The embedded PGlite backend is a
 //     dev/test runtime; `assertProductionReadiness` refuses it loudly.
-//   * Redis is never domain truth — a missing REDIS_URL degrades queue/
-//     cache/lock to the in-process memory backend (legal, lock 35) and is
-//     reported as a warning, never a refusal.
+//   * Redis is never domain truth — a missing redis seam (REDIS_URL, or
+//     W077's UPSTASH_REDIS_REST_URL/TOKEN / KV_REST_API_URL/TOKEN) degrades
+//     queue/cache/lock to the in-process memory backend (legal, lock 35)
+//     and is reported as a warning, never a refusal.
 //   * Nothing here throws at import time (config discipline); the one
 //     throwing surface is `resolveDeploymentProfile`, and only for a
 //     malformed explicit DEPLOYMENT_ENV.
 
-import { envFlag, envString, getAurumDb, getDatabaseUrl, getRedisUrl } from './config';
+import { envFlag, envString, getAurumDb, getDatabaseUrl, getRedisRestConfig, getRedisUrl } from './config';
 
 /** The four separated deployment environments (plan §7 deployment pipeline). */
 export type DeploymentEnvironment = 'development' | 'preview' | 'staging' | 'production';
@@ -154,7 +155,7 @@ function resolveBackends(): DeploymentBackends {
     (getAurumDb() ?? (getDatabaseUrl() !== undefined ? 'postgres' : 'embedded')) === 'postgres'
       ? 'postgres'
       : 'embedded';
-  const redis = getRedisUrl() !== undefined;
+  const redis = getRedisUrl() !== undefined || getRedisRestConfig() !== undefined;
   return {
     db,
     queue: redis ? 'redis' : 'memory',
@@ -215,7 +216,7 @@ export function assertProductionReadiness(profile: DeploymentProfile): Deploymen
     notes.push({
       level: 'warning',
       message:
-        'REDIS_URL is not set — queue/cache/lock run on the in-process memory backend; queue jobs cannot survive restarts or span instances (legal while Redis is never domain truth, but not durable)',
+        'no redis seam is configured (REDIS_URL for the redis protocol, or UPSTASH_REDIS_REST_URL/TOKEN / KV_REST_API_URL/TOKEN for redis-over-HTTP) — queue/cache/lock run on the in-process memory backend; queue jobs cannot survive restarts or span instances (legal while Redis is never domain truth, but not durable)',
     });
   }
   if (profile.backends.email !== 'resend') {

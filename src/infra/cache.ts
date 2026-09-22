@@ -2,9 +2,13 @@
 //
 // Backends: `memory` (default, dev/test) or `redis` when REDIS_URL is set
 // (ioredis, imported lazily so the memory path stays dependency-free).
+// W077 adds the redis-over-HTTP transport (Upstash REST —
+// UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN) as the second
+// redis option, behind the same port semantics.
 
 import type Redis from 'ioredis';
 import { getRedisUrl } from './config';
+import { getRedisRestClient, type RedisRestClient } from './redis-rest';
 import { now } from './clock';
 
 export interface CachePort {
@@ -62,6 +66,26 @@ function redisCacheBackend(client: Redis): CacheBackend {
   };
 }
 
+function redisRestCacheBackend(client: RedisRestClient): CacheBackend {
+  const key = (k: string) => `aurum:cache:${k}`;
+  return {
+    async get(k) {
+      const value = await client.command(['GET', key(k)]);
+      return value === null || value === undefined ? null : String(value);
+    },
+    async set(k, value, ttlSeconds) {
+      if (ttlSeconds === undefined) {
+        await client.command(['SET', key(k), value]);
+        return;
+      }
+      await client.command(['SET', key(k), value, 'PX', Math.ceil(ttlSeconds * 1000)]);
+    },
+    async del(k) {
+      await client.command(['DEL', key(k)]);
+    },
+  };
+}
+
 let cachePort: CachePort | null = null;
 let backendPromise: Promise<CacheBackend> | null = null;
 let redisClient: Redis | null = null;
@@ -69,10 +93,14 @@ let redisClient: Redis | null = null;
 function ensureBackend(): Promise<CacheBackend> {
   backendPromise ??= (async () => {
     const url = getRedisUrl();
-    if (url === undefined) return memoryCacheBackend();
-    const { default: RedisCtor } = await import('ioredis');
-    redisClient = new RedisCtor(url);
-    return redisCacheBackend(redisClient);
+    if (url !== undefined) {
+      const { default: RedisCtor } = await import('ioredis');
+      redisClient = new RedisCtor(url);
+      return redisCacheBackend(redisClient);
+    }
+    const rest = getRedisRestClient();
+    if (rest !== null) return redisRestCacheBackend(rest);
+    return memoryCacheBackend();
   })();
   return backendPromise;
 }

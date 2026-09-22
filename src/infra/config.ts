@@ -39,6 +39,32 @@ export function getRedisUrl(): string | undefined {
   return envString('REDIS_URL');
 }
 
+/** Redis-over-HTTP (Upstash REST) configuration: endpoint + bearer token. */
+export interface RedisRestConfig {
+  url: string;
+  token: string;
+}
+
+/**
+ * The redis REST seam (W077). Two spellings are accepted so both the direct
+ * Upstash naming and the Vercel marketplace integration naming work:
+ *   UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
+ *   KV_REST_API_URL       + KV_REST_API_TOKEN
+ * A HALF-CONFIGURED pair is a hard misconfiguration (loud, never silently
+ * re-labeled as the memory backend) — the same discipline as AURUM_DB.
+ */
+export function getRedisRestConfig(): RedisRestConfig | undefined {
+  const url = envString('UPSTASH_REDIS_REST_URL') ?? envString('KV_REST_API_URL');
+  const token = envString('UPSTASH_REDIS_REST_TOKEN') ?? envString('KV_REST_API_TOKEN');
+  if (url === undefined && token === undefined) return undefined;
+  if (url === undefined || token === undefined) {
+    throw new Error(
+      'redis rest requires BOTH a URL and a token (set UPSTASH_REDIS_REST_URL/TOKEN or KV_REST_API_URL/TOKEN together)',
+    );
+  }
+  return { url, token };
+}
+
 /** Force the embedded database into `:memory:` mode (used by tests). */
 export function isDbMemory(): boolean {
   return envFlag('AURUM_DB_MEMORY');
