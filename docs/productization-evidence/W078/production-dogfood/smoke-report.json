@@ -1,0 +1,581 @@
+{
+  "label": "production-dogfood",
+  "target": "https://aurum-chat-livid.vercel.app",
+  "profile": "full",
+  "startedAt": "2026-09-22T18:12:23.062Z",
+  "finishedAt": "2026-09-22T18:12:27.852Z",
+  "durationMs": 4790,
+  "expectedEnvironment": "production",
+  "results": [
+    {
+      "id": "routing.root-anonymous-gate",
+      "title": "anonymous root is gated to sign-in with a return path",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 307,
+        "location": "https://aurum-chat-livid.vercel.app/signin?next=%2F"
+      }
+    },
+    {
+      "id": "routing.chat-anonymous-gate",
+      "title": "anonymous /chat is gated to sign-in with next=/chat",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 307,
+        "location": "https://aurum-chat-livid.vercel.app/signin?next=%2Fchat"
+      }
+    },
+    {
+      "id": "routing.onboarding-gate",
+      "title": "anonymous /onboarding is gated to sign-in",
+      "category": "routing",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 307,
+        "location": "https://aurum-chat-livid.vercel.app/signin?next=%2Fonboarding"
+      }
+    },
+    {
+      "id": "routing.signin-renders",
+      "title": "/signin renders a real HTML page",
+      "category": "routing",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8"
+      }
+    },
+    {
+      "id": "routing.static-assets",
+      "title": "static assets referenced by the page are served",
+      "category": "routing",
+      "acceptance": "browser journeys pass on production dogfood",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "asset": "/_next/static/immutable/chunks/0m4f_knaps1dr.css",
+        "status": 200,
+        "contentType": "text/css; charset=utf-8"
+      }
+    },
+    {
+      "id": "health.contract",
+      "title": "/api/health answers with the full readiness contract",
+      "category": "health-readiness",
+      "acceptance": "health endpoint is green",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 503,
+        "healthStatus": "error",
+        "environment": "production",
+        "backends": {
+          "db": "embedded",
+          "queue": "memory",
+          "cache": "memory",
+          "lock": "memory",
+          "email": "resend",
+          "blob": "vercel-blob"
+        }
+      }
+    },
+    {
+      "id": "health.green",
+      "title": "/api/health is green (db answers, schema applied, no refusals)",
+      "category": "health-readiness",
+      "acceptance": "health endpoint is green",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error",
+        "dbBackend": "embedded",
+        "dbError": "ENOENT: no such file or directory, mkdir '.data'"
+      }
+    },
+    {
+      "id": "health.environment-label",
+      "title": "/api/health reports the expected environment label",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "the target reports 'production'",
+      "evidence": {
+        "observed": "production",
+        "expected": "production",
+        "hostedOnVercel": true
+      }
+    },
+    {
+      "id": "health.honest-refusal",
+      "title": "a production target without its domain-truth database refuses to serve (and says so precisely)",
+      "category": "health-readiness",
+      "acceptance": "health endpoint is green",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 503,
+        "refusals": [
+          "production requires the external PostgreSQL backend (DATABASE_URL) — the embedded PGlite runtime is dev/test only (lock 35: PostgreSQL is authoritative domain state)"
+        ],
+        "dbBackend": "embedded"
+      }
+    },
+    {
+      "id": "worker.retry-policy-surface",
+      "title": "the deployment surfaces its worker retry policy (guardrails)",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "guardrails": {
+          "workerMaxAttempts": 5,
+          "workerBatchLimit": 10,
+          "workerPollIntervalMs": 2000
+        }
+      }
+    },
+    {
+      "id": "worker.seam-auth-fail-closed",
+      "title": "the worker seam refuses unauthenticated and bad-token calls",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "noTokenStatus": 401,
+        "badTokenStatus": 401
+      }
+    },
+    {
+      "id": "observability.worker-snapshot",
+      "title": "GET /api/worker exposes queue depth and the metrics registry",
+      "category": "observability",
+      "acceptance": "queue depth and worker metrics are inspectable",
+      "layer": "hosted",
+      "status": "blocked",
+      "detail": "Provide the worker seam token (--worker-token / AURUM_SMOKE_WORKER_TOKEN) — the value lives in the Vercel project environment (WORKER_TOKEN)",
+      "evidence": {
+        "noTokenStatus": 401
+      }
+    },
+    {
+      "id": "env.quick-signin-availability",
+      "title": "demo quick sign-in availability matches the runtime family",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 404,
+        "body": {
+          "error": "not_available",
+          "message": "quick sign-in is not available in this environment"
+        }
+      }
+    },
+    {
+      "id": "auth.signup",
+      "title": "a fresh visitor registers a real account and receives a session cookie",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "auth.session-no-company",
+      "title": "the fresh session reports no active company (onboarding state)",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "auth.chat-gated-pre-onboarding",
+      "title": "chat correctly refuses a company-less session (409 no_active_company)",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "auth.onboarding-company",
+      "title": "company creation through onboarding selects the tenant",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "auth.signout",
+      "title": "sign-out revokes the session and clears the cookie",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "routing.root-authenticated-chat",
+      "title": "an authenticated session is routed from / to /chat",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "chat.state-fresh",
+      "title": "chat state answers for the onboarded session",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "chat.turn",
+      "title": "a composer turn runs the real workflow and returns the reply",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "chat.thread-persists",
+      "title": "the turn persists into the conversation thread",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "seeded.persona-signin",
+      "title": "the seeded manager persona signs in through the real password path",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "seeded.conversation-list",
+      "title": "the seeded demo conversation appears in the manager chat list",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "seeded.thread",
+      "title": "the seeded thread opens with its recorded turns",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "seeded.attention-turn",
+      "title": "the attention turn surfaces the seeded pending approval as a chat card",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "seeded.approval-decided",
+      "title": "the pending approval is decided inline and the timeline reflects it",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "worker.duplicate-acknowledged",
+      "title": "a redelivered (stale-stage) job is acknowledged as an idempotent duplicate",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "worker.dead-letter-invalid",
+      "title": "an invalid pushed envelope is dead-lettered with a precise reason",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "worker.not-found-consumed",
+      "title": "a job for an unknown execution is consumed as not_found (never retried)",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "worker.idle-pull",
+      "title": "a pull-mode sweep of the drained queue reports idle honestly",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "observability.metrics-advance",
+      "title": "worker metrics counters advance with observed job dispositions",
+      "category": "observability",
+      "acceptance": "queue depth and worker metrics are inspectable",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "observability.surfaces-agree",
+      "title": "the health and worker observability surfaces report the same counters",
+      "category": "observability",
+      "acceptance": "queue depth and worker metrics are inspectable",
+      "layer": "journey",
+      "status": "blocked",
+      "detail": "the hosted database is not ready — /api/health reports status 'error' (ENOENT: no such file or directory, mkdir '.data'). Complete the documented operator step (docs/DEPLOYMENT.md §11 \"Open provider gaps\": attach the Neon PostgreSQL database to the Vercel project and set DATABASE_URL for the target environment), then re-run this smoke command",
+      "evidence": {
+        "healthStatus": "error"
+      }
+    },
+    {
+      "id": "release.rollback-runbook",
+      "title": "the rollback runbook documents all four recovery cases",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "runbook": "docs/DEPLOYMENT.md §12 (Rollback)"
+      }
+    },
+    {
+      "id": "release.known-good-deployment",
+      "title": "a known-good deployment uid is recorded as the promote target",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "knownGood": "dpl_4CCXFBvoCdDZxsaogF2Av2AY8whV"
+      }
+    },
+    {
+      "id": "release.ci-gates",
+      "title": "CI runs the four repository gates before deploy",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "gates": [
+          "typecheck",
+          "lint",
+          "arch",
+          "test"
+        ]
+      }
+    },
+    {
+      "id": "release.deployment-config",
+      "title": "the deployment configuration migrates before build and sweeps daily",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "buildCommand": "bun run vercel:build",
+        "cron": "0 3 * * * → /api/worker"
+      }
+    },
+    {
+      "id": "browser.suite-registered",
+      "title": "the real-browser journey suite is wired and evidenced (re-runnable against the hosted dogfood)",
+      "category": "release-rollback",
+      "acceptance": "browser journeys pass on production dogfood",
+      "layer": "repo",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "command": "bun run browser:journeys",
+        "suite": "tests/browser/** (desktop 1280×800 + mobile 390×844/touch)"
+      }
+    },
+    {
+      "id": "env.demo-gate-refuses-production",
+      "title": "the demo seed gate refuses production runtimes and backends",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "repo",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "gate": "evaluateDemoSeedGate (src/modules/demo/contract)"
+      }
+    },
+    {
+      "id": "env.matrix-documented",
+      "title": "the environment separation matrix is documented",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "repo",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "matrix": "docs/DEPLOYMENT.md §3"
+      }
+    }
+  ],
+  "summary": {
+    "total": 40,
+    "passed": 18,
+    "failed": 0,
+    "blocked": 22,
+    "skipped": 0
+  },
+  "health": {
+    "httpStatus": 503,
+    "status": "error",
+    "environment": "production",
+    "hostedOnVercel": true,
+    "dogfoodNotice": "internal/non-commercial dogfood while the free tier is used (plan §7)",
+    "dbBackend": "embedded",
+    "dbOk": false,
+    "migrations": null,
+    "dbError": "ENOENT: no such file or directory, mkdir '.data'",
+    "queueBackend": "memory",
+    "cacheBackend": "memory",
+    "lockBackend": "memory",
+    "emailBackend": "resend",
+    "blobBackend": "vercel-blob",
+    "refusals": [
+      "production requires the external PostgreSQL backend (DATABASE_URL) — the embedded PGlite runtime is dev/test only (lock 35: PostgreSQL is authoritative domain state)"
+    ],
+    "warnings": [
+      "no redis seam is configured (REDIS_URL for the redis protocol, or UPSTASH_REDIS_REST_URL/TOKEN / KV_REST_API_URL/TOKEN for redis-over-HTTP) — queue/cache/lock run on the in-process memory backend; queue jobs cannot survive restarts or span instances (legal while Redis is never domain truth, but not durable)"
+    ],
+    "workerMetricsPresent": true,
+    "workerMetrics": {
+      "jobsEnqueued": 0,
+      "jobsProcessed": 0,
+      "jobsSuspended": 0,
+      "jobsDuplicate": 0,
+      "jobsConflict": 0,
+      "jobsNotFound": 0,
+      "jobsRetried": 0,
+      "jobsDeadLettered": 0,
+      "idlePolls": 0,
+      "batches": 0,
+      "lastActivityAt": null
+    },
+    "guardrails": {
+      "workerMaxAttempts": 5,
+      "workerBatchLimit": 10,
+      "workerPollIntervalMs": 2000
+    },
+    "cacheControl": "no-store",
+    "fetchError": null
+  }
+}

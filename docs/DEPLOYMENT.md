@@ -354,3 +354,61 @@ implement the corrected model.
    (`DELETE /v1/storage/stores/blob/{id}`), and re-run this runbook from
    §4. Nothing in the repository holds provider state: every resource is
    re-creatable from code plus this file.
+
+## 13. Post-deployment smoke (W078)
+
+`bun run smoke:dogfood` is the post-deployment acceptance harness: it
+proves the DEPLOYED system over real HTTP — routing gates,
+health/readiness, the worker seam's fail-closed auth and its
+duplicate/dead-letter/not-found dispositions, queue/worker observability,
+real authentication (fresh sign-up → onboarding → company → chat → a full
+composer turn), the seeded demo journeys (persona sign-in with the
+manifest password, the seeded thread, the pending approval decided
+inline), plus the repository's operations surface (this runbook's
+rollback cases, the CI gates, the deployment configuration, environment
+separation). The typed check catalog, evaluators and driver live in
+`src/modules/deployment-smoke/`; the CLI is `scripts/deployment-smoke.ts`.
+
+```bash
+# the hosted dogfood (routine post-deploy check)
+bun run smoke:dogfood -- \
+  --target https://aurum-chat-livid.vercel.app \
+  --profile full --expect-environment production --quick-sign-in off
+
+# a preview-profile deployment artifact of this repository
+bun run vercel:build && bun run seed:demo
+DEPLOYMENT_ENV=preview WORKER_TOKEN=<t> bun run next start -- -p 3130
+bun run smoke:dogfood -- \
+  --target http://localhost:3130 --profile full --expect-environment preview \
+  --worker-token <t> --quick-sign-in off
+```
+
+Verdicts per check: **PASS** (observed as specified), **FAIL** (the
+target violated its own contract), **BLOCKED** (a documented external
+precondition is missing — the §11 operator steps; the target's own health
+endpoint must be reporting the gap honestly for a check to be blocked),
+**SKIP** (not applicable to this target/profile). Exit codes: `0` green,
+`1` failures, `2` blocked-attention (`--allow-blocked` acknowledges a
+known gap). Evidence lands in `docs/productization-evidence/W078/<label>/`
+(`smoke-report.json` + `smoke-report.md`); the committed runs live there.
+
+Operator notes:
+
+- **Today (Neon gap open):** the full-profile production run passes the
+  hosted layer (liveness, routing, the health contract, the honest
+  503 refusal, the worker seam's 401s, quick-sign-in correctly off in
+  the production runtime) and reports the journey layer BLOCKED with the
+  §11 operator steps. Complete the Neon step, redeploy, re-run — the
+  same command goes green.
+- **Worker token:** the journey-layer worker probes need `WORKER_TOKEN`
+  (a production secret — pass `--worker-token` or `AURUM_SMOKE_WORKER_TOKEN`;
+  it is never printed or written into the reports).
+- **Deterministic re-runs:** the seeded pending approval is one-shot; a
+  green re-run of the full matrix needs the demo world reseeded
+  (`rm -rf .data && bun run vercel:build && bun run seed:demo`) — the
+  same reset-and-reseed discipline the W076 browser suite applies per
+  run.
+- The suite's own gates-time proof is
+  `tests/e2e/deployment-smoke/smoke.e2e.test.ts`: the full matrix, green,
+  over real HTTP against the real handler libraries and the real W068
+  demo world.

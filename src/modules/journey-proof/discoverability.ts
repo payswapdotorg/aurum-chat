@@ -475,6 +475,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'this module — a verification harness over the real surface code, exercised by tests/e2e/journeys',
   },
+  {
+    module: 'deployment-smoke',
+    label: 'The post-deployment smoke and operations proof (W078)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'a verification harness, not a product capability: it proves the HOSTED deployment over real HTTP (bun run smoke:dogfood) and owns no user-facing route',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
