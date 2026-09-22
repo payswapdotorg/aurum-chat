@@ -41,6 +41,18 @@ Aurum is built as a TypeScript modular monolith on Bun and Next.js with PostgreS
 | `bun run migrate` | apply module migrations (`scripts/migrate.ts`) |
 | `bun run db:dev` | boot the embedded db, migrate, print tables |
 
+## Deployment (free-tier dogfood)
+
+Aurum runs as an internal, non-commercial dogfood deployment on the free
+tier: Vercel Hobby (project `aurum-chat`, production
+<https://aurum-chat-livid.vercel.app>), Vercel Blob (object storage) and
+Resend (transactional email) are live; Neon PostgreSQL is the domain-truth
+database and Upstash Redis the queue/cache/lock layer — both are env-var
+seams (`DATABASE_URL`, `REDIS_URL` or `UPSTASH_REDIS_REST_URL`/`_TOKEN`).
+`docs/DEPLOYMENT.md` is the operator runbook: stack, environment matrix,
+provisioning, health/readiness, the as-deployed W077 record (including the
+exact operator steps for the two open provider gaps) and rollback.
+
 ## Non-goals
 
 Aurum is not itself the CRM, PM system, construction supervisor, customer-support agent, ERP, or vertical workflow engine. Those capabilities are acquired through authorized agents, extensions, integrations, or marketplace packages.
