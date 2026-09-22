@@ -363,11 +363,15 @@ describe('composeAnswerParts', () => {
     expect(why?.lines[0]).toContain('renegotiation timing');
   });
 
-  it('inefficiency composes capability gaps as risk cards', () => {
+  it('inefficiency composes capability gaps as capability cards with alternatives (W072)', () => {
     const parts = composeAnswerParts('inefficiency', answerDataFixture());
-    const risk = parts.cards.find((card) => card.kind === 'risk');
-    expect(risk?.title).toContain('Customs brokerage');
-    expect(risk?.statusLabel).toBe('No active supply');
+    const capability = parts.cards.find((card) => card.kind === 'capability');
+    expect(capability?.title).toContain('Customs brokerage');
+    expect(capability?.statusLabel).toBe('No active supply');
+    expect(capability?.href).toBe('/capabilities');
+    // The alternatives are always visible on a capability card (W017).
+    const alternatives = capability?.context?.sections.find((s) => s.kind === 'detail');
+    expect(alternatives?.title).toBe('Alternatives exist');
   });
 
   it('improve composes recommendations from pending action requests', () => {

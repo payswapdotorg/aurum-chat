@@ -47,6 +47,8 @@ import type {
   ChatMessageView,
   ChatStateView,
 } from '../lib/chat-types';
+import { chatReturnLink } from '../lib/chat-types';
+import { enrichCardContextLinks } from '../lib/cards';
 import {
   conversationActivity,
   bubbleGroup,
@@ -221,6 +223,31 @@ export function ChatWorkspace({
     node.scrollTop = node.scrollHeight;
   }, [renderedCount, sending]);
 
+  // --- W072: land on the anchored message ---------------------------------
+  // A return link (or any shared conversation link) may address one
+  // exact message (`/chat?c=<id>#m-<message>`). After the thread's
+  // timeline renders, scroll that message into view once per anchor —
+  // returning from a drill-down lands the reader where they left, not
+  // at the timeline's bottom. (The effect re-runs as the timeline
+  // renders its messages; the ref keeps the landing to once per
+  // anchor so later polls never yank the reader around.)
+  const anchoredMessageId = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const hash = window.location.hash;
+    return hash.startsWith('#m-') ? hash.slice(3) : null;
+  }, [state.generatedAt]);
+  const landedAnchorRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (anchoredMessageId === null) return;
+    if (landedAnchorRef.current === anchoredMessageId) return;
+    const node = document.getElementById(`m-${anchoredMessageId}`);
+    if (node === null) return;
+    landedAnchorRef.current = anchoredMessageId;
+    stickToBottom.current = false;
+    node.scrollIntoView({ block: 'center' });
+  }, [anchoredMessageId, renderedCount]);
+
   const onTimelineScroll = useCallback(() => {
     const node = timelineRef.current;
     if (node === null) return;
@@ -337,13 +364,20 @@ export function ChatWorkspace({
     () => ({
       decided,
       deciding,
-      onOpenContext: (card) => {
+      onOpenContext: (card, returnTo) => {
         if (card.context === null) return;
+        // W072 — the drawer is part of the conversation: its section
+        // links inherit the message's return context so anything the
+        // drawer leads to keeps the way back to this exact message.
+        const context =
+          returnTo === null
+            ? card.context
+            : enrichCardContextLinks(card.context, returnTo);
         openContext({
           title: card.title,
-          subtitle: card.context.subtitle,
+          subtitle: context.subtitle,
           tone: card.tone,
-          sections: card.context.sections,
+          sections: context.sections,
           source: `Chat card · ${card.kind}`,
         });
       },
@@ -403,6 +437,17 @@ export function ChatWorkspace({
   const rendered = useMemo(
     () => (pendingMessage === null ? messages : [...messages, pendingMessage]),
     [messages, pendingMessage],
+  );
+  /**
+   * W072 — the open conversation's stable return link per message:
+   * `/chat?c=<conversation>#m-<message>`. Every drill-down the thread
+   * offers (cards, citations, explainability) carries it, and the
+   * destination surfaces render it as the way home.
+   */
+  const returnToFor = useCallback(
+    (message: ChatMessageView): string | null =>
+      thread === null ? null : chatReturnLink(thread.id, message.id),
+    [thread],
   );
 
   return (
@@ -629,6 +674,7 @@ export function ChatWorkspace({
                         separatedAfter ? undefined : next,
                       )}
                       actions={cardActions}
+                      returnTo={returnToFor(message)}
                     />
                   </div>
                 );

@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { ErrorState, PageHead, Panel, StatusPill, EmptyState } from '../../../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../../../chat/components/chat-return-link';
 import { buildMissionView } from '../../lib/views';
 import type { MissionView } from '../../lib/views';
 import {
@@ -71,10 +72,15 @@ function percent(value: number): string {
 
 export default async function MissionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ missionId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { missionId } = await params;
+  // W072 — the guarded return link when this mission was opened from a
+  // chat card, a briefing finding or a chain hop (`?back=/chat?c=…`).
+  const back = chatReturnFromSearchParams(await searchParams);
   const session = await requireAuthenticatedPage();
 
   let view: MissionView;
@@ -112,6 +118,7 @@ export default async function MissionPage({
         description={`A learning mission — ${mission.urgency} urgency, status ${mission.status}, updated ${dateLabel(mission.updatedAt)}.`}
         meta={
           <>
+            <ChatReturnLink back={back} />
             <Link href="/intelligence">← Intelligence</Link>
             {' · '}
             <Link href="/missions">Missions surface (management mode)</Link>
@@ -219,7 +226,7 @@ export default async function MissionPage({
         ) : (
           <ul className="aurum-intel-list">
             {view.unknowns.map((unknown) => (
-              <UnknownLinkRow key={unknown.id} unknown={unknown} />
+              <UnknownLinkRow key={unknown.id} unknown={unknown} back={back} />
             ))}
           </ul>
         )}

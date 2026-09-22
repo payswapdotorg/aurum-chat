@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { EmptyState, ErrorState, PageHead, Panel, StatusPill } from '../../../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../../../chat/components/chat-return-link';
 import { anchorHref, anchorKindForSegment } from '../../lib/anchors';
 import {
   beliefStatusLabel,
@@ -57,13 +58,21 @@ export const metadata: Metadata = {
 
 export default async function ExplainDecisionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ kind: string; id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { kind, id } = await params;
   const anchorKind = anchorKindForSegment(kind);
   if (anchorKind === null) notFound();
 
+  // W072 — the card→explainability→return loop: when this
+  // reconstruction was opened FROM a chat message or card
+  // (`?back=/chat?c=…`), the way back to the exact message renders in
+  // the head — the full causal chain never strands the reader away
+  // from the conversation that asked for it.
+  const back = chatReturnFromSearchParams(await searchParams);
   const session = await requireAuthenticatedPage();
   const resolution = await buildDecisionExplainView(session.context, anchorKind, id);
   if (resolution.status === 'not-found') notFound();
@@ -88,6 +97,7 @@ export default async function ExplainDecisionPage({
         )} from the owning modules' real records.`}
         meta={
           <>
+            <ChatReturnLink back={back} />
             <Link href="/explain">← Evidence &amp; audit</Link>
             {' · '}
             <span>{view.kindLabel}</span>

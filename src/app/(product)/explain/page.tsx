@@ -17,6 +17,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { EmptyState, PageHead, Panel, StatusPill } from '../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../chat/components/chat-return-link';
 import { buildEvidenceIndexView } from './lib/views';
 import { dateTimeLabel } from './lib/labels';
 import { AuditRow } from './components/chain-steps';
@@ -29,7 +30,14 @@ export const metadata: Metadata = {
     'Explain any consequential answer or decision: the full causal chain from input through evidence, belief, policy, approval, execution and outcome to learning.',
 };
 
-export default async function ExplainHomePage() {
+export default async function ExplainHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // W072 — the guarded return link when the audit surface was opened
+  // from a chat card's fallback context (`?back=/chat?c=…`).
+  const back = chatReturnFromSearchParams(await searchParams);
   const session = await requireAuthenticatedPage();
   const view = await buildEvidenceIndexView(session.context);
 
@@ -38,7 +46,10 @@ export default async function ExplainHomePage() {
       <PageHead
         title="Evidence & audit"
         description="Every consequential answer or decision is reconstructable end to end — input, evidence, beliefs, missions, policy, approval, execution, outcome and learning. Open a decision to walk its causal chain."
-        meta={<>Generated {dateTimeLabel(view.generatedAt)}</>}
+        meta={<>
+          <ChatReturnLink back={back} />
+          Generated {dateTimeLabel(view.generatedAt)}
+        </>}
       />
 
       <Panel

@@ -22,6 +22,7 @@ import type { PageSearchParams } from '../lib/context';
 import { intelligenceSurfaces } from '../lib/navigation';
 import { EmptyState, PageHead, Panel, StatusPill } from '../components/states';
 import { ShellGlyph } from '../components/icons';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../chat/components/chat-return-link';
 import { buildIntelligenceView } from './lib/views';
 import type { IntelligenceView } from './lib/views';
 import { ChainRail, FindingRow, MissionLinkRow } from './components/chain-ui';
@@ -47,6 +48,9 @@ export default async function IntelligencePage({
   searchParams: Promise<PageSearchParams>;
 }) {
   const params = await searchParams;
+  // W072 — the guarded return link when the workflow was opened from a
+  // chat card or a briefing drill-down (`?back=/chat?c=…`).
+  const back = chatReturnFromSearchParams(params);
   const session = await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
   const view: IntelligenceView = await buildIntelligenceView(session.context);
@@ -57,7 +61,10 @@ export default async function IntelligencePage({
       <PageHead
         title="Intelligence"
         description="Today\u2019s briefing — what Aurum found on its own — and the workflow from goals through gaps, unknowns and missions to the evidence and beliefs underneath."
-        meta={<>Generated {dateLabel(view.generatedAt)}</>}
+        meta={<>
+          <ChatReturnLink back={back} />
+          Generated {dateLabel(view.generatedAt)}
+        </>}
       />
 
       {/* The product-mode Today: the proactive findings briefing. */}
@@ -74,7 +81,7 @@ export default async function IntelligencePage({
         ) : (
           <div className="aurum-intel-findings">
             {view.findings.map((finding) => (
-              <FindingRow key={`${finding.source}-${finding.id}`} finding={finding} />
+              <FindingRow key={`${finding.source}-${finding.id}`} finding={finding} back={back} />
             ))}
           </div>
         )}
@@ -126,7 +133,7 @@ export default async function IntelligencePage({
             ) : (
               <ul className="aurum-intel-list">
                 {view.attention.urgentMissions.map((mission) => (
-                  <MissionLinkRow key={mission.id} mission={mission} />
+                  <MissionLinkRow key={mission.id} mission={mission} back={back} />
                 ))}
               </ul>
             )}

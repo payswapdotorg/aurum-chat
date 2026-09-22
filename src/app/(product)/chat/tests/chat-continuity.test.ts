@@ -345,7 +345,7 @@ describe('the drill href and the pending-decision predicate', () => {
     expect(cardDrillHref(card, null)).toBe('/intelligence/unknowns/u-1');
   });
 
-  it('only pending approval cards offer the inline decision affordance', () => {
+  it('any card with a still-pending request offers the inline decision affordance', () => {
     expect(isPendingDecisionCard(card)).toBe(false);
     const pending: ChatCard = {
       ...card,

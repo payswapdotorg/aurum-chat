@@ -19,7 +19,13 @@ import type {
   ChatCard,
   ChatMessageView,
 } from '../lib/chat-types';
-import { chatCardKindLabel } from '../lib/chat-types';
+import { chatCardKindLabel, chatMessageAnchor, withChatReturn } from '../lib/chat-types';
+import {
+  answerExplainHref,
+  cardDrillHref,
+  cardExplainHref,
+  isPendingDecisionCard,
+} from '../lib/cards';
 import {
   bubbleTimeLabel,
   dayLabel,
@@ -65,6 +71,9 @@ export { Glyph };
 export const SEND_GLYPH_D = 'M12 19V5M5 12l7-7 7 7';
 export const BACK_GLYPH_D = 'm15 18-6-6 6-6';
 export const OPEN_GLYPH_D = 'M7 17 17 7M9 7h8v8';
+/** The question-in-circle glyph (the explainability affordance, W072). */
+export const WHY_GLYPH_D =
+  'M12 17h.01M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM9.1 9a3 3 0 1 1 4.6 2.5c-.8.5-1.7 1-1.7 2.2';
 /** The new-message glyph (chat bubble + plus — the new-conversation affordance, W071). */
 export const COMPOSE_GLYPH_D =
   'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z M11.5 7.5v5 M9 10h5';
@@ -104,17 +113,29 @@ export function MessageBubble({
   message,
   group,
   actions,
+  returnTo,
 }: {
   message: ChatMessageView;
   /** Run-position flags (W071 rhythm — spacing + the tail corner). */
   group?: BubbleGroup;
   actions?: CardActions;
+  /**
+   * The stable return link of THIS message (W072 continuity —
+   * `/chat?c=<conversation>#m-<message>`): every drill-down the message
+   * offers (cards, citations, explainability) carries it so the reader
+   * can always come back to this exact spot. Null when no conversation
+   * is open (the optimistic pending bubble).
+   */
+  returnTo?: string | null;
 }): ReactNode {
   const time = bubbleTimeLabel(message.sentAt);
   const run = group ?? { first: true, last: true };
   return (
     <div
       className="aurum-chat-msg"
+      // W072 — the message anchor: deep links (drill-down return links,
+      // shared conversation links) land on the exact message.
+      id={chatMessageAnchor(message.id)}
       data-side={message.side}
       data-pending={message.pending}
       data-group-first={run.first ? 'true' : undefined}
@@ -129,7 +150,7 @@ export function MessageBubble({
           </p>
         )}
         {message.answer === null ? null : (
-          <AnswerExtras answer={message.answer} actions={actions} />
+          <AnswerExtras answer={message.answer} actions={actions} returnTo={returnTo ?? null} />
         )}
         <span className="aurum-chat-bubble-meta">
           {message.side === 'member' ? (
@@ -153,16 +174,28 @@ export function MessageBubble({
 function AnswerExtras({
   answer,
   actions,
+  returnTo,
 }: {
   answer: ChatAnswer;
   actions?: CardActions;
+  returnTo: string | null;
 }): ReactNode {
+  // W072 — the message-level explainability loop: the cognition
+  // execution that produced this answer is a reconstructable decision,
+  // so "Why this answer?" opens the full causal chain and carries the
+  // way back to this exact message.
+  const explainHref = answerExplainHref(answer);
   return (
     <>
       {answer.cards.length === 0 ? null : (
         <div className="aurum-chat-cards">
           {answer.cards.map((card) => (
-            <MessageCard key={`${card.kind}-${card.id}`} card={card} actions={actions} />
+            <MessageCard
+              key={`${card.kind}-${card.id}`}
+              card={card}
+              actions={actions}
+              returnTo={returnTo}
+            />
           ))}
         </div>
       )}
@@ -174,7 +207,7 @@ function AnswerExtras({
               <Link
                 key={`${citation.kind}-${citation.id}`}
                 className="aurum-chat-citation"
-                href={citation.href}
+                href={withChatReturn(citation.href, returnTo)}
                 title={citation.detail ?? undefined}
               >
                 <span className="aurum-chat-citation-dot" aria-hidden="true" />
@@ -190,12 +223,21 @@ function AnswerExtras({
           : 'Answer composed from live company records'}
         {answer.executionId === null ? '' : ' · full reasoning on the cognition trace'}
       </span>
+      {explainHref === null ? null : (
+        <Link
+          className="aurum-chat-explain"
+          href={withChatReturn(explainHref, returnTo)}
+        >
+          <Glyph d={WHY_GLYPH_D} size={13} label="why this answer" />
+          Why this answer?
+        </Link>
+      )}
     </>
   );
 }
 
 // ---------------------------------------------------------------------------
-// One action card (the seven consequential kinds, W060 acceptance)
+// One action card (the unified consequential kinds, W060 + W072)
 // ---------------------------------------------------------------------------
 
 export interface CardActions {
@@ -203,15 +245,29 @@ export interface CardActions {
   decided: Record<string, 'approved' | 'rejected'>;
   /** The request currently being decided (spinner state). */
   deciding: string | null;
-  /** Open the shell context drawer with the card's why/evidence. */
-  onOpenContext: (card: ChatCard) => void;
+  /**
+   * Open the shell context drawer with the card's why/evidence. The
+   * message's return link (W072) rides along so the drawer's links
+   * inherit the conversation context.
+   */
+  onOpenContext: (card: ChatCard, returnTo: string | null) => void;
   /** Decide a pending approval (approve/reject through the actions contract). */
   onDecide: (card: ChatCard, decision: 'approve' | 'reject') => void;
 }
 
-export function MessageCard({ card, actions }: { card: ChatCard; actions?: CardActions }): ReactNode {
+export function MessageCard({
+  card,
+  actions,
+  returnTo = null,
+}: {
+  card: ChatCard;
+  actions?: CardActions;
+  /** The message's stable return link (W072 continuity). */
+  returnTo?: string | null;
+}): ReactNode {
   const decided = actions === undefined ? undefined : actions.decided[card.decision?.requestId ?? ''];
-  const isPending = card.decision?.status === 'pending' && decided === undefined;
+  const isPending = isPendingDecisionCard(card) && decided === undefined;
+  const explainHref = cardExplainHref(card);
   const decisionNote =
     decided === undefined
       ? card.decision?.status === 'approved'
@@ -239,17 +295,29 @@ export function MessageCard({ card, actions }: { card: ChatCard; actions?: CardA
         </ul>
       )}
       <div className="aurum-chat-card-actions">
-        <Link className="aurum-chat-card-open" href={card.href}>
+        {/* W072 — the drill-down carries the way back: the Open link
+            appends ?back=/chat?c=<conversation>#m-<message> so the
+            destination surface can offer the return affordance. */}
+        <Link className="aurum-chat-card-open" href={cardDrillHref(card, returnTo)}>
           {card.linkLabel === null || card.linkLabel === undefined
             ? 'Open in management mode'
             : card.linkLabel}
           <Glyph d={OPEN_GLYPH_D} size={13} label="open" />
         </Link>
+        {explainHref === null ? null : (
+          <Link
+            className="aurum-chat-card-explain"
+            href={withChatReturn(explainHref, returnTo)}
+          >
+            <Glyph d={WHY_GLYPH_D} size={13} label="explain this decision" />
+            Explain decision
+          </Link>
+        )}
         {card.context === null ? null : (
           <button
             type="button"
             className="aurum-chat-card-why"
-            onClick={() => actions?.onOpenContext(card)}
+            onClick={() => actions?.onOpenContext(card, returnTo)}
           >
             Why this?
           </button>

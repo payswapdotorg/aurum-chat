@@ -3903,3 +3903,43 @@ a.aurum-explain-row-meta {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- W072: conversational intelligence continuity (chat-scoped) ---- */
+
+/* The "back to the conversation" affordance drill-down surfaces render
+   when they were opened FROM a chat message (`?back=/chat?c=…`). It is
+   the continuity contract's visible half: quiet, ShareNet-restrained
+   (hairline + teal accent text, no chrome), but clearly a way home —
+   and a 44px+ touch target. Rendered by the chat surface's
+   ChatReturnLink component on intelligence/explain pages. */
+.aurum-chat-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-s);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.aurum-chat-return:hover {
+  background: color-mix(in srgb, var(--accent-soft) 70%, var(--accent) 10%);
+}
+
+.aurum-chat-return:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The PageHead meta row wraps the affordance on drill-down pages; keep
+   the quiet text links beside it aligned without stretching. */
+.aurum-page-meta .aurum-chat-return {
+  vertical-align: middle;
+  margin-right: 6px;
+}

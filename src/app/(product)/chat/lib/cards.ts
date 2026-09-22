@@ -89,9 +89,9 @@ export function enrichCardContextLinks(
 
 /**
  * Does this card currently offer the inline human decision affordance?
- * (Approval cards with a still-pending request — the Journey E pattern
- * W074 builds on for full lifecycle continuity.)
+ * (Any card carrying a still-pending action request — the Journey E
+ * pattern; W074 builds the full intervention lifecycle on this seam.)
  */
 export function isPendingDecisionCard(card: ChatCard): boolean {
-  return card.kind === 'approval' && card.decision?.status === 'pending';
+  return card.decision?.status === 'pending';
 }
