@@ -16,7 +16,8 @@
     "db:dev": "tsx scripts/dev-db.ts",
     "seed:demo": "tsx scripts/seed-demo-harness.ts",
     "mcp": "tsx src/mcp/server.ts",
-    "browser:journeys": "node node_modules/@playwright/test/cli.js test -c playwright.config.ts"
+    "browser:journeys": "node node_modules/@playwright/test/cli.js test -c playwright.config.ts",
+    "smoke:dogfood": "tsx scripts/deployment-smoke.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
