@@ -1,0 +1,43 @@
+{
+  "spec": "/home/z/aurum/tests/browser/desktop/w074-chat-interventions-desktop.spec.ts",
+  "title": "the inline human decision and the activation complete end to end in the thread",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T14:26:05.251Z",
+      "step": "sign in and open the interventions conversation",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:06.636Z",
+      "step": "approve the proposal with the card button (the authority gate)",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:06.809Z",
+      "step": "the outcome message returns to the originating thread",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:08.688Z",
+      "step": "the activation affordance registers the agent",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:08.748Z",
+      "step": "the activation outcome lands with the agent card",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:10.857Z",
+      "step": "screenshot: the activation — the agent card lands in the thread",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": "docs/productization-evidence/W076/screens/w074-chat-interventions-desktop__the-inline-human-decision-and-the-activation-complete-end-to__the-activation-the-agent-card-lands-in-the-thread.png"
+    }
+  ]
+}

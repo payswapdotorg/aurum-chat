@@ -1,16 +1,16 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/interventions-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/interventions-desktop.spec.ts",
   "title": "the tower Approvals surface shows the decision trail (management mode)",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:27:45.979Z",
+      "at": "2026-09-22T14:25:52.161Z",
       "step": "open the tower approvals surface",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:47.963Z",
+      "at": "2026-09-22T14:25:52.826Z",
       "step": "screenshot: the tower approvals surface — the decision trail",
       "url": "http://localhost:3105/approvals",
       "shot": "docs/productization-evidence/W076/screens/interventions-desktop__the-tower-approvals-surface-shows-the-decision-trail-managem__the-tower-approvals-surface-the-decision-trail.png"

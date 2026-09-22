@@ -1,22 +1,22 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/accessibility-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/accessibility-desktop.spec.ts",
   "title": "the command-search dialog obeys Escape and returns focus to its opener",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:28.392Z",
+      "at": "2026-09-22T14:25:01.301Z",
       "step": "open the command search from the rail (keyboard-adjacent path)",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:28.698Z",
+      "at": "2026-09-22T14:25:01.705Z",
       "step": "arrow keys move the selection inside the dialog",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:28.790Z",
+      "at": "2026-09-22T14:25:01.776Z",
       "step": "Escape closes the dialog and restores the opener’s focus",
       "url": "http://localhost:3105/chat",
       "shot": null

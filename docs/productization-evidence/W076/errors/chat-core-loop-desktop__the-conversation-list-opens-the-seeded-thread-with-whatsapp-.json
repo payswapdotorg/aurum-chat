@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
   "title": "the conversation list opens the seeded thread with WhatsApp-like fidelity",
   "project": "desktop",
   "violationCount": 0,

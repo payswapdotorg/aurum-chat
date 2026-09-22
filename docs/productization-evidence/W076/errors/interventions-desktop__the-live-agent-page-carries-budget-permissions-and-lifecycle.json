@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/interventions-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/interventions-desktop.spec.ts",
   "title": "the live agent page carries budget, permissions and lifecycle onward",
   "project": "desktop",
   "violationCount": 0,

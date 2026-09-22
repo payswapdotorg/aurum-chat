@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/discovery-desktop.spec.ts",
   "title": "the More hub groups capabilities by user intent, not module names",
   "project": "desktop",
   "violationCount": 0,

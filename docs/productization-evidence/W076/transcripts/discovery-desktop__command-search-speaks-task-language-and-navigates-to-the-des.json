@@ -1,34 +1,34 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/discovery-desktop.spec.ts",
   "title": "command search speaks task language and navigates to the destination",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:57.798Z",
+      "at": "2026-09-22T14:25:23.192Z",
       "step": "open the command search from the rail",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:58.136Z",
+      "at": "2026-09-22T14:25:23.521Z",
       "step": "type a task and see the matching commands",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:58.484Z",
+      "at": "2026-09-22T14:25:23.712Z",
       "step": "screenshot: command search — task language",
       "url": "http://localhost:3105/chat",
       "shot": "docs/productization-evidence/W076/screens/discovery-desktop__command-search-speaks-task-language-and-navigates-to-the-des__command-search-task-language.png"
     },
     {
-      "at": "2026-09-22T07:26:58.484Z",
+      "at": "2026-09-22T14:25:23.713Z",
       "step": "a no-match query offers task-language suggestions (no dead end)",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:58.610Z",
+      "at": "2026-09-22T14:25:23.775Z",
       "step": "escape closes the dialog (keyboard discipline)",
       "url": "http://localhost:3105/chat",
       "shot": null

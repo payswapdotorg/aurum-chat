@@ -27,6 +27,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { EmptyState, ErrorState, PageHead, Panel, StatusPill } from '../../../components/states';
+import { ChatReturnLink, chatReturnFromSearchParams } from '../../../chat/components/chat-return-link';
+import { withChatReturn } from '../../../chat/lib/chat-types';
+import type { PageSearchParams } from '../../../lib/context';
 import { buildAgentView } from '../../lib/views';
 import type { AgentView } from '../../lib/views';
 import {
@@ -55,10 +58,18 @@ export const metadata: Metadata = {
 
 export default async function AgentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ agentId: string }>;
+  searchParams: Promise<PageSearchParams>;
 }) {
   const { agentId } = await params;
+  // W072/W074 — the guarded return link when the agent was opened from
+  // a chat activation-outcome card (`?back=/chat?c=…`): the manager
+  // jumps into the lifecycle detail and keeps the way back to the
+  // thread where the activation landed.
+  const search = await searchParams;
+  const back = chatReturnFromSearchParams(search);
   const session = await requireAuthenticatedPage();
 
   let view: AgentView;
@@ -78,6 +89,7 @@ export default async function AgentPage({
         description="One organizational agent — what it is contracted to do, how it measures, and the lifecycle decisions that govern it."
         meta={
           <>
+            <ChatReturnLink back={back} />{' '}
             <StatusPill tone={agent.status === 'active' ? 'positive' : 'neutral'}>
               {agent.status}
             </StatusPill>{' '}
@@ -90,7 +102,7 @@ export default async function AgentPage({
         {agent.role}
       </p>
       <p className="aurum-intel-row-foot" style={{ marginBottom: 18 }}>
-        <Link className="aurum-learn-link" href="/interventions">
+        <Link className="aurum-learn-link" href={withChatReturn('/interventions', back)}>
           ← All interventions
         </Link>
       </p>

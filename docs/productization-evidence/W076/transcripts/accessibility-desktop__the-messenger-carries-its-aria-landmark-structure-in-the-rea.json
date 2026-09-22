@@ -1,16 +1,16 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/accessibility-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/accessibility-desktop.spec.ts",
   "title": "the messenger carries its ARIA landmark structure in the real DOM",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:26.082Z",
+      "at": "2026-09-22T14:24:59.888Z",
       "step": "assert the document’s landmark structure",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:26.588Z",
+      "at": "2026-09-22T14:25:00.361Z",
       "step": "screenshot: the messenger’s landmark structure",
       "url": "http://localhost:3105/chat",
       "shot": "docs/productization-evidence/W076/screens/accessibility-desktop__the-messenger-carries-its-aria-landmark-structure-in-the-rea__the-messenger-s-landmark-structure.png"

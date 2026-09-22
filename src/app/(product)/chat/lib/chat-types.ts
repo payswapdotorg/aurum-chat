@@ -24,6 +24,11 @@
 // originating conversation — `/chat?c=<conversation>` plus the message
 // anchor — without ever making the transcript domain truth.
 
+// The existing Interventions surfaces: `src/app/(product)/interventions/**`
+// own the detail truth; W074 drives the SAME domain workflow from chat
+// (its two station kinds join the unified model below through this
+// file's extension pattern, exactly like W073's learning kinds).
+
 import type { PillTone } from '../../lib/states';
 
 // ---------------------------------------------------------------------------
@@ -107,7 +112,14 @@ export type ChatCardKind =
   // W073 — chat-based learning requests (learning surfaces as cards).
   | 'knowledge-request'
   | 'contribution'
-  | 'reward';
+  | 'reward'
+  // W074 — conversational interventions & approval continuity: the
+  // recruitment-proposal card (the comparison + its state + the inline
+  // human decision + the activation affordance) and the recruited-agent
+  // card (the activation outcome with its retain/modify/terminate
+  // lifecycle context).
+  | 'intervention-proposal'
+  | 'intervention-agent';
 
 export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'goal',
@@ -123,6 +135,9 @@ export const CHAT_CARD_KINDS: readonly ChatCardKind[] = [
   'knowledge-request',
   'contribution',
   'reward',
+  // W074 — conversational interventions & approval continuity.
+  'intervention-proposal',
+  'intervention-agent',
 ];
 
 /** The tower surface each card kind deep-links into (management mode). */
@@ -140,6 +155,10 @@ export const CARD_HREFS: Record<ChatCardKind, string> = {
   'knowledge-request': '/learning',
   contribution: '/learning',
   reward: '/learning',
+  // W074 — the Interventions surface owns the comparison, the gate and
+  // the lifecycle truth these cards drill into.
+  'intervention-proposal': '/interventions',
+  'intervention-agent': '/interventions',
 };
 
 /**
@@ -161,6 +180,20 @@ export const LEARNING_CARD_KINDS: readonly ChatCardKind[] = [
 export function isLearningCardKind(value: unknown): value is ChatCardKind {
   return (
     typeof value === 'string' && (LEARNING_CARD_KINDS as readonly string[]).includes(value)
+  );
+}
+
+/** The intervention kinds (W074) — cards the chat intervention lane renders. */
+export const INTERVENTION_CARD_KINDS: readonly ChatCardKind[] = [
+  'intervention-proposal',
+  'intervention-agent',
+];
+
+/** Is this card kind one of the W074 intervention kinds? */
+export function isInterventionCardKind(value: unknown): value is ChatCardKind {
+  return (
+    typeof value === 'string' &&
+    (INTERVENTION_CARD_KINDS as readonly string[]).includes(value)
   );
 }
 
@@ -208,6 +241,11 @@ export function chatCardKindLabel(kind: ChatCardKind): string {
       return 'Contribution';
     case 'reward':
       return 'Reward';
+    // W074 — conversational interventions & approval continuity.
+    case 'intervention-proposal':
+      return 'Intervention proposal';
+    case 'intervention-agent':
+      return 'Agent';
   }
 }
 
@@ -586,6 +624,11 @@ const KIND_WHY_LINES: Record<ChatCardKind, string> = {
   'knowledge-request': 'A knowledge request asks an employee what they know — the answer becomes evidence and a recognized contribution.',
   contribution: 'A contribution is knowledge an employee gave through chat — acknowledged, traceable, and separate from people decisions.',
   reward: 'A reward recognizes a knowledge contribution under the company’s explicit reward policy — never a compensation signal.',
+  // W074 — conversational interventions & approval continuity.
+  'intervention-proposal':
+    'An intervention proposal compares the ways to close a capability gap — Aurum proposes the comparison, a human authorizes the acquisition.',
+  'intervention-agent':
+    'A recruited agent is an organizational actor with explicit scopes and outcomes — its lifecycle decisions follow measured evaluations and human authority.',
 };
 
 /** Defensive read of a stored card; null when the shape is not a card. */

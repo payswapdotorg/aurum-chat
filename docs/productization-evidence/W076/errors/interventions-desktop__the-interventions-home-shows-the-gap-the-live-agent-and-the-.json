@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/interventions-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/interventions-desktop.spec.ts",
   "title": "the interventions home shows the gap, the live agent and the proposal",
   "project": "desktop",
   "violationCount": 0,

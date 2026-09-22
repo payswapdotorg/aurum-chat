@@ -1,30 +1,30 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/discovery-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/discovery-desktop.spec.ts",
   "title": "the marketplace catalog is public and its packages drill down",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:58.732Z",
+      "at": "2026-09-22T14:25:23.864Z",
       "step": "browse the public catalog",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:00.715Z",
+      "at": "2026-09-22T14:25:24.560Z",
       "step": "screenshot: the marketplace catalog",
       "url": "http://localhost:3105/marketplace",
       "shot": "docs/productization-evidence/W076/screens/discovery-desktop__the-marketplace-catalog-is-public-and-its-packages-drill-dow__the-marketplace-catalog.png"
     },
     {
-      "at": "2026-09-22T07:27:00.715Z",
+      "at": "2026-09-22T14:25:24.560Z",
       "step": "open the package page (permissions and governance)",
       "url": "http://localhost:3105/marketplace",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:02.010Z",
+      "at": "2026-09-22T14:25:26.875Z",
       "step": "screenshot: the package page — permissions and governance",
-      "url": "http://localhost:3105/marketplace/package/fd515567-0569-4051-9bea-fa2de14fc35a",
+      "url": "http://localhost:3105/marketplace/package/3a7dec1e-51ce-4101-8f21-0f9d5750b4a1",
       "shot": "docs/productization-evidence/W076/screens/discovery-desktop__the-marketplace-catalog-is-public-and-its-packages-drill-dow__the-package-page-permissions-and-governance.png"
     }
   ]

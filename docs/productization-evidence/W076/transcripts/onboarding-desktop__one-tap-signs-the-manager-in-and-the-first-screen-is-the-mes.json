@@ -1,34 +1,34 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/onboarding-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/onboarding-desktop.spec.ts",
   "title": "one tap signs the manager in and the first screen is the messenger",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:27:52.956Z",
+      "at": "2026-09-22T14:25:55.962Z",
       "step": "sign in as the manager through quick access",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:54.803Z",
+      "at": "2026-09-22T14:25:56.686Z",
       "step": "the first screen is the conversation surface",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:55.003Z",
+      "at": "2026-09-22T14:25:56.818Z",
       "step": "the visual contract: ShareNet shell + dominant messenger",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:55.225Z",
+      "at": "2026-09-22T14:25:57.078Z",
       "step": "the shell footer stays at the bottom of the viewport",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:27:55.396Z",
+      "at": "2026-09-22T14:25:57.228Z",
       "step": "screenshot: first screen — the messenger (manager)",
       "url": "http://localhost:3105/chat",
       "shot": "docs/productization-evidence/W076/screens/onboarding-desktop__one-tap-signs-the-manager-in-and-the-first-screen-is-the-mes__first-screen-the-messenger-manager.png"

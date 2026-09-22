@@ -1,10 +1,10 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/onboarding-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/onboarding-desktop.spec.ts",
   "title": "the sign-in page offers the seeded demo personas through quick access",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:27:51.698Z",
+      "at": "2026-09-22T14:25:55.447Z",
       "step": "open the sign-in page and inspect quick access",
       "url": "about:blank",
       "shot": null

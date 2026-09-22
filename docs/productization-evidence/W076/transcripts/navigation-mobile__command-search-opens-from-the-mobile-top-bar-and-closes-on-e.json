@@ -1,16 +1,16 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/navigation-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/navigation-mobile.spec.ts",
   "title": "command search opens from the mobile top bar and closes on Escape",
   "project": "mobile",
   "steps": [
     {
-      "at": "2026-09-22T07:29:39.210Z",
+      "at": "2026-09-22T14:26:32.192Z",
       "step": "open the command search from the top bar",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:39.617Z",
+      "at": "2026-09-22T14:26:32.607Z",
       "step": "type a task and Escape back out",
       "url": "http://localhost:3105/chat",
       "shot": null

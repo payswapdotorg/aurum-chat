@@ -19,7 +19,7 @@
 //   bun scripts/browser-server.ts start   (blocks until healthy)
 //   bun scripts/browser-server.ts stop
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -54,6 +54,19 @@ function childEnv(): NodeJS.ProcessEnv {
   delete env.KV_REST_API_URL;
   delete env.KV_REST_API_TOKEN;
   env.AURUM_DB = 'embedded';
+  // W074 note (same launch-glue fix family): bound the dev server's V8
+  // heap on small verification hosts. V8 grows lazily toward its
+  // ceiling before collecting; unbounded, the route worker's RSS climbs
+  // ~2-3MB per request and the kernel OOM-kills it mid-suite on a 4GB
+  // host sharing memory with the browser pool (observed at ~2.5GB after
+  // ~25 journeys, ERR_CONNECTION_REFUSED for every later test). A tight
+  // ceiling (700MB) forces collection early and keeps the worker flat
+  // (~250MB of growth over 1000 mixed requests, decelerating); PGlite's
+  // WASM/buffers live outside V8 below the kill threshold. An
+  // operator-provided NODE_OPTIONS always wins.
+  if (env.NODE_OPTIONS === undefined || env.NODE_OPTIONS === '') {
+    env.NODE_OPTIONS = '--max-old-space-size=700';
+  }
   return env;
 }
 
@@ -130,11 +143,32 @@ export interface RunningBrowserServer {
  * Start the dev server on the dedicated port and wait for health.
  * Console output is piped through with a prefix so a server-side crash
  * is visible in the suite's own log.
+ *
+ * W074 note (launch-glue fix, documented in the delivery report): the
+ * dev-server CHILD is spawned with `node` (falling back to `bun` only
+ * when node is absent). Bun remains the runner of the harness itself
+ * (`bun run browser:journeys` → playwright CLI → this global setup), but
+ * as the dev-server process runtime bun cannot resolve Next 16
+ * turbopack's external-module ids — `serverExternalPackages` members
+ * load through `require("<pkg>-<turbopack-hash>")`, which node's loader
+ * resolves through Next's dev bootstrap and bun's does not (reproducible
+ * 500s on /api/health: "Cannot find package 'pg-<hash>'"). Node is the
+ * runtime Next.js targets for `next dev`; using it for the child changes
+ * no harness semantics — same command, same port, same health gate.
  */
 export async function startBrowserServer(): Promise<RunningBrowserServer> {
   const root = repoRoot();
+  // Prefer node for the child (see the W074 note above); bun only when a
+  // node runtime is genuinely unavailable on this host.
+  let serverRuntime = 'node';
+  try {
+    const probe = spawnSync('node', ['--version'], { encoding: 'utf8' });
+    if (probe.status !== 0 || typeof probe.stdout !== 'string') serverRuntime = 'bun';
+  } catch {
+    serverRuntime = 'bun';
+  }
   const child = spawn(
-    'bun',
+    serverRuntime,
     ['node_modules/next/dist/bin/next', 'dev', '-p', String(BROWSER_SERVER_PORT)],
     { cwd: root, env: childEnv(), detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
   );

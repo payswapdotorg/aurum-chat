@@ -1,0 +1,37 @@
+{
+  "spec": "/home/z/aurum/tests/browser/desktop/w074-chat-interventions-desktop.spec.ts",
+  "title": "the drill-down carries the way back to the exact message (W072 continuity)",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T14:26:10.902Z",
+      "step": "sign in and open the interventions conversation",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:11.861Z",
+      "step": "open the proposal detail from the card",
+      "url": "http://localhost:3105/chat?c=e0632c49-1311-462f-9d43-b81ee3798c60",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:12.203Z",
+      "step": "the detail surface shows the same governance truth",
+      "url": "http://localhost:3105/interventions/proposals/eee9a8b6-9401-4158-aeb9-fda9b8b2d40e?back=%2Fchat%3Fc%3De0632c49-1311-462f-9d43-b81ee3798c60%23m-d95bd99a-e2a9-41c1-a54e-6445d3f9cc38",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T14:26:12.571Z",
+      "step": "screenshot: the proposal detail — decided, from the card drill-down",
+      "url": "http://localhost:3105/interventions/proposals/eee9a8b6-9401-4158-aeb9-fda9b8b2d40e?back=%2Fchat%3Fc%3De0632c49-1311-462f-9d43-b81ee3798c60%23m-d95bd99a-e2a9-41c1-a54e-6445d3f9cc38",
+      "shot": "docs/productization-evidence/W076/screens/w074-chat-interventions-desktop__the-drill-down-carries-the-way-back-to-the-exact-message-w07__the-proposal-detail-decided-from-the-card-drill-down.png"
+    },
+    {
+      "at": "2026-09-22T14:26:12.571Z",
+      "step": "return to the conversation through the W072 return link",
+      "url": "http://localhost:3105/interventions/proposals/eee9a8b6-9401-4158-aeb9-fda9b8b2d40e?back=%2Fchat%3Fc%3De0632c49-1311-462f-9d43-b81ee3798c60%23m-d95bd99a-e2a9-41c1-a54e-6445d3f9cc38",
+      "shot": null
+    }
+  ]
+}

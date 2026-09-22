@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/tenant-isolation-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/tenant-isolation-desktop.spec.ts",
   "title": "the quick-access panel served both personas through the real auth flow",
   "project": "desktop",
   "violationCount": 0,

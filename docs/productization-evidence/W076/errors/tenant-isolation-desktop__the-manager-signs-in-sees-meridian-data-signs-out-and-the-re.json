@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/tenant-isolation-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/tenant-isolation-desktop.spec.ts",
   "title": "the manager signs in, sees Meridian data, signs out, and the reviewer sees none of it",
   "project": "desktop",
   "violationCount": 0,

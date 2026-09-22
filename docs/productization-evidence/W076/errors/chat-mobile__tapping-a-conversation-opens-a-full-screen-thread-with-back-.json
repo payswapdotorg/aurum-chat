@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/chat-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/chat-mobile.spec.ts",
   "title": "tapping a conversation opens a full-screen thread with back navigation",
   "project": "mobile",
   "violationCount": 0,

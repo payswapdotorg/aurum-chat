@@ -1,34 +1,34 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/accessibility-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/accessibility-desktop.spec.ts",
   "title": "the keyboard walk starts at the skip link and focus is always visible",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:21.139Z",
+      "at": "2026-09-22T14:24:56.517Z",
       "step": "sign in and land on the messenger",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:23.244Z",
+      "at": "2026-09-22T14:24:57.500Z",
       "step": "the first Tab reaches the skip link, which becomes visible",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:23.428Z",
+      "at": "2026-09-22T14:24:57.709Z",
       "step": "the skip link jumps to the content landmark",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:23.441Z",
+      "at": "2026-09-22T14:24:57.721Z",
       "step": "walk the shell by keyboard — every stop focusable and visibly ringed",
       "url": "http://localhost:3105/chat#product-main",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:23.938Z",
+      "at": "2026-09-22T14:24:58.298Z",
       "step": "screenshot: keyboard focus — the visible ring",
       "url": "http://localhost:3105/chat#product-main",
       "shot": "docs/productization-evidence/W076/screens/accessibility-desktop__the-keyboard-walk-starts-at-the-skip-link-and-focus-is-alway__keyboard-focus-the-visible-ring.png"

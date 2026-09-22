@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/interventions-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/interventions-desktop.spec.ts",
   "title": "the recruitment proposal shows compared alternatives at the human gate",
   "project": "desktop",
   "violationCount": 0,

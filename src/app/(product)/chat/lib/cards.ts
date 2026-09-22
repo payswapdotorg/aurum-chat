@@ -54,11 +54,26 @@ export function answerExplainHref(answer: ChatAnswer): string | null {
  * what policy did, who decided" chain. Null for kinds that are not
  * action-request-anchored (their explainability rides the answer's
  * execution link instead).
+ *
+ * W074 — the intervention-proposal card joins the action-anchored
+ * family through the shared contract's extension pattern: a
+ * recruitment proposal waiting at (or decided through) the authority
+ * gate carries its gate request's id in the shared `decision` payload,
+ * so "Explain decision" opens the SAME reconstruction the Approvals
+ * surface links (one governance truth, two surfaces).
  */
 export function cardExplainHref(card: ChatCard): string | null {
-  if (card.kind !== 'approval' && card.kind !== 'recommendation') return null;
+  if (
+    card.kind !== 'approval' &&
+    card.kind !== 'recommendation' &&
+    card.kind !== 'intervention-proposal'
+  ) {
+    return null;
+  }
   const requestId =
-    card.kind === 'approval' ? (card.decision?.requestId ?? null) : card.id;
+    card.kind === 'approval' || card.kind === 'intervention-proposal'
+      ? (card.decision?.requestId ?? null)
+      : card.id;
   if (requestId === null || requestId === '') return null;
   return `/explain/action/${requestId}`;
 }

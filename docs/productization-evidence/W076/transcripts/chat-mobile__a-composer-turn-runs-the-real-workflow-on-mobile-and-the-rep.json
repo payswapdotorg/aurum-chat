@@ -1,30 +1,30 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/mobile/chat-mobile.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/mobile/chat-mobile.spec.ts",
   "title": "a composer turn runs the real workflow on mobile and the reply lands",
   "project": "mobile",
   "steps": [
     {
-      "at": "2026-09-22T07:29:20.129Z",
+      "at": "2026-09-22T14:26:21.908Z",
       "step": "open the seeded conversation",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:20.899Z",
+      "at": "2026-09-22T14:26:22.394Z",
       "step": "ask through the touch composer",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:21.110Z",
+      "at": "2026-09-22T14:26:22.537Z",
       "step": "the reply lands as an Aurum bubble",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:29:22.314Z",
+      "at": "2026-09-22T14:26:23.626Z",
       "step": "screenshot: mobile — the composer round-trip",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": "docs/productization-evidence/W076/screens/chat-mobile__a-composer-turn-runs-the-real-workflow-on-mobile-and-the-rep__mobile-the-composer-round-trip.png"
     }
   ]

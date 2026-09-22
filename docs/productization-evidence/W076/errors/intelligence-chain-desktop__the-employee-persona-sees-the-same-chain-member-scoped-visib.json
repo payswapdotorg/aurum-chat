@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
   "title": "the employee persona sees the same chain (member-scoped visibility)",
   "project": "desktop",
   "violationCount": 0,

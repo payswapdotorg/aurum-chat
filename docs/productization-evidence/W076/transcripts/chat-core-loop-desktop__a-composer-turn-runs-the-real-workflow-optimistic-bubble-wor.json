@@ -1,36 +1,36 @@
 {
-  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "spec": "/home/z/aurum/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
   "title": "a composer turn runs the real workflow: optimistic bubble → working → cards",
   "project": "desktop",
   "steps": [
     {
-      "at": "2026-09-22T07:26:33.920Z",
+      "at": "2026-09-22T14:25:05.004Z",
       "step": "open the seeded conversation",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:35.001Z",
+      "at": "2026-09-22T14:25:05.564Z",
       "step": "ask the attention question through the composer",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:35.063Z",
+      "at": "2026-09-22T14:25:05.768Z",
       "step": "the optimistic bubble + the working indicator",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:35.095Z",
+      "at": "2026-09-22T14:25:05.810Z",
       "step": "the reply lands with contextual cards in the stream",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": null
     },
     {
-      "at": "2026-09-22T07:26:36.215Z",
+      "at": "2026-09-22T14:25:06.919Z",
       "step": "screenshot: the reply — contextual cards in the live stream",
-      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "url": "http://localhost:3105/chat?c=2584ed7c-5026-40a3-809f-5e4e8f76dc28",
       "shot": "docs/productization-evidence/W076/screens/chat-core-loop-desktop__a-composer-turn-runs-the-real-workflow-optimistic-bubble-wor__the-reply-contextual-cards-in-the-live-stream.png"
     }
   ]
