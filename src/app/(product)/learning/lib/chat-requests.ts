@@ -656,13 +656,15 @@ export async function deliverKnowledgeRequestsToChat(
     return { ok: false, reason: 'reads_unavailable' };
   }
 
-  // Nothing to say and nothing to converge: no conversation is created.
-  if (open.length === 0 && answered.length === 0) {
-    const existing = await findLearningConversation(ctx);
+  // Nothing to deliver and no thread to converge: no conversation is
+  // created (a tenant whose asks were all answered before any chat
+  // delivery never gets an empty thread).
+  const existing = await findLearningConversation(ctx);
+  if (open.length === 0 && existing === null) {
     return {
       ok: true,
       delivered: false,
-      conversationId: existing?.id ?? null,
+      conversationId: null,
       openCount: 0,
       asksRecorded: 0,
       asksDeduped: 0,
@@ -671,7 +673,7 @@ export async function deliverKnowledgeRequestsToChat(
     };
   }
 
-  const conversation = await ensureLearningConversation(ctx);
+  const conversation = existing ?? (await ensureLearningConversation(ctx));
 
   // The idempotency window: which ask/ack provider ids the thread already
   // carries (bounded to the recent window; the contract's (tenant,

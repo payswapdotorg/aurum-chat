@@ -241,16 +241,24 @@ describe('no capability is command-search-only', () => {
     }
   });
 
-  it('the chat cards still deep-link their seven management destinations (the contextual-action frame)', () => {
+  it('the chat cards still deep-link their management destinations (the contextual-action frame)', () => {
     // The W060 card kinds — the "Chat → contextual action → detail
     // surface" frame. Worker A owns the chat surface; the card href
     // contract is the seam this wave builds around.
+    // W073: the shared card model gained the learning kinds
+    // (knowledge-request / contribution / reward → the Learning surface,
+    // the supporting learning evidence chain) through the contract's
+    // extension pattern — the seven W060 management destinations remain
+    // untouched and every card destination stays multi-frame reachable.
     expect(Object.keys(CARD_HREFS).sort()).toEqual([
       'approval',
+      'contribution',
       'goal',
+      'knowledge-request',
       'mission',
       'opportunity',
       'recommendation',
+      'reward',
       'risk',
       'unknown',
     ]);

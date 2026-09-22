@@ -719,6 +719,65 @@ describe('chat-based learning requests over the full Journey F chain', () => {
     expect(await learningChatLinkage(beta.owner)).toBeNull();
   });
 
+  it('creates no empty thread for answered-only plans that were never chat-delivered', async () => {
+    // The demo-seed shape: an ask-person plan answered through the
+    // Learning surface before any chat delivery. The sweep must not mint
+    // an empty "Aurum learning" conversation for it.
+    const ctx = beta.owner;
+    const employee = await askableEmployee(ctx, 'Milton Waddams');
+    const mission = await createMission(ctx, {
+      title: 'Stapler inventory variance',
+      knowledgeObjective: 'Explain the stapler inventory variance in Q3.',
+      informationValue: 0.4,
+      urgency: 'low',
+      targetConfidence: 0.6,
+      investigationBudget: { amount: 100_00, currency: 'USD' },
+      rewardBudget: { amount: 50_00, currency: 'USD' },
+      candidateSources: [{ kind: 'person', id: employee.personId, label: 'Milton Waddams' }],
+      completionCriteria: 'The variance is explained.',
+      actor: { kind: 'person', label: 'Ops Lead' },
+    });
+    const coverage = await recordObservation(ctx, {
+      kind: 'ops.note',
+      payload: { note: 'Milton Waddams keeps the stapler ledger.' },
+      observedAt: '2026-10-07T08:00:00.000Z',
+      source: { kind: 'person', id: employee.personId, label: 'Milton Waddams' },
+      channel: 'ingestion',
+      confidence: { value: 0.7, method: 'person-account', basis: 'the office ledger' },
+    });
+    await recordTransactiveEntry(ctx, {
+      actor: { kind: 'person', id: employee.personId },
+      relation: 'knows',
+      subjectLabel: 'Stapler inventory keeping',
+      topics: missionSubjectTopics(
+        'Stapler inventory variance',
+        'Explain the stapler inventory variance in Q3.',
+      ),
+      evidenceObservationIds: [coverage.id],
+      notes: 'the office ledger',
+    });
+    const ask = await requestNextKnowledge(ctx, mission.id, 'Initech Owner');
+    expect(ask.decision).toBe('selected');
+    // Answer through the LEARNING form API (no chat involvement).
+    const answered = await handleAnswerPost(
+      sessionRequest(
+        beta.ownerToken,
+        { summary: 'The red Swingline was never shipped back from storage.', confidence: 'high' },
+        `https://aurum.test/api/product/learning/requests/${ask.planId}/answer`,
+      ),
+      ask.planId,
+    );
+    expect(answered.status).toBe(200);
+    // The sweep: open requests are empty, no thread exists — nothing.
+    const delivery = await deliverKnowledgeRequestsToChat(ctx);
+    expect(delivery.ok).toBe(true);
+    if (delivery.ok) {
+      expect(delivery.delivered).toBe(false);
+      expect(delivery.conversationId).toBeNull();
+    }
+    expect(await findLearningConversation(ctx)).toBeNull();
+  });
+
   it('maps the deliver API surface honestly (401 anonymous)', async () => {
     const anonymous = await handleChatDeliverPost(
       new Request('https://aurum.test/x', { method: 'POST', body: '{}' }),
@@ -740,10 +799,13 @@ describe('chat-based learning requests over the full Journey F chain', () => {
     // The plan and the conversation are invisible to tenant B's context.
     await expect(getAcquisitionPlan(beta.owner, planId)).rejects.toThrow();
     expect(await findLearningConversation(beta.owner)).toBeNull();
-    // Tenant B's hub shows nothing of tenant A's.
+    // Tenant B's hub carries none of tenant A's records (B owns its own
+    // stapler fixture by now — isolation means no A leakage, not
+    // emptiness).
     const view = await buildLearningHomeView(beta.owner);
-    expect(view.requests).toEqual([]);
-    expect(view.contributions).toEqual([]);
+    expect(view.requests.map((row) => row.planId)).not.toContain(planId);
+    expect(view.contributions.map((row) => row.id)).not.toContain(contributionId);
+    expect(view.contributions.every((row) => row.missionId !== missionId)).toBe(true);
     expect(view.rewards).toEqual([]);
     expect(view.chat).toBeNull();
   });
