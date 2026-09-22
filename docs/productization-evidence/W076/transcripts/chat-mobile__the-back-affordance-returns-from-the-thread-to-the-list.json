@@ -1,0 +1,13 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/mobile/chat-mobile.spec.ts",
+  "title": "the back affordance returns from the thread to the list",
+  "project": "mobile",
+  "steps": [
+    {
+      "at": "2026-09-22T06:24:16.786Z",
+      "step": "open the thread, then go back",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    }
+  ]
+}

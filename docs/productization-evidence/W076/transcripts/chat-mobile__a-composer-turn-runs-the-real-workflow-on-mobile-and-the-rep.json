@@ -1,0 +1,31 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/mobile/chat-mobile.spec.ts",
+  "title": "a composer turn runs the real workflow on mobile and the reply lands",
+  "project": "mobile",
+  "steps": [
+    {
+      "at": "2026-09-22T06:24:12.483Z",
+      "step": "open the seeded conversation",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T06:24:13.661Z",
+      "step": "ask through the touch composer",
+      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T06:24:13.724Z",
+      "step": "the reply lands as an Aurum bubble",
+      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T06:24:14.791Z",
+      "step": "screenshot: mobile — the composer round-trip",
+      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "shot": "docs/productization-evidence/W076/screens/chat-mobile__a-composer-turn-runs-the-real-workflow-on-mobile-and-the-rep__mobile-the-composer-round-trip.png"
+    }
+  ]
+}

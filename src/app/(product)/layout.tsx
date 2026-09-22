@@ -10,6 +10,7 @@
 
 import type { ReactNode } from 'react';
 import './product.css';
+import { resolveSession } from '@/app/lib/session';
 import { ProductShellProvider } from './components/product-shell-provider';
 import { ShellStateProvider } from './components/shell-state-context';
 import { DesktopRail } from './components/desktop-rail';
@@ -17,14 +18,19 @@ import { MobileTopBar, MobileBottomNav } from './components/mobile-chrome';
 import { CommandSearch } from './components/command-search';
 import { ContextDrawer } from './components/context-drawer';
 
-export default function ProductLayout({ children }: { children: ReactNode }) {
+export default async function ProductLayout({ children }: { children: ReactNode }) {
+  // Read-only session resolve (no gating): PUBLIC product pages (the
+  // marketplace catalog) legitimately render for anonymous visitors, and
+  // the chrome must know whether session-scoped state exists at all
+  // (W076 — the anonymous public page must not fetch it and 401).
+  const session = await resolveSession();
   return (
     <div className="aurum-shell">
       <a className="aurum-skip" href="#product-main">
         Skip to content
       </a>
       <ProductShellProvider>
-        <ShellStateProvider>
+        <ShellStateProvider authenticated={session.status === 'authenticated'}>
           {/* The mobile top bar is a COLUMN child of the shell (not of the
               body row) so it never stretches to the page content height;
               the body row holds rail + main only. */}

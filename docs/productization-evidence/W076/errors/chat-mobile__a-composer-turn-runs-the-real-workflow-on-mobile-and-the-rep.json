@@ -1,0 +1,11 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/mobile/chat-mobile.spec.ts",
+  "title": "a composer turn runs the real workflow on mobile and the reply lands",
+  "project": "mobile",
+  "violationCount": 0,
+  "violations": [],
+  "documentedFilter": [
+    "favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)",
+    "net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)"
+  ]
+}

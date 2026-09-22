@@ -5,3 +5,7 @@ node_modules
 .env*.local
 coverage
 *.tsbuildinfo
+
+# W076 browser-suite runtime state (the harness pid file)
+tests/browser/.server.pid
+test-results
