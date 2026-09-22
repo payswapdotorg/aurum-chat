@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/onboarding-desktop.spec.ts",
+  "title": "anonymous visitors land on the sign-in surface from the root",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:48.027Z",
+      "step": "visit the root as an anonymous visitor",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:49.804Z",
+      "step": "screenshot: anonymous entry — the sign-in surface",
+      "url": "http://localhost:3105/signin?next=%2F",
+      "shot": "docs/productization-evidence/W076/screens/onboarding-desktop__anonymous-visitors-land-on-the-sign-in-surface-from-the-root__anonymous-entry-the-sign-in-surface.png"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/mobile/navigation-mobile.spec.ts",
+  "title": "the More hub is reachable on mobile and its cards navigate",
+  "project": "mobile",
+  "steps": [
+    {
+      "at": "2026-09-22T07:29:32.025Z",
+      "step": "open More from the bottom nav",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:29:32.941Z",
+      "step": "follow a hub card into a capability surface",
+      "url": "http://localhost:3105/more",
+      "shot": null
+    }
+  ]
+}

@@ -4,25 +4,25 @@
   "project": "mobile",
   "steps": [
     {
-      "at": "2026-09-22T06:24:03.626Z",
+      "at": "2026-09-22T07:28:41.036Z",
       "step": "sign in as the manager on the mobile viewport",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:05.901Z",
+      "at": "2026-09-22T07:28:43.142Z",
       "step": "the touch chrome: top bar + five-area bottom nav (44px+)",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:06.179Z",
+      "at": "2026-09-22T07:28:43.492Z",
       "step": "the conversation list fills the screen",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:06.431Z",
+      "at": "2026-09-22T07:28:43.788Z",
       "step": "screenshot: mobile — the conversation list home",
       "url": "http://localhost:3105/chat",
       "shot": "docs/productization-evidence/W076/screens/chat-mobile__the-conversation-list-is-the-mobile-home-with-the-touch-chro__mobile-the-conversation-list-home.png"

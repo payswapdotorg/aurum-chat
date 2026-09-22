@@ -45,6 +45,24 @@ export async function signInViaQuickAccess(page: Page, role: PersonaRole): Promi
   // The real auth round-trip: cookie issuance + client-side replace to
   // the after-auth target. Every seeded persona has an active company,
   // so the target is always /chat.
+  //
+  // HYDRATION RACE GUARD (documented, bounded): a click delivered after
+  // first paint but before React hydrates the panel is lost — no state
+  // change, no request, no error (provably: zero violations accompany
+  // this state). Detect exactly that (still on /signin, no aria-busy
+  // pending anywhere) and click ONCE more; then the real flow must run.
+  const engaged = await page
+    .waitForFunction(
+      () =>
+        window.location.pathname === '/chat' ||
+        document.querySelector('[aria-busy="true"]') !== null,
+      { timeout: 8_000, polling: 200 },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (!engaged) {
+    await row.click();
+  }
   await page.waitForURL(/\/chat(\?.*)?$/, { timeout: 30_000 });
   await expect(page.locator('.aurum-chat-app')).toBeVisible();
 }

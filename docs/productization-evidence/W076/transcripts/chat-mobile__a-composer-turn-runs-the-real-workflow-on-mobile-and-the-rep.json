@@ -4,27 +4,27 @@
   "project": "mobile",
   "steps": [
     {
-      "at": "2026-09-22T06:24:12.483Z",
+      "at": "2026-09-22T07:29:20.129Z",
       "step": "open the seeded conversation",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:13.661Z",
+      "at": "2026-09-22T07:29:20.899Z",
       "step": "ask through the touch composer",
-      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:13.724Z",
+      "at": "2026-09-22T07:29:21.110Z",
       "step": "the reply lands as an Aurum bubble",
-      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:14.791Z",
+      "at": "2026-09-22T07:29:22.314Z",
       "step": "screenshot: mobile — the composer round-trip",
-      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
       "shot": "docs/productization-evidence/W076/screens/chat-mobile__a-composer-turn-runs-the-real-workflow-on-mobile-and-the-rep__mobile-the-composer-round-trip.png"
     }
   ]

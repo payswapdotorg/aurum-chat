@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/interventions-desktop.spec.ts",
+  "title": "the interventions home shows the gap, the live agent and the proposal",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:29.860Z",
+      "step": "sign in as the manager and open Interventions",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:33.780Z",
+      "step": "screenshot: the interventions home — gap, agent, proposal",
+      "url": "http://localhost:3105/interventions",
+      "shot": "docs/productization-evidence/W076/screens/interventions-desktop__the-interventions-home-shows-the-gap-the-live-agent-and-the-__the-interventions-home-gap-agent-proposal.png"
+    }
+  ]
+}

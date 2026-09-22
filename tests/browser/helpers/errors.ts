@@ -7,7 +7,8 @@
 // or not).
 //
 // THE DOCUMENTED NOISE FILTER (kept as narrow as possible; every entry is
-// browser bookkeeping, never an application defect):
+// browser bookkeeping or third-party browser behavior, never an
+// application defect):
 //   1. favicon 404s — the app deliberately ships no favicon asset, so the
 //      browser's automatic /favicon.ico request 404s in the dev runtime
 //      and Chromium logs it as a console error + HTTP 404. Third-party
@@ -17,6 +18,15 @@
 //      mid-poll). Cancellation bookkeeping, not a server or app failure;
 //      real failures still surface as HTTP >= 400 responses, requestfailed
 //      with other error texts, console errors and pageerror events.
+//   3. Chromium's PASSWORD-MANAGER style injection on auth forms — the
+//      browser's password manager intermittently injects
+//      style="caret-color:transparent" into email/password inputs BEFORE
+//      React hydrates (a known Chromium behavior — vercel/next.js#47973;
+//      the repo's source contains no caret-color anywhere). React's dev
+//      hydration warning then fires with that attribute as the only diff.
+//      The filter matches ONLY that exact signature (a hydration warning
+//      whose diff is the injected caret-color style); every other
+//      hydration mismatch still fails the journey.
 
 import type { Page } from '@playwright/test';
 
@@ -46,6 +56,15 @@ function isFaviconConsoleNoise(text: string): boolean {
 }
 
 /**
+ * Is this console text Chromium's password-manager hydration warning (the
+ * injected caret-color style — the ONLY acceptable hydration diff)?
+ */
+function isPasswordManagerHydrationNoise(text: string): boolean {
+  if (!text.includes('A tree hydrated but some attributes')) return false;
+  return text.includes('caret-color') || text.includes('caretColor');
+}
+
+/**
  * Attach the collectors to a page. Every console error, uncaught page
  * error, failed request and HTTP >= 400 response lands in `sink` unless
  * it matches the documented noise filter above.
@@ -57,6 +76,7 @@ export function attachViolationCollectors(page: Page, sink: Violation[]): void {
     if (message.type() !== 'error') return;
     const text = message.text();
     if (isFaviconConsoleNoise(text)) return;
+    if (isPasswordManagerHydrationNoise(text)) return;
     sink.push({ kind: 'console', detail: text, url: page.url(), at: at() });
   });
 

@@ -1,0 +1,49 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "title": "the conversation list opens the seeded thread with WhatsApp-like fidelity",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:26:29.002Z",
+      "step": "sign in as the manager",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:30.744Z",
+      "step": "the list shows the conversation with unread treatment",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:30.888Z",
+      "step": "open the conversation from the list",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:31.894Z",
+      "step": "the bubble geometry: speaker sides, tints, compact timestamps",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:31.981Z",
+      "step": "the thread header carries the Aurum identity and quiet status",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:31.988Z",
+      "step": "the evidence-backed seeded answer is on screen",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:32.097Z",
+      "step": "screenshot: the seeded thread — bubbles, timestamps, composer",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": "docs/productization-evidence/W076/screens/chat-core-loop-desktop__the-conversation-list-opens-the-seeded-thread-with-whatsapp-__the-seeded-thread-bubbles-timestamps-composer.png"
+    }
+  ]
+}

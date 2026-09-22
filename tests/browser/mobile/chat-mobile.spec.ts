@@ -16,6 +16,7 @@
 
 import { journeyTest as test, expect } from '../fixtures';
 import { signInViaQuickAccess } from '../helpers/personas';
+import { openConversationFromList } from '../helpers/interact';
 import {
   CHAT_APP,
   CHAT_BACK,
@@ -66,7 +67,11 @@ test.describe('Mobile chat — first-class conversation (390×844, touch)', () =
     const { page } = journey;
     await signInViaQuickAccess(page, 'manager');
     await journey.step('tap the conversation row');
-    await page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }).tap();
+    await openConversationFromList(
+      page,
+      page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }),
+      { touch: true },
+    );
 
     await journey.step('the thread pane takes the screen');
     await expect(page.locator(CHAT_APP)).toHaveAttribute('data-mobile-view', 'thread');
@@ -92,7 +97,11 @@ test.describe('Mobile chat — first-class conversation (390×844, touch)', () =
     const { page } = journey;
     await signInViaQuickAccess(page, 'manager');
     await journey.step('open the seeded conversation');
-    await page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }).tap();
+    await openConversationFromList(
+      page,
+      page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }),
+      { touch: true },
+    );
     await expect(page.locator(CHAT_TIMELINE).getByText(SEEDED_QUESTION).first()).toBeVisible();
 
     await journey.step('ask through the touch composer');
@@ -121,7 +130,11 @@ test.describe('Mobile chat — first-class conversation (390×844, touch)', () =
     const { page } = journey;
     await signInViaQuickAccess(page, 'manager');
     await journey.step('open the thread, then go back');
-    await page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }).tap();
+    await openConversationFromList(
+      page,
+      page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }),
+      { touch: true },
+    );
     await expect(page.locator(CHAT_APP)).toHaveAttribute('data-mobile-view', 'thread');
     await page.locator(CHAT_BACK).tap();
     await expect(page.locator(CHAT_APP)).toHaveAttribute('data-mobile-view', 'list');

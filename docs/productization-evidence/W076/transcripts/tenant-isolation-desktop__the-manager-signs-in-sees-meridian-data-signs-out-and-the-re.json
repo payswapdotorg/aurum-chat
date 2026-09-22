@@ -1,0 +1,55 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/tenant-isolation-desktop.spec.ts",
+  "title": "the manager signs in, sees Meridian data, signs out, and the reviewer sees none of it",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:28:28.092Z",
+      "step": "sign in as the manager (Meridian Roasters)",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:28:32.462Z",
+      "step": "screenshot: manager — Meridian data visible",
+      "url": "http://localhost:3105/intelligence",
+      "shot": "docs/productization-evidence/W076/screens/tenant-isolation-desktop__the-manager-signs-in-sees-meridian-data-signs-out-and-the-re__manager-meridian-data-visible.png"
+    },
+    {
+      "at": "2026-09-22T07:28:32.462Z",
+      "step": "sign out through the real affordance (More → Account)",
+      "url": "http://localhost:3105/intelligence",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:28:34.505Z",
+      "step": "sign in as the platform reviewer (Aurum Platform Review)",
+      "url": "http://localhost:3105/signin",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:28:36.701Z",
+      "step": "the conversation list shows NONE of Meridian’s threads",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:28:36.835Z",
+      "step": "screenshot: platform reviewer — an empty conversation list (isolation)",
+      "url": "http://localhost:3105/chat",
+      "shot": "docs/productization-evidence/W076/screens/tenant-isolation-desktop__the-manager-signs-in-sees-meridian-data-signs-out-and-the-re__platform-reviewer-an-empty-conversation-list-isolation.png"
+    },
+    {
+      "at": "2026-09-22T07:28:36.835Z",
+      "step": "the intelligence briefing shows NONE of Meridian’s goals",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:28:38.286Z",
+      "step": "screenshot: platform reviewer — the intelligence briefing (isolation)",
+      "url": "http://localhost:3105/intelligence",
+      "shot": "docs/productization-evidence/W076/screens/tenant-isolation-desktop__the-manager-signs-in-sees-meridian-data-signs-out-and-the-re__platform-reviewer-the-intelligence-briefing-isolation.png"
+    }
+  ]
+}

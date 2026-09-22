@@ -1,0 +1,19 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
+  "title": "the employee persona sees the same chain (member-scoped visibility)",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:27.702Z",
+      "step": "the employee opens the intelligence briefing",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:29.808Z",
+      "step": "screenshot: the intelligence briefing (employee)",
+      "url": "http://localhost:3105/intelligence",
+      "shot": "docs/productization-evidence/W076/screens/intelligence-chain-desktop__the-employee-persona-sees-the-same-chain-member-scoped-visib__the-intelligence-briefing-employee.png"
+    }
+  ]
+}

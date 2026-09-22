@@ -13,6 +13,7 @@
 
 import { journeyTest as test, expect } from '../fixtures';
 import { signInViaQuickAccess } from '../helpers/personas';
+import { openConversationFromList } from '../helpers/interact';
 import {
   CHAT_BACK,
   CHAT_CARD,
@@ -88,7 +89,10 @@ test.describe('Journey B — the chat core loop (desktop)', () => {
     const { page } = journey;
     await signInViaQuickAccess(page, 'manager');
     await journey.step('open the seeded conversation');
-    await page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }).click();
+    await openConversationFromList(
+      page,
+      page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }),
+    );
     await expect(page.locator(CHAT_TIMELINE).getByText(SEEDED_QUESTION).first()).toBeVisible();
 
     await journey.step('ask the attention question through the composer');
@@ -132,6 +136,9 @@ test.describe('Journey B — the chat core loop (desktop)', () => {
     // The message-level explainability affordance (W072).
     await expect(page.locator(CHAT_EXPLAIN).first()).toBeVisible();
 
+    // Bring the card into the timeline's viewport so the human-review
+    // screenshot shows the live-stream card contract in frame.
+    await approvalCard.scrollIntoViewIfNeeded();
     await journey.shot('the reply — contextual cards in the live stream');
     journey.expectZeroViolations();
   });
@@ -142,7 +149,10 @@ test.describe('Journey B — the chat core loop (desktop)', () => {
     const { page } = journey;
     await signInViaQuickAccess(page, 'manager');
     await journey.step('open the conversation and ask for attention');
-    await page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }).click();
+    await openConversationFromList(
+      page,
+      page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }),
+    );
     await expect(page.locator(CHAT_TIMELINE).getByText(SEEDED_QUESTION).first()).toBeVisible();
     await page.locator(CHAT_INPUT).fill('What needs my attention?');
     await page.locator(CHAT_INPUT).press('Enter');
@@ -159,6 +169,7 @@ test.describe('Journey B — the chat core loop (desktop)', () => {
     await expect(approvalCard).toContainText(/You approved this/i, { timeout: 30_000 });
     await expect(approvalCard.locator(CHAT_DECIDE_APPROVE)).toHaveCount(0);
 
+    await approvalCard.scrollIntoViewIfNeeded();
     await journey.shot('the inline approval — decided inside the thread');
     journey.expectZeroViolations();
   });
@@ -169,7 +180,10 @@ test.describe('Journey B — the chat core loop (desktop)', () => {
     const { page } = journey;
     await signInViaQuickAccess(page, 'manager');
     await journey.step('open the conversation and ask for attention');
-    await page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }).click();
+    await openConversationFromList(
+      page,
+      page.locator(CHAT_CONVO, { hasText: SEEDED_CONVERSATION }),
+    );
     await expect(page.locator(CHAT_TIMELINE).getByText(SEEDED_QUESTION).first()).toBeVisible();
     await page.locator(CHAT_INPUT).fill('What needs my attention?');
     await page.locator(CHAT_INPUT).press('Enter');

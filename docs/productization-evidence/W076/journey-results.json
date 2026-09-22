@@ -75,6 +75,1043 @@
   },
   "suites": [
     {
+      "title": "desktop/accessibility-desktop.spec.ts",
+      "file": "desktop/accessibility-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Accessibility smoke — keyboard, focus, landmarks (desktop)",
+          "file": "desktop/accessibility-desktop.spec.ts",
+          "line": 41,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the keyboard walk starts at the skip link and focus is always visible",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2878,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:21.012Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "56399a5e706ea67c151a-c744ff6e4fa0b9656c22",
+              "file": "desktop/accessibility-desktop.spec.ts",
+              "line": 42,
+              "column": 3
+            },
+            {
+              "title": "the messenger carries its ARIA landmark structure in the real DOM",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2582,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:24.007Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "56399a5e706ea67c151a-e51e228e67a93915b1d8",
+              "file": "desktop/accessibility-desktop.spec.ts",
+              "line": 89,
+              "column": 3
+            },
+            {
+              "title": "the command-search dialog obeys Escape and returns focus to its opener",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2210,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:26.616Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "56399a5e706ea67c151a-5ac9128921f60acfc30c",
+              "file": "desktop/accessibility-desktop.spec.ts",
+              "line": 118,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "desktop/chat-core-loop-desktop.spec.ts",
+      "file": "desktop/chat-core-loop-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Journey B — the chat core loop (desktop)",
+          "file": "desktop/chat-core-loop-desktop.spec.ts",
+          "line": 24,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the conversation list opens the seeded thread with WhatsApp-like fidelity",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3207,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:28.898Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b2e309b5b0c30de980c-f162c11f6ca7adbff08d",
+              "file": "desktop/chat-core-loop-desktop.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "a composer turn runs the real workflow: optimistic bubble → working → cards",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4104,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:32.115Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b2e309b5b0c30de980c-f21c2444c2cbd45c0a9c",
+              "file": "desktop/chat-core-loop-desktop.spec.ts",
+              "line": 60,
+              "column": 3
+            },
+            {
+              "title": "a pending approval is decided inline from the conversation (Journey E, chat-first)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4830,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:36.231Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b2e309b5b0c30de980c-d1925d3343b9ad5e15d9",
+              "file": "desktop/chat-core-loop-desktop.spec.ts",
+              "line": 116,
+              "column": 3
+            },
+            {
+              "title": "the explainability drill-down opens from the message and returns to the thread",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5644,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:41.080Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b2e309b5b0c30de980c-81cd4c9abcca8cbc9ad7",
+              "file": "desktop/chat-core-loop-desktop.spec.ts",
+              "line": 150,
+              "column": 3
+            },
+            {
+              "title": "new-chat affordance + conversation search filter the list (W071 controls)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2999,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:46.746Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0b2e309b5b0c30de980c-2b5a41baa0e86932cc27",
+              "file": "desktop/chat-core-loop-desktop.spec.ts",
+              "line": 204,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "desktop/discovery-desktop.spec.ts",
+      "file": "desktop/discovery-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Journeys J/L + W075 — discovery through More, search and marketplace (desktop)",
+          "file": "desktop/discovery-desktop.spec.ts",
+          "line": 12,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the More hub groups capabilities by user intent, not module names",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5434,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:49.808Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99272bce1e991e98a50d-91782e5741b03630f59f",
+              "file": "desktop/discovery-desktop.spec.ts",
+              "line": 13,
+              "column": 3
+            },
+            {
+              "title": "command search speaks task language and navigates to the destination",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3427,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:55.252Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99272bce1e991e98a50d-b7d3e2959cf75f564d77",
+              "file": "desktop/discovery-desktop.spec.ts",
+              "line": 52,
+              "column": 3
+            },
+            {
+              "title": "the marketplace catalog is public and its packages drill down",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3327,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:26:58.689Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99272bce1e991e98a50d-c578d2b0e740c8cbd79f",
+              "file": "desktop/discovery-desktop.spec.ts",
+              "line": 94,
+              "column": 3
+            },
+            {
+              "title": "the developer console is discoverable from More (Journey L)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5897,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:02.026Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99272bce1e991e98a50d-99a570de6faa666ec274",
+              "file": "desktop/discovery-desktop.spec.ts",
+              "line": 114,
+              "column": 3
+            },
+            {
+              "title": "the mobile chrome exists in the DOM for narrow viewports (desktop-width sanity)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2628,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:07.930Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99272bce1e991e98a50d-a74758e4f0189e279f4b",
+              "file": "desktop/discovery-desktop.spec.ts",
+              "line": 135,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "desktop/intelligence-chain-desktop.spec.ts",
+      "file": "desktop/intelligence-chain-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Journey C — goal → unknown → mission (desktop)",
+          "file": "desktop/intelligence-chain-desktop.spec.ts",
+          "line": 12,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the intelligence briefing shows the proactive finding and links the chain",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6679,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:10.597Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "83d2a9d51e95bf1110f8-b4157c45304fc6e1a8a3",
+              "file": "desktop/intelligence-chain-desktop.spec.ts",
+              "line": 13,
+              "column": 3
+            },
+            {
+              "title": "the unknown and the mission open through their own links",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8249,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:17.288Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "83d2a9d51e95bf1110f8-f681e0e9162f3e432d67",
+              "file": "desktop/intelligence-chain-desktop.spec.ts",
+              "line": 40,
+              "column": 3
+            },
+            {
+              "title": "the employee persona sees the same chain (member-scoped visibility)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4267,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:25.546Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "83d2a9d51e95bf1110f8-5440ed155e45d2da2f89",
+              "file": "desktop/intelligence-chain-desktop.spec.ts",
+              "line": 69,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "desktop/interventions-desktop.spec.ts",
+      "file": "desktop/interventions-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Journeys E/I — interventions, approvals and the tower (desktop)",
+          "file": "desktop/interventions-desktop.spec.ts",
+          "line": 12,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the interventions home shows the gap, the live agent and the proposal",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3965,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:29.828Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0d554242fdb0d1b73710-cbddeaa3b54dde5f11f0",
+              "file": "desktop/interventions-desktop.spec.ts",
+              "line": 13,
+              "column": 3
+            },
+            {
+              "title": "the recruitment proposal shows compared alternatives at the human gate",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4882,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:33.803Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0d554242fdb0d1b73710-78065ce9ba71cf1c27f1",
+              "file": "desktop/interventions-desktop.spec.ts",
+              "line": 27,
+              "column": 3
+            },
+            {
+              "title": "the live agent page carries budget, permissions and lifecycle onward",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5142,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:38.693Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0d554242fdb0d1b73710-341ee50d1627510104e3",
+              "file": "desktop/interventions-desktop.spec.ts",
+              "line": 43,
+              "column": 3
+            },
+            {
+              "title": "the tower Approvals surface shows the decision trail (management mode)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4099,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:43.843Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0d554242fdb0d1b73710-6ca991933fdfd08c6d31",
+              "file": "desktop/interventions-desktop.spec.ts",
+              "line": 63,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "desktop/onboarding-desktop.spec.ts",
+      "file": "desktop/onboarding-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Journey A — first-time entry (desktop)",
+          "file": "desktop/onboarding-desktop.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "anonymous visitors land on the sign-in surface from the root",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1827,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:47.996Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "97e497d07da7d0676afa-4005081606266d985a08",
+              "file": "desktop/onboarding-desktop.spec.ts",
+              "line": 20,
+              "column": 3
+            },
+            {
+              "title": "an unusable invitation link is an honest page with a way forward (no dead ends)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1821,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:49.834Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "97e497d07da7d0676afa-30fd2474ca517a824290",
+              "file": "desktop/onboarding-desktop.spec.ts",
+              "line": 37,
+              "column": 3
+            },
+            {
+              "title": "the sign-in page offers the seeded demo personas through quick access",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1249,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:51.664Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "97e497d07da7d0676afa-4fb04145b9e4c86997c3",
+              "file": "desktop/onboarding-desktop.spec.ts",
+              "line": 59,
+              "column": 3
+            },
+            {
+              "title": "one tap signs the manager in and the first screen is the messenger",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2483,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:52.922Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "97e497d07da7d0676afa-09861968ae250de6f60f",
+              "file": "desktop/onboarding-desktop.spec.ts",
+              "line": 78,
+              "column": 3
+            },
+            {
+              "title": "the composer is keyboard-first (focusable, typed, and cleared by UI state)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 32581,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:27:55.414Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "97e497d07da7d0676afa-4bd6cc75e131c1482105",
+              "file": "desktop/onboarding-desktop.spec.ts",
+              "line": 117,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "desktop/tenant-isolation-desktop.spec.ts",
+      "file": "desktop/tenant-isolation-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Authentication and tenant switching — isolation visible in the UI (desktop)",
+          "file": "desktop/tenant-isolation-desktop.spec.ts",
+          "line": 28,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the manager signs in, sees Meridian data, signs out, and the reviewer sees none of it",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10278,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:28:28.019Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "73155a32047ea4221df1-2f803ae465fa0cf9c04c",
+              "file": "desktop/tenant-isolation-desktop.spec.ts",
+              "line": 29,
+              "column": 3
+            },
+            {
+              "title": "the quick-access panel served both personas through the real auth flow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1414,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:28:38.312Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "73155a32047ea4221df1-2256802d35797c29b3f3",
+              "file": "desktop/tenant-isolation-desktop.spec.ts",
+              "line": 70,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "mobile/chat-mobile.spec.ts",
       "file": "mobile/chat-mobile.spec.ts",
       "column": 0,
@@ -84,7 +1121,7 @@
         {
           "title": "Mobile chat — first-class conversation (390×844, touch)",
           "file": "mobile/chat-mobile.spec.ts",
-          "line": 23,
+          "line": 24,
           "column": 6,
           "specs": [
             {
@@ -100,15 +1137,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2911,
+                      "duration": 2918,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-22T06:24:03.502Z",
+                      "startTime": "2026-09-22T07:28:40.849Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -118,7 +1155,7 @@
               ],
               "id": "bcdb781897b8f4937d9d-fef1987d6dad874c6249",
               "file": "mobile/chat-mobile.spec.ts",
-              "line": 24,
+              "line": 25,
               "column": 3
             },
             {
@@ -134,15 +1171,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3865,
+                      "duration": 4157,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-22T06:24:06.493Z",
+                      "startTime": "2026-09-22T07:28:43.904Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -152,7 +1189,7 @@
               ],
               "id": "bcdb781897b8f4937d9d-4712585319105e4b605b",
               "file": "mobile/chat-mobile.spec.ts",
-              "line": 47,
+              "line": 48,
               "column": 3
             },
             {
@@ -168,15 +1205,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4414,
+                      "duration": 34257,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-22T06:24:10.368Z",
+                      "startTime": "2026-09-22T07:28:48.071Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -186,7 +1223,7 @@
               ],
               "id": "bcdb781897b8f4937d9d-d0e1dbecfc79f935124a",
               "file": "mobile/chat-mobile.spec.ts",
-              "line": 74,
+              "line": 77,
               "column": 3
             },
             {
@@ -202,15 +1239,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2383,
+                      "duration": 3938,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-22T06:24:14.811Z",
+                      "startTime": "2026-09-22T07:29:22.343Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -220,7 +1257,160 @@
               ],
               "id": "bcdb781897b8f4937d9d-5000c22debe289fc4834",
               "file": "mobile/chat-mobile.spec.ts",
-              "line": 101,
+              "line": 106,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "mobile/navigation-mobile.spec.ts",
+      "file": "mobile/navigation-mobile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Mobile navigation — the five areas and the hub (390×844, touch)",
+          "file": "mobile/navigation-mobile.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the bottom navigation carries the five areas with active treatment",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile",
+                  "projectName": "mobile",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3655,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:29:26.301Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "35a22b03688107dffcd0-c03594ce9bb8cd5e702a",
+              "file": "mobile/navigation-mobile.spec.ts",
+              "line": 12,
+              "column": 3
+            },
+            {
+              "title": "the More hub is reachable on mobile and its cards navigate",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile",
+                  "projectName": "mobile",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3264,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:29:29.966Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "35a22b03688107dffcd0-c7092dc31382f8587b21",
+              "file": "mobile/navigation-mobile.spec.ts",
+              "line": 44,
+              "column": 3
+            },
+            {
+              "title": "management mode (Today) keeps its own shell on mobile",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile",
+                  "projectName": "mobile",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3703,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:29:33.242Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "35a22b03688107dffcd0-d3dff6d59e5d96c50c1d",
+              "file": "mobile/navigation-mobile.spec.ts",
+              "line": 70,
+              "column": 3
+            },
+            {
+              "title": "command search opens from the mobile top bar and closes on Escape",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile",
+                  "projectName": "mobile",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2776,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-22T07:29:36.954Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "35a22b03688107dffcd0-089304f342fd0a289e6e",
+              "file": "mobile/navigation-mobile.spec.ts",
+              "line": 89,
               "column": 3
             }
           ]
@@ -230,9 +1420,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-22T06:23:43.964Z",
-    "duration": 33414.678,
-    "expected": 4,
+    "startTime": "2026-09-22T07:26:02.916Z",
+    "duration": 217114.101,
+    "expected": 35,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

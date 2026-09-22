@@ -4,27 +4,27 @@
   "project": "mobile",
   "steps": [
     {
-      "at": "2026-09-22T06:24:08.808Z",
+      "at": "2026-09-22T07:28:46.410Z",
       "step": "tap the conversation row",
       "url": "http://localhost:3105/chat",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:09.135Z",
+      "at": "2026-09-22T07:28:46.781Z",
       "step": "the thread pane takes the screen",
-      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:09.206Z",
+      "at": "2026-09-22T07:28:46.829Z",
       "step": "the seeded thread renders with mobile bubble fidelity",
-      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
       "shot": null
     },
     {
-      "at": "2026-09-22T06:24:10.351Z",
+      "at": "2026-09-22T07:28:48.054Z",
       "step": "screenshot: mobile — the full-screen thread",
-      "url": "http://localhost:3105/chat?c=ce4a32f7-db7e-48fb-ac8d-4e5a7e148f0d",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
       "shot": "docs/productization-evidence/W076/screens/chat-mobile__tapping-a-conversation-opens-a-full-screen-thread-with-back-__mobile-the-full-screen-thread.png"
     }
   ]

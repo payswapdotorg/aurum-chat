@@ -96,7 +96,9 @@ test.describe('Mobile navigation — the five areas and the hub (390×844, touch
     await expect(dialog.getByLabel('Search commands')).toBeFocused();
 
     await journey.step('type a task and Escape back out');
-    await dialog.getByLabel('Search commands').fill('goal');
+    const mobileInput = dialog.getByLabel('Search commands');
+    await mobileInput.fill('goal');
+    await expect(mobileInput).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     journey.expectZeroViolations();

@@ -140,6 +140,7 @@ export const journeyTest = baseTest.extend<{ journey: Journey }>({
       documentedFilter: [
         'favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)',
         'net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)',
+        'Chromium password-manager caret-color hydration warnings (browser-injected style attribute; every other hydration mismatch fails)',
       ],
     });
     expect(

@@ -74,6 +74,9 @@ test.describe('Journeys J/L + W075 — discovery through More, search and market
     await expect(dialog.locator('[role="option"]').first()).toBeVisible();
 
     await journey.step('escape closes the dialog (keyboard discipline)');
+    // Pin the ordering: the Escape handler lives on the dialog's input —
+    // wait until focus is (back) on it, then Escape.
+    await expect(dialog.getByLabel('Search commands')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     journey.expectZeroViolations();

@@ -1,0 +1,37 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/chat-core-loop-desktop.spec.ts",
+  "title": "a composer turn runs the real workflow: optimistic bubble → working → cards",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:26:33.920Z",
+      "step": "open the seeded conversation",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:35.001Z",
+      "step": "ask the attention question through the composer",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:35.063Z",
+      "step": "the optimistic bubble + the working indicator",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:35.095Z",
+      "step": "the reply lands with contextual cards in the stream",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:26:36.215Z",
+      "step": "screenshot: the reply — contextual cards in the live stream",
+      "url": "http://localhost:3105/chat?c=06951c91-ae25-48f0-b5c0-88dc745153b1",
+      "shot": "docs/productization-evidence/W076/screens/chat-core-loop-desktop__a-composer-turn-runs-the-real-workflow-optimistic-bubble-wor__the-reply-contextual-cards-in-the-live-stream.png"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/mobile/navigation-mobile.spec.ts",
+  "title": "the More hub is reachable on mobile and its cards navigate",
+  "project": "mobile",
+  "violationCount": 0,
+  "violations": [],
+  "documentedFilter": [
+    "favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)",
+    "net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)",
+    "Chromium password-manager caret-color hydration warnings (browser-injected style attribute; every other hydration mismatch fails)"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/desktop/intelligence-chain-desktop.spec.ts",
+  "title": "the unknown and the mission open through their own links",
+  "project": "desktop",
+  "steps": [
+    {
+      "at": "2026-09-22T07:27:19.836Z",
+      "step": "open the goal page from the briefing",
+      "url": "http://localhost:3105/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:23.019Z",
+      "step": "open the promoted unknown",
+      "url": "http://localhost:3105/intelligence/goals/cbeabcd6-2fbf-44d1-8273-022951b8783e",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:24.172Z",
+      "step": "screenshot: the unknown — consequence and the closing mission",
+      "url": "http://localhost:3105/intelligence/unknowns/a979bc5f-09c3-414b-a783-56147f073706",
+      "shot": "docs/productization-evidence/W076/screens/intelligence-chain-desktop__the-unknown-and-the-mission-open-through-their-own-links__the-unknown-consequence-and-the-closing-mission.png"
+    },
+    {
+      "at": "2026-09-22T07:27:24.172Z",
+      "step": "open the mission",
+      "url": "http://localhost:3105/intelligence/unknowns/a979bc5f-09c3-414b-a783-56147f073706",
+      "shot": null
+    },
+    {
+      "at": "2026-09-22T07:27:25.524Z",
+      "step": "screenshot: the mission — the knowledge objective",
+      "url": "http://localhost:3105/intelligence/missions/1c337a75-ccee-4255-8837-950ae86c697c",
+      "shot": "docs/productization-evidence/W076/screens/intelligence-chain-desktop__the-unknown-and-the-mission-open-through-their-own-links__the-mission-the-knowledge-objective.png"
+    },
+    {
+      "at": "2026-09-22T07:27:25.524Z",
+      "step": "the chain links upward (no dead end)",
+      "url": "http://localhost:3105/intelligence/missions/1c337a75-ccee-4255-8837-950ae86c697c",
+      "shot": null
+    }
+  ]
+}
