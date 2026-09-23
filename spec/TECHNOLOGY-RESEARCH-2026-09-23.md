@@ -197,6 +197,28 @@ Can generate MCP servers from OpenAPI/Swagger and deploy them in customer-contro
 
 This is valuable for customer-specific internal APIs: upload or authorize an OpenAPI contract and automatically expose governed MCP tools without hand-building every adapter.
 
+## Private and on-premise systems
+
+Aurum will encounter systems that cannot or should not be exposed as public SaaS APIs, especially in large enterprises and regulated environments.
+
+Create an **Aurum Edge Connector** as a lightweight, customer-controlled runtime that establishes outbound connections to Aurum and can reach approved internal systems.
+
+The Edge Connector should:
+
+- run inside the customer's network or private cloud;
+- make outbound-only connections to Aurum;
+- receive only signed, tenant-scoped jobs;
+- expose approved source/destination/action capabilities through Aurum's provider-neutral gateway;
+- keep credentials inside the customer's secret store;
+- support local OpenAPI/MCP endpoints, databases, file shares and approved desktop/browser adapters;
+- report capability, health and version metadata to the Integration Intelligence layer;
+- support explicit network allowlists and organization policy;
+- return normalized evidence/results without exposing provider objects to the domain.
+
+**Priority: P0/P1**, especially for large, regulated and on-premise customers.
+
+This should be an adapter/runtime pattern, not a second Aurum control plane. PostgreSQL, policy, authority and audit remain authoritative in Aurum.
+
 ## Browser / computer-use fallback
 
 ### Stagehand + Browserbase
