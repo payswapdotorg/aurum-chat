@@ -194,59 +194,82 @@ Maintain a technology registry containing capability, project/provider, license,
 Before rebuilding infrastructure, the Tech Lead reviews the registry.
 
 ## 15. New work-item DAG
+
 ### CommOS fusion extraction
 
-`CommOS source contracts → Aurum communication-kernel boundary → Aurum identity/evidence/policy adapters → production transports/gateways → delivery evidence`
+CommOS protocol/core → Aurum communication-kernel boundary → Aurum identity/policy/evidence → production transports/gateways → delivery evidence.
 
-The initial extraction target is the reusable protocol/core subset, not the CommOS application. Preserve CommOS protocol tests as upstream conformance fixtures where licensing and source ownership permit. 
-
+Extract only the validated reusable CommOS subset. Do not import the CommOS application shell, separate auth, singleton demo network, separate business data model or second AI loop.
 
 ### Foundation
-W080 Durable Agent Runtime Adapter
-W099 CommOS Fusion and Communication Kernel (replaces the earlier Matrix-only W099)
-W081 Integration Intelligence
-W082 Universal Connection Broker
+
+W080 Durable Agent Runtime Adapter  
+W081 Integration Intelligence  
+W082 Universal Connection Broker  
 W083 Progressive Capability Grants
 
-### Communications / execution
-W084 Deep Action Gateway + Reconciliation
-W085 Meeting Intelligence Gateway
-W086 Realtime Voice + Meeting Companion
-W087 Cellular Reachability + Telecom Abstraction
+### Communications and execution
+
+W084 Deep Action Gateway and Reconciliation  
+W085 Meeting Intelligence Gateway  
+W086 Realtime Voice and Meeting Companion  
+W087 Cellular Reachability and Communication Fallback  
 W088 Aurum Edge Connector
 
-### Provider independence / economics
-W089 Provider Adapter SDK + OSS Technology Registry
-W090 Aurum Provider Billing Gateway
+### Provider independence and economics
+
+W089 Provider Adapter SDK and OSS Technology Registry  
+W090 Aurum Provider Billing Gateway  
 W091 User-Friendly Provider Choice UX
 
-### Industry / fallback
-W092 Vertical Extension Starter Kits
-W093 Browser/Computer-Use Fallback
-W094 Migration + Dual-Run Continuity
-W095 Unified Cross-Channel/Meeting/Telephony Identity Verification
+### Industry and fallback
 
-### Proof
-W096 Integration Intelligence End-to-End Fixture
-W097 Meeting + Cellular End-to-End Fixture
-W098 Persistent Agent Supervision/Recovery
-W099 CommOS Fusion and Communication Kernel
-W100 Longitudinal S003 Conversion Benchmark
+W092 Vertical Extension Starter Kits  
+W093 Browser and Computer-Use Fallback  
+W094 Migration and Dual-Run Continuity
+
+### Identity and proof
+
+W095 Unified Cross-Channel, Meeting and Telephony Identity Verification  
+W096 Integration Intelligence End-to-End Fixture  
+W097 Meeting and Cellular End-to-End Fixture  
+W098 Persistent Agent Supervision and Recovery
+
+### Fusion, learning and release
+
+W099 CommOS Fusion and Communication Kernel  
+W100 Longitudinal S003 Conversion Benchmark  
 W101 Final Post-S002 Production Certification
 
-`W080 → W084, W086, W098`
+## 16. Dependency relationships
 
-`W080 → W084, W086, W098`
-`W081 → W082, W083, W089, W096`
-`W082 + W083 → W084`
-`W084 + W009 → W090 + W091`
-`W085 + W095 → W086`
-`W087 + W095 → W097`
-`W084 + W088 → W092 + W094`
-`W089 → all new provider adapters`
-`W092 + W084 + W040 → W100`
-`W095 + W030 + W002 + W099 → W087`
-`W096 + W097 + W098 + W100 + W099 → W101`
+W079 certification reconciliation → W099
+
+W080 → W084, W086, W098
+
+W081 → W082, W083, W089, W096
+
+W082 + W083 + W009 → W084
+
+W099 + W002 + W030 → W095
+
+W099 → W085, W087, W088
+
+W085 + W095 → W086
+
+W087 + W095 → W097
+
+W088 + W084 → W092, W094
+
+W089 → all new provider adapters, including optional Matrix
+
+W090 → W091
+
+W093 → W084
+
+W092 + W084 + W040 → W100
+
+W096 + W097 + W098 + W100 + W099 → W101
 
 ## 17. Three-worker execution waves
 
@@ -256,32 +279,32 @@ Tech Lead: reconcile current main, deployed revision and W079 certification befo
 ### Wave 1
 Worker A — W080 Durable Agent Runtime
 Worker B — W081 Integration Intelligence
-Worker C — W099 CommOS Fusion + W087 Cellular Reachability
+Worker C — W099 CommOS Fusion and Communication Kernel
 
 ### Wave 2
 Worker A — W082 Universal Connection Broker
 Worker B — W085 Meeting Intelligence Gateway
-Worker C — W090/W091 Provider billing + outcome-oriented provider choice
+Worker C — W087 Cellular Reachability and Communication Fallback
 
 ### Wave 3
 Worker A — W083 Progressive Capability Grants + W084 Deep Actions
 Worker B — W086 LiveKit Realtime + Meeting Companion
-Worker C — W088 Edge Connector + W089 adapter/OSS registry
+Worker C — W088 Edge Connector + W089 Provider/OSS Registry
 
 ### Wave 4
-Worker A — W092 Vertical Extension Foundation
-Worker B — W093 Browser Fallback
-Worker C — W094 Migration/Dual Run
+Worker A — W090 Provider Billing Gateway + W091 Provider Choice UX
+Worker B — W092 Vertical Extension Foundation
+Worker C — W093 Browser Fallback
 
 ### Wave 5
-Worker A — W095 Unified Identity
-Worker B — W096 Integration E2E proof
-Worker C — W097 Meeting/Cellular E2E proof
+Worker A — W094 Migration and Dual Run
+Worker B — W095 Unified Identity
+Worker C — W098 Persistent Agent Supervision and Recovery
 
 ### Wave 6
-Worker A — W098 Persistent Agent Supervision
-Worker B — W099 Matrix optional adapter only if customer use-case evidence warrants it
-Worker C — Tech Lead release/security reconciliation
+Worker A — W096 Integration Intelligence E2E proof
+Worker B — W097 Meeting and Cellular E2E proof
+Worker C — Tech Lead integration, security and licensing reconciliation
 
 ### Wave 7
 All workers support W100 S003 longitudinal simulation and W101 final production certification.
