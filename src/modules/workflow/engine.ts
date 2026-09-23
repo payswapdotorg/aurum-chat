@@ -515,35 +515,49 @@ async function invokeClaimed(
 ): Promise<WorkflowPumpOutcome> {
   const db = getDb();
   const at = now();
-  const claim = await db.transaction(async (tx) => {
-    if (consume !== undefined) {
-      await tx.query(
-        `UPDATE workflow_run_signals SET consumed_at = $3 WHERE tenant_id = $1 AND id = $2 AND consumed_at IS NULL`,
-        [ctx.tenantId, consume.signalId, at],
+  try {
+    const claim = await db.transaction(async (tx) => {
+      if (consume !== undefined) {
+        await tx.query(
+          `UPDATE workflow_run_signals SET consumed_at = $3 WHERE tenant_id = $1 AND id = $2 AND consumed_at IS NULL`,
+          [ctx.tenantId, consume.signalId, at],
+        );
+      }
+      const claimed = await tx.query<StepRow>(
+        `UPDATE workflow_run_steps
+           SET status = 'running', invocation_count = invocation_count + 1,
+               wait_kind = NULL, wait_resume_at = NULL, wait_action_request_id = NULL,
+               wait_event_type = NULL, wait_note = NULL,
+               lease_expires_at = $3::timestamptz + lease_seconds * interval '1 second',
+               started_at = COALESCE(started_at, $3), updated_at = $3
+         WHERE tenant_id = $1 AND id = $2 AND status = 'waiting'
+         RETURNING *`,
+        [ctx.tenantId, target.step.id, at],
       );
+      const step = claimed.rows[0];
+      if (step === undefined) throw new ClaimConflict('wait was released by a concurrent pump');
+      const runUpdate = await tx.query(
+        `UPDATE workflow_runs SET status = 'running', updated_at = $3
+           WHERE tenant_id = $1 AND id = $2 AND status = 'waiting'`,
+        [ctx.tenantId, target.run.id, at],
+      );
+      if ((runUpdate.rowCount ?? 0) === 0) throw new ClaimConflict('run left the waiting state');
+      return { step, claimedAt: at };
+    });
+    return runExecutorAndPersist(
+      ctx,
+      bindings,
+      { run: target.run, step: claim.step },
+      waitOutcome,
+      claim.claimedAt,
+      false,
+    );
+  } catch (error) {
+    if (error instanceof ClaimConflict) {
+      return conflictOutcome(target, false, error.message);
     }
-    const claimed = await tx.query<StepRow>(
-      `UPDATE workflow_run_steps
-         SET status = 'running', invocation_count = invocation_count + 1,
-             wait_kind = NULL, wait_resume_at = NULL, wait_action_request_id = NULL,
-             wait_event_type = NULL, wait_note = NULL,
-             lease_expires_at = $3 + (lease_seconds || 0) * interval '1 second',
-             started_at = COALESCE(started_at, $3), updated_at = $3
-       WHERE tenant_id = $1 AND id = $2 AND status = 'waiting'
-       RETURNING *`,
-      [ctx.tenantId, target.step.id, at],
-    );
-    const step = claimed.rows[0];
-    if (step === undefined) throw new ClaimConflict('wait was released by a concurrent pump');
-    const runUpdate = await tx.query(
-      `UPDATE workflow_runs SET status = 'running', updated_at = $3
-         WHERE tenant_id = $1 AND id = $2 AND status = 'waiting'`,
-      [ctx.tenantId, target.run.id, at],
-    );
-    if ((runUpdate.rowCount ?? 0) === 0) throw new ClaimConflict('run left the waiting state');
-    return { step, claimedAt: at };
-  });
-  return runExecutorAndPersist(ctx, bindings, { run: target.run, step: claim.step }, waitOutcome, claim.claimedAt, false);
+    throw error;
+  }
 }
 
 /**
@@ -559,15 +573,14 @@ async function claimAndInvoke(
   const db = getDb();
   const at = now();
   const stepBefore = target.step;
-  const recovering =
-    stepBefore.status === 'running' && stepBefore.invocation_count > 0;
+  let recovered = false;
   try {
     const claim = await db.transaction(async (tx) => {
       const claimed = await tx.query<StepRow>(
         `UPDATE workflow_run_steps
            SET status = 'running', invocation_count = invocation_count + 1,
                retry_not_before = NULL,
-               lease_expires_at = $3 + (lease_seconds || 0) * interval '1 second',
+               lease_expires_at = $3::timestamptz + lease_seconds * interval '1 second',
                started_at = COALESCE(started_at, $3), updated_at = $3
          WHERE tenant_id = $1 AND id = $2 AND status IN ('pending', 'running')
            AND (
@@ -579,16 +592,27 @@ async function claimAndInvoke(
       );
       const step = claimed.rows[0];
       if (step === undefined) throw new ClaimConflict('step was claimed by a concurrent pump');
-      if (recovering) {
-        // The previous invocation's worker died without persisting an
-        // outcome — record the loss on the append-only evidence trail.
-        await tx.query(
-          `INSERT INTO workflow_step_attempts (
-             tenant_id, run_id, step_number, invocation, outcome, started_at, finished_at, recorded_by
-           ) VALUES ($1, $2, $3, $4, 'abandoned', $5, $5, $6)
-           ON CONFLICT (tenant_id, run_id, step_number, invocation) DO NOTHING`,
-          [ctx.tenantId, step.run_id, step.step_number, stepBefore.invocation_count, at, ctx.principalId],
+      // A previously-invoked running step is either a clean checkpoint
+      // continuation (its invocation RECORDED an outcome row) or a dead
+      // worker (no outcome row). Only the latter is a recovery: mark the
+      // lost invocation on the append-only evidence trail.
+      if (stepBefore.status === 'running' && stepBefore.invocation_count > 0) {
+        const evidence = await tx.query(
+          `SELECT 1 FROM workflow_step_attempts
+            WHERE tenant_id = $1 AND run_id = $2 AND step_number = $3 AND invocation = $4
+            LIMIT 1`,
+          [ctx.tenantId, step.run_id, step.step_number, stepBefore.invocation_count],
         );
+        if (evidence.rows.length === 0) {
+          await tx.query(
+            `INSERT INTO workflow_step_attempts (
+               tenant_id, run_id, step_number, invocation, outcome, started_at, finished_at, recorded_by
+             ) VALUES ($1, $2, $3, $4, 'abandoned', $5, $5, $6)
+             ON CONFLICT (tenant_id, run_id, step_number, invocation) DO NOTHING`,
+            [ctx.tenantId, step.run_id, step.step_number, stepBefore.invocation_count, at, ctx.principalId],
+          );
+          recovered = true;
+        }
       }
       const runUpdate = await tx.query(
         `UPDATE workflow_runs
@@ -607,7 +631,7 @@ async function claimAndInvoke(
       { run: target.run, step: claim.step },
       null,
       claim.claimedAt,
-      recovering,
+      recovered,
     );
   } catch (error) {
     if (error instanceof ClaimConflict) return null;
@@ -669,7 +693,7 @@ async function runExecutorAndPersist(
     heartbeat: async () => {
       const beaten = await getDb().query(
         `UPDATE workflow_run_steps
-           SET lease_expires_at = $3 + (lease_seconds || 0) * interval '1 second', updated_at = $3
+           SET lease_expires_at = $3::timestamptz + lease_seconds * interval '1 second', updated_at = $3
          WHERE tenant_id = $1 AND id = $2 AND status = 'running' AND invocation_count = $4`,
         [run.tenant_id, step.id, now(), invocationNumber],
       );
@@ -877,7 +901,7 @@ async function persistWait(
       const request = await authorizeAction(runCtx, {
         actionKind: waitSpec.actionKind,
         authorityLevel: waitSpec.authorityLevel,
-        payload: waitSpec.payload,
+        payload: waitSpec.payload ?? {},
         justification: waitSpec.justification,
         idempotencyKey: approvalIdempotencyKey(run.id, step.step_number),
       });
@@ -967,13 +991,14 @@ async function persistFailure(
       if (mayRetry) {
         // Transient failure within budget: schedule the retry (explicit
         // attempt counter + exponential backoff). The checkpoint SURVIVES
-        // — a blip must not erase durable progress.
+        // — a blip must not erase durable progress. The failure detail
+        // lives on the append-only attempt evidence row (a pending step
+        // carries no error columns — see the storage CHECK shapes).
         const backoff = retryBackoffSeconds(step.retry_backoff_seconds, newAttemptCount);
         const stepUpdate = await tx.query(
           `UPDATE workflow_run_steps
              SET status = 'pending', attempt_count = $5,
-                 retry_not_before = $6, lease_expires_at = NULL,
-                 error_code = $7, error_detail = $8, updated_at = $3
+                 retry_not_before = $6, lease_expires_at = NULL, updated_at = $3
            WHERE tenant_id = $1 AND id = $2 AND status = 'running' AND invocation_count = $4`,
           [
             ctx.tenantId,
@@ -982,8 +1007,6 @@ async function persistFailure(
             invocationNumber,
             newAttemptCount,
             new Date(at.getTime() + backoff * 1000),
-            errorCode,
-            errorDetail,
           ],
         );
         if ((stepUpdate.rowCount ?? 0) === 0) throw new ClaimConflict('invocation claim was lost');
@@ -993,10 +1016,6 @@ async function persistFailure(
           errorDetail,
         });
         await tx.query(
-          `UPDATE workflow_run_steps SET error_code = NULL, error_detail = NULL WHERE tenant_id = $1 AND id = $2`,
-          [ctx.tenantId, step.id],
-        );
-        await tx.query(
           `UPDATE workflow_runs SET updated_at = $3 WHERE tenant_id = $1 AND id = $2 AND status = 'running'`,
           [ctx.tenantId, run.id, at],
         );
@@ -1004,10 +1023,10 @@ async function persistFailure(
       }
       const stepUpdate = await tx.query(
         `UPDATE workflow_run_steps
-           SET status = 'failed', attempt_count = $5, error_code = $7, error_detail = $8,
+           SET status = 'failed', attempt_count = $5, error_code = $6, error_detail = $7,
                finished_at = $3, lease_expires_at = NULL, retry_not_before = NULL, updated_at = $3
          WHERE tenant_id = $1 AND id = $2 AND status = 'running' AND invocation_count = $4`,
-        [ctx.tenantId, step.id, at, invocationNumber, newAttemptCount, null, errorCode, errorDetail],
+        [ctx.tenantId, step.id, at, invocationNumber, newAttemptCount, errorCode, errorDetail],
       );
       if ((stepUpdate.rowCount ?? 0) === 0) throw new ClaimConflict('invocation claim was lost');
       await insertAttemptEvidence(tx, ctx, target, invocationNumber, claimedAt, {

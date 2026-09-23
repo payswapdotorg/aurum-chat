@@ -37,11 +37,13 @@ interface CronField {
 export interface ParsedCron {
   minutes: number[];
   hours: number[];
-  /** Day-of-month values; empty = `*`. */
   daysOfMonth: number[];
   months: number[];
-  /** Day-of-week values (0..7, 0/7 Sunday); empty = `*`. */
   daysOfWeek: number[];
+  /** True when the day-of-month field is `*` (unrestricted). */
+  domAny: boolean;
+  /** True when the day-of-week field is `*` (unrestricted). */
+  dowAny: boolean;
 }
 
 const FIELD_RANGES: ReadonlyArray<readonly [number, number]> = [
@@ -119,6 +121,8 @@ export function parseCron(expression: string): ParsedCron {
     daysOfMonth: parsedFields[2]!.values,
     months: parsedFields[3]!.values,
     daysOfWeek: parsedFields[4]!.values,
+    domAny: parsedFields[2]!.any,
+    dowAny: parsedFields[4]!.any,
   };
 }
 
@@ -133,14 +137,13 @@ export function isValidCron(expression: string): boolean {
 }
 
 function dayMatches(parsed: ParsedCron, dayOfMonth: number, dayOfWeek: number): boolean {
-  const domAny = parsed.daysOfMonth.length === 0;
-  const dowAny = parsed.daysOfWeek.length === 0;
-  if (domAny && dowAny) return true;
+  // The Vixie rule: when BOTH day fields are restricted, either may
+  // match; otherwise the restricted one (if any) must match.
+  if (parsed.domAny && parsed.dowAny) return true;
   const domMatch = parsed.daysOfMonth.includes(dayOfMonth);
   const dowMatch = parsed.daysOfWeek.includes(dayOfWeek);
-  if (domAny) return dowMatch;
-  if (dowAny) return domMatch;
-  // Both restricted — Vixie OR semantics.
+  if (parsed.domAny) return dowMatch;
+  if (parsed.dowAny) return domMatch;
   return domMatch || dowMatch;
 }
 

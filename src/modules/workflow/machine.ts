@@ -190,9 +190,9 @@ export function scheduleRunIdempotencyKey(scheduleId: string, occurrenceMs: numb
 /**
  * Classify an executor's return value into the durable transition the
  * engine must persist. Pure — the engine applies this to whatever an
- * executor returned and fails deterministically on a malformed result
- * (executors are code, but code can be wrong; the state machine never
- * trusts shape).
+ * executor returned (typed `unknown`: executors are code, but code can
+ * be wrong; the state machine never trusts shape) and fails
+ * deterministically on a malformed result.
  */
 export type ClassifiedStepResult =
   | { type: 'done'; output: unknown }
@@ -214,7 +214,7 @@ export type ClassifiedStepResult =
 /** The wait specification of a classified `wait` result. */
 export type ClassifiedWaitSpec = Extract<ClassifiedStepResult, { type: 'wait' }>['wait'];
 
-export function classifyStepResult(result: WorkflowStepResult): ClassifiedStepResult | null {
+export function classifyStepResult(result: unknown): ClassifiedStepResult | null {
   if (typeof result !== 'object' || result === null) return null;
   const candidate = result as Partial<WorkflowStepResult>;
   if (candidate.type === 'done') {

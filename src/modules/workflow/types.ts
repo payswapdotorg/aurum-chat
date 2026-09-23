@@ -102,7 +102,8 @@ export type WorkflowTriggerKind = 'manual' | 'event' | 'schedule';
 export interface WorkflowStepSpec {
   /** Unique step key within the definition (referenced by executor bindings). */
   key: string;
-  title: string | null;
+  /** Optional human-readable step title. */
+  title?: string | null;
   /**
    * Maximum failed attempts before the step (and therefore the run) fails
    * terminally. Waits and checkpoints never consume attempts. Default 3.
