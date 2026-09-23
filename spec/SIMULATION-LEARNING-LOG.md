@@ -210,3 +210,18 @@ Prioritize these after the current simulation set:
 - real employee conversations across multiple provider channels with one person identity and one organizational knowledge graph;
 - agent vendor → marketplace → tenant purchase/install → proposal → approval → activation → performance → modify/terminate lifecycle;
 - explicit commerce requirements before adding any marketplace monetization work.
+
+## S001 addendum — refined drift measurement
+
+### F12 — Distinguish strict implementation drift from validation uncertainty
+
+Using the 26 frozen architecture sections as equally weighted top-level contracts:
+- 22 are implemented without a material semantic gap;
+- 4 are partially evidenced/implemented at the boundary (not absent): real provider transport availability for channel/agent delivery, repeated unresolved-gap attention behavior, and cross-industry generalization evidence.
+
+Treating each partial section as 50% complete gives:
+`(22 + 4×0.5) / 26 = 92.3% alignment`
+
+Therefore the **strict architecture-to-implementation drift is approximately 7.7%, rounded to ~8%**.
+
+A broader **capability/evidence uncertainty remains around ~10%** because some concerns are not missing modules: they are deployment/provider configuration, unproven repeated-attention behavior, and the lack of a genuinely multi-industry benchmark. The earlier ~10% working estimate should be understood as this broader practical gap, not literal missing-code percentage.
