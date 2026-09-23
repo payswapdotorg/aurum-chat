@@ -261,7 +261,7 @@ Tech Lead: reconcile current main, deployed revision and W079 certification befo
 ### Wave 1
 Worker A — W080 Durable Agent Runtime
 Worker B — W081 Integration Intelligence
-Worker C — W099 CommOS Fusion and Communication Kernel
+Worker C — W099 Matrix Interoperability Adapter (optional)
 
 ### Wave 2
 Worker A — W082 Universal Connection Broker
