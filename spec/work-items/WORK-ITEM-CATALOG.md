@@ -427,11 +427,11 @@ Dependencies: W002, W004, W013, W036, W080. Create canonical meeting/session/tra
 Acceptance: meeting metadata, participant identity, transcript/artifact and provenance are captured into the canonical evidence model; provider-specific schemas remain inside adapters; failed/expired meeting access is explicit.
 
 ### W086 — Realtime Voice and Meeting Companion
-Dependencies: W080, W085, W095. Implement provider-neutral realtime session contracts with a replaceable LiveKit adapter for Aurum voice, two-way meeting participation, Meeting Companion and telephony/SIP.
+Dependencies: W080, W085. Implement provider-neutral realtime session contracts with a replaceable LiveKit adapter for Aurum voice, two-way meeting participation, Meeting Companion and telephony/SIP.
 Acceptance: start/stop session, consent/recording state, interruption handling, speaker attribution, live transcript, spoken Aurum response, durable meeting artifact; transport provider can be swapped without domain rewrite.
 
 ### W087 — Cellular Reachability and Communication Fallback
-Dependencies: W002, W009, W030, W031, W095. Implement outcome-oriented “Reach Anyone” using SMS and voice, telecom provider adapters, verified phone identity, delivery/reply state, routing, cost and policy controls. Recipient must not need Internet or Aurum.
+Dependencies: W002, W009, W030, W031. Implement outcome-oriented “Reach Anyone” using SMS and voice, telecom provider adapters, verified phone identity, delivery/reply state, routing, cost and policy controls. Recipient must not need Internet or Aurum.
 Acceptance: manager can tell Aurum “Tell Sarah …”; Aurum resolves Sarah; sends SMS when reachable; falls back to voice when policy permits; recipient reply can return into Aurum; failed delivery is visible and retryable; manager can optionally initiate an SMS/voice request to Aurum itself when the manager has no usable Internet data.
 
 ### W088 — Aurum Edge Connector
@@ -463,7 +463,7 @@ Dependencies: W081, W082, W084, W092. Import history, preserve identifiers, sync
 Acceptance: customer can run incumbent and Aurum in parallel; conflicts are surfaced; rollback is possible; no silent data loss or duplicate authority.
 
 ### W095 — Unified Cross-Channel, Meeting and Telephony Identity Verification
-Dependencies: W002, W030, W085, W087. Extend identity proof so one person remains one organizational identity across messaging, meetings, SMS, voice and Edge Connector paths.
+Dependencies: W002, W030, W085, W086, W087. Extend identity proof so one person remains one organizational identity across messaging, meetings, SMS, voice and Edge Connector paths.
 Acceptance: same verified employee can be recognized across at least three communication modalities; ambiguous matches remain external/unverified instead of being auto-merged.
 
 ### W096 — Integration Intelligence End-to-End Fixture
