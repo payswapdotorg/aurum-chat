@@ -368,9 +368,12 @@ async function runBrowserMatrix(
     CI: '1',
   };
   try {
+    // The config (playwright.certification.config.ts) owns the reporters:
+    // the list reporter for the console and the JSON reporter writing the
+    // full Playwright results to the run directory (W079_PLAYWRIGHT_JSON).
     const result = await execImpl(
       'node',
-      ['node_modules/@playwright/test/cli.js', 'test', '-c', 'playwright.certification.config.ts', '--reporter=json'],
+      ['node_modules/@playwright/test/cli.js', 'test', '-c', 'playwright.certification.config.ts'],
       { cwd: config.repoRoot, env },
     );
     // The digest is assembled by the suite's global teardown (fixture-side
