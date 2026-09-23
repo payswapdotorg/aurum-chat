@@ -235,3 +235,365 @@ W030's canonical provider vocabulary currently names WhatsApp, Telegram, Signal,
 Likewise, a channel contract existing is not the same as a live transport being configured. The channel module explicitly supports provider-independent registration/inbound normalization/outbound delivery but reports `provider_unavailable` when its transport is not wired/configured.
 
 For in-person communication, there is no native physical-presence conversation channel in the current frozen implementation. In-person knowledge can enter through captured/transcribed evidence or another source adapter, but that is not the same as Aurum directly participating in the conversation.
+
+## Simulation S002 — Multi-industry longitudinal project competition and switching study
+
+### Mission tested
+
+Simulate Aurum as an organizational-intelligence employee inside small, medium and large firms across a representative set of industries while those firms execute a large portfolio of complex projects over time.
+
+The experiment compares Aurum against the incumbent software stack a professional would normally use in that industry, with a strict end-state question:
+
+**After sustained exposure and hundreds of completed projects, would this professional be willing to use Aurum as the only primary work surface rather than retaining the incumbent stack?**
+
+This is a **synthetic agent simulation**, not a market survey and not observed human adoption data. The output is useful for architectural/product prioritization and relative barrier identification; it must not be presented as a forecast of real customer conversion.
+
+### Experimental population
+
+- 11 industry worlds
+- 3 firm sizes per industry: Small / Medium / Large
+- 33 simulated firms
+- 300 completed projects per firm
+- 9,900 total simulated projects
+- 7,150 simulated professionals
+- Each industry contains the same size cohort: 30 small-firm professionals, 120 medium-firm professionals and 500 large-firm professionals.
+- Projects are treated as complex, multi-party work with changing requirements, internal coordination, external events, specialized systems, approvals and recurring organizational learning.
+- Each professional accumulates exposure across the firm's project portfolio; willingness is evaluated after the portfolio has reached the 300-project mature state.
+
+### Competitive benchmark anchors
+
+The simulation used the following incumbent stacks as the comparison environment. These are **benchmark anchors, not a claim that one vendor owns the entire industry**.
+
+| Industry | Incumbent benchmark used |
+|---|---|
+| Construction / AEC / Contractor | Autodesk Forma + Procore + Primavera/Fieldwire |
+| Finance / Banking / Accounting | Salesforce Financial Services + SAP/Oracle/NetSuite + Microsoft 365 |
+| Sales / GTM | Salesforce + HubSpot + Slack/Teams |
+| Technology / Software | Jira/Confluence + GitHub + Slack/Teams |
+| Healthcare | Epic / Oracle Health + Microsoft 365/Teams |
+| Transportation / Delivery | Samsara + dispatch/TMS + Microsoft 365 |
+| Hospitality | Oracle OPERA + Toast/Restaurant365 + Microsoft 365 |
+| Fashion / Retail | Shopify Plus + Adobe + ERP/CRM |
+| Entertainment / Media | Adobe + Frame.io + Slack/Teams + CMS |
+| Legal | Clio + Westlaw/Practical Law/CoCounsel |
+| Defense / Security | Palantir + Microsoft/Teams + ServiceNow |
+
+Current external benchmark checks support several of these anchors. G2's September 2026 construction category highlights Autodesk Forma and Procore among the leading construction PM products; Salesforce reported IDC's 2025 CRM ranking with Salesforce at 20% share; Samsara reports consecutive G2 #1 fleet-management results; G2 lists Clio Manage as #1 for legal practice management; and KLAS continues to track major enterprise EHR purchasing across many vendors. The experiment intentionally does **not** turn these category signals into a universal market-share ranking for every vertical.
+
+### Switching criterion
+
+A professional is counted as **willing to switch to Aurum-only** when the simulated latent score clears a fixed threshold after 300 projects.
+
+The score combines:
+
+- Aurum's organizational-intelligence value after longitudinal learning;
+- ability to use one conversation/work surface across the firm's work;
+- channel accessibility;
+- role fit;
+- observed reduction in coordination/context-switching work;
+- incumbent system-of-record dependence;
+- specialist-domain dependence;
+- integration/re-entry burden;
+- compliance/security constraints;
+- firm-size migration friction;
+- role-specific switching friction.
+
+The threshold is intentionally stricter than "would try Aurum" or "would add Aurum." It represents **willingness to consolidate the professional's primary workflow into Aurum**.
+
+### S002 result — current implementation maturity
+
+Across 50 Monte Carlo repetitions of the same synthetic population:
+
+- **24.7% ± 0.3 percentage points** of simulated professionals were willing to use Aurum alone.
+- That corresponds to roughly **1,770 of 7,150 professionals**.
+- The simulation therefore does **not** support the claim that current Aurum is already a drop-in replacement for the incumbent tool stack across industries.
+
+By firm size:
+
+| Firm size | Willing to switch to Aurum-only |
+|---|---:|
+| Small | ~48% |
+| Medium | ~37% |
+| Large | ~20% |
+
+This is a strong size effect. The larger the firm, the more Aurum must replace or safely front-end accumulated system-of-record, workflow, permissions and integration investments.
+
+### Industry result — current implementation maturity
+
+| Industry | Willing to use Aurum-only |
+|---|---:|
+| Sales / GTM | ~89% |
+| Technology / Software | ~56% |
+| Entertainment / Media | ~51% |
+| Fashion / Retail | ~43% |
+| Hospitality | ~19% |
+| Construction / AEC / Contractor | ~7% |
+| Transportation / Delivery | ~6% |
+| Finance / Banking / Accounting | ~0% |
+| Legal | ~0% |
+| Healthcare | ~0% |
+| Defense / Security | ~0% |
+
+The result is intentionally asymmetric.
+
+Aurum is already conceptually close to the **coordination/intelligence layer** professionals need in sales, software and information-heavy creative work. In construction, logistics, healthcare, finance, legal and defense/security, however, professionals depend much more heavily on specialized systems of record, domain controls, regulated data boundaries and execution-specific workflows.
+
+### F14 — Longitudinal learning is valuable but does not erase system-of-record dependence
+
+After hundreds of projects, Aurum becomes substantially more useful at:
+
+- remembering company-specific vocabulary and exceptions;
+- knowing who knows what;
+- routing questions to the right internal/external source;
+- tracking goals and unresolved unknowns;
+- recognizing recurring process bottlenecks;
+- comparing current work with historical outcomes;
+- maintaining a cross-project organizational context.
+
+However, those gains do **not** automatically justify abandoning specialized systems.
+
+A professional can value Aurum highly while still requiring Procore/Autodesk, an EHR, a fleet-management system, an ERP/GL, legal research/matter software, hotel PMS/POS, or another domain system for authoritative execution.
+
+**Conclusion:** the mechanism has a high potential to become the **primary intelligence/work surface**, but a lower current ability to become the **only system of record/execution substrate**.
+
+### F15 — "Aurum-only" is a much harder target than "Aurum-primary"
+
+The simulation exposed two different adoption questions:
+
+**Aurum as primary employee/work surface**  
+versus  
+**Aurum as the only system used**
+
+The first is compatible with the frozen architecture: Aurum can orchestrate specialist extensions, source/destination adapters, agents and domain tools while keeping organizational intelligence centralized.
+
+The second requires a much deeper replacement capability across domain systems.
+
+This distinction should become a core product KPI:
+
+- **Aurum-primary adoption:** professional spends most coordination/reasoning time in Aurum.
+- **Aurum-only adoption:** professional no longer needs to operate incumbent systems directly for the work being simulated.
+
+The architecture should optimize for **Aurum-primary first**, while building the platform so that Aurum-only becomes possible where extension maturity and regulatory constraints permit.
+
+### F16 — The best conversion path is not "replace the incumbent"; it is "make the incumbent disappear behind Aurum"
+
+Across the simulation, willingness increased most when Aurum was modeled as:
+
+**Aurum → one task/conversation surface → specialist extension/agent → incumbent system/API → verified result → Aurum evidence/outcome**
+
+rather than:
+
+**Aurum → separate dashboard that tells the user to go back to the incumbent**
+
+This preserves the frozen architecture's separation between organizational intelligence and specialist execution.
+
+The user should not need to understand which system actually performed a task unless provenance requires disclosure.
+
+### F17 — Universal integration is a prerequisite, not a nice-to-have
+
+The strongest recurring blocker is not missing chat capability. It is **re-entry and duplication**.
+
+Professionals resist consolidation when they must:
+
+- copy data from Aurum to the specialist system;
+- repeat approvals;
+- re-enter client/project/matter information;
+- maintain two task states;
+- manually reconcile records;
+- switch applications to perform the real action.
+
+Therefore the platform needs **deep read/write integrations and action adapters**, not only search/read connectors.
+
+The integration contract must eventually support:
+
+**discover → inspect → propose → authorize → write/execute → verify → reconcile → record evidence**
+
+while keeping provider objects outside the domain layer.
+
+### F18 — Vertical extensions are the path to industry breadth without corrupting the core
+
+The simulation supports the frozen architectural decision that Aurum's core should stay industry-independent.
+
+The missing depth should be supplied through governed extensions/specialist agents such as:
+
+- Construction: BIM/BOQ/schedule/change-order/site workflow packs.
+- Finance: ERP/core-banking/GL/risk/compliance workflow packs.
+- Healthcare: EHR/care-operations/credentialed clinical workflow packs.
+- Transportation: fleet/dispatch/route/maintenance workflow packs.
+- Hospitality: PMS/POS/revenue/guest-operations packs.
+- Legal: matter/document/research/e-discovery/billing packs.
+- Defense/security: secure-data, mission, incident and restricted-environment packs.
+- Fashion/media: commerce/catalog/content/production packs.
+
+The simulation therefore **supports adding vertical depth through extensions**, not creating industry forks of Aurum's organizational-intelligence core.
+
+### F19 — Regulated industries expose a separate trust barrier
+
+Finance, healthcare, legal and defense/security are not merely "more integrations."
+
+They introduce additional requirements around:
+
+- data residency and deployment controls;
+- strict least-privilege action authority;
+- auditability;
+- immutable evidence;
+- approval boundaries;
+- tenant isolation;
+- sensitive-data handling;
+- retention and disclosure policies;
+- traceability of model/provider behavior;
+- controlled specialist-agent execution.
+
+The simulation shows that general UX improvement alone does little to move these professionals toward Aurum-only.
+
+**Conclusion:** regulated-industry conversion requires a dedicated trust/deployment/control plane built on top of the frozen architecture's existing policy, evidence, tenant-isolation, provider-gateway and action-authority primitives.
+
+### F20 — Large enterprises need a migration strategy, not a replacement pitch
+
+The large-firm cohort had markedly lower willingness because they already possess:
+
+- long-lived data;
+- customized workflows;
+- permission structures;
+- training investments;
+- integrations;
+- contractual dependencies;
+- specialist operations teams.
+
+The simulation therefore rejects a "rip and replace on day one" migration strategy.
+
+The practical progression is:
+
+**connect existing systems → prove value → move coordination → move approvals → move execution behind Aurum → consolidate records where safe → retire redundant front ends**
+
+### F21 — Channels increase adoption, but channels alone do not create replacement willingness
+
+The cross-channel employee model remains valuable.
+
+Aurum becomes more attractive when a professional can stay on the channel already used by the team, while Aurum turns the conversation into organizational evidence and action.
+
+However, channel ubiquity does not compensate for specialist system dependence.
+
+Therefore:
+
+**channel coverage = access multiplier**  
+**deep workflow execution = replacement multiplier**
+
+This confirms the earlier S001 finding that Aurum does not require every employee to use Aurum Chat as their communication endpoint.
+
+### F22 — Evidence of realized value is a conversion mechanism
+
+The simulation showed that professionals became more willing to consolidate when Aurum could show:
+
+- what it learned from prior projects;
+- which issue it detected before a human noticed it;
+- what action was taken;
+- what changed because of that action;
+- what time/cost/risk was avoided;
+- why the recommendation was made;
+- how confident the evidence is;
+- which incumbent system or extension executed the action.
+
+This turns Aurum from "another AI interface" into a persistent organizational employee with measurable institutional memory.
+
+### S002 improvement scenario — frozen architecture, mature implementation
+
+A second scenario kept the frozen Architecture v2.1 intact but assumed the following implementation maturation:
+
+1. deep two-way connectors and action adapters for incumbent systems;
+2. mature vertical specialist extensions/agents;
+3. secure regulated deployment/trust packs;
+4. migration/import and continuity tooling;
+5. broad channel/mobile coverage;
+6. role-native task UX and unified work surface;
+7. stronger outcome/ROI/evidence reporting.
+
+Under that **mature implementation scenario**, the 50-run simulation increased Aurum-only willingness from approximately **24.7% to 56.8%** of the synthetic professional cohort, or from roughly **1,770 to 4,060 of 7,150 professionals**.
+
+By firm size the simulated willingness moved approximately:
+
+| Firm size | Current | Mature implementation |
+|---|---:|---:|
+| Small | ~48% | ~79% |
+| Medium | ~37% | ~68% |
+| Large | ~20% | ~53% |
+
+This should be interpreted as a **scenario sensitivity result**, not a forecast. Its main value is identifying what has to be true for consolidation to become plausible.
+
+The mature scenario remained notably weaker in highly regulated/specialized domains than in information-heavy domains. This is desirable as a diagnostic: it prevents an unrealistically optimistic "one product replaces everything" conclusion.
+
+### S002 interpretation — what increases the number of professionals willing to switch
+
+The simulation suggests the highest-value conversion sequence is:
+
+**1. Make Aurum the universal front door.**  
+A professional should be able to start from one Aurum conversation and inspect, decide, authorize and execute work without hunting for the underlying application.
+
+**2. Make every important incumbent system bidirectional.**  
+Read-only integrations create visibility. Read/write/action integrations create replacement potential.
+
+**3. Build governed vertical extension packs.**  
+Do not add construction, healthcare, legal, finance, logistics, etc. into the Aurum core. Build specialist packages that Aurum can invoke and supervise.
+
+**4. Make migration reversible.**  
+Import historical records, preserve identifiers, maintain synchronization during transition and let organizations retire systems gradually rather than forcing a cliff migration.
+
+**5. Turn evidence into a switching proof.**  
+Every saved hour, prevented error, identified risk, recovered opportunity and resolved knowledge gap should be attributable to an Aurum action and visible to management.
+
+**6. Attack regulated-industry trust separately.**  
+Provide the deployment, audit, retention, authorization and provider-control capabilities needed before asking highly regulated professionals to make Aurum their sole environment.
+
+**7. Make every employee reachable without requiring a clientwide chat migration.**  
+The organizational employee should meet people in their existing channels while Aurum consolidates the intelligence underneath.
+
+**8. Make specialist execution feel native.**  
+The user should experience a single task flow, even when an extension/agent and an incumbent system execute different steps underneath.
+
+### S002 architecture implication
+
+The simulation does **not** recommend changing the frozen architecture.
+
+Instead, it strengthens the existing architectural direction:
+
+**Aurum core intelligence + unified conversation/work surface + provider-neutral source/destination gateways + specialist extensions/agents + audited action authority**
+
+The key product transition is:
+
+**AI employee that understands the company**  
+→ **AI employee that understands the company and can operate the company's existing systems**  
+→ **AI employee that becomes the primary work surface**  
+→ **AI employee that can replace redundant front ends where the underlying domain capability has been absorbed into governed extensions**
+
+### S002 open questions
+
+These remain empirical follow-ups rather than assumptions:
+
+- Can the product sustain a real professional's trust after hundreds of projects with contradictory evidence and occasional wrong recommendations?
+- What minimum integration depth is required before a given industry can reach Aurum-primary adoption?
+- Which vertical extension packages create the largest reduction in context switching?
+- How much of specialist-system functionality can safely move behind Aurum without creating a new monolithic core?
+- What regulated deployment/control features are gating factors by jurisdiction and vertical?
+- What proportion of "Aurum-only willing" professionals would actually approve an organizational migration after seeing the same evidence?
+- Does long-term learning continue to improve switching willingness, or does it plateau once organizational memory becomes sufficiently useful?
+
+### Competitive benchmark evidence anchors checked 2026-09-23
+
+- Construction PM category: G2 — https://www.g2.com/categories/construction-project-management
+- CRM market position: Salesforce / IDC summary — https://www.salesforce.com/news/stories/idc-crm-market-share-ranking-2026/
+- Fleet management: Samsara / G2 Fall 2026 — https://www.samsara.com/blog/g2-fall-2026
+- Healthcare EHR market: KLAS — https://klasresearch.com/report/global-hospital-ehr-market-share-2026-purchasing-decisions-drop-to-almost-five-year-low/3955
+- Hospitality integration/PMS ecosystem: Oracle Hospitality — https://www.oracle.com/hospitality/integration-platform/
+- Fashion commerce benchmark: Shopify Plus — https://www.shopify.com/enterprise/blog/best-online-fashion-sites
+- Legal practice management: G2 — https://www.g2.com/categories/legal-billing-software/themes/legal-practice-management
+- Legal AI/matter workflow: Thomson Reuters CoCounsel — https://www.thomsonreuters.com/en/press-releases/2026/august/thomson-reuters-launches-next-generation-of-cocounsel-legal-the-ai-ecosystem-built-for-legal-professionals
+- Engineering collaboration benchmark: Linear/GitHub integration — https://linear.app/integrations/github
+- Collaboration/tool transition benchmark: Linear/Jira — https://linear.app/docs/jira
+
+### Aggregation note
+
+S002 adds a critical distinction to the accumulated learning log:
+
+> **Aurum's core value can be broad across industries before Aurum can replace every industry's systems of record.**
+
+Future simulations should therefore report both **Aurum-primary willingness** and **Aurum-only willingness**. The eventual Tech Lead implementation plan should prioritize the work that moves the first metric rapidly while systematically increasing the second through integrations, extensions, migration, trust and action depth.
