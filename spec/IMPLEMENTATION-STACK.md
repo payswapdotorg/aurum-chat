@@ -91,7 +91,7 @@ This addendum does not change frozen Architecture v2.1. It operationalizes the p
 Aurum's identity and state remain application-owned. Durable workflow execution is accessed through an application-owned workflow port. Vercel Workflows is the current deployment-compatible implementation; alternative durable workflow engines remain replaceable adapters.
 
 ### Communications kernel
-The communications kernel lives below organizational intelligence and may reuse validated CommOS protocol primitives inside the channels/edge boundary. It must not introduce a second identity authority, authorization system, organization model, billing system, analytics truth store or AI cognition loop.
+The communications kernel remains below organizational intelligence and must not introduce a second identity authority, authorization system, organization model, billing system, analytics truth store or AI cognition loop.
 
 ### Provider-independent reachability
 Communication routing supports ordinary connected channels plus SMS/voice cellular fallback. The recipient does not need Internet or an Aurum account. Provider-specific telecom, meeting and realtime transports remain adapters.
