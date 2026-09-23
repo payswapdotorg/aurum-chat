@@ -142,3 +142,71 @@ Each future simulation should add:
 7. **Open question** — what still needs empirical proof.
 
 The eventual Tech Lead plan should be synthesized from the complete accumulated log, not from this first simulation alone.
+
+## S001 addendum — drift, cross-channel communication, persistent attention, agent commerce
+
+### F8 — Architecture-to-implementation drift should be measured by contract, not feature count
+
+The frozen architecture has 26 sections and the work-item system maps implementation work across those sections. Current code exposes concrete contracts for the core intelligence loop, world model, channels, environment watch, briefings, learning, CompanyModel, agents and marketplace. W079 also gives production evidence for the principal employee journeys.
+
+A simple item-count ratio would therefore understate the remaining drift because the main residuals are semantic/operational/generalization boundaries rather than missing modules.
+
+S001 working estimate, using a contract-weighted rubric:
+- **~88–92% implementation alignment** with the frozen architecture;
+- **~8–12% residual drift/uncertainty**.
+
+The midpoint working figure is **~10% drift**. This is an analytical estimate, not a machine-generated repository metric. The main contributors are:
+1. cross-industry generalization is not yet demonstrated at benchmark strength;
+2. real provider transport availability is configuration/provider-dependent, even where canonical channel contracts exist;
+3. persistent unresolved-gap “hammering” is represented by mission/briefing/escalation primitives, but the exact repeated-attention product loop still needs dedicated simulation;
+4. marketplace supports governed agent packaging/publication/installability, but a commerce/payment/revenue-sharing layer is not present in the frozen marketplace contract;
+5. latest main is newer than the exact W079-certified deployment revision, so W079 certification should not be silently inherited by a changed production revision.
+
+### F9 — Aurum does not require every employee to use Aurum Chat
+
+The channel architecture explicitly models Aurum as a participant that communicates through canonical provider-neutral adapters. One employee/person may have multiple ExternalIdentity records mapped to the same verified employee. W030 supports inbound normalization and outbound delivery for WhatsApp, Telegram, Signal, Slack, X, Instagram, Facebook/Messenger, LinkedIn, email, SMS/voice and web as provider availability permits.
+
+Therefore the intended employee model is:
+
+`employee remains on existing channel → Aurum meets them there → canonical conversation/evidence enters Aurum's intelligence loop`
+
+Aurum Chat is the canonical Aurum conversation UX, not a mandatory replacement for every employee's existing communications tool.
+
+Operational caveat: a provider connection/transport must actually be configured. The channels contract deliberately fails with `provider_unavailable` when a transport is not wired.
+
+### F10 — Unresolved knowledge gaps can stay in management attention, but “hammering until resolved” needs explicit simulation proof
+
+EnvironmentWatch implements freshness policies, stale-episode escalation and policy-snapshotted escalation records. Briefings compile continuous windows containing changes, goal drift, unknowns, risks, opportunities, capability gaps and approvals, and Notifications provides urgent/digest/escalation delivery with retries, dedupe, acknowledgment and escalation.
+
+Learning missions also prevent repeated duplicate mission creation while an active mission covers the same gap.
+
+The intended state machine is:
+
+`gap → mission → acquisition attempt → unresolved → remain visible/escalated → re-evaluate → priority changes OR new acquisition path → resolved/retired`
+
+However, S001 did not directly simulate multiple unanswered cycles through the live product. Future simulation must prove the user-visible “keep this in management attention until its information value/priority falls or it is resolved” behavior.
+
+### F11 — Agent building/publishing is implemented; commercial selling is not yet evidenced as a first-class feature
+
+Developers can create governed AgentPackages containing role, instructions, runtime provider and permissions; submit them; pass automated verification; undergo mandatory platform review; publish; and make them installable. This is a real vendor/platform governance path.
+
+Aurum can also propose agent/capability interventions, require human approval, activate agents, track executions/cost/outcomes, and operate evaluation/lifecycle controls.
+
+What is **not** represented in the current marketplace contract is a commercial transaction layer: listing price, checkout, payment settlement, marketplace revenue split, vendor payout, tax handling, subscription/license billing, etc. Therefore the accurate current answer is:
+
+- build agent: **yes**;
+- package/publish for governed marketplace distribution: **yes**;
+- tenant install/activate through the full marketplace + extension/agent runtime stack: **architecturally yes, with the governed installation/runtime split**;
+- propose an agent to management: **yes**;
+- track performance/outcomes/cost: **yes**;
+- terminate/disable under the agent lifecycle and management authority model: **yes** for agent/runtime/execution lifecycle operations; human employee termination remains prohibited;
+- sell agents for money through an Aurum-native marketplace transaction system: **not currently implemented/evidenced**.
+
+### Follow-up simulation queue
+
+Prioritize these after the current simulation set:
+- cross-industry worlds (construction / finance / healthcare / technology / additional industries) using the same intelligence-loop assertions;
+- unresolved-unknown persistence and repeated escalation/deprioritization;
+- real employee conversations across multiple provider channels with one person identity and one organizational knowledge graph;
+- agent vendor → marketplace → tenant purchase/install → proposal → approval → activation → performance → modify/terminate lifecycle;
+- explicit commerce requirements before adding any marketplace monetization work.
