@@ -424,7 +424,7 @@ export async function revokeDiscoverySource(
   const valid = validateRevokeDiscoverySourceInput(input);
   const result = await getDb().query<GrantRow>(
     `UPDATE integration_discovery_grants SET
-       status = 'revoked', revoked_by = $3, revoked_at = $4, updated_at = $4
+       status = 'revoked', revoked_by = $3, revoked_at = $4
      WHERE tenant_id = $1 AND id = $2 AND status = 'active'
      RETURNING *`,
     [ctx.tenantId, valid.grantId, ctx.principalId, now()],
@@ -710,15 +710,18 @@ async function proposeRecommendationIfAbsent(
   const systemId = systemRows.rows[0]?.id;
   if (systemId === undefined) return false; // defensive — upsert ran first
 
-  // The status list is a compile-time module constant — literal interpolation
-  // is safe here (no caller input reaches this statement).
-  const live = await db.query<{ id: string }>(
+  // A recommendation exists for this system at all? A LIVE one (proposed/
+  // pending/approved/connected) blocks re-proposal trivially — and so does
+  // a REJECTED one: a rejected proposal is a standing human decision that
+  // automatic discovery never re-litigates (re-proposal after rejection
+  // is an explicit human act, outside W081's automatic path).
+  const existing = await db.query<{ id: string }>(
     `SELECT id FROM integration_recommendations
        WHERE tenant_id = $1 AND system_id = $2
-         AND status IN ('proposed', 'pending_approval', 'approved', 'connected')`,
+       LIMIT 1`,
     [ctx.tenantId, systemId],
   );
-  if (live.rows.length > 0) return false;
+  if (existing.rows.length > 0) return false;
 
   const draft = buildRecommendationDraft(manifest, orgContext);
   await db.query(
@@ -910,7 +913,7 @@ export async function submitRecommendationBatch(
   // exist (uniform not-found) and be 'proposed' (a live proposal that has
   // not been gated yet — resubmission of decided/batched proposals is a
   // status conflict, the goals module's surgical-transition discipline).
-  const { sql: inList, params: idParams } = inPlaceholders(valid.recommendationIds, 2);
+  const { sql: inList, params: idParams } = inPlaceholders(valid.recommendationIds, 1);
   const rows = await getDb().query<RecommendationRow>(
     `SELECT * FROM integration_recommendations
        WHERE tenant_id = $1 AND id IN (${inList})`,
@@ -937,7 +940,7 @@ export async function submitRecommendationBatch(
   // recommendation — the outcome-oriented explanation and the explicit
   // scope impact (§10: outcomes and scope, never provider mechanics).
   const systemIds = [...new Set([...byId.values()].map((row) => row.system_id))];
-  const { sql: systemIn, params: systemParams } = inPlaceholders(systemIds, 2);
+  const { sql: systemIn, params: systemParams } = inPlaceholders(systemIds, 1);
   const systemRows = await getDb().query<SystemRow>(
     `SELECT * FROM integration_systems WHERE tenant_id = $1 AND id IN (${systemIn})`,
     [ctx.tenantId, ...systemParams],
@@ -985,8 +988,8 @@ export async function submitRecommendationBatch(
   // own decidedAt — mirror that, not our clock.
   const decidedAt = request.status === 'pending' ? null : request.decidedAt ?? at;
   // Re-generate the IN list for THIS statement's placeholder numbering
-  // ($1..$5 are fixed; the ids follow).
-  const { sql: updateIn, params: updateIds } = inPlaceholders(valid.recommendationIds, 6);
+  // ($1..$5 are fixed; the ids follow from $6).
+  const { sql: updateIn, params: updateIds } = inPlaceholders(valid.recommendationIds, 5);
   return getDb().transaction(async (tx) => {
     const inserted = await tx.query<BatchRow>(
       `INSERT INTO integration_recommendation_batches (
