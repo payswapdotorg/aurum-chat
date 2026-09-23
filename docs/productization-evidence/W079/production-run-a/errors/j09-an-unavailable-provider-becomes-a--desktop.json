@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j09-byoa-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j09-byoa-desktop.spec.ts",
   "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
   "project": "desktop",
   "runLabel": "A",

@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j11-marketplace-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j11-marketplace-desktop.spec.ts",
   "title": "J11 — the marketplace: discovery, the public catalog and the install state",
   "project": "desktop",
   "runLabel": "A",

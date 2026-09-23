@@ -91,7 +91,9 @@ test.describe('J05 — consequential approval (desktop)', () => {
     await expect(reveal).toBeVisible({ timeout: 30_000 });
     const rawKey = (await reveal.textContent())?.trim() ?? '';
     expect(rawKey.length, 'the raw key is revealed exactly once').toBeGreaterThan(20);
-    await cert.shot('the key reveal — the grantee-scoped integration credential');
+    // Contract §9 (no secret in evidence): NO screenshot at the reveal
+    // moment — the raw key is read, asserted and persisted to the secrets
+    // scratch ONLY (J12 revokes it in-test at the run's end).
     // Persist the key in the secrets scratch for J07's mission leg (the
     // scratch directory is wiped by the driver after the run — it never
     // enters the evidence tree).

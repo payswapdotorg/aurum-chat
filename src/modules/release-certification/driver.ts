@@ -31,7 +31,7 @@
 
 import { execFile } from 'node:child_process';
 import type { ExecException } from 'node:child_process';
-import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdir, readdir, readFile, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { runDeploymentSmoke } from '@/modules/deployment-smoke/contract';
 import type { SmokeReport } from '@/modules/deployment-smoke/contract';
@@ -416,8 +416,14 @@ export async function runCertificationPass(
   await mkdir(runDir, { recursive: true });
   // The run directory is THIS run's evidence: wipe any prior content so
   // recycled evidence is structurally impossible (the W076 discipline).
-  for (const entry of ['browser-run-digest.json', 'deployment-identity.json', 'command-manifest.json', 'run-report.md', 'run-result.json']) {
-    await rm(path.join(runDir, entry), { force: true });
+  // Every prior entry — files AND directories (screenshots, transcripts,
+  // results, errors, w078) — is removed recursively; a plain rm(dir)
+  // without recursive would be a silent no-op and let stale artifacts
+  // from a previous pass survive beside the new evidence (found on the
+  // 2026-09-23 Run A re-fire: two key-reveal PNGs from the failed first
+  // pass outlived the wipe).
+  for (const entry of await readdir(runDir)) {
+    await rm(path.join(runDir, entry), { force: true, recursive: true });
   }
   const secretsScratchDir = path.join(runDir, '.scratch-secrets');
   await rm(secretsScratchDir, { recursive: true, force: true });

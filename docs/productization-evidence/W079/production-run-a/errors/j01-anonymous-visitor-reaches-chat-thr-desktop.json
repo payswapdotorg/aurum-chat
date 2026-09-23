@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j01-first-manager-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j01-first-manager-desktop.spec.ts",
   "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
   "project": "desktop",
   "runLabel": "A",

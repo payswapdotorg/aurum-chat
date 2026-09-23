@@ -1,13 +1,61 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j11-marketplace-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j11-marketplace-desktop.spec.ts",
   "title": "J11 — the marketplace: discovery, the public catalog and the install state",
   "project": "desktop",
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-23T14:34:50.386Z",
+      "at": "2026-09-23T16:19:12.750Z",
       "step": "sign in and discover the marketplace from More",
       "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:15.266Z",
+      "step": "screenshot: the marketplace — discovered from the hub",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-discovered-from-the-hub.png"
+    },
+    {
+      "at": "2026-09-23T16:19:15.266Z",
+      "step": "the public catalog renders its live, governed state",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:15.443Z",
+      "step": "screenshot: the public catalog — the governed listing state",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-public-catalog-the-governed-listing-state.png"
+    },
+    {
+      "at": "2026-09-23T16:19:15.444Z",
+      "step": "the installed-extensions state surface (the review state)",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:15.913Z",
+      "step": "screenshot: the installed state — the tenant review surface",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-installed-state-the-tenant-review-surface.png"
+    },
+    {
+      "at": "2026-09-23T16:19:15.913Z",
+      "step": "the marketplace developer surface (the publish path)",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:16.560Z",
+      "step": "screenshot: the marketplace developer surface",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/developer",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-developer-surface.png"
+    },
+    {
+      "at": "2026-09-23T16:19:16.560Z",
+      "step": "return to the task in Chat (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/developer",
       "shot": null
     }
   ]

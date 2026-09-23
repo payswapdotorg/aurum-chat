@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j12-developer-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j12-developer-desktop.spec.ts",
   "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
   "project": "desktop",
   "runLabel": "A",

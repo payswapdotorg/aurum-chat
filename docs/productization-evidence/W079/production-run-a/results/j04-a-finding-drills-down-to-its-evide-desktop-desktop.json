@@ -2,17 +2,20 @@
   "testId": "j04-a-finding-drills-down-to-its-evide-desktop:desktop",
   "journeyId": "J04",
   "context": "desktop",
-  "status": "fail",
+  "status": "pass",
   "title": "J04 — a finding drills down to its evidence and returns to the conversation",
   "file": "tests/browser/production/j04-investigation-desktop.spec.ts",
-  "durationMs": 2244,
-  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "durationMs": 2986,
+  "error": null,
   "violations": 0,
   "evidence": {
     "transcripts": [
       "docs/productization-evidence/W079/production-run-a/transcripts/j04-a-finding-drills-down-to-its-evide-desktop.json"
     ],
-    "screenshots": [],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+    ],
     "errorCaptures": [
       "docs/productization-evidence/W079/production-run-a/errors/j04-a-finding-drills-down-to-its-evide-desktop.json"
     ],

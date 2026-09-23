@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j08-connections-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j08-connections-desktop.spec.ts",
   "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
   "project": "desktop",
   "runLabel": "A",

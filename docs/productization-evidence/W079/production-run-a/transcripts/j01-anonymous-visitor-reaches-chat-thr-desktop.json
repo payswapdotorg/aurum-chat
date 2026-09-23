@@ -1,59 +1,59 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j01-first-manager-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j01-first-manager-desktop.spec.ts",
   "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
   "project": "desktop",
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-23T14:34:20.740Z",
+      "at": "2026-09-23T16:18:16.281Z",
       "step": "the anonymous root lands on the sign-in surface",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-23T14:34:21.419Z",
+      "at": "2026-09-23T16:18:17.034Z",
       "step": "screenshot: anonymous entry — the production sign-in surface",
       "url": "https://aurum-chat-livid.vercel.app/signin?next=%2F",
       "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__anonymous-entry-the-production-sign-in-surface.png"
     },
     {
-      "at": "2026-09-23T14:34:21.419Z",
+      "at": "2026-09-23T16:18:17.034Z",
       "step": "follow the real \"Create an account\" entry",
       "url": "https://aurum-chat-livid.vercel.app/signin?next=%2F",
       "shot": null
     },
     {
-      "at": "2026-09-23T14:34:21.862Z",
+      "at": "2026-09-23T16:18:17.406Z",
       "step": "register through the real form (name, email, password)",
       "url": "https://aurum-chat-livid.vercel.app/signup",
       "shot": null
     },
     {
-      "at": "2026-09-23T14:34:21.953Z",
+      "at": "2026-09-23T16:18:17.552Z",
       "step": "the fresh principal lands on onboarding (no company yet)",
       "url": "https://aurum-chat-livid.vercel.app/signup",
       "shot": null
     },
     {
-      "at": "2026-09-23T14:34:22.711Z",
+      "at": "2026-09-23T16:18:18.342Z",
       "step": "screenshot: onboarding — the workspace setup surface",
       "url": "https://aurum-chat-livid.vercel.app/onboarding",
       "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__onboarding-the-workspace-setup-surface.png"
     },
     {
-      "at": "2026-09-23T14:34:22.711Z",
+      "at": "2026-09-23T16:18:18.342Z",
       "step": "create the company through the real form",
       "url": "https://aurum-chat-livid.vercel.app/onboarding",
       "shot": null
     },
     {
-      "at": "2026-09-23T14:34:22.753Z",
+      "at": "2026-09-23T16:18:18.401Z",
       "step": "the first screen is the messenger (Chat-first)",
       "url": "https://aurum-chat-livid.vercel.app/onboarding",
       "shot": null
     },
     {
-      "at": "2026-09-23T14:34:23.553Z",
+      "at": "2026-09-23T16:18:19.251Z",
       "step": "screenshot: the first screen — the messenger with its starters",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__the-first-screen-the-messenger-with-its-starters.png"

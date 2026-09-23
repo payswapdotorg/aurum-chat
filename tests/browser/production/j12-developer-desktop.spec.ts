@@ -44,7 +44,10 @@ test.describe('J12 — developer / API / MCP (desktop)', () => {
     await expect(reveal).toBeVisible({ timeout: 30_000 });
     const rawKey = (await reveal.textContent())?.trim() ?? '';
     expect(rawKey.length, 'the raw key is shown exactly once').toBeGreaterThan(20);
-    await cert.shot('the key reveal — the credential discipline (shown once)');
+    // Contract §9 (no secret in evidence): NO screenshot at the reveal
+    // moment — the raw key is read and asserted ONLY. The post-reload
+    // roster shot below proves the grant; the key is revoked in-test at
+    // the end of this journey (the run mints nothing that outlives it).
 
     await cert.step('the key list records the new key (the audit state)');
     await page.reload();
@@ -75,6 +78,28 @@ test.describe('J12 — developer / API / MCP (desktop)', () => {
     // registration) is appended as evidence — the surface shows the
     // audit entries or their summary.
     await expect(page.getByText(/audit|operations|recorded/i).first()).toBeVisible();
+
+    // ---- the run mints nothing that outlives it (key hygiene) ----
+    // Both certification keys live on THIS manager's roster (J05 minted
+    // the grantee-scoped integration key in this same console; J12 minted
+    // the console key above). Revoke both through the real flow — the
+    // native confirm is accepted (the run's own keys), and the roster's
+    // "Revoked — retained as evidence." state is the audit trail.
+    await cert.step('revoke the run\u2019s API keys (nothing minted outlives the run)');
+    page.on('dialog', (dialog) => {
+      void dialog.accept();
+    });
+    for (const keyLabel of [`w079-${runLabel}-console-key`, `w079-${runLabel}-integration`]) {
+      const row = page.locator('li.aurum-dev-key', { hasText: keyLabel }).first();
+      await expect(row, `the key row for ${keyLabel} is on the roster`).toBeVisible({
+        timeout: 30_000,
+      });
+      await row.getByRole('button', { name: 'Revoke' }).click();
+      await expect(row.getByText('Revoked — retained as evidence.')).toBeVisible({
+        timeout: 30_000,
+      });
+    }
+    await cert.shot('the revoked keys — the roster retains the audit trail');
     cert.expectZeroViolations();
   });
 });

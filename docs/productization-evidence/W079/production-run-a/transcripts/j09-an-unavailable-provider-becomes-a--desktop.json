@@ -1,14 +1,68 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j09-byoa-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j09-byoa-desktop.spec.ts",
   "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
   "project": "desktop",
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-23T14:34:44.541Z",
+      "at": "2026-09-23T16:19:00.843Z",
       "step": "sign in and hit the unavailable-capability prompt",
       "url": "about:blank",
       "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:03.123Z",
+      "step": "screenshot: the honest answer — the provider prompt",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=1b0b82fd-53ad-4d7b-80e1-c53e9f358028",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-honest-answer-the-provider-prompt.png"
+    },
+    {
+      "at": "2026-09-23T16:19:03.123Z",
+      "step": "open the AI provider surface",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=1b0b82fd-53ad-4d7b-80e1-c53e9f358028",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:04.261Z",
+      "step": "screenshot: the AI surface — no accounts yet (the unavailable state)",
+      "url": "https://aurum-chat-livid.vercel.app/ai",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-ai-surface-no-accounts-yet-the-unavailable-state.png"
+    },
+    {
+      "at": "2026-09-23T16:19:04.261Z",
+      "step": "register a provider account through the BYOA form",
+      "url": "https://aurum-chat-livid.vercel.app/ai",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:05.139Z",
+      "step": "screenshot: the registered BYOA account — opaque reference only",
+      "url": "https://aurum-chat-livid.vercel.app/ai",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-registered-byoa-account-opaque-reference-only.png"
+    },
+    {
+      "at": "2026-09-23T16:19:05.139Z",
+      "step": "the usable route is reflected in routing and policy",
+      "url": "https://aurum-chat-livid.vercel.app/ai",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:06.087Z",
+      "step": "screenshot: the routing panel — the usable route",
+      "url": "https://aurum-chat-livid.vercel.app/ai",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-routing-panel-the-usable-route.png"
+    },
+    {
+      "at": "2026-09-23T16:19:06.087Z",
+      "step": "return to the task in Chat (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/ai",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:07.488Z",
+      "step": "screenshot: back to the task — the answer still evidence-backed",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=50aad12c-619f-4fbb-a089-7b3a6a0f77df",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__back-to-the-task-the-answer-still-evidence-backed.png"
     }
   ]
 }

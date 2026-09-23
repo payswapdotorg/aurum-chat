@@ -1,11 +1,11 @@
 {
   "config": {
-    "configFile": "/home/z/my-project/aurum/playwright.certification.config.ts",
-    "rootDir": "/home/z/my-project/aurum/tests/browser/production",
+    "configFile": "/home/z/aurum-cert-tree/playwright.certification.config.ts",
+    "rootDir": "/home/z/aurum-cert-tree/tests/browser/production",
     "forbidOnly": false,
     "fullyParallel": false,
     "globalSetup": null,
-    "globalTeardown": "/home/z/my-project/aurum/tests/browser/production/global-teardown.ts",
+    "globalTeardown": "/home/z/aurum-cert-tree/tests/browser/production/global-teardown.ts",
     "globalTimeout": 0,
     "grep": {},
     "grepInvert": null,
@@ -22,7 +22,7 @@
       [
         "json",
         {
-          "outputFile": "/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/playwright-results.json"
+          "outputFile": "/home/z/aurum-cert-tree/docs/productization-evidence/W079/production-run-a/playwright-results.json"
         }
       ]
     ],
@@ -33,7 +33,7 @@
     "quiet": false,
     "projects": [
       {
-        "outputDir": "/home/z/my-project/aurum/test-results/certification",
+        "outputDir": "/home/z/aurum-cert-tree/test-results/certification",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -41,7 +41,7 @@
         },
         "id": "desktop",
         "name": "desktop",
-        "testDir": "/home/z/my-project/aurum/tests/browser/production",
+        "testDir": "/home/z/aurum-cert-tree/tests/browser/production",
         "testIgnore": [],
         "testMatch": [
           "/.*-desktop\\.spec\\.ts/"
@@ -49,7 +49,7 @@
         "timeout": 300000
       },
       {
-        "outputDir": "/home/z/my-project/aurum/test-results/certification",
+        "outputDir": "/home/z/aurum-cert-tree/test-results/certification",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -57,7 +57,7 @@
         },
         "id": "mobile",
         "name": "mobile",
-        "testDir": "/home/z/my-project/aurum/tests/browser/production",
+        "testDir": "/home/z/aurum-cert-tree/tests/browser/production",
         "testIgnore": [],
         "testMatch": [
           "/.*-mobile\\.spec\\.ts/"
@@ -89,7 +89,7 @@
           "specs": [
             {
               "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -102,48 +102,18 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2918,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at /home/z/my-project/aurum/tests/browser/production/j01-first-manager-desktop.spec.ts:66:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at /home/z/my-project/aurum/tests/browser/production/j01-first-manager-desktop.spec.ts:66:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 3082,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:20.599Z",
+                      "startTime": "2026-09-23T16:18:15.994Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j01-first-manager-desktop--f8555-arding-and-company-creation-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "e7d808a3c099d506cc64-018c7d367c1ac50745fc",
@@ -170,7 +140,7 @@
           "specs": [
             {
               "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -181,50 +151,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2134,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j02-talk-to-aurum-desktop.spec.ts:37:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j02-talk-to-aurum-desktop.spec.ts:37:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 3476,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:24.231Z",
+                      "startTime": "2026-09-23T16:18:19.282Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j02-talk-to-aurum-desktop--1caf1-working-answer-and-evidence-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "92f70af9afba21b556db-f47d168c1b5bb38c975a",
@@ -251,7 +191,7 @@
           "specs": [
             {
               "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -262,50 +202,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2257,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j03-unprompted-discovery-desktop.spec.ts:28:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j03-unprompted-discovery-desktop.spec.ts:28:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 6164,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:27.129Z",
+                      "startTime": "2026-09-23T16:18:22.777Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j03-unprompted-discovery-d-ec7b6-ub-and-the-Learning-surface-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "9ec7af77c4d0930319c4-7e562feec81199598e31",
@@ -332,7 +242,7 @@
           "specs": [
             {
               "title": "J04 — a finding drills down to its evidence and returns to the conversation",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -343,50 +253,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2293,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j04-investigation-desktop.spec.ts:25:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j04-investigation-desktop.spec.ts:25:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 2995,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:30.108Z",
+                      "startTime": "2026-09-23T16:18:28.965Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j04-investigation-desktop--0889e-returns-to-the-conversation-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "089ccc9b0e13624e0005-b38aa081effdcd85b01a",
@@ -413,7 +293,7 @@
           "specs": [
             {
               "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -424,50 +304,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 4,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2066,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j05-consequential-approval-desktop.spec.ts:50:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j05-consequential-approval-desktop.spec.ts:50:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 13486,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:33.114Z",
+                      "startTime": "2026-09-23T16:18:32.013Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j05-consequential-approval-7c318-decided-inline-and-recorded-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "99665a2c91e84eaa3833-d89437a2605f8ed67235",
@@ -494,7 +344,7 @@
           "specs": [
             {
               "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -505,50 +355,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 5,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2083,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j06-explainability-desktop.spec.ts:24:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j06-explainability-desktop.spec.ts:24:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 3559,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:35.924Z",
+                      "startTime": "2026-09-23T16:18:45.524Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j06-explainability-desktop-976c5-eturns-to-the-exact-message-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "d5e50678ab30474c4119-3c1d0cf8c5eb2ec6a327",
@@ -575,7 +395,7 @@
           "specs": [
             {
               "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -586,50 +406,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 6,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2150,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j07-learning-contribution-desktop.spec.ts:43:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j07-learning-contribution-desktop.spec.ts:43:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 5435,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:38.755Z",
+                      "startTime": "2026-09-23T16:18:49.112Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j07-learning-contribution--13243-ntribution-and-reward-state-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "2fecdf423c123311986f-74c766812d84fe63506f",
@@ -656,7 +446,7 @@
           "specs": [
             {
               "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -667,50 +457,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 7,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2063,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j08-connections-desktop.spec.ts:25:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j08-connections-desktop.spec.ts:25:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 6200,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:41.633Z",
+                      "startTime": "2026-09-23T16:18:54.570Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j08-connections-desktop-J0-c795b--is-configured-and-verified-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "2bd2ba614280c4c65414-327c0819a3d426f43256",
@@ -737,7 +497,7 @@
           "specs": [
             {
               "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -748,50 +508,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 8,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2293,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j09-byoa-desktop.spec.ts:26:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j09-byoa-desktop.spec.ts:26:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 6706,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:44.407Z",
+                      "startTime": "2026-09-23T16:19:00.789Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j09-byoa-desktop-J09-—-AI--079b2--route-and-the-task-resumes-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "dad19ef31ee1720156b1-c922830e2c432991b4df",
@@ -818,7 +548,7 @@
           "specs": [
             {
               "title": "J10 — the intervention governance chain: gaps, alternatives, the gate and the workforce",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -829,50 +559,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 9,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2036,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j10-workforce-intervention-desktop.spec.ts:38:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j10-workforce-intervention-desktop.spec.ts:38:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 5191,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:47.466Z",
+                      "startTime": "2026-09-23T16:19:07.509Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j10-workforce-intervention-de320--the-gate-and-the-workforce-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "33787a90973ced6f146a-c4597cfb0c66f8322294",
@@ -899,7 +599,7 @@
           "specs": [
             {
               "title": "J11 — the marketplace: discovery, the public catalog and the install state",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -910,50 +610,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 10,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2117,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j11-marketplace-desktop.spec.ts:38:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j11-marketplace-desktop.spec.ts:38:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 4272,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:50.248Z",
+                      "startTime": "2026-09-23T16:19:12.715Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j11-marketplace-desktop-J1-44619-talog-and-the-install-state-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "ea0aa138090699d09855-7bbc80659eeec0049027",
@@ -980,7 +650,7 @@
           "specs": [
             {
               "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -991,50 +661,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 11,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2064,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j12-developer-desktop.spec.ts:25:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j12-developer-desktop.spec.ts:25:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 8250,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:53.059Z",
+                      "startTime": "2026-09-23T16:19:17.021Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j12-developer-desktop-J12--35540-oks-MCP-and-the-audit-trail-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "dfa13d97e06f237846a4-7df3d9e8b397f6b967cd",
@@ -1061,7 +701,7 @@
           "specs": [
             {
               "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -1072,50 +712,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 12,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2075,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j13-tenant-isolation-desktop.spec.ts:35:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j13-tenant-isolation-desktop.spec.ts:35:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 9468,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:55.906Z",
+                      "startTime": "2026-09-23T16:19:25.287Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j13-tenant-isolation-deskt-65d8d-he-first-keeps-its-activity-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "018f48543fcfcb0c83cb-02c40814043574020574",
@@ -1142,7 +752,7 @@
           "specs": [
             {
               "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -1153,50 +763,20 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 13,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2176,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j15-accessibility-desktop.spec.ts:58:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j15-accessibility-desktop.spec.ts:58:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 2585,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:34:58.746Z",
+                      "startTime": "2026-09-23T16:19:34.799Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j15-accessibility-desktop--e7234--discovery-and-no-dead-ends-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "60fb2a0e9b18cefb86df-af3e1e1c7109005e5c37",
@@ -1223,7 +803,7 @@
           "specs": [
             {
               "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -1234,50 +814,20 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 14,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 2063,
-                      "error": {
-                        "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
-                        "stack": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j14-mobile-loop-mobile.spec.ts:35:5",
-                        "location": {
-                          "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                          "column": 3,
-                          "line": 94
-                        },
-                        "snippet": "   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                            "column": 3,
-                            "line": 94
-                          },
-                          "message": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'\n\n   at helpers.ts:94\n\n  92 | /** Persist the run's tenant record (the secrets scratch dir — never evidence). */\n  93 | export async function writeRunTenant(tenant: CertTenant): Promise<void> {\n> 94 |   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\\n`, 'utf8');\n     |   ^\n  95 | }\n  96 |\n  97 | /** Read the run's employee record (null when the employee was not invited yet). */\n    at writeRunTenant (/home/z/my-project/aurum/tests/browser/production/helpers.ts:94:3)\n    at signInRunManager (/home/z/my-project/aurum/tests/browser/production/helpers.ts:150:5)\n    at /home/z/my-project/aurum/tests/browser/production/j14-mobile-loop-mobile.spec.ts:35:5"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 3467,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-23T14:35:01.709Z",
+                      "startTime": "2026-09-23T16:19:38.070Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum/test-results/certification/j14-mobile-loop-mobile-J14-96c07-read-composer-turn-and-back-mobile/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum/tests/browser/production/helpers.ts",
-                        "column": 3,
-                        "line": 94
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "40146485ce9814195948-a0abe225a6a65b88bd32",
@@ -1292,11 +842,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-23T14:34:19.895Z",
-    "duration": 44018.737,
-    "expected": 0,
+    "startTime": "2026-09-23T16:18:15.265Z",
+    "duration": 86412.113,
+    "expected": 15,
     "skipped": 0,
-    "unexpected": 15,
+    "unexpected": 0,
     "flaky": 0
   }
 }

@@ -2,17 +2,22 @@
   "testId": "j07-the-learning-lane-mission-ask-plan-desktop:desktop",
   "journeyId": "J07",
   "context": "desktop",
-  "status": "fail",
+  "status": "pass",
   "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
   "file": "tests/browser/production/j07-learning-contribution-desktop.spec.ts",
-  "durationMs": 2117,
-  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "durationMs": 5425,
+  "error": null,
   "violations": 0,
   "evidence": {
     "transcripts": [
       "docs/productization-evidence/W079/production-run-a/transcripts/j07-the-learning-lane-mission-ask-plan-desktop.json"
     ],
-    "screenshots": [],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-hub-the-live-mission.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-planner-decision-honest-on-the-record.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-contribution-and-reward-state.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-answer-in-chat.png"
+    ],
     "errorCaptures": [
       "docs/productization-evidence/W079/production-run-a/errors/j07-the-learning-lane-mission-ask-plan-desktop.json"
     ],

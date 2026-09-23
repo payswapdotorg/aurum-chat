@@ -1,0 +1,29 @@
+{
+  "testId": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop",
+  "journeyId": "J05",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
+  "file": "tests/browser/production/j05-consequential-approval-desktop.spec.ts",
+  "durationMs": 12874,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-b/transcripts/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-issued-invitation-shown-once.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-employee-joined-landing-in-the-company-chat.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approval-card-the-comparison-waiting-at-the-human-gate.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-decision-acknowledged-in-place.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approvals-surface-the-append-only-decision-trail.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-b/errors/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-b/results/j05-a-proposed-action-waits-at-the-hum-desktop-desktop.json"
+    ]
+  }
+}

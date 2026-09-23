@@ -1,13 +1,43 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j04-investigation-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j04-investigation-desktop.spec.ts",
   "title": "J04 — a finding drills down to its evidence and returns to the conversation",
   "project": "desktop",
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-23T14:34:30.268Z",
+      "at": "2026-09-23T16:18:29.018Z",
       "step": "sign in and ask the investigation question",
       "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:18:31.450Z",
+      "step": "screenshot: the answer — the finding with its evidence citations",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=e7912a1c-8b21-4725-8094-bb3d5398b04d",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png"
+    },
+    {
+      "at": "2026-09-23T16:18:31.450Z",
+      "step": "follow the evidence citation to the detail surface",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=e7912a1c-8b21-4725-8094-bb3d5398b04d",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:18:31.821Z",
+      "step": "the observation detail carries its provenance",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3De7912a1c-8b21-4725-8094-bb3d5398b04d%23m-844e6821-c7f2-406d-981a-9ba43215cf05",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:18:31.932Z",
+      "step": "screenshot: the Evidence surface — the observation detail",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3De7912a1c-8b21-4725-8094-bb3d5398b04d%23m-844e6821-c7f2-406d-981a-9ba43215cf05",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+    },
+    {
+      "at": "2026-09-23T16:18:31.932Z",
+      "step": "return to the originating conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3De7912a1c-8b21-4725-8094-bb3d5398b04d%23m-844e6821-c7f2-406d-981a-9ba43215cf05",
       "shot": null
     }
   ]

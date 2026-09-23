@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum/tests/browser/production/j05-consequential-approval-desktop.spec.ts",
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j05-consequential-approval-desktop.spec.ts",
   "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
   "project": "desktop",
   "runLabel": "A",

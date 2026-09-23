@@ -2,17 +2,24 @@
   "testId": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile",
   "journeyId": "J14",
   "context": "mobile",
-  "status": "fail",
+  "status": "pass",
   "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
   "file": "tests/browser/production/j14-mobile-loop-mobile.spec.ts",
-  "durationMs": 2034,
-  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "durationMs": 3448,
+  "error": null,
   "violations": 0,
   "evidence": {
     "transcripts": [
       "docs/productization-evidence/W079/production-run-a/transcripts/j14-the-mobile-loop-list-full-screen-t-mobile.json"
     ],
-    "screenshots": [],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-touch-chrome.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-conversation-list-home.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-full-screen-thread.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-composer.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-reply-landed.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-back-to-the-list.png"
+    ],
     "errorCaptures": [
       "docs/productization-evidence/W079/production-run-a/errors/j14-the-mobile-loop-list-full-screen-t-mobile.json"
     ],

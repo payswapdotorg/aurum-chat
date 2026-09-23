@@ -2,11 +2,11 @@
   "testId": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop",
   "journeyId": "J01",
   "context": "desktop",
-  "status": "fail",
+  "status": "pass",
   "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
   "file": "tests/browser/production/j01-first-manager-desktop.spec.ts",
-  "durationMs": 2890,
-  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "durationMs": 3069,
+  "error": null,
   "violations": 0,
   "evidence": {
     "transcripts": [

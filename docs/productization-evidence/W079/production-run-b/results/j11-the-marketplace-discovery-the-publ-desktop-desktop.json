@@ -1,0 +1,28 @@
+{
+  "testId": "j11-the-marketplace-discovery-the-publ-desktop:desktop",
+  "journeyId": "J11",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J11 — the marketplace: discovery, the public catalog and the install state",
+  "file": "tests/browser/production/j11-marketplace-desktop.spec.ts",
+  "durationMs": 4304,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-b/transcripts/j11-the-marketplace-discovery-the-publ-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-discovered-from-the-hub.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-public-catalog-the-governed-listing-state.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-installed-state-the-tenant-review-surface.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-developer-surface.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-b/errors/j11-the-marketplace-discovery-the-publ-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-b/results/j11-the-marketplace-discovery-the-publ-desktop-desktop.json"
+    ]
+  }
+}
