@@ -79,7 +79,7 @@ const {
 } = integration;
 
 const { registerSource, setSourceTransport } = sourcesContract;
-const { listActionRequests, listApprovalDecisions, setAuthorityPolicy } = actionsContract;
+const { listApprovalDecisions, setAuthorityPolicy } = actionsContract;
 
 // A FRESH tenant per test so counts stay deterministic (every test owns
 // its own grants, inventory, recommendations and policies).
