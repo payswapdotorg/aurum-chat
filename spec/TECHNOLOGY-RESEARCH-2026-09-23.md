@@ -394,3 +394,24 @@ not:
 
 The local runtime must use the same Aurum identity, authorization, audit and conversation contracts when synchronizing back to the cloud.
 
+
+
+## CommOS fusion decision
+
+Repository review of `payswapdotorg/commos` at main `9d1f24250e5037cb49b3499794c158f09caf4398` shows strong complementarity with Aurum.
+
+Use CommOS as the lower communication substrate rather than a second product. Reusable areas include universal identity/channel-link semantics, communication intent, encrypted CommunicationBundle/proofs, delivery state, capability advertisements/cache, policy-aware routing, transport abstractions, gateway semantics, DTN/store-and-forward and Android edge foundations.
+
+Do not duplicate the CommOS web UI, auth/user model, singleton demo network, separate business model, or AI cognition loop.
+
+Important evidence boundaries:
+- CommOS SMS/email/WhatsApp adapters are explicitly experimental in-process transcripts, not real external delivery.
+- CommOS P4 Android work is not fully validated; its worklog states P4.1-B validation is in progress and P4.2 BLE is blocked.
+- Current `android/app/src/main/java/io/commos/edge/AndroidResourceSampler.kt` on CommOS main is only 14 bytes while its worklog describes a larger implementation. This contradiction must be resolved before extraction.
+- CommOS P7 Matrix Fabric is not implemented.
+
+Fusion rule:
+
+`Aurum intent → Aurum identity/policy → CommOS communication kernel → provider/transport adapter → delivery evidence → Aurum conversation/evidence`
+
+Matrix remains an optional interoperability adapter and never a core dependency.
