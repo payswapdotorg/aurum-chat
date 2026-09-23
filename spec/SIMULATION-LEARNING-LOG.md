@@ -225,3 +225,13 @@ Treating each partial section as 50% complete gives:
 Therefore the **strict architecture-to-implementation drift is approximately 7.7%, rounded to ~8%**.
 
 A broader **capability/evidence uncertainty remains around ~10%** because some concerns are not missing modules: they are deployment/provider configuration, unproven repeated-attention behavior, and the lack of a genuinely multi-industry benchmark. The earlier ~10% working estimate should be understood as this broader practical gap, not literal missing-code percentage.
+
+## S001 addendum — provider-channel boundary
+
+### F13 — Aurum is channel-agnostic, but only for the channels actually implemented/configured
+
+W030's canonical provider vocabulary currently names WhatsApp, Telegram, Signal, Slack, X, Instagram, Facebook/Messenger, LinkedIn, email, SMS/voice and web. **Discord is not currently in that frozen vocabulary.** Therefore “employees can stay wherever they are” is true as an architectural pattern, but Discord specifically requires a future provider adapter/vocabulary addition before it can be claimed as a native Aurum channel.
+
+Likewise, a channel contract existing is not the same as a live transport being configured. The channel module explicitly supports provider-independent registration/inbound normalization/outbound delivery but reports `provider_unavailable` when its transport is not wired/configured.
+
+For in-person communication, there is no native physical-presence conversation channel in the current frozen implementation. In-person knowledge can enter through captured/transcribed evidence or another source adapter, but that is not the same as Aurum directly participating in the conversation.
