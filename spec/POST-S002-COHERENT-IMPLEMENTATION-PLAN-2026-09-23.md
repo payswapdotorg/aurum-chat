@@ -7,7 +7,7 @@
 
 ## 0. Mission
 
-Turn Aurum into a persistent, provider-independent organizational work surface that can operate through existing systems and communications without forcing provider lock-in or requiring every employee to adopt Aurum Chat. Fuse Universal Comm OS into this product as the communications substrate rather than maintaining two end-user communication products.
+Turn Aurum into a persistent, provider-independent organizational work surface that can operate through existing systems and communications without forcing provider lock-in or requiring every employee to adopt Aurum Chat.
 
 Primary outcomes:
 - understand and operate through the organization's existing systems;
@@ -39,16 +39,6 @@ Ordinary users choose outcomes such as **Best quality**, **Lowest cost**, **Most
 
 ### Billing gateway
 Where a provider permits platform-mediated billing, the user pays Aurum and Aurum settles provider costs underneath. Provider terms, geography and regulated billing rules may require a direct customer relationship; that must remain an explicit exception.
-
-## 2. CommOS fusion rule
-
-`payswapdotorg/commos` is not a second end-user product. Aurum is the canonical product. The validated CommOS protocol/runtime subset becomes Aurum's communication kernel beneath W030/W045/W087/W086/W088.
-
-Reuse the CommOS protocol contracts and implementation ideas for universal identity links, communication intent, encrypted bundles, delivery states/proofs, capability advertisements, routing, transport interfaces, gateway semantics, DTN/store-and-forward and Android edge foundations. Do not import CommOS's separate web UI, auth model, singleton demo network, separate business data model or second AI cognition loop.
-
-CommOS current repo truth is mixed maturity: P1/P2/P3/P5/P6/P8/P9/P10/P11 are implemented/validated at different levels; P4 Android source exists but its worklog says validation is still in progress and P4.2 BLE remains blocked; P7 Matrix is not implemented. Experimental channel adapters in CommOS are not production delivery evidence.
-
-The extraction must preserve one semantic owner per concern: Aurum owns tenant/employee/person identity, organizational policy, conversations, evidence, cognition and business truth; CommOS owns communication transport semantics below those boundaries.
 
 ## 3. Persistent Aurum runtime
 
@@ -181,9 +171,9 @@ Use browser automation only when APIs/MCP/native adapters are insufficient.
 
 Browser automation never becomes authoritative business state.
 
-## 13. Workstream J — Matrix / CommOS interoperability
+## 13. Workstream J — Matrix interoperability
 
-Matrix is optional. Do not add it to the core merely to solve the cellular requirement. CommOS already defines Matrix as an adapter/fabric below the universal communication protocol; Aurum should inherit that boundary, not make Matrix a required transport.
+Matrix is optional. Do not add it to the core merely to solve cellular reachability.
 
 Use Matrix when a customer already operates Matrix or needs an open, customer-controlled communication/interoperability fabric and bridges. Matrix enters through the channel gateway like every other provider.
 
@@ -194,12 +184,6 @@ Maintain a technology registry containing capability, project/provider, license,
 Before rebuilding infrastructure, the Tech Lead reviews the registry.
 
 ## 15. New work-item DAG
-
-### CommOS fusion extraction
-
-CommOS protocol/core → Aurum communication-kernel boundary → Aurum identity/policy/evidence → production transports/gateways → delivery evidence.
-
-Extract only the validated reusable CommOS subset. Do not import the CommOS application shell, separate auth, singleton demo network, separate business data model or second AI loop.
 
 ### Foundation
 
@@ -237,13 +221,13 @@ W098 Persistent Agent Supervision and Recovery
 
 ### Fusion, learning and release
 
-W099 CommOS Fusion and Communication Kernel  
+W099 Matrix Interoperability Adapter (optional)  
 W100 Longitudinal S003 Conversion Benchmark  
 W101 Final Post-S002 Production Certification
 
 ## 16. Dependency relationships
 
-W079 certification reconciliation → W099
+W079 certification reconciliation → post-S002 implementation
 
 W080 → W084, W086, W098
 
@@ -252,8 +236,6 @@ W081 → W082, W083, W089, W096
 W082 + W083 + W009 → W084
 
 W099 + W002 + W030 → W095
-
-W099 → W085, W087, W088
 
 W085 + W095 → W086
 
