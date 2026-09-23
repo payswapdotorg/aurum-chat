@@ -66,7 +66,23 @@ function createRestClient(url: string, token: string): RedisRestClient {
         const detail = (await response.text().catch(() => '')).slice(0, 200);
         throw new Error(`redis rest rejected the command (HTTP ${response.status}): ${detail}`);
       }
-      return (await response.json().catch(() => null)) as unknown;
+      const parsed = (await response.json().catch(() => null)) as unknown;
+      // Upstash's REST contract wraps EVERY command result in a
+      // `{"result": <value>}` envelope (verified against the live wire:
+      // PING → {"result":"PONG"}, LLEN → {"result":0}, LPOP on an empty
+      // list → {"result":null}). The ports need the bare result, so the
+      // envelope is unwrapped HERE — the one place that owns the wire.
+      // Defensive for other HTTP-redis vendors: a body that is not the
+      // envelope passes through unchanged.
+      if (
+        parsed !== null &&
+        typeof parsed === 'object' &&
+        !Array.isArray(parsed) &&
+        'result' in parsed
+      ) {
+        return (parsed as { result: unknown }).result;
+      }
+      return parsed;
     },
   };
 }

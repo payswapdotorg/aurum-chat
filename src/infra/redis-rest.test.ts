@@ -37,12 +37,17 @@ function setEnv(values: Record<string, string | undefined>): void {
 const REST_URL = 'https://redis-rest.example.test';
 const REST_TOKEN = 'test-redis-rest-token';
 
-/** A fetch stub returning `value` as the JSON command result. */
+/** A fetch stub returning Upstash's command envelope: `{"result": value}`. */
 function jsonResponse(value: unknown, status = 200): Response {
   return new Response(JSON.stringify(value), {
     status,
     headers: { 'content-type': 'application/json' },
   });
+}
+
+/** The Upstash REST wire shape: every command result is envelope-wrapped. */
+function envelope(value: unknown, status = 200): Response {
+  return jsonResponse({ result: value }, status);
 }
 
 let fetchMock: ReturnType<typeof vi.fn>;
@@ -123,7 +128,7 @@ describe('redis rest transport (getRedisRestClient)', () => {
 
   it('POSTs the command argv as JSON with the bearer token', async () => {
     setEnv({ UPSTASH_REDIS_REST_URL: REST_URL, UPSTASH_REDIS_REST_TOKEN: REST_TOKEN });
-    fetchMock.mockResolvedValueOnce(jsonResponse('OK'));
+    fetchMock.mockResolvedValueOnce(envelope('OK'));
     const client = getRedisRestClient();
     expect(client).not.toBeNull();
     await client!.command(['SET', 'k', 'v']);
@@ -135,11 +140,22 @@ describe('redis rest transport (getRedisRestClient)', () => {
     expect(init.body).toBe(JSON.stringify(['SET', 'k', 'v']));
   });
 
-  it('resolves the JSON command result verbatim', async () => {
+  it('unwraps the Upstash result envelope (the live wire contract)', async () => {
     setEnv({ UPSTASH_REDIS_REST_URL: REST_URL, UPSTASH_REDIS_REST_TOKEN: REST_TOKEN });
-    fetchMock.mockResolvedValueOnce(jsonResponse(null));
+    fetchMock.mockResolvedValueOnce(envelope(null));
     const client = getRedisRestClient()!;
     await expect(client.command(['GET', 'missing'])).resolves.toBeNull();
+    fetchMock.mockResolvedValueOnce(envelope(0));
+    await expect(client.command(['LLEN', 'aurum:queue:worker'])).resolves.toBe(0);
+    fetchMock.mockResolvedValueOnce(envelope('PONG'));
+    await expect(client.command(['PING'])).resolves.toBe('PONG');
+  });
+
+  it('passes a non-envelope body through unchanged (vendor-neutral defense)', async () => {
+    setEnv({ UPSTASH_REDIS_REST_URL: REST_URL, UPSTASH_REDIS_REST_TOKEN: REST_TOKEN });
+    fetchMock.mockResolvedValueOnce(jsonResponse('OK'));
+    const client = getRedisRestClient()!;
+    await expect(client.command(['SET', 'k', 'v'])).resolves.toBe('OK');
   });
 
   it('rejects an HTTP error with status and truncated detail', async () => {
@@ -158,7 +174,7 @@ describe('redis rest transport (getRedisRestClient)', () => {
 
   it('tolerates a trailing slash in the endpoint and is a per-process singleton', () => {
     setEnv({ UPSTASH_REDIS_REST_URL: `${REST_URL}/`, UPSTASH_REDIS_REST_TOKEN: REST_TOKEN });
-    fetchMock.mockResolvedValue(jsonResponse('PONG'));
+    fetchMock.mockResolvedValue(envelope('PONG'));
     const first = getRedisRestClient();
     const second = getRedisRestClient();
     expect(second).toBe(first);
@@ -172,21 +188,21 @@ describe('redis rest transport (getRedisRestClient)', () => {
 describe('cache port on the redis rest backend', () => {
   it('maps set/get/del onto SET/GET/DEL under the aurum:cache: prefix', async () => {
     setEnv({ UPSTASH_REDIS_REST_URL: REST_URL, UPSTASH_REDIS_REST_TOKEN: REST_TOKEN });
-    fetchMock.mockResolvedValue(jsonResponse('OK'));
+    fetchMock.mockResolvedValue(envelope('OK'));
     const cache = getCache();
     await cache.set('k', 'v');
     await cache.set('k2', 'v2', 90);
     expect(sentCommand(0)).toEqual(['SET', 'aurum:cache:k', 'v']);
     expect(sentCommand(1)).toEqual(['SET', 'aurum:cache:k2', 'v2', 'PX', 90_000]);
 
-    fetchMock.mockResolvedValueOnce(jsonResponse('v'));
+    fetchMock.mockResolvedValueOnce(envelope('v'));
     await expect(cache.get('k')).resolves.toBe('v');
     expect(sentCommand(2)).toEqual(['GET', 'aurum:cache:k']);
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(null));
+    fetchMock.mockResolvedValueOnce(envelope(null));
     await expect(cache.get('missing')).resolves.toBeNull();
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(1));
+    fetchMock.mockResolvedValueOnce(envelope(1));
     await cache.del('k');
     expect(sentCommand(4)).toEqual(['DEL', 'aurum:cache:k']);
   });
@@ -195,19 +211,19 @@ describe('cache port on the redis rest backend', () => {
 describe('queue port on the redis rest backend', () => {
   it('maps enqueue/dequeue/depth onto RPUSH/LPOP/LLEN under the aurum:queue: prefix', async () => {
     setEnv({ UPSTASH_REDIS_REST_URL: REST_URL, UPSTASH_REDIS_REST_TOKEN: REST_TOKEN });
-    fetchMock.mockResolvedValue(jsonResponse(1));
+    fetchMock.mockResolvedValue(envelope(1));
     const queue = getQueue();
     await queue.enqueue('w077', { hello: 'world' });
     expect(sentCommand(0)).toEqual(['RPUSH', 'aurum:queue:w077', JSON.stringify({ hello: 'world' })]);
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(1));
+    fetchMock.mockResolvedValueOnce(envelope(1));
     await expect(queue.depth('w077')).resolves.toBe(1);
     expect(sentCommand(1)).toEqual(['LLEN', 'aurum:queue:w077']);
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(JSON.stringify({ hello: 'world' })));
+    fetchMock.mockResolvedValueOnce(envelope(JSON.stringify({ hello: 'world' })));
     await expect(queue.dequeue('w077')).resolves.toEqual({ hello: 'world' });
 
-    fetchMock.mockResolvedValueOnce(jsonResponse(null));
+    fetchMock.mockResolvedValueOnce(envelope(null));
     await expect(queue.dequeue('w077')).resolves.toBeNull();
   });
 });
@@ -217,7 +233,7 @@ describe('lock port on the redis rest backend', () => {
     setEnv({ UPSTASH_REDIS_REST_URL: REST_URL, UPSTASH_REDIS_REST_TOKEN: REST_TOKEN });
     const lock = getLock();
 
-    fetchMock.mockResolvedValueOnce(jsonResponse('OK'));
+    fetchMock.mockResolvedValueOnce(envelope('OK'));
     const token = await lock.acquire('w077', 5_000);
     expect(token).toBeTypeOf('string');
     const acquireArgs = sentCommand(0) as unknown[];
@@ -229,11 +245,11 @@ describe('lock port on the redis rest backend', () => {
     expect(acquireArgs[5]).toBe('NX');
 
     // Held: SET NX does not apply — no token.
-    fetchMock.mockResolvedValueOnce(jsonResponse(null));
+    fetchMock.mockResolvedValueOnce(envelope(null));
     await expect(lock.acquire('w077', 5_000)).resolves.toBeNull();
 
     // Release with the owning token: EVAL deletes → 1.
-    fetchMock.mockResolvedValueOnce(jsonResponse(1));
+    fetchMock.mockResolvedValueOnce(envelope(1));
     await expect(lock.release('w077', token!)).resolves.toBe(true);
     const releaseArgs = sentCommand(2) as string[];
     expect(releaseArgs[0]).toBe('EVAL');
@@ -242,7 +258,7 @@ describe('lock port on the redis rest backend', () => {
     expect(releaseArgs[4]).toBe(token);
 
     // Release with a foreign token: EVAL refuses → 0.
-    fetchMock.mockResolvedValueOnce(jsonResponse(0));
+    fetchMock.mockResolvedValueOnce(envelope(0));
     await expect(lock.release('w077', 'not-the-token')).resolves.toBe(false);
   });
 });
