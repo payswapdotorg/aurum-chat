@@ -313,6 +313,7 @@ describe('capability coverage', () => {
       'deployment-smoke',
       'journey-proof',
       'quality',
+      'release-certification',
       'simulator',
     ]);
   });

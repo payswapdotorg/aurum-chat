@@ -484,6 +484,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'a verification harness, not a product capability: it proves the HOSTED deployment over real HTTP (bun run smoke:dogfood) and owns no user-facing route',
   },
+  {
+    module: 'release-certification',
+    label: 'The production journey certification and release gate (W079)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'a verification harness, not a product capability: it certifies the J01–J15 journey matrix against the hosted production deployment (two-run same-revision rule) and owns no user-facing route',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(

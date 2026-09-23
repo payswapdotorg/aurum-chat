@@ -58,6 +58,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   people: 'foundation-sweep.test.ts',
   processes: 'cognition-sweep.test.ts',
   quality: 'evidence-sweep.test.ts',
+  'release-certification': 'release-certification-sweep.test.ts',
   rewards: 'capability-sweep.test.ts',
   simulator: 'foundation-sweep.test.ts',
   sources: 'experience-sweep.test.ts',

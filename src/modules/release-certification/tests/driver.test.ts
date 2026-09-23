@@ -11,6 +11,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { SmokeReport } from '@/modules/deployment-smoke/contract';
 import { runCertificationPass } from '../driver';
 import type { BrowserRunDigest } from '../types';
 
@@ -227,7 +228,7 @@ function cannedFetch(): typeof fetch {
 
 /** A fully-green 16-test browser digest (J01–J15 desktop + J14 mobile). */
 function greenDigest(): BrowserRunDigest {
-  const tests = Array.from({ length: 15 }, (_, index) => {
+  const tests: BrowserRunDigest['tests'] = Array.from({ length: 15 }, (_, index) => {
     const id = `J${String(index + 1).padStart(2, '0')}`;
     return {
       testId: `${id.toLowerCase()}-x:desktop`,
@@ -361,8 +362,12 @@ describe('the certification driver — one full pass over a canned production ta
     // The evidence tree: run-result.json, identity, command manifest, report, W078.
     const runDir = path.join(evidenceRoot, 'production-run-a');
     {
-      const w078Report = JSON.parse(await readFile(path.join(runDir, 'w078', 'smoke-report.json'), 'utf8'));
-      console.log('W078 FAILURES:', JSON.stringify(w078Report.results.filter((entry) => entry.status === 'fail' || entry.status === 'blocked').map((entry) => [entry.id, entry.detail]), null, 1));
+      const w078Report = JSON.parse(
+        await readFile(path.join(runDir, 'w078', 'smoke-report.json'), 'utf8'),
+      ) as SmokeReport;
+      console.log('W078 FAILURES:', JSON.stringify(w078Report.results
+        .filter((entry) => entry.status === 'fail' || entry.status === 'blocked')
+        .map((entry) => [entry.id, entry.detail]), null, 1));
     }
     const runResult = JSON.parse(await readFile(path.join(runDir, 'run-result.json'), 'utf8'));
     expect(runResult.verdict).toBe('CERTIFIED READY');
