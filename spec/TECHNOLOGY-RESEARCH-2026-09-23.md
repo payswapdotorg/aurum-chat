@@ -339,3 +339,58 @@ None of these technologies should become the source of truth for tenant identity
 External platforms are adapters and execution substrates.
 
 **Aurum's durable organizational intelligence remains application-owned.**
+
+## Matrix — decision
+
+Matrix is **useful but not necessary as an Aurum core dependency**.
+
+Matrix is an open standard for decentralized realtime communication with client-server APIs, federation, extensible events, bridges and MatrixRTC. The Matrix ecosystem currently lists bridges for Discord, Slack, Signal, Telegram, WhatsApp, Messenger, Instagram, LinkedIn, X, SMS and email, among others. MatrixRTC provides end-to-end-encrypted group voice/video, with LiveKit used by the main current implementation. Source: https://spec.matrix.org/ and https://matrix.org/ecosystem/bridges/
+
+### Recommended use
+
+**P2 optional interoperability adapter, not core messaging architecture.**
+
+Use Matrix when an organization:
+- already operates Matrix;
+- wants an open/interoperable communications fabric;
+- needs to bridge several supported messaging systems;
+- wants a customer-controlled local/private communications plane.
+
+Aurum should talk to Matrix through the existing channel/source/destination/provider gateways. Matrix rooms/events must normalize into Aurum's canonical conversations/events/evidence. Aurum's world model, policy and audit remain authoritative.
+
+The open source matrix-rust-sdk is currently listed as a stable Apache-2.0 SDK by Matrix.org. Conduit is listed as a beta Apache-2.0 Matrix homeserver. Synapse is open source but AGPL-3.0 or commercial licensed, so it should not become a default dependency for Aurum's proprietary application without an explicit licensing decision. Sources: https://matrix.org/ecosystem/sdks/ , https://github.com/element-hq/synapse , https://matrix.org/ecosystem/servers/
+
+### Matrix is not the answer to literal offline communication
+
+Matrix normally assumes a client can reach a homeserver; federation also requires IP connectivity. It can therefore work **without Internet** when a local homeserver/edge relay is reachable over the organization's LAN or another IP network, but it cannot create connectivity when the devices have no network path at all.
+
+For a manager and secretary with no Internet:
+- **same local LAN:** use an Aurum Edge Connector/local relay; Matrix may optionally carry the local messaging layer;
+- **no LAN but nearby devices:** use a native local transport such as Wi-Fi Direct/Wi-Fi Aware/Bluetooth from an installed Aurum companion;
+- **no network and not within radio/P2P range:** no software-only solution can establish a call/message path.
+
+Android exposes Wi-Fi Direct service discovery and communication without an Internet connection or access point. Apple exposes peer-to-peer Wi-Fi/Wi-Fi Aware capabilities for nearby devices. Web Bluetooth has limited browser availability, so browser-only Aurum cannot be the sole basis of the offline feature. Sources: https://developer.android.com/develop/connectivity/wifi/nsd-wifi-direct , https://developer.apple.com/documentation/wifiaware , https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API
+
+## Aurum Local Link
+
+Create a small customer-device/local-network runtime, distinct from cloud Aurum.
+
+It provides:
+- nearby-person discovery;
+- authenticated local text;
+- voice-call signaling/media;
+- local store-and-forward when a peer temporarily disappears;
+- optional connection to an Aurum Edge Connector;
+- later optional Matrix transport.
+
+The user should see:
+
+**Call Sarah nearby**  
+**Send a message to Sarah nearby**
+
+not:
+
+**Bluetooth / Wi-Fi Direct / Matrix / WebRTC**.
+
+The local runtime must use the same Aurum identity, authorization, audit and conversation contracts when synchronizing back to the cloud.
+
