@@ -82,3 +82,31 @@ Provider SDKs (LLM, channel, source, destination, agent-runtime) may be imported
 ## 10. Module map (frozen; W000 scaffolds it)
 
 auth, organizations (tenants/workspaces), identity, people, world, events, observations, sources, destinations, memory, epistemics, freshness, goals, attention, investigation, missions, knowledge-acquisition, cognition, environment, opportunities, presence, processes, capabilities, automation, workforce, suppliers, actions, agents, extensions, marketplace, learning, rewards, conversations, channels, notifications, briefings, llm, audit, api, mcp — per ARCHITECTURE.md §26. Workers create a module folder only when their work item owns it.
+
+## Post-S002 implementation addendum
+
+This addendum does not change frozen Architecture v2.1. It operationalizes the post-S002 handoff.
+
+### Persistent organizational actor
+Aurum's identity and state remain application-owned. Durable workflow execution is accessed through an application-owned workflow port. Vercel Workflows is the current deployment-compatible implementation; alternative durable workflow engines remain replaceable adapters.
+
+### Communications kernel
+The communications kernel lives below organizational intelligence and may reuse validated CommOS protocol primitives inside the channels/edge boundary. It must not introduce a second identity authority, authorization system, organization model, billing system, analytics truth store or AI cognition loop.
+
+### Provider-independent reachability
+Communication routing supports ordinary connected channels plus SMS/voice cellular fallback. The recipient does not need Internet or an Aurum account. Provider-specific telecom, meeting and realtime transports remain adapters.
+
+### Edge execution
+Customer-controlled Aurum Edge runtime may reach private/on-prem APIs, MCP/OpenAPI services, files, databases and approved browser adapters through signed, tenant-scoped jobs. Credentials should remain customer-side where possible.
+
+### Progressive provider selection
+Ordinary product UX chooses outcomes such as quality, speed, privacy, cost and organization-managed control rather than provider/technology names. Provider selection occurs automatically or when a capability requires it. Advanced settings may expose technical details.
+
+### Provider billing
+Provider payment is abstracted behind Aurum where contracts permit platform-mediated settlement. Provider-specific commercial constraints may require direct customer billing; this remains an adapter-level exception.
+
+### Open-source reuse gate
+Before implementing substantial infrastructure, the Tech Lead must consult spec/TECHNOLOGY-RESEARCH-2026-09-23.md and the W089 technology registry. Any proposed OSS dependency requires explicit review of license, security, maintenance, data handling, operational complexity and exit strategy.
+
+### Work-item execution
+The post-S002 work catalog is spec/work-items/WORK-ITEM-CATALOG.md; the dependency/parallelization DAG is spec/WORK-ITEM-DEPENDENCY-GRAPH.md; the self-contained handoff is spec/FINAL-TECH-LEAD-HANDOFF-POST-S002-2026-09-23.md.
