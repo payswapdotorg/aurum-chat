@@ -135,10 +135,9 @@ W079 is a release gate, not a feature track. It may not be marked complete from 
 ## Post-S002 organizational reach / integration / realtime DAG
 
 ```text
-W079 release integrity
-  ↓
 W080 Durable Agent Runtime
   ├──→ W084 Deep Action Gateway
+  ├──→ W085 Meeting Intelligence Gateway
   ├──→ W086 Realtime Voice / Meeting Companion
   └──→ W098 Persistent Agent Supervision
 
@@ -150,80 +149,99 @@ W081 Integration Intelligence
 W082 + W083 + W009
   └──→ W084 Deep Action Gateway + Reconciliation
 
-W085 Meeting Intelligence Gateway
-  └──→ W086 Realtime Voice / Meeting Companion
+W085
+  └──→ W086
 
-W095 Unified Cross-Channel / Meeting / Telephony Identity
-  ├──→ W085
-  └──→ W087 Cellular Reachability
+W084
+  ├──→ W092 Vertical Extension Starter Kits
+  ├──→ W093 Browser / Computer-Use Fallback
+  └──→ W094 Migration + Dual-Run Continuity (after W092)
 
 W087 Cellular Reachability
-  └──→ W097 Meeting + Cellular E2E Fixture
+  └──→ W095 Unified Cross-Channel / Meeting / Telephony Identity
+
+W085 + W086 + W087 + W002 + W030
+  └──→ W095 Unified Identity
 
 W088 Aurum Edge Connector
-  ├──→ W084
-  └──→ W092 Vertical Extension Starter Kits
+  └──→ W092, W093
 
 W089 Provider Adapter SDK + OSS Registry
-  └──→ all provider adapters / Matrix adapter inside W099 when justified
+  ├──→ W082
+  ├──→ W090 Provider Billing
+  └──→ optional W099 Matrix Adapter
 
-W090 Provider Billing Gateway
-  └──→ W091 User-Friendly Provider Choice UX
+W090
+  └──→ W091 Provider Choice UX
 
-W084 + W088
-  └──→ W094 Migration + Dual-Run Continuity
+W084 + W088 + W092
+  └──→ W094 Migration + Dual Run
 
-W092 Vertical Extension Starter Kits
-  └──→ S003 benchmark / specialist execution
+W081 + W082 + W083 + W084
+  └──→ W096 Integration E2E
 
-W093 Browser / Computer-Use Fallback
-  └──→ W084
+W085 + W086 + W087 + W095
+  └──→ W097 Meeting + Cellular E2E
 
-W096 + W097 + W098
-  └──→ W100 Longitudinal S003 Conversion Benchmark
+W080 + W021 + W023 + W024
+  └──→ W098 Supervision / Recovery
 
-W100 + production environment
-  └──→ W101 Final Post-S002 Production Certification
+W092 + W094 + W096 + W097 + W098
+  └──→ W100 Longitudinal S003
+
+W096 + W097 + W098 + W100 + production infrastructure
+  └──→ W101 Final Production Certification
 ```
 
 ### Post-S002 three-worker waves
 
 ```text
 Wave 0:
-  Tech Lead — reconcile current main vs exact certified production revision
+  Tech Lead — reconcile current main vs exact W079-certified revision; freeze baseline.
 
 Wave 1:
-  Worker A — W080
-  Worker B — W081
-  Worker C — W087
+  Worker A — W080 Durable Agent Runtime
+  Worker B — W081 Integration Intelligence
+  Worker C — W089 Provider Adapter SDK + OSS Technology Registry
 
 Wave 2:
-  Worker A — W082
-  Worker B — W085
-  Worker C — W090 + W091
+  Worker A — W082 Universal Connection Broker
+  Worker B — W085 Meeting Intelligence Gateway
+  Worker C — W087 Cellular Reachability
 
 Wave 3:
-  Worker A — W083 + W084
-  Worker B — W086
-  Worker C — W088 + W089
+  Worker A — W083 Progressive Capability Grants + W084 Deep Actions
+  Worker B — W086 Realtime Voice + Meeting Companion
+  Worker C — W098 Persistent Agent Supervision + Recovery
 
 Wave 4:
-  Worker A — W092
-  Worker B — W093
-  Worker C — W094
+  Worker A — W088 Aurum Edge Connector
+  Worker B — W090 Provider Billing Gateway
+  Worker C — W095 Unified Cross-Channel / Meeting / Telephony Identity
 
 Wave 5:
-  Worker A — W095
-  Worker B — W096
-  Worker C — W097
+  Worker A — W091 User-Friendly Provider Choice UX
+  Worker B — W092 Vertical Extension Starter Kits
+  Worker C — W093 Browser / Computer-Use Fallback
 
 Wave 6:
-  Worker A — W098
-  Worker B — W099 only when justified by evidence
-  Worker C — integration/security reconciliation
+  Worker A — W094 Migration + Dual Run
+  Worker B — W096 Integration Intelligence E2E
+  Worker C — W097 Meeting + Cellular E2E
 
 Wave 7:
-  W100 simulation + W101 certification
+  Worker A — W099 Matrix Interoperability Adapter (optional)
+  Worker B — W100 Longitudinal S003 Conversion Benchmark
+  Worker C — Tech Lead security/licensing/provider reconciliation
+
+Wave 8:
+  All workers support W101 final production certification.
 ```
 
-Ownership rule: workers must not concurrently modify the same gateway/contract primitive. Provider adapters are independent once their gateway contract is frozen. Optional Matrix work may not block cellular, meeting or integration work.
+### Parallelization rule
+
+A worker may start an item only after every dependency contract listed in the catalog is already present and stable. Two workers may not concurrently change the same public contract. Optional Matrix work may never block W087, W085/W086, W081-W084, W092 or W101.
+
+### Scope rule
+
+W080-W101 are the only post-S002 implementation scope in this DAG. Historical CommOS research/artifacts are not implementation dependencies for these work items.
