@@ -74,6 +74,11 @@ test.describe('J13 — tenant isolation (desktop)', () => {
     expect(tenant, 'the run tenant record exists (J01 ran first)').not.toBeNull();
     await signInManager(page, tenant!);
 
+    // Open the recorded conversation from the list (a fresh /chat lands on
+    // the welcome state — the thread must be opened like a user would).
+    const row = page.locator('.aurum-chat-convo', { hasText: /Remember this/i }).first();
+    await expect(row, 'the marker conversation is in the list').toBeVisible({ timeout: 60_000 });
+    await row.click();
     await expect(
       page.locator(CHAT_TIMELINE).getByText(`Remember this: ${marker}`).first(),
     ).toBeVisible({ timeout: 90_000 });

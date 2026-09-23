@@ -37,7 +37,7 @@ import {
 } from './helpers';
 import { CHAT_CARD, CHAT_TIMELINE } from '../helpers/selectors';
 
-const IMPROVE_QUESTION = 'What should we improve?';
+const ATTENTION_QUESTION = 'What needs my attention?';
 
 test.describe('J05 — consequential approval (desktop)', () => {
   test('J05 — a proposed action waits at the human gate, is decided inline and recorded', async ({
@@ -131,7 +131,7 @@ test.describe('J05 — consequential approval (desktop)', () => {
     // ---- the recommendation surfaces in Chat with the human gate ----
     await cert.step('the recommendation arrives in the conversation');
     await page.goto('/chat');
-    await page.locator('#aurum-chat-input').fill(IMPROVE_QUESTION);
+    await page.locator('#aurum-chat-input').fill(ATTENTION_QUESTION);
     await page.locator('#aurum-chat-input').press('Enter');
     const approvalCard = page
       .locator(CHAT_CARD, { hasText: /employee-messaging|Employee messaging/i })
@@ -162,8 +162,11 @@ test.describe('J05 — consequential approval (desktop)', () => {
 
     await cert.step('return to the conversation (cross-surface rule)');
     await page.goto('/chat');
+    const row = page.locator('.aurum-chat-convo', { hasText: /attention/i }).first();
+    await expect(row).toBeVisible({ timeout: 30_000 });
+    await row.click();
     await expect(
-      page.locator(CHAT_TIMELINE).getByText(IMPROVE_QUESTION).first(),
+      page.locator(CHAT_TIMELINE).getByText(ATTENTION_QUESTION).first(),
     ).toBeVisible({ timeout: 30_000 });
     cert.expectZeroViolations();
   });

@@ -41,20 +41,20 @@ test.describe('J08 — company connections (desktop)', () => {
     await cert.shot('the Connections hub');
 
     await cert.step('configure a channel endpoint through the real form');
-    await page.getByText('Connect a channel').click();
-    const channelForm = page.locator('#channel-connect-provider').locator('..').locator('..');
-    await page.locator('#channel-connect-provider').selectOption('slack');
-    await page.locator('#channel-connect-account').fill('w079-cert-workspace');
+    await page.locator('summary', { hasText: 'Connect a channel' }).first().click();
+    // The email channel: the canonical account id is the mailbox address
+    // (the provider adapters normalize their own id vocabularies).
+    await page.locator('#channel-connect-provider').selectOption('email');
+    await page.locator('#channel-connect-account').fill('w079-cert@aurum-cert.test');
     await page.locator('#channel-connect-name').fill('Certification workspace');
-    await page.locator('#channel-connect-credential').fill('secret-store://w079/cert/slack');
-    await page.getByRole('button', { name: /Connect Slack/i }).click();
+    await page.locator('#channel-connect-credential').fill('secret-store://w079/cert/email');
+    await page.getByRole('button', { name: /Connect Email/i }).click();
     // The registration lands: the summary line confirms and the roster
     // re-renders with the connected endpoint.
     await expect(page.getByText(/connected|registered|active/i).first()).toBeVisible({
       timeout: 60_000,
     });
     await cert.shot('the configured channel — registered with its opaque credential reference');
-    void channelForm;
 
     await cert.step('the connection is verified in the hub state');
     await expect(

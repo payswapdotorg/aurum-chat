@@ -88,8 +88,17 @@ test.describe('J07 — employee learning contribution (desktop)', () => {
     ).toBeVisible({ timeout: 30_000 });
     await cert.shot('the Learning hub — the live mission');
 
+    await cert.step('open the mission chain — the ask planner lives there');
+    await page.goto(`/intelligence/missions/${mission.missionId}`);
+    await expect(
+      page.getByText('Understand the weekly freshness workflow').first(),
+    ).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText(/The acquisitions the loop ran/i).first()).toBeVisible();
+
     await cert.step('the ask planner runs and decides honestly');
-    const ask = page.getByRole('button', { name: 'Ask the next source' }).first();
+    const ask = page
+      .getByRole('button', { name: /plan the next knowledge acquisition/i })
+      .first();
     await expect(ask).toBeVisible();
     await ask.click();
     // The planner's honest decision renders — the person gate excludes
@@ -99,8 +108,10 @@ test.describe('J07 — employee learning contribution (desktop)', () => {
     await cert.shot('the planner decision — honest, on the record');
 
     await cert.step('the contribution and reward state panels render');
-    await expect(page.getByText('Contributions')).toBeVisible();
-    await expect(page.getByText('Rewards')).toBeVisible();
+    await page.goto('/learning');
+    await expect(page.getByRole('heading', { name: 'Learning' }).first()).toBeVisible();
+    await expect(page.getByText('Contributions', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Rewards', { exact: true }).first()).toBeVisible();
     // The closed reward vocabulary + the explicit policy note (rewards
     // are never minted silently — no policy, no rewards).
     await expect(

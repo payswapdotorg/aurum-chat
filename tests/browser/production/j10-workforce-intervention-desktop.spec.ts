@@ -59,18 +59,22 @@ test.describe('J10 — workforce / agent intervention (desktop)', () => {
       page.getByText(/human|approval|decide/i).first(),
     ).toBeVisible();
 
-    await cert.step('the Workforce surface renders the read model');
+    await cert.step('the Workforce surface renders the read model (tower chrome)');
     await page.goto('/workforce');
     await expect(page.getByRole('heading', { name: 'Workforce' }).first()).toBeVisible();
     await expect(page.getByText(/Employee-supplied capabilities|capabilit/i).first()).toBeVisible();
     await cert.shot('the Workforce surface — the honest read model');
 
-    await cert.step('the agents governance surface is reachable');
+    await cert.step('the agents governance surface is reachable (tower chrome)');
     await page.goto('/agents');
     await expect(page.getByRole('heading', { name: /agents/i }).first()).toBeVisible();
     await cert.shot('the agents surface');
 
-    await cert.step('return to Chat (cross-surface rule)');
+    await cert.step('back on the product shell — return to Chat (cross-surface rule)');
+    // The tower surfaces carry the tower chrome; the product rail lives on
+    // the product shell — return through the Interventions surface.
+    await page.goto('/interventions');
+    await expect(page.getByRole('heading', { name: 'Interventions' }).first()).toBeVisible();
     await page.locator(RAIL).getByRole('link', { name: 'Chat' }).click();
     await page.waitForURL(/\/chat/);
     await expect(page.locator('.aurum-chat-app')).toBeVisible();
