@@ -165,7 +165,7 @@ W088 Aurum Edge Connector
   └──→ W092 Vertical Extension Starter Kits
 
 W089 Provider Adapter SDK + OSS Registry
-  └──→ all provider adapters / W099 Matrix
+  └──→ all provider adapters / Matrix adapter inside W099 when justified
 
 W090 Provider Billing Gateway
   └──→ W091 User-Friendly Provider Choice UX
