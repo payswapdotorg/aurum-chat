@@ -1,0 +1,23 @@
+{
+  "testId": "j12-the-developer-console-discovery-ke-desktop:desktop",
+  "journeyId": "J12",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
+  "file": "tests/browser/production/j12-developer-desktop.spec.ts",
+  "durationMs": 2013,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j12-the-developer-console-discovery-ke-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j12-the-developer-console-discovery-ke-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j12-the-developer-console-discovery-ke-desktop-desktop.json"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "testId": "j02-a-composer-turn-runs-the-real-work-desktop:desktop",
+  "journeyId": "J02",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
+  "file": "tests/browser/production/j02-talk-to-aurum-desktop.spec.ts",
+  "durationMs": 2089,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j02-a-composer-turn-runs-the-real-work-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j02-a-composer-turn-runs-the-real-work-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j02-a-composer-turn-runs-the-real-work-desktop-desktop.json"
+    ]
+  }
+}

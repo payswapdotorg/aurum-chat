@@ -1,0 +1,14 @@
+{
+  "spec": "/home/z/my-project/aurum/tests/browser/production/j14-mobile-loop-mobile.spec.ts",
+  "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
+  "project": "mobile",
+  "runLabel": "A",
+  "steps": [
+    {
+      "at": "2026-09-23T14:35:01.860Z",
+      "step": "sign in as the run manager on the mobile viewport",
+      "url": "about:blank",
+      "shot": null
+    }
+  ]
+}

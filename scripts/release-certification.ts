@@ -55,6 +55,7 @@ interface CliArgs {
   workerTokenFile: string | null;
   vercelTokenFile: string | null;
   skipRepoGates: boolean;
+  repoGatesFrom: string | null;
 }
 
 function parseArgs(argv: readonly string[]): CliArgs {
@@ -68,6 +69,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     workerTokenFile: null,
     vercelTokenFile: null,
     skipRepoGates: false,
+    repoGatesFrom: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
@@ -95,12 +97,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
     else if (arg === '--worker-token-file') args.workerTokenFile = next();
     else if (arg === '--vercel-token-file') args.vercelTokenFile = next();
     else if (arg === '--skip-repo-gates') args.skipRepoGates = true;
+    else if (arg === '--repo-gates-from') args.repoGatesFrom = next();
     else if (arg === '--help' || arg === '-h') {
       console.log(
         [
           'usage: bun run cert:production -- --target <url> --run a|b',
           '         --deployment-id <dpl> --expect-commit <sha> --deployment-created <iso>',
-          '         [--worker-token-file <path>] [--vercel-token-file <path>] [--skip-repo-gates]',
+          '         [--worker-token-file <path>] [--vercel-token-file <path>]',
+          '         [--repo-gates-from <dir>] [--skip-repo-gates]',
           '       bun run cert:production -- --finalize',
         ].join('\n'),
       );
@@ -174,6 +178,26 @@ async function main(): Promise<number> {
     (args.deploymentCreated === null ? '' : ` --deployment-created ${args.deploymentCreated}`) +
     ' --worker-token-file <redacted> --vercel-token-file <redacted>';
 
+  // Phase-split G2 evidence: pre-recorded gate results from real executions
+  // against this tree (see the driver's repoGateResults contract note).
+  let repoGateResults: Record<string, { command: string; exitCode: number | null; summary: string }> | undefined;
+  if (args.repoGatesFrom !== null) {
+    repoGateResults = {};
+    for (const label of ['typecheck', 'tests', 'architecture', 'lint']) {
+      const file = path.join(args.repoGatesFrom, `${label}.json`);
+      try {
+        repoGateResults[label] = JSON.parse(await readFile(file, 'utf8')) as {
+          command: string;
+          exitCode: number | null;
+          summary: string;
+        };
+      } catch {
+        console.error(`the repo-gate record '${file}' could not be read — record it first`);
+        return 1;
+      }
+    }
+  }
+
   const run = await runCertificationPass({
     target: args.target,
     runLabel: args.run === 'a' ? 'A' : 'B',
@@ -188,6 +212,7 @@ async function main(): Promise<number> {
     evidenceRoot: EVIDENCE_ROOT,
     command,
     skipRepoGates: args.skipRepoGates,
+    repoGateResults,
   });
 
   console.log(`\n=== W079 RUN ${run.runLabel} VERDICT: ${run.verdict} ===`);

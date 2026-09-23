@@ -1,0 +1,14 @@
+{
+  "spec": "/home/z/my-project/aurum/tests/browser/production/j12-developer-desktop.spec.ts",
+  "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
+  "project": "desktop",
+  "runLabel": "A",
+  "steps": [
+    {
+      "at": "2026-09-23T14:34:53.191Z",
+      "step": "sign in and discover the console from the More hub",
+      "url": "about:blank",
+      "shot": null
+    }
+  ]
+}

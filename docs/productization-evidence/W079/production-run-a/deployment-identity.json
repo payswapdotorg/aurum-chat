@@ -1,0 +1,22 @@
+{
+  "hostname": "aurum-chat-livid.vercel.app",
+  "deploymentId": "dpl_42N21dKzTM6LfAf98EghUN4UFX9w",
+  "commitSha": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+  "deploymentCreatedAt": "2026-09-23",
+  "certificationStartedAt": "2026-09-23T14:34:07.700Z",
+  "environmentLabel": "production",
+  "databaseBackendClass": "postgres",
+  "workerRuntimeState": {
+    "seamTokenGated": true,
+    "snapshotReachable": true,
+    "environment": "production",
+    "queueDepth": 0
+  },
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --deployment-id dpl_42N21dKzTM6LfAf98EghUN4UFX9w --expect-commit c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 --deployment-created 2026-09-23 --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "repository": {
+    "remote": "https://github.com/payswapdotorg/aurum-chat.git",
+    "branch": "work/w079-production-certification",
+    "baseCommit": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+    "headCommit": "8c3fc1e971aec9f6c720018e5559166149b7cf80"
+  }
+}

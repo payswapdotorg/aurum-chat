@@ -1,0 +1,23 @@
+{
+  "testId": "j09-an-unavailable-provider-becomes-a--desktop:desktop",
+  "journeyId": "J09",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
+  "file": "tests/browser/production/j09-byoa-desktop.spec.ts",
+  "durationMs": 2249,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j09-an-unavailable-provider-becomes-a--desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j09-an-unavailable-provider-becomes-a--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j09-an-unavailable-provider-becomes-a--desktop-desktop.json"
+    ]
+  }
+}

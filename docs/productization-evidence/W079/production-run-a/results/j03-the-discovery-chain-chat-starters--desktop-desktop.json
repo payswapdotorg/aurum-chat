@@ -1,0 +1,23 @@
+{
+  "testId": "j03-the-discovery-chain-chat-starters--desktop:desktop",
+  "journeyId": "J03",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
+  "file": "tests/browser/production/j03-unprompted-discovery-desktop.spec.ts",
+  "durationMs": 2218,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j03-the-discovery-chain-chat-starters--desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j03-the-discovery-chain-chat-starters--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j03-the-discovery-chain-chat-starters--desktop-desktop.json"
+    ]
+  }
+}

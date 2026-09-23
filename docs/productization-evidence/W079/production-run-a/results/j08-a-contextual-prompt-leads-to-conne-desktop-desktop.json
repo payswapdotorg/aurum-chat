@@ -1,0 +1,23 @@
+{
+  "testId": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop",
+  "journeyId": "J08",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
+  "file": "tests/browser/production/j08-connections-desktop.spec.ts",
+  "durationMs": 2033,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j08-a-contextual-prompt-leads-to-conne-desktop-desktop.json"
+    ]
+  }
+}

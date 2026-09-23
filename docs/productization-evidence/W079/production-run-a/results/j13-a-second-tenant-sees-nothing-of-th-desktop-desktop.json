@@ -1,0 +1,23 @@
+{
+  "testId": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop",
+  "journeyId": "J13",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
+  "file": "tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
+  "durationMs": 2030,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j13-a-second-tenant-sees-nothing-of-th-desktop-desktop.json"
+    ]
+  }
+}

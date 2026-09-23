@@ -19,7 +19,7 @@
 // Credentials are assembled from fragments at runtime (the repository's
 // fake-credential discipline): nothing realistic is ever a source literal.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -91,6 +91,7 @@ export async function readRunTenant(): Promise<CertTenant | null> {
 
 /** Persist the run's tenant record (the secrets scratch dir — never evidence). */
 export async function writeRunTenant(tenant: CertTenant): Promise<void> {
+  await mkdir(SECRETS_DIR, { recursive: true });
   await writeFile(path.join(SECRETS_DIR, 'tenant.json'), `${JSON.stringify(tenant, null, 2)}\n`, 'utf8');
 }
 
@@ -106,6 +107,7 @@ export async function readRunEmployee(): Promise<CertEmployee | null> {
 
 /** Persist the run's employee record (the secrets scratch dir — never evidence). */
 export async function writeRunEmployee(employee: CertEmployee): Promise<void> {
+  await mkdir(SECRETS_DIR, { recursive: true });
   await writeFile(
     path.join(SECRETS_DIR, 'employee.json'),
     `${JSON.stringify(employee, null, 2)}\n`,

@@ -1,0 +1,23 @@
+{
+  "testId": "j07-the-learning-lane-mission-ask-plan-desktop:desktop",
+  "journeyId": "J07",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
+  "file": "tests/browser/production/j07-learning-contribution-desktop.spec.ts",
+  "durationMs": 2117,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j07-the-learning-lane-mission-ask-plan-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j07-the-learning-lane-mission-ask-plan-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j07-the-learning-lane-mission-ask-plan-desktop-desktop.json"
+    ]
+  }
+}

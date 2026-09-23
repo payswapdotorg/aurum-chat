@@ -1,0 +1,23 @@
+{
+  "testId": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop",
+  "journeyId": "J05",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
+  "file": "tests/browser/production/j05-consequential-approval-desktop.spec.ts",
+  "durationMs": 2016,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j05-a-proposed-action-waits-at-the-hum-desktop-desktop.json"
+    ]
+  }
+}

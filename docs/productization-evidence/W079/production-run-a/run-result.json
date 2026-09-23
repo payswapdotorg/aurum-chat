@@ -1,0 +1,498 @@
+{
+  "runLabel": "A",
+  "startedAt": "2026-09-23T14:34:07.700Z",
+  "finishedAt": "2026-09-23T14:35:03.949Z",
+  "target": "https://aurum-chat-livid.vercel.app",
+  "identity": {
+    "hostname": "aurum-chat-livid.vercel.app",
+    "deploymentId": "dpl_42N21dKzTM6LfAf98EghUN4UFX9w",
+    "commitSha": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+    "deploymentCreatedAt": "2026-09-23",
+    "certificationStartedAt": "2026-09-23T14:34:07.700Z",
+    "environmentLabel": "production",
+    "databaseBackendClass": "postgres",
+    "workerRuntimeState": {
+      "seamTokenGated": true,
+      "snapshotReachable": true,
+      "environment": "production",
+      "queueDepth": 0
+    },
+    "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --deployment-id dpl_42N21dKzTM6LfAf98EghUN4UFX9w --expect-commit c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 --deployment-created 2026-09-23 --worker-token-file <redacted> --vercel-token-file <redacted>",
+    "repository": {
+      "remote": "https://github.com/payswapdotorg/aurum-chat.git",
+      "branch": "work/w079-production-certification",
+      "baseCommit": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+      "headCommit": "8c3fc1e971aec9f6c720018e5559166149b7cf80"
+    }
+  },
+  "gates": [
+    {
+      "id": "matrix.consistency",
+      "title": "the J01–J15 matrix is the contract matrix",
+      "status": "pass",
+      "detail": "all 15 journeys declared with their mandatory proofs"
+    },
+    {
+      "id": "g1.health",
+      "title": "the production runtime is genuinely production (health contract)",
+      "status": "pass",
+      "detail": "/api/health status ok · environment production · db postgres (91 migrations) · queue/cache/lock redis · 0 refusals · 0 warnings",
+      "evidence": {
+        "httpStatus": 200,
+        "healthStatus": "ok",
+        "environment": "production",
+        "backends": {
+          "db": "postgres",
+          "queue": "redis",
+          "cache": "redis",
+          "lock": "redis",
+          "email": "resend",
+          "blob": "vercel-blob"
+        }
+      }
+    },
+    {
+      "id": "g1.quick-sign-in-off",
+      "title": "production quick-sign-in/demo credentials remain OFF",
+      "status": "pass",
+      "detail": "POST /api/auth/quick-sign-in answered 404 — the quick-access panel is off in the production runtime",
+      "evidence": {
+        "status": 404
+      }
+    },
+    {
+      "id": "g1.worker-authorization",
+      "title": "WORKER_TOKEN exists and worker authorization works",
+      "status": "pass",
+      "detail": "the seam is fail-closed (401 no/bad token) and the valid token reads the snapshot (environment production, queue depth 0)",
+      "evidence": {
+        "noTokenStatus": 401,
+        "badTokenStatus": 401,
+        "validStatus": 200,
+        "snapshotEnvironment": "production"
+      }
+    },
+    {
+      "id": "g1.deployment-identity",
+      "title": "the target is the expected production deployment (identity manifest)",
+      "status": "pass",
+      "detail": "the live production deployment is dpl_42N21dKzTM6LfAf98EghUN4UFX9w @ c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 (READY, created 2026-09-23T04:15:26.369Z)",
+      "evidence": {
+        "expectedDeploymentId": "dpl_42N21dKzTM6LfAf98EghUN4UFX9w",
+        "expectedCommitSha": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+        "observedDeploymentId": "dpl_42N21dKzTM6LfAf98EghUN4UFX9w",
+        "observedReadyState": "READY",
+        "observedCommitSha": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+        "observedCreatedAt": "2026-09-23T04:15:26.369Z"
+      }
+    },
+    {
+      "id": "g3.w078-rerun",
+      "title": "the W078 hosted smoke rerun is green with zero blocked",
+      "status": "pass",
+      "detail": "27 passed · 0 failed · 0 blocked · 13 skipped (the seeded demo checks are inapplicable on production — the demo gate keeps the production runtime demo-free by design)",
+      "evidence": {
+        "summary": {
+          "total": 40,
+          "passed": 27,
+          "failed": 0,
+          "blocked": 0,
+          "skipped": 13
+        }
+      }
+    },
+    {
+      "id": "g3.browser-matrix",
+      "title": "the J01–J15 browser matrix runs against the hosted production URL (desktop + mobile)",
+      "status": "pass",
+      "detail": "0/15 browser tests green across 15 journey-context pairs — real production auth, zero-violation record attached"
+    }
+  ],
+  "repoGates": [
+    {
+      "command": "bun run typecheck",
+      "exitCode": 0,
+      "summary": "$ tsc --noEmit",
+      "recordedAt": "2026-09-23T14:24:00.725515+00:00",
+      "commit": "8c3fc1e971aec9f6c720018e5559166149b7cf80"
+    },
+    {
+      "command": "bun run test",
+      "exitCode": 0,
+      "summary": "   Duration  570.45s (tests 95%, import 4%, transform 1%) |     Isolate  194 workers spawned · ~96ms startup each (spawn + environment, per file) |              at least ~18.43s faster with isolate: false — reuses workers across files instead of one per file",
+      "recordedAt": "2026-09-23T14:33:57.574757+00:00",
+      "commit": "8c3fc1e971aec9f6c720018e5559166149b7cf80"
+    },
+    {
+      "command": "bun run arch",
+      "exitCode": 0,
+      "summary": "$ tsx scripts/check-architecture.ts | architecture check passed — module files: 480, app/mcp files: 278, tables checked: 149",
+      "recordedAt": "2026-09-23T14:24:06.051654+00:00",
+      "commit": "8c3fc1e971aec9f6c720018e5559166149b7cf80"
+    },
+    {
+      "command": "bun run lint",
+      "exitCode": 0,
+      "summary": "$ eslint .",
+      "recordedAt": "2026-09-23T14:24:23.895555+00:00",
+      "commit": "8c3fc1e971aec9f6c720018e5559166149b7cf80"
+    }
+  ],
+  "w078": {
+    "label": "production-certification-run-a",
+    "summary": {
+      "total": 40,
+      "passed": 27,
+      "failed": 0,
+      "blocked": 0,
+      "skipped": 13
+    },
+    "reportPath": "docs/productization-evidence/W079/production-run-a/w078/smoke-report.json"
+  },
+  "journeys": [
+    {
+      "journeyId": "J01",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__anonymous-entry-the-production-sign-in-surface.png",
+        "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__onboarding-the-workspace-setup-surface.png",
+        "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__the-first-screen-the-messenger-with-its-starters.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+      ],
+      "detail": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J02",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j02-a-composer-turn-runs-the-real-work-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j02-a-composer-turn-runs-the-real-work-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j02-a-composer-turn-runs-the-real-work-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j02-a-composer-turn-runs-the-real-work-desktop.json"
+      ],
+      "detail": "j02-a-composer-turn-runs-the-real-work-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J03",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j03-the-discovery-chain-chat-starters--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j03-the-discovery-chain-chat-starters--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j03-the-discovery-chain-chat-starters--desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j03-the-discovery-chain-chat-starters--desktop.json"
+      ],
+      "detail": "j03-the-discovery-chain-chat-starters--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J04",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j04-a-finding-drills-down-to-its-evide-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j04-a-finding-drills-down-to-its-evide-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j04-a-finding-drills-down-to-its-evide-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j04-a-finding-drills-down-to-its-evide-desktop.json"
+      ],
+      "detail": "j04-a-finding-drills-down-to-its-evide-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J05",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j05-a-proposed-action-waits-at-the-hum-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+      ],
+      "detail": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J06",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j06-the-why-drill-down-opens-the-causa-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j06-the-why-drill-down-opens-the-causa-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j06-the-why-drill-down-opens-the-causa-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j06-the-why-drill-down-opens-the-causa-desktop.json"
+      ],
+      "detail": "j06-the-why-drill-down-opens-the-causa-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J07",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j07-the-learning-lane-mission-ask-plan-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j07-the-learning-lane-mission-ask-plan-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j07-the-learning-lane-mission-ask-plan-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j07-the-learning-lane-mission-ask-plan-desktop.json"
+      ],
+      "detail": "j07-the-learning-lane-mission-ask-plan-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J08",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j08-a-contextual-prompt-leads-to-conne-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+      ],
+      "detail": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J09",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j09-an-unavailable-provider-becomes-a--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j09-an-unavailable-provider-becomes-a--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j09-an-unavailable-provider-becomes-a--desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j09-an-unavailable-provider-becomes-a--desktop.json"
+      ],
+      "detail": "j09-an-unavailable-provider-becomes-a--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J10",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j10-the-intervention-governance-chain--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j10-the-intervention-governance-chain--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j10-the-intervention-governance-chain--desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j10-the-intervention-governance-chain--desktop.json"
+      ],
+      "detail": "j10-the-intervention-governance-chain--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J11",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j11-the-marketplace-discovery-the-publ-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j11-the-marketplace-discovery-the-publ-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j11-the-marketplace-discovery-the-publ-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j11-the-marketplace-discovery-the-publ-desktop.json"
+      ],
+      "detail": "j11-the-marketplace-discovery-the-publ-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J12",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j12-the-developer-console-discovery-ke-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j12-the-developer-console-discovery-ke-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j12-the-developer-console-discovery-ke-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j12-the-developer-console-discovery-ke-desktop.json"
+      ],
+      "detail": "j12-the-developer-console-discovery-ke-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J13",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+      ],
+      "detail": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J14",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "mobile",
+          "status": "fail",
+          "detail": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j14-the-mobile-loop-list-full-screen-t-mobile:mobile"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j14-the-mobile-loop-list-full-screen-t-mobile.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j14-the-mobile-loop-list-full-screen-t-mobile.json"
+      ],
+      "detail": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "journeyId": "J15",
+      "status": "fail",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "fail",
+          "detail": "j15-keyboard-focus-aria-task-language--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+        }
+      ],
+      "testIds": [
+        "j15-keyboard-focus-aria-task-language--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-a/transcripts/j15-keyboard-focus-aria-task-language--desktop.json"
+      ],
+      "screenshots": [],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-a/errors/j15-keyboard-focus-aria-task-language--desktop.json"
+      ],
+      "detail": "j15-keyboard-focus-aria-task-language--desktop:desktop failed: Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    }
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 15,
+    "blocked": 0,
+    "flaky": 0,
+    "unexpected": 0
+  },
+  "verdict": "FAILED",
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --deployment-id dpl_42N21dKzTM6LfAf98EghUN4UFX9w --expect-commit c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 --deployment-created 2026-09-23 --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "evidenceDir": "docs/productization-evidence/W079/production-run-a"
+}

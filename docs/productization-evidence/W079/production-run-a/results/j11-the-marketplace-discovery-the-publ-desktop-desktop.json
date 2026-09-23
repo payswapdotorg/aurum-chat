@@ -1,0 +1,23 @@
+{
+  "testId": "j11-the-marketplace-discovery-the-publ-desktop:desktop",
+  "journeyId": "J11",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J11 — the marketplace: discovery, the public catalog and the install state",
+  "file": "tests/browser/production/j11-marketplace-desktop.spec.ts",
+  "durationMs": 2060,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j11-the-marketplace-discovery-the-publ-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j11-the-marketplace-discovery-the-publ-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j11-the-marketplace-discovery-the-publ-desktop-desktop.json"
+    ]
+  }
+}

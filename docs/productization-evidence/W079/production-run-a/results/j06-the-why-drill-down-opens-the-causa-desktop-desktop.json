@@ -1,0 +1,23 @@
+{
+  "testId": "j06-the-why-drill-down-opens-the-causa-desktop:desktop",
+  "journeyId": "J06",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
+  "file": "tests/browser/production/j06-explainability-desktop.spec.ts",
+  "durationMs": 2046,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j06-the-why-drill-down-opens-the-causa-desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j06-the-why-drill-down-opens-the-causa-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j06-the-why-drill-down-opens-the-causa-desktop-desktop.json"
+    ]
+  }
+}

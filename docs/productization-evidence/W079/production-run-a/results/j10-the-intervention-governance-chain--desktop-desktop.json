@@ -1,0 +1,23 @@
+{
+  "testId": "j10-the-intervention-governance-chain--desktop:desktop",
+  "journeyId": "J10",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J10 — the intervention governance chain: gaps, alternatives, the gate and the workforce",
+  "file": "tests/browser/production/j10-workforce-intervention-desktop.spec.ts",
+  "durationMs": 1984,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j10-the-intervention-governance-chain--desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j10-the-intervention-governance-chain--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j10-the-intervention-governance-chain--desktop-desktop.json"
+    ]
+  }
+}

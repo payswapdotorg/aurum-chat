@@ -1,0 +1,14 @@
+{
+  "spec": "/home/z/my-project/aurum/tests/browser/production/j04-investigation-desktop.spec.ts",
+  "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+  "project": "desktop",
+  "runLabel": "A",
+  "steps": [
+    {
+      "at": "2026-09-23T14:34:30.268Z",
+      "step": "sign in and ask the investigation question",
+      "url": "about:blank",
+      "shot": null
+    }
+  ]
+}

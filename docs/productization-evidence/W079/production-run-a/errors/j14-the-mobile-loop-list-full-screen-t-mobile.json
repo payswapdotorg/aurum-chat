@@ -1,0 +1,13 @@
+{
+  "spec": "/home/z/my-project/aurum/tests/browser/production/j14-mobile-loop-mobile.spec.ts",
+  "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
+  "project": "mobile",
+  "runLabel": "A",
+  "violationCount": 0,
+  "violations": [],
+  "documentedFilter": [
+    "favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)",
+    "net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)",
+    "Chromium password-manager caret-color hydration warnings (browser-injected style attribute; every other hydration mismatch fails)"
+  ]
+}

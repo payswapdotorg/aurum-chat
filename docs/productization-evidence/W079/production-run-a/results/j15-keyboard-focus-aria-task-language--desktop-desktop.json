@@ -1,0 +1,23 @@
+{
+  "testId": "j15-keyboard-focus-aria-task-language--desktop:desktop",
+  "journeyId": "J15",
+  "context": "desktop",
+  "status": "fail",
+  "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
+  "file": "tests/browser/production/j15-accessibility-desktop.spec.ts",
+  "durationMs": 2123,
+  "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'",
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j15-keyboard-focus-aria-task-language--desktop.json"
+    ],
+    "screenshots": [],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j15-keyboard-focus-aria-task-language--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j15-keyboard-focus-aria-task-language--desktop-desktop.json"
+    ]
+  }
+}

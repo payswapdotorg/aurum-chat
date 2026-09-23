@@ -1,0 +1,279 @@
+{
+  "total": 15,
+  "passed": 0,
+  "failed": 15,
+  "flaky": 0,
+  "skipped": 0,
+  "tests": [
+    {
+      "testId": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop",
+      "journeyId": "J01",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
+      "file": "tests/browser/production/j01-first-manager-desktop.spec.ts",
+      "durationMs": 2890,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j02-a-composer-turn-runs-the-real-work-desktop:desktop",
+      "journeyId": "J02",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
+      "file": "tests/browser/production/j02-talk-to-aurum-desktop.spec.ts",
+      "durationMs": 2089,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j03-the-discovery-chain-chat-starters--desktop:desktop",
+      "journeyId": "J03",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
+      "file": "tests/browser/production/j03-unprompted-discovery-desktop.spec.ts",
+      "durationMs": 2218,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j04-a-finding-drills-down-to-its-evide-desktop:desktop",
+      "journeyId": "J04",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+      "file": "tests/browser/production/j04-investigation-desktop.spec.ts",
+      "durationMs": 2244,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop",
+      "journeyId": "J05",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
+      "file": "tests/browser/production/j05-consequential-approval-desktop.spec.ts",
+      "durationMs": 2016,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j06-the-why-drill-down-opens-the-causa-desktop:desktop",
+      "journeyId": "J06",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
+      "file": "tests/browser/production/j06-explainability-desktop.spec.ts",
+      "durationMs": 2046,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j07-the-learning-lane-mission-ask-plan-desktop:desktop",
+      "journeyId": "J07",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
+      "file": "tests/browser/production/j07-learning-contribution-desktop.spec.ts",
+      "durationMs": 2117,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop",
+      "journeyId": "J08",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
+      "file": "tests/browser/production/j08-connections-desktop.spec.ts",
+      "durationMs": 2033,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j09-an-unavailable-provider-becomes-a--desktop:desktop",
+      "journeyId": "J09",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
+      "file": "tests/browser/production/j09-byoa-desktop.spec.ts",
+      "durationMs": 2249,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j10-the-intervention-governance-chain--desktop:desktop",
+      "journeyId": "J10",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J10 — the intervention governance chain: gaps, alternatives, the gate and the workforce",
+      "file": "tests/browser/production/j10-workforce-intervention-desktop.spec.ts",
+      "durationMs": 1984,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j11-the-marketplace-discovery-the-publ-desktop:desktop",
+      "journeyId": "J11",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J11 — the marketplace: discovery, the public catalog and the install state",
+      "file": "tests/browser/production/j11-marketplace-desktop.spec.ts",
+      "durationMs": 2060,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j12-the-developer-console-discovery-ke-desktop:desktop",
+      "journeyId": "J12",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
+      "file": "tests/browser/production/j12-developer-desktop.spec.ts",
+      "durationMs": 2013,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop",
+      "journeyId": "J13",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
+      "file": "tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
+      "durationMs": 2030,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile",
+      "journeyId": "J14",
+      "context": "mobile",
+      "status": "fail",
+      "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
+      "file": "tests/browser/production/j14-mobile-loop-mobile.spec.ts",
+      "durationMs": 2034,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    },
+    {
+      "testId": "j15-keyboard-focus-aria-task-language--desktop:desktop",
+      "journeyId": "J15",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
+      "file": "tests/browser/production/j15-accessibility-desktop.spec.ts",
+      "durationMs": 2123,
+      "error": "Error: ENOENT: no such file or directory, open '/home/z/my-project/aurum/docs/productization-evidence/W079/production-run-a/.scratch-secrets/tenant.json'"
+    }
+  ],
+  "violations": [
+    {
+      "testId": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j02-a-composer-turn-runs-the-real-work-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j03-the-discovery-chain-chat-starters--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j04-a-finding-drills-down-to-its-evide-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j06-the-why-drill-down-opens-the-causa-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j07-the-learning-lane-mission-ask-plan-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j09-an-unavailable-provider-becomes-a--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j10-the-intervention-governance-chain--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j11-the-marketplace-discovery-the-publ-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j12-the-developer-console-discovery-ke-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile",
+      "violations": 0
+    },
+    {
+      "testId": "j15-keyboard-focus-aria-task-language--desktop:desktop",
+      "violations": 0
+    }
+  ],
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j01-anonymous-visitor-reaches-chat-thr-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j02-a-composer-turn-runs-the-real-work-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j03-the-discovery-chain-chat-starters--desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j04-a-finding-drills-down-to-its-evide-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j05-a-proposed-action-waits-at-the-hum-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j06-the-why-drill-down-opens-the-causa-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j07-the-learning-lane-mission-ask-plan-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j08-a-contextual-prompt-leads-to-conne-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j09-an-unavailable-provider-becomes-a--desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j10-the-intervention-governance-chain--desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j11-the-marketplace-discovery-the-publ-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j12-the-developer-console-discovery-ke-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j13-a-second-tenant-sees-nothing-of-th-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j14-the-mobile-loop-list-full-screen-t-mobile.json",
+      "docs/productization-evidence/W079/production-run-a/transcripts/j15-keyboard-focus-aria-task-language--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__anonymous-entry-the-production-sign-in-surface.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__onboarding-the-workspace-setup-surface.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__the-first-screen-the-messenger-with-its-starters.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j01-anonymous-visitor-reaches-chat-thr-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j02-a-composer-turn-runs-the-real-work-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j03-the-discovery-chain-chat-starters--desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j04-a-finding-drills-down-to-its-evide-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j05-a-proposed-action-waits-at-the-hum-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j06-the-why-drill-down-opens-the-causa-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j07-the-learning-lane-mission-ask-plan-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j08-a-contextual-prompt-leads-to-conne-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j09-an-unavailable-provider-becomes-a--desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j10-the-intervention-governance-chain--desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j11-the-marketplace-discovery-the-publ-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j12-the-developer-console-discovery-ke-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j13-a-second-tenant-sees-nothing-of-th-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j14-the-mobile-loop-list-full-screen-t-mobile.json",
+      "docs/productization-evidence/W079/production-run-a/errors/j15-keyboard-focus-aria-task-language--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j01-anonymous-visitor-reaches-chat-thr-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j02-a-composer-turn-runs-the-real-work-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j03-the-discovery-chain-chat-starters--desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j04-a-finding-drills-down-to-its-evide-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j05-a-proposed-action-waits-at-the-hum-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j06-the-why-drill-down-opens-the-causa-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j07-the-learning-lane-mission-ask-plan-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j08-a-contextual-prompt-leads-to-conne-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j09-an-unavailable-provider-becomes-a--desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j10-the-intervention-governance-chain--desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j11-the-marketplace-discovery-the-publ-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j12-the-developer-console-discovery-ke-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j13-a-second-tenant-sees-nothing-of-th-desktop-desktop.json",
+      "docs/productization-evidence/W079/production-run-a/results/j14-the-mobile-loop-list-full-screen-t-mobile-mobile.json",
+      "docs/productization-evidence/W079/production-run-a/results/j15-keyboard-focus-aria-task-language--desktop-desktop.json"
+    ]
+  }
+}

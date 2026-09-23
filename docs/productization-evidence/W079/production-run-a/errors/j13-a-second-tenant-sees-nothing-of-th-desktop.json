@@ -1,0 +1,13 @@
+{
+  "spec": "/home/z/my-project/aurum/tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
+  "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
+  "project": "desktop",
+  "runLabel": "A",
+  "violationCount": 0,
+  "violations": [],
+  "documentedFilter": [
+    "favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)",
+    "net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)",
+    "Chromium password-manager caret-color hydration warnings (browser-injected style attribute; every other hydration mismatch fails)"
+  ]
+}

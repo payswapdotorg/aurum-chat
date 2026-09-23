@@ -1,0 +1,14 @@
+{
+  "spec": "/home/z/my-project/aurum/tests/browser/production/j07-learning-contribution-desktop.spec.ts",
+  "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
+  "project": "desktop",
+  "runLabel": "A",
+  "steps": [
+    {
+      "at": "2026-09-23T14:34:38.888Z",
+      "step": "sign in as the run manager",
+      "url": "about:blank",
+      "shot": null
+    }
+  ]
+}

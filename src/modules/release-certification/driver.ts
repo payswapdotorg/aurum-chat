@@ -96,6 +96,15 @@ export interface CertificationRunConfig {
   skipBrowser?: boolean;
   /** Skip the repo gates (G2 runs in the finalizer instead). */
   skipRepoGates?: boolean;
+  /**
+   * Pre-recorded G2 repo-gate results (label → command + exit code +
+   * summary tail), produced by real executions of the four gate commands
+   * against this repository tree (phase-split execution: the gates are
+   * too long to run inside one process on constrained runners). When a
+   * label is present here it is recorded as that run's G2 evidence
+   * verbatim; missing labels fall back to running the gate in-process.
+   */
+  repoGateResults?: Record<string, { command: string; exitCode: number | null; summary: string }>;
   /** Injectable fetch for the integration tests. */
   fetchImpl?: typeof fetch;
   /** Injectable child-process runner for the integration tests. */
@@ -463,6 +472,11 @@ export async function runCertificationPass(
     : [];
   if (!config.skipRepoGates) {
     for (const gate of G2_REPO_GATES) {
+      const recorded = config.repoGateResults?.[gate.label];
+      if (recorded !== undefined) {
+        repoGates.push(recorded);
+        continue;
+      }
       repoGates.push(await runRepoGate(gate, config.repoRoot, config.execImpl ?? defaultExec));
     }
   }
