@@ -403,67 +403,89 @@ Dependencies: W077, W078, W070, W076. Certify the complete end-user journey matr
 ## Post-S002 organizational reach, integrations, realtime and provider-independence work
 
 ### W080 — Durable Agent Runtime Adapter
-Abstract durable orchestration behind an Aurum-owned workflow port. Support event triggers, schedules, waits, retries, approvals, resumptions, idempotency and long-running cognition. Keep orchestration technology replaceable.
+Dependencies: W013, W021, W034. Abstract durable orchestration behind an Aurum-owned workflow port. Support event triggers, schedules, waits, retries, human approvals, resumptions, idempotency, cancellation and long-running cognition. Orchestration providers must be replaceable without domain changes.
+Acceptance: kill/restart workers during active runs; pending approval/employee wait survives; execution resumes exactly once or produces deterministic idempotent recovery; no workflow state is held only in worker memory.
 
 ### W081 — Integration Intelligence
-Discover authorized organizational tooling, explain why connections matter, recommend safe connections, support bulk approval, automatic verification and a tenant-scoped Tool & System Inventory.
+Dependencies: W002, W036, W037, W058, W059, W061. Discover authorized organizational tooling, explain why connections matter, recommend safe connections, support bulk approval, automatic verification and a tenant-scoped Tool & System Inventory.
+Acceptance: admin grants an approved discovery source; Aurum identifies systems/capabilities; shows outcome-oriented recommendations and scope impact; no uncontrolled network scanning; every discovered system is tenant-scoped.
 
 ### W082 — Universal Connection Broker
-Integrate OAuth, tokens, syncs and webhooks through provider-neutral adapters. Support Nango first and equivalent broker alternatives.
+Dependencies: W081, W036, W037. Integrate OAuth, tokens, syncs and webhooks through provider-neutral adapters. Support a pluggable managed connection broker with Nango as the first candidate and equivalent alternatives.
+Acceptance: connect/revoke/refresh; webhook/sync checkpoints; provider outages are localized; credential values never enter domain state; broker replacement does not change domain contracts.
 
 ### W083 — Progressive Capability Grants
-Start with safe read-only access and request write/action authority only when a concrete task requires it. Make every grant visible, scoped and revocable.
+Dependencies: W009, W081, W082. Start with safe read-only access and request write/action authority only when a concrete task requires it. Make every grant visible, scoped, auditable and revocable.
+Acceptance: initial read-only connection; action invocation produces human-readable reason and exact requested scope; denial stops the write; later retry can request only the missing capability.
 
 ### W084 — Deep Action Gateway and Reconciliation
-Implement discover→inspect→propose→authorize→execute→verify→reconcile with evidence and outcome links across external systems.
+Dependencies: W009, W037, W080, W082, W083. Implement discover→inspect→propose→authorize→execute→verify→reconcile with evidence and outcome links across external systems.
+Acceptance: multi-system task can execute from Aurum; action receipt and downstream state are verified; reconciliation detects mismatches and creates attention/evidence; provider objects never cross the gateway.
 
 ### W085 — Meeting Intelligence Gateway
-Create canonical meeting/session/transcript/artifact contracts and native Zoom/Teams/Meet adapters plus optional Recall/Meeting BaaS acceleration.
+Dependencies: W002, W004, W013, W036, W080. Create canonical meeting/session/transcript/artifact contracts and native Zoom/Teams/Meet adapters, plus optional cross-platform meeting-bot adapters.
+Acceptance: meeting metadata, participant identity, transcript/artifact and provenance are captured into the canonical evidence model; provider-specific schemas remain inside adapters; failed/expired meeting access is explicit.
 
 ### W086 — Realtime Voice and Meeting Companion
-Use the realtime gateway with a replaceable LiveKit adapter for live voice, Meeting Companion, realtime meetings and telephony/SIP.
+Dependencies: W080, W085, W095. Implement provider-neutral realtime session contracts with a replaceable LiveKit adapter for Aurum voice, two-way meeting participation, Meeting Companion and telephony/SIP.
+Acceptance: start/stop session, consent/recording state, interruption handling, speaker attribution, live transcript, spoken Aurum response, durable meeting artifact; transport provider can be swapped without domain rewrite.
 
 ### W087 — Cellular Reachability and Communication Fallback
-Implement outcome-oriented Reach Anyone using SMS and voice, telecom provider adapters, verified phone identity, delivery/reply state, routing, cost and policy controls. Recipient must not need Internet or Aurum.
+Dependencies: W002, W009, W030, W031, W095. Implement outcome-oriented “Reach Anyone” using SMS and voice, telecom provider adapters, verified phone identity, delivery/reply state, routing, cost and policy controls. Recipient must not need Internet or Aurum.
+Acceptance: manager can tell Aurum “Tell Sarah …”; Aurum resolves Sarah; sends SMS when reachable; falls back to voice when policy permits; recipient reply can return into Aurum; failed delivery is visible and retryable; manager can optionally initiate an SMS/voice request to Aurum itself when the manager has no usable Internet data.
 
 ### W088 — Aurum Edge Connector
-Provide a customer-controlled outbound runtime for private/on-prem APIs, MCP, OpenAPI, databases, files and approved browser adapters.
+Dependencies: W080, W082, W083, W084. Provide a customer-controlled runtime for private/on-prem APIs, MCP, OpenAPI, databases, files and approved browser adapters.
+Acceptance: outbound-only connection where possible; signed tenant-scoped jobs; local secret handling; capability allowlist; health/version reporting; result normalization; no second organizational truth store.
 
 ### W089 — Provider Adapter SDK and OSS Technology Registry
-Standardize provider adapter lifecycle, conformance tests, health/capability mapping, provider hot-swap evidence and technology evaluation records including license/security/maintenance/exit path.
+Dependencies: W009, W034, W035, W036, W037. Standardize provider adapter lifecycle, conformance tests, health/capability mapping, provider hot-swap evidence and technology evaluation records including license/security/maintenance/exit path.
+Acceptance: one template can produce at least two conforming providers for a representative gateway; provider selection stays outside domain logic; registry is reviewable by Tech Lead.
 
 ### W090 — Aurum Provider Billing Gateway
-Abstract supported provider payment, usage, budgets and receipts behind Aurum. Use Aurum-mediated settlement when provider terms permit; support direct customer billing as an explicit exception.
+Dependencies: W009, W034, W080, W089. Abstract supported provider payment, usage, budgets and receipts behind Aurum. Use Aurum-mediated settlement when terms permit; direct customer billing is an explicit fallback.
+Acceptance: provider cost can be attributed to tenant/capability/execution; budget policy can block/route usage; supported provider settlement produces an auditable receipt; unsupported direct-billing provider does not break capability flow.
 
 ### W091 — User-Friendly Provider Choice UX
-Present provider selection as outcomes such as cost, privacy, quality and speed. Persist preferences and reveal technical details only in advanced settings.
+Dependencies: W066, W080, W089, W090. Present provider selection as outcomes such as cost, privacy, quality, speed or organizational policy. Persist preferences and reveal technical details only in advanced settings.
+Acceptance: ordinary user never needs provider jargon; preference can be changed at any time; system explains why a provider was selected; technical override remains available to authorized advanced users.
 
 ### W092 — Vertical Extension Starter Kits
-Create reusable specialist extension/agent interfaces and initial deep integrations for system-of-record-heavy industries without moving vertical semantics into the Aurum core.
+Dependencies: W025, W026, W027, W084, W088. Create reusable specialist extension/agent starter kits and first deep integrations for system-of-record-heavy industries without moving vertical semantics into Aurum core.
+Acceptance: each pack is installable, permission-scoped, versioned, auditable and removable; core modules remain industry-independent.
 
 ### W093 — Browser and Computer-Use Fallback
-Use governed browser automation only where APIs/MCP/native adapters are insufficient. Require verification, reconciliation and evidence for actions.
+Dependencies: W080, W084, W088. Use governed browser automation only where APIs/MCP/native adapters are insufficient. Require verification, reconciliation, screenshots/action traces and evidence.
+Acceptance: browser task is disposable and resumable; session credentials are isolated; observed state is verified before being treated as a result; failure produces actionable evidence.
 
 ### W094 — Migration and Dual-Run Continuity
-Import history, preserve IDs, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement.
+Dependencies: W081, W082, W084, W092. Import history, preserve identifiers, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement.
+Acceptance: customer can run incumbent and Aurum in parallel; conflicts are surfaced; rollback is possible; no silent data loss or duplicate authority.
 
 ### W095 — Unified Cross-Channel, Meeting and Telephony Identity Verification
-Extend identity proof so one person remains one organizational identity across messaging, meetings, SMS, voice and Edge Connector paths.
+Dependencies: W002, W030, W085, W087. Extend identity proof so one person remains one organizational identity across messaging, meetings, SMS, voice and Edge Connector paths.
+Acceptance: same verified employee can be recognized across at least three communication modalities; ambiguous matches remain external/unverified instead of being auto-merged.
 
 ### W096 — Integration Intelligence End-to-End Fixture
-Prove discover→recommend→approve→connect→verify→map→observe→request action scope→execute→reconcile→outcome.
+Dependencies: W081-W084. Prove discover→recommend→approve→connect→verify→map→observe→request action scope→execute→reconcile→outcome.
+Acceptance: machine-readable fixture, browser evidence for admin UX, provider-failure case, denied-scope case and tenant-isolation case.
 
 ### W097 — Meeting and Cellular End-to-End Fixture
-Prove meeting transcript/artifact ingestion, Meeting Companion, SMS fallback, voice fallback and reply-to-Aurum continuity.
+Dependencies: W085-W087, W095. Prove meeting transcript/artifact ingestion, Meeting Companion, SMS fallback, voice fallback and reply-to-Aurum continuity.
+Acceptance: real provider evidence where credentials permit plus deterministic fixture; exact consent/policy behavior; recipient does not need Aurum or Internet; manager-originated SMS/voice request path is covered where supported.
 
 ### W098 — Persistent Agent Supervision and Recovery
-Prove durable agent health, review schedules, budgets, waiting states, recovery and resumptions independent of worker lifetime.
+Dependencies: W080, W021, W023, W024. Prove durable agent health, review schedules, budgets, waiting states, recovery and resumptions independent of worker lifetime.
+Acceptance: worker/process failure does not terminate organizational actor state; review and lifecycle controls remain authoritative; budget and permissions survive resume.
 
-### W099 — CommOS Fusion and Communication Kernel
-Extract the validated provider-neutral CommOS protocol/core subset into Aurum as the communication kernel. Reuse universal identity-link semantics, communication intent, encrypted bundles/proofs, delivery state/proofs, capability advertisements, policy-aware routing, transport interfaces, gateway semantics, DTN/store-and-forward and Android edge foundations only after repository/device validation. Do not import the CommOS application, separate auth/user model, singleton demo network, separate business data model or second AI loop. Matrix is optional within this work item, not an Aurum core dependency.
+### W099 — Matrix Interoperability Adapter (Optional)
+Dependencies: W030, W089, W095. Add Matrix support only when a customer/use-case justifies it. Matrix remains a channel/interoperability adapter, never Aurum core infrastructure.
+Acceptance: Matrix events normalize to canonical conversations/evidence; identity and policy checks remain Aurum-owned; Matrix can be disabled without altering core messaging.
 
 ### W100 — Longitudinal S003 Conversion Benchmark
-Re-run the multi-industry benchmark after the new integration/realtime/action capabilities. Measure Aurum-primary and Aurum-only willingness, context-switching reduction, integration setup effort, trust and realized value.
+Dependencies: W092, W094, W096, W097, W098. Re-run the multi-industry benchmark after the new integration/realtime/action capabilities. Measure Aurum-primary and Aurum-only willingness, context-switching reduction, integration setup effort, trust and realized value.
+Acceptance: reproducible seeds, multiple firm sizes/industries, explicit baseline versus mature scenario, no hidden-ground-truth leakage, raw results committed.
 
 ### W101 — Final Post-S002 Production Certification
-Certify the complete production journey including cross-channel communication, meetings, cellular reachability, integrations, provider choice/billing, durable cognition and specialist execution.
+Dependencies: W096, W097, W098, W100 plus production infrastructure. Certify complete production journeys including cross-channel communication, meetings, cellular reachability, integrations, provider choice/billing, durable cognition and specialist execution.
+Acceptance: two consecutive same-revision production runs, zero failed/blocked/flaky mandatory journeys, tenant isolation, approval authority, accessibility, evidence and rollback proof.
