@@ -183,129 +183,187 @@ Maintain a technology registry containing capability, project/provider, license,
 
 Before rebuilding infrastructure, the Tech Lead reviews the registry.
 
-## 15. New work-item DAG
+## 15. Work-item DAG — W080 to W101 only
 
 ### Foundation
-
-W080 Durable Agent Runtime Adapter  
-W081 Integration Intelligence  
-W082 Universal Connection Broker  
+W080 Durable Agent Runtime Adapter
+W081 Integration Intelligence
+W082 Universal Connection Broker
 W083 Progressive Capability Grants
 
-### Communications and execution
-
-W084 Deep Action Gateway and Reconciliation  
-W085 Meeting Intelligence Gateway  
-W086 Realtime Voice and Meeting Companion  
-W087 Cellular Reachability and Communication Fallback  
+### Communication and execution
+W084 Deep Action Gateway and Reconciliation
+W085 Meeting Intelligence Gateway
+W086 Realtime Voice and Meeting Companion
+W087 Cellular Reachability and Communication Fallback
 W088 Aurum Edge Connector
 
 ### Provider independence and economics
-
-W089 Provider Adapter SDK and OSS Technology Registry  
-W090 Aurum Provider Billing Gateway  
+W089 Provider Adapter SDK and OSS Technology Registry
+W090 Aurum Provider Billing Gateway
 W091 User-Friendly Provider Choice UX
 
 ### Industry and fallback
-
-W092 Vertical Extension Starter Kits  
-W093 Browser and Computer-Use Fallback  
+W092 Vertical Extension Starter Kits
+W093 Browser and Computer-Use Fallback
 W094 Migration and Dual-Run Continuity
 
 ### Identity and proof
-
-W095 Unified Cross-Channel, Meeting and Telephony Identity Verification  
-W096 Integration Intelligence End-to-End Fixture  
-W097 Meeting and Cellular End-to-End Fixture  
+W095 Unified Cross-Channel, Meeting and Telephony Identity Verification
+W096 Integration Intelligence End-to-End Fixture
+W097 Meeting and Cellular End-to-End Fixture
 W098 Persistent Agent Supervision and Recovery
 
-### Fusion, learning and release
-
-W099 Matrix Interoperability Adapter (optional)  
-W100 Longitudinal S003 Conversion Benchmark  
+### Optional interoperability and release
+W099 Matrix Interoperability Adapter (Optional)
+W100 Longitudinal S003 Conversion Benchmark
 W101 Final Post-S002 Production Certification
 
 ## 16. Dependency relationships
 
-W079 certification reconciliation → post-S002 implementation
-
-W080 → W084, W086, W098
-
+W080 → W084, W085, W086, W098
 W081 → W082, W083, W089, W096
-
 W082 + W083 + W009 → W084
-
-W099 + W002 + W030 → W095
-
-W085 + W095 → W086
-
-W087 + W095 → W097
-
-W088 + W084 → W092, W094
-
-W089 → all new provider adapters, including optional Matrix
-
+W085 → W086
+W002 + W030 + W085 + W086 + W087 → W095
+W084 + W088 → W092, W093
+W089 → W082, W090, optional W099
 W090 → W091
-
-W093 → W084
-
-W092 + W084 + W040 → W100
-
-W096 + W097 + W098 + W100 + W099 → W101
+W084 + W088 + W092 → W094
+W081 + W082 + W083 + W084 → W096
+W085 + W086 + W087 + W095 → W097
+W080 + W021 + W023 + W024 → W098
+W092 + W094 + W096 + W097 + W098 → W100
+W096 + W097 + W098 + W100 + production infrastructure → W101
 
 ## 17. Three-worker execution waves
 
 ### Wave 0 — integrity
-Tech Lead: reconcile current main, deployed revision and W079 certification before feature work. Main has moved since the earlier certified revision.
+Tech Lead only: fetch current main, reconcile the exact deployed revision against the exact W079-certified revision, record the new baseline SHA, and verify W080–W101 are the only active post-S002 implementation scope.
 
 ### Wave 1
 Worker A — W080 Durable Agent Runtime
 Worker B — W081 Integration Intelligence
-Worker C — W099 Matrix Interoperability Adapter (optional)
+Worker C — W089 Provider Adapter SDK + OSS Technology Registry
 
 ### Wave 2
 Worker A — W082 Universal Connection Broker
 Worker B — W085 Meeting Intelligence Gateway
-Worker C — W087 Cellular Reachability and Communication Fallback
+Worker C — W087 Cellular Reachability
 
 ### Wave 3
 Worker A — W083 Progressive Capability Grants + W084 Deep Actions
-Worker B — W086 LiveKit Realtime + Meeting Companion
-Worker C — W088 Edge Connector + W089 Provider/OSS Registry
+Worker B — W086 Realtime Voice + Meeting Companion
+Worker C — W098 Persistent Agent Supervision + Recovery
 
 ### Wave 4
-Worker A — W090 Provider Billing Gateway + W091 Provider Choice UX
-Worker B — W092 Vertical Extension Foundation
-Worker C — W093 Browser Fallback
+Worker A — W088 Aurum Edge Connector
+Worker B — W090 Provider Billing Gateway
+Worker C — W095 Unified Cross-Channel / Meeting / Telephony Identity
 
 ### Wave 5
-Worker A — W094 Migration and Dual Run
-Worker B — W095 Unified Identity
-Worker C — W098 Persistent Agent Supervision and Recovery
+Worker A — W091 User-Friendly Provider Choice UX
+Worker B — W092 Vertical Extension Starter Kits
+Worker C — W093 Browser / Computer-Use Fallback
 
 ### Wave 6
-Worker A — W096 Integration Intelligence E2E proof
-Worker B — W097 Meeting and Cellular E2E proof
-Worker C — Tech Lead integration, security and licensing reconciliation
+Worker A — W094 Migration + Dual Run
+Worker B — W096 Integration Intelligence E2E
+Worker C — W097 Meeting + Cellular E2E
 
 ### Wave 7
-All workers support W100 S003 longitudinal simulation and W101 final production certification.
+Worker A — W099 Matrix Interoperability Adapter only if justified by customer/use-case evidence
+Worker B — W100 Longitudinal S003 Conversion Benchmark
+Worker C — Tech Lead security/licensing/provider reconciliation
 
-## 18. Acceptance rules
+### Wave 8
+All workers support W101 Final Post-S002 Production Certification.
 
-Nothing is complete because an SDK was installed or a happy-path demo worked.
+## 18. Execution rules
 
-Every work item requires appropriate unit/integration tests, architecture-boundary checks, tenant isolation, provider failure tests, policy/approval tests, user journey evidence and real provider evidence when provider capability is claimed.
+- Only the Tech Lead resolves cross-worker conflicts or changes dependency ownership.
+- Public contracts are frozen before dependent work begins.
+- Provider SDKs stay inside adapter boundaries.
+- UI workers do not become domain owners.
+- Provider failures must be localized and observable.
+- Long-running work must resume after worker/process loss.
+- Consequential actions require Aurum policy/authority checks.
+- External actions require verification/reconciliation before being treated as successful.
+- Tenant isolation applies to every integration, meeting, telephony and Edge path.
+- No work item may claim completion from prose, mocks or unverified provider imports.
+- Frozen Architecture v2.1 cannot be silently modified.
 
-Provider-specific defects must remain inside adapters.
+## 19. Outcome-oriented user choice rules
 
-Every long-running workflow must survive worker/process loss.
+Ordinary users never need to choose a vendor, SDK, runtime or protocol.
 
-Every integration action must have an auditable authorization, result and reconciliation path.
+At first launch or when a capability first needs a provider, show outcomes such as:
 
-Every CommOS-derived transport capability must be independently conformance-tested inside Aurum before being treated as production-ready. Experimental/in-process CommOS adapters cannot be promoted merely by reuse.
+**Best quality** · **Fastest** · **Lowest cost** · **Most private** · **Use my organization's setup** · **Let Aurum choose**
 
-## 19. Product success metrics
+Aurum selects an eligible provider from tenant-approved capabilities and records why it was selected.
+
+Advanced settings may reveal and override the selected provider when authorized. Provider choice remains changeable after initial setup.
+
+## 20. Integration onboarding rules
+
+Default experience:
+
+**Connect organization → discover authorized systems → explain value → recommend safe connections → approve → connect → verify → map → observe → request additional authority only when needed → execute → reconcile → learn.**
+
+Read access is the default starting point.
+
+Write/action capability is requested only when a concrete task needs it, with the reason, scope, expected consequence and estimated provider cost shown before approval.
+
+## 21. Communication requirements
+
+Aurum must support the user intent:
+
+**“Tell Sarah the supplier meeting moved to 4pm.”**
+
+Aurum resolves Sarah's verified identity, chooses an authorized route, delivers through the preferred channel, falls back to SMS and then voice where policy permits, records delivery evidence and can route authorized replies back into Aurum.
+
+The recipient does not need Internet access or an Aurum account.
+
+When the sender has no usable Internet but still has cellular service, an SMS/voice entry path to an Aurum organizational number is supported where provider terms permit.
+
+When there is genuinely no network/radio path, Aurum reports that no route exists.
+
+## 22. Meeting requirements
+
+Aurum must participate in Zoom, Microsoft Teams, Google Meet and approved in-person meetings.
+
+Meeting information enters the same canonical evidence, identity, CompanyModel and cognition loop.
+
+Consent/recording state must be explicit.
+
+## 23. Persistent-agent requirements
+
+The persistent Aurum actor is durable state plus durable workflows, not one permanent process.
+
+PostgreSQL remains authoritative.
+
+Ephemeral workers/sandboxes execute LLM, browser, media, connector and specialist-agent tasks.
+
+Worker death must not destroy Aurum state or mission progress.
+
+## 24. Open-source reuse rule
+
+Before implementing infrastructure, check the OSS technology registry.
+
+Prefer a mature existing open-source component or thin adapter when licensing, security, maintenance, operational maturity, performance and exit risk are acceptable.
+
+Do not reimplement a mature equivalent solely to avoid a dependency.
+
+## 25. Provider billing rule
+
+Where provider terms allow Aurum to mediate payment, expose one Aurum billing experience and settle provider charges underneath.
+
+Where direct provider billing is mandatory, preserve the same outcome-oriented UX and clearly identify the external billing requirement.
+
+No provider billing object becomes organizational truth.
+
+## 26. Product-level success metrics
 
 Track separately:
 - Aurum-primary adoption;
@@ -313,24 +371,15 @@ Track separately:
 - context-switching reduction;
 - time-to-useful-understanding;
 - integration setup effort;
-- connector coverage;
 - action success and reconciliation rate;
-- meeting capture usefulness;
+- meeting capture/usefulness;
 - cellular reachability success;
 - provider failure recovery;
 - realized value;
 - time from first connection to first useful organizational insight.
 
-## 20. Final product sequence
+## 27. Final sequence
 
-`Understand the organization`
-→ `Reach everyone`
-→ `Understand every meeting`
-→ `Connect every relevant system`
-→ `Act through those systems`
-→ `Prove outcomes`
-→ `Learn continuously`
-→ `Become the primary work surface`
-→ `Replace redundant front ends where safe`
+**Understand the organization** → **Reach everyone** → **Understand every meeting** → **Connect every relevant system** → **Act through those systems** → **Prove outcomes** → **Learn continuously** → **Become the primary work surface** → **Replace redundant front ends where safe**
 
-Do not reverse this sequence by creating an industry-specific monolith.
+Do not turn Aurum into an industry-specific monolith.
