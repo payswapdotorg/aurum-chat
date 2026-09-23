@@ -244,4 +244,4 @@ A worker may start an item only after every dependency contract listed in the ca
 
 ### Scope rule
 
-W080-W101 are the only post-S002 implementation scope in this DAG. Historical CommOS research/artifacts are not implementation dependencies for these work items.
+W080-W101 are the only post-S002 implementation scope in this DAG. Historical out-of-scope research artifacts are not implementation dependencies for these work items.
