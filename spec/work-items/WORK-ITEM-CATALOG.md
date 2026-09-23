@@ -395,3 +395,6 @@ Dependencies: W069. Create the real Vercel `aurum-chat` project and provision/co
 
 ### W078 — Post-Deployment Smoke and Operations Proof
 Dependencies: W076, W077. Prove the hosted dogfood environment through real authentication, onboarding, chat, seeded journeys, durable execution retry/idempotency, health/readiness, queue/worker observability and release/rollback checks.
+
+### W079 — Production Journey Certification & Release Gate
+Dependencies: W077, W078, W070, W076. Certify the complete end-user journey matrix against the real hosted production deployment. Require real production authentication, external PostgreSQL/Redis execution paths, desktop/mobile Chromium journeys, tenant isolation, Chat-first continuity, accessibility/discoverability, and two consecutive zero-failure/zero-blocked runs against the same deployment revision. Completion requires a committed machine-generated certification evidence tree and explicit CERTIFIED READY verdict. Preview/local evidence cannot satisfy this work item.
