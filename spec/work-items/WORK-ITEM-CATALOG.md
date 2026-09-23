@@ -411,7 +411,7 @@ Dependencies: W002, W036, W037, W058, W059, W061. Discover authorized organizati
 Acceptance: admin grants an approved discovery source; Aurum identifies systems/capabilities; shows outcome-oriented recommendations and scope impact; no uncontrolled network scanning; every discovered system is tenant-scoped.
 
 ### W082 — Universal Connection Broker
-Dependencies: W081, W036, W037. Integrate OAuth, tokens, syncs and webhooks through provider-neutral adapters. Support a pluggable managed connection broker with Nango as the first candidate and equivalent alternatives.
+Dependencies: W081, W036, W037, W089. Integrate OAuth, tokens, syncs and webhooks through provider-neutral adapters. Support a pluggable managed connection broker with Nango as the first candidate and equivalent alternatives.
 Acceptance: connect/revoke/refresh; webhook/sync checkpoints; provider outages are localized; credential values never enter domain state; broker replacement does not change domain contracts.
 
 ### W083 — Progressive Capability Grants
@@ -459,7 +459,7 @@ Dependencies: W080, W084, W088. Use governed browser automation only where APIs/
 Acceptance: browser task is disposable and resumable; session credentials are isolated; observed state is verified before being treated as a result; failure produces actionable evidence.
 
 ### W094 — Migration and Dual-Run Continuity
-Dependencies: W081, W082, W084, W092. Import history, preserve identifiers, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement.
+Dependencies: W081, W082, W084, W088, W092. Import history, preserve identifiers, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement.
 Acceptance: customer can run incumbent and Aurum in parallel; conflicts are surfaced; rollback is possible; no silent data loss or duplicate authority.
 
 ### W095 — Unified Cross-Channel, Meeting and Telephony Identity Verification
