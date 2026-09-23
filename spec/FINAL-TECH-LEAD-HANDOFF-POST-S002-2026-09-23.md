@@ -1,7 +1,8 @@
 # Final Tech Lead Handoff — Aurum + CommOS Post-S002
 
 **Repository:** `payswapdotorg/aurum-chat`  
-**Current main at handoff:**  `a3525a434de0ebc5dfcf9ab3333236bb4a987fdf`  
+**Verified implementation baseline before this handoff document:**  `a3525a434de0ebc5dfcf9ab3333236bb4a987fdf`  
+**Takeover rule:** Tech Lead must fetch the repository's current `main` and reconcile it against this baseline before implementation.  
 **Frozen Aurum architecture:** v2.1  
 **Maximum concurrent workers:** 3  
 **Canonical implementation plan:** `spec/POST-S002-COHERENT-IMPLEMENTATION-PLAN-2026-09-23.md`  
@@ -49,15 +50,7 @@ replace redundant front ends where safe
 
 ### Aurum
 
-Aurum main is ahead of the exact W079 certification base. The comparison from W079 certified base:
-
-`c0ea5f78f8979d46029ac6124eff2bf0ebd6d988`
-
-to the current main:
-
-`a3525a434de0ebc5dfcf9ab3333236bb4a987fdf`
-
-is **22 commits ahead** and included additional release-certification code/files. Therefore the W079 verdict must not be inherited silently by current main.
+Aurum main is ahead of the exact W079 certification base. The comparison from W079 certified base is recorded as historical evidence only. The exact W079-certified revision is `c0ea5f78f8979d46029ac6124eff2bf0ebd6d988`. Do not inherit that certification onto a later SHA without re-running the release gate. and included additional release-certification code/files. Therefore the W079 verdict must not be inherited silently by current main.
 
 ### CommOS
 
