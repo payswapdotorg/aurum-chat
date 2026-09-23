@@ -123,3 +123,11 @@ Wave 3:  W076 | W078 | Tech Lead integration/reconciliation
 ```
 
 Ownership rule: W071 owns chat presentation/interaction chrome; W072 owns the reusable conversational-card/context contract; W073 owns learning surfaces; W074 owns intervention surfaces; W075 owns navigation/discovery; W077 owns deployment/infra; W076/W078 own verification. Do not concurrently edit the same primitive outside these ownership boundaries.
+
+## Final release certification
+
+```text
+W077 + W078 + W076 + W070 → W079 Production Journey Certification & Release Gate
+```
+
+W079 is a release gate, not a feature track. It may not be marked complete from local/preview evidence. It requires two consecutive green certification runs against the same live production deployment revision.
