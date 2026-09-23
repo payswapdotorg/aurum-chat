@@ -398,3 +398,72 @@ Dependencies: W076, W077. Prove the hosted dogfood environment through real auth
 
 ### W079 — Production Journey Certification & Release Gate
 Dependencies: W077, W078, W070, W076. Certify the complete end-user journey matrix against the real hosted production deployment. Require real production authentication, external PostgreSQL/Redis execution paths, desktop/mobile Chromium journeys, tenant isolation, Chat-first continuity, accessibility/discoverability, and two consecutive zero-failure/zero-blocked runs against the same deployment revision. Completion requires a committed machine-generated certification evidence tree and explicit CERTIFIED READY verdict. Preview/local evidence cannot satisfy this work item.
+
+
+## Post-S002 organizational reach, integrations, realtime and provider-independence work
+
+### W080 — Durable Agent Runtime Adapter
+Abstract durable orchestration behind an Aurum-owned workflow port. Support event triggers, schedules, waits, retries, approvals, resumptions, idempotency and long-running cognition. Keep orchestration technology replaceable.
+
+### W081 — Integration Intelligence
+Discover authorized organizational tooling, explain why connections matter, recommend safe connections, support bulk approval, automatic verification and a tenant-scoped Tool & System Inventory.
+
+### W082 — Universal Connection Broker
+Integrate OAuth, tokens, syncs and webhooks through provider-neutral adapters. Support Nango first and equivalent broker alternatives.
+
+### W083 — Progressive Capability Grants
+Start with safe read-only access and request write/action authority only when a concrete task requires it. Make every grant visible, scoped and revocable.
+
+### W084 — Deep Action Gateway and Reconciliation
+Implement discover→inspect→propose→authorize→execute→verify→reconcile with evidence and outcome links across external systems.
+
+### W085 — Meeting Intelligence Gateway
+Create canonical meeting/session/transcript/artifact contracts and native Zoom/Teams/Meet adapters plus optional Recall/Meeting BaaS acceleration.
+
+### W086 — Realtime Voice and Meeting Companion
+Use the realtime gateway with a replaceable LiveKit adapter for live voice, Meeting Companion, realtime meetings and telephony/SIP.
+
+### W087 — Cellular Reachability and Communication Fallback
+Implement outcome-oriented Reach Anyone using SMS and voice, telecom provider adapters, verified phone identity, delivery/reply state, routing, cost and policy controls. Recipient must not need Internet or Aurum.
+
+### W088 — Aurum Edge Connector
+Provide a customer-controlled outbound runtime for private/on-prem APIs, MCP, OpenAPI, databases, files and approved browser adapters.
+
+### W089 — Provider Adapter SDK and OSS Technology Registry
+Standardize provider adapter lifecycle, conformance tests, health/capability mapping, provider hot-swap evidence and technology evaluation records including license/security/maintenance/exit path.
+
+### W090 — Aurum Provider Billing Gateway
+Abstract supported provider payment, usage, budgets and receipts behind Aurum. Use Aurum-mediated settlement when provider terms permit; support direct customer billing as an explicit exception.
+
+### W091 — User-Friendly Provider Choice UX
+Present provider selection as outcomes such as cost, privacy, quality and speed. Persist preferences and reveal technical details only in advanced settings.
+
+### W092 — Vertical Extension Starter Kits
+Create reusable specialist extension/agent interfaces and initial deep integrations for system-of-record-heavy industries without moving vertical semantics into the Aurum core.
+
+### W093 — Browser and Computer-Use Fallback
+Use governed browser automation only where APIs/MCP/native adapters are insufficient. Require verification, reconciliation and evidence for actions.
+
+### W094 — Migration and Dual-Run Continuity
+Import history, preserve IDs, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement.
+
+### W095 — Unified Cross-Channel, Meeting and Telephony Identity Verification
+Extend identity proof so one person remains one organizational identity across messaging, meetings, SMS, voice and Edge Connector paths.
+
+### W096 — Integration Intelligence End-to-End Fixture
+Prove discover→recommend→approve→connect→verify→map→observe→request action scope→execute→reconcile→outcome.
+
+### W097 — Meeting and Cellular End-to-End Fixture
+Prove meeting transcript/artifact ingestion, Meeting Companion, SMS fallback, voice fallback and reply-to-Aurum continuity.
+
+### W098 — Persistent Agent Supervision and Recovery
+Prove durable agent health, review schedules, budgets, waiting states, recovery and resumptions independent of worker lifetime.
+
+### W099 — Matrix Interoperability Adapter (Optional)
+Add Matrix support only when a customer or measured use case warrants it. Matrix remains a channel/interoperability adapter, never Aurum core infrastructure.
+
+### W100 — Longitudinal S003 Conversion Benchmark
+Re-run the multi-industry benchmark after the new integration/realtime/action capabilities. Measure Aurum-primary and Aurum-only willingness, context-switching reduction, integration setup effort, trust and realized value.
+
+### W101 — Final Post-S002 Production Certification
+Certify the complete production journey including cross-channel communication, meetings, cellular reachability, integrations, provider choice/billing, durable cognition and specialist execution.
