@@ -1,7 +1,7 @@
 # Final Tech Lead Handoff — Aurum + CommOS Post-S002
 
 **Repository:** `payswapdotorg/aurum-chat`  
-**Current main at handoff:**  `5939bd735d5693878f34d2928e036b76327c00c6`  
+**Current main at handoff:**  `307870d0b936e38678d1f48e53e019771f7841e2`  
 **Frozen Aurum architecture:** v2.1  
 **Maximum concurrent workers:** 3  
 **Canonical implementation plan:** `spec/POST-S002-COHERENT-IMPLEMENTATION-PLAN-2026-09-23.md`  
@@ -53,11 +53,11 @@ Aurum main is ahead of the exact W079 certification base. The comparison from W0
 
 `c0ea5f78f8979d46029ac6124eff2bf0ebd6d988`
 
-to current main:
+to the current main:
 
-`c43193b3a6ae1b1275a2dd8f78936f54a165b6c9`
+`307870d0b936e38678d1f48e53e019771f7841e2`
 
-was **12 commits ahead** and included additional release-certification code/files. Therefore the W079 verdict must not be inherited silently by current main.
+is **20 commits ahead** and included additional release-certification code/files. Therefore the W079 verdict must not be inherited silently by current main.
 
 ### CommOS
 
