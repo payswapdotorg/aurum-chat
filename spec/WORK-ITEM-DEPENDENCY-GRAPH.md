@@ -131,3 +131,99 @@ W077 + W078 + W076 + W070 → W079 Production Journey Certification & Release Ga
 ```
 
 W079 is a release gate, not a feature track. It may not be marked complete from local/preview evidence. It requires two consecutive green certification runs against the same live production deployment revision.
+
+## Post-S002 organizational reach / integration / realtime DAG
+
+```text
+W079 release integrity
+  ↓
+W080 Durable Agent Runtime
+  ├──→ W084 Deep Action Gateway
+  ├──→ W086 Realtime Voice / Meeting Companion
+  └──→ W098 Persistent Agent Supervision
+
+W081 Integration Intelligence
+  ├──→ W082 Universal Connection Broker
+  ├──→ W083 Progressive Capability Grants
+  └──→ W096 Integration E2E Fixture
+
+W082 + W083 + W009
+  └──→ W084 Deep Action Gateway + Reconciliation
+
+W085 Meeting Intelligence Gateway
+  └──→ W086 Realtime Voice / Meeting Companion
+
+W095 Unified Cross-Channel / Meeting / Telephony Identity
+  ├──→ W085
+  └──→ W087 Cellular Reachability
+
+W087 Cellular Reachability
+  └──→ W097 Meeting + Cellular E2E Fixture
+
+W088 Aurum Edge Connector
+  ├──→ W084
+  └──→ W092 Vertical Extension Starter Kits
+
+W089 Provider Adapter SDK + OSS Registry
+  └──→ all provider adapters / W099 Matrix
+
+W090 Provider Billing Gateway
+  └──→ W091 User-Friendly Provider Choice UX
+
+W084 + W088
+  └──→ W094 Migration + Dual-Run Continuity
+
+W092 Vertical Extension Starter Kits
+  └──→ S003 benchmark / specialist execution
+
+W093 Browser / Computer-Use Fallback
+  └──→ W084
+
+W096 + W097 + W098
+  └──→ W100 Longitudinal S003 Conversion Benchmark
+
+W100 + production environment
+  └──→ W101 Final Post-S002 Production Certification
+```
+
+### Post-S002 three-worker waves
+
+```text
+Wave 0:
+  Tech Lead — reconcile current main vs exact certified production revision
+
+Wave 1:
+  Worker A — W080
+  Worker B — W081
+  Worker C — W087
+
+Wave 2:
+  Worker A — W082
+  Worker B — W085
+  Worker C — W090 + W091
+
+Wave 3:
+  Worker A — W083 + W084
+  Worker B — W086
+  Worker C — W088 + W089
+
+Wave 4:
+  Worker A — W092
+  Worker B — W093
+  Worker C — W094
+
+Wave 5:
+  Worker A — W095
+  Worker B — W096
+  Worker C — W097
+
+Wave 6:
+  Worker A — W098
+  Worker B — W099 only when justified by evidence
+  Worker C — integration/security reconciliation
+
+Wave 7:
+  W100 simulation + W101 certification
+```
+
+Ownership rule: workers must not concurrently modify the same gateway/contract primitive. Provider adapters are independent once their gateway contract is frozen. Optional Matrix work may not block cellular, meeting or integration work.
