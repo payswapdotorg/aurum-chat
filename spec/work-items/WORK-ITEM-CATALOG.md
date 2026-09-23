@@ -459,8 +459,8 @@ Prove meeting transcript/artifact ingestion, Meeting Companion, SMS fallback, vo
 ### W098 — Persistent Agent Supervision and Recovery
 Prove durable agent health, review schedules, budgets, waiting states, recovery and resumptions independent of worker lifetime.
 
-### W099 — Matrix Interoperability Adapter (Optional)
-Add Matrix support only when a customer or measured use case warrants it. Matrix remains a channel/interoperability adapter, never Aurum core infrastructure.
+### W099 — CommOS Fusion and Communication Kernel
+Extract the validated provider-neutral CommOS protocol/core subset into Aurum as the communication kernel. Reuse universal identity-link semantics, communication intent, encrypted bundles/proofs, delivery state/proofs, capability advertisements, policy-aware routing, transport interfaces, gateway semantics, DTN/store-and-forward and Android edge foundations only after repository/device validation. Do not import the CommOS application, separate auth/user model, singleton demo network, separate business data model or second AI loop. Matrix is optional within this work item, not an Aurum core dependency.
 
 ### W100 — Longitudinal S003 Conversion Benchmark
 Re-run the multi-industry benchmark after the new integration/realtime/action capabilities. Measure Aurum-primary and Aurum-only willingness, context-switching reduction, integration setup effort, trust and realized value.
