@@ -7,7 +7,7 @@
 
 ## 0. Mission
 
-Turn Aurum into a persistent, provider-independent organizational work surface that can operate through existing systems and communications without forcing provider lock-in or requiring every employee to adopt Aurum Chat.
+Turn Aurum into a persistent, provider-independent organizational work surface that can operate through existing systems and communications without forcing provider lock-in or requiring every employee to adopt Aurum Chat. Fuse Universal Comm OS into this product as the communications substrate rather than maintaining two end-user communication products.
 
 Primary outcomes:
 - understand and operate through the organization's existing systems;
@@ -40,7 +40,17 @@ Ordinary users choose outcomes such as **Best quality**, **Lowest cost**, **Most
 ### Billing gateway
 Where a provider permits platform-mediated billing, the user pays Aurum and Aurum settles provider costs underneath. Provider terms, geography and regulated billing rules may require a direct customer relationship; that must remain an explicit exception.
 
-## 2. Persistent Aurum runtime
+## 2. CommOS fusion rule
+
+`payswapdotorg/commos` is not a second end-user product. Aurum is the canonical product. The validated CommOS protocol/runtime subset becomes Aurum's communication kernel beneath W030/W045/W087/W086/W088.
+
+Reuse the CommOS protocol contracts and implementation ideas for universal identity links, communication intent, encrypted bundles, delivery states/proofs, capability advertisements, routing, transport interfaces, gateway semantics, DTN/store-and-forward and Android edge foundations. Do not import CommOS's separate web UI, auth model, singleton demo network, separate business data model or second AI cognition loop.
+
+CommOS current repo truth is mixed maturity: P1/P2/P3/P5/P6/P8/P9/P10/P11 are implemented/validated at different levels; P4 Android source exists but its worklog says validation is still in progress and P4.2 BLE remains blocked; P7 Matrix is not implemented. Experimental channel adapters in CommOS are not production delivery evidence.
+
+The extraction must preserve one semantic owner per concern: Aurum owns tenant/employee/person identity, organizational policy, conversations, evidence, cognition and business truth; CommOS owns communication transport semantics below those boundaries.
+
+## 3. Persistent Aurum runtime
 
 Aurum is a persistent organizational actor, not a permanent process.
 
@@ -57,7 +67,7 @@ LLM calls, browser sessions, media processing, connector work, specialist agents
 
 Modal is the leading general execution candidate; E2B is a specialized isolated-code/computer-use candidate.
 
-## 3. Workstream A — Universal integration
+## 4. Workstream A — Universal integration
 
 ### Goal
 Make connection feel like **giving Aurum permission to understand and operate the organization**, not configuring a connector catalog.
@@ -81,14 +91,14 @@ Required capabilities:
 
 Nango is the leading connection/OAuth/sync candidate; Composio and Pipedream are long-tail action/connectivity candidates; Workato and customer MCP/OpenAPI are enterprise bridges; Merge is selective.
 
-## 4. Workstream B — Deep action / Aurum as front door
+## 5. Workstream B — Deep action / Aurum as front door
 
 Move from seeing systems to operating them:
 `discover → inspect → propose → authorize → execute → verify → reconcile → evidence → outcome`
 
 A professional should be able to initiate multi-system work from Aurum without manually opening each underlying application for ordinary cases.
 
-## 5. Workstream C — Meetings
+## 6. Workstream C — Meetings
 
 Make Aurum a participant in organizational conversations.
 
@@ -104,7 +114,7 @@ Canonical meeting lifecycle:
 
 Meeting evidence enters the same Aurum evidence/cognition loop; it is not a parallel knowledge store.
 
-## 6. Workstream D — Realtime voice and in-person companion
+## 7. Workstream D — Realtime voice and in-person companion
 
 Use LiveKit behind a provider-neutral realtime gateway for Aurum voice, realtime two-way meeting participation, Meeting Companion, telephony/SIP and Aurum-hosted realtime rooms.
 
@@ -112,7 +122,7 @@ Transcript-first meeting capture does not require LiveKit; live spoken participa
 
 Meeting Companion runs on approved phone/tablet/laptop hardware and exposes explicit participation/recording state.
 
-## 7. Workstream E — Cellular Reachability / Reach Anyone
+## 8. Workstream E — Cellular Reachability / Reach Anyone
 
 ### Product requirement
 Aurum must be able to convey information to a person even when that recipient has no Internet and does not use Aurum.
@@ -140,14 +150,14 @@ Exact boundary:
 
 Where the manager has no Internet data but can use SMS/voice, provide an SMS/voice entry path to an Aurum-owned organizational number where supported.
 
-## 8. Workstream F — Aurum Edge Connector
+## 9. Workstream F — Aurum Edge Connector
 
 Provide a customer-controlled runtime for private/on-prem systems:
 `Aurum cloud → signed outbound job → customer Edge Connector → internal system → normalized result/evidence → Aurum`
 
 Keep credentials customer-side where possible. Support approved local APIs, MCP, OpenAPI, databases, files and browser adapters. Do not create a second organizational control plane.
 
-## 9. Workstream G — Provider choice and billing
+## 10. Workstream G — Provider choice and billing
 
 At first launch and whenever a capability first needs a provider, ask the user for the desired outcome rather than provider terminology.
 
@@ -155,7 +165,7 @@ Persist preferences at user/tenant level and let Aurum select an eligible implem
 
 Create an Aurum Provider Billing Gateway that normalizes provider cost, budget, usage and receipts. Route supported provider settlement through Aurum. Fall back to direct customer billing where necessary.
 
-## 10. Workstream H — Specialist vertical depth
+## 11. Workstream H — Specialist vertical depth
 
 Do not create industry forks of the Aurum core.
 
@@ -163,7 +173,7 @@ Build governed extension/agent packs for construction/AEC, finance/banking/accou
 
 Use the S002 result to prioritize system-of-record-heavy vertical integrations rather than merely adding industry dashboards.
 
-## 11. Workstream I — Browser/computer-use fallback
+## 12. Workstream I — Browser/computer-use fallback
 
 Use browser automation only when APIs/MCP/native adapters are insufficient.
 
@@ -171,27 +181,34 @@ Use browser automation only when APIs/MCP/native adapters are insufficient.
 
 Browser automation never becomes authoritative business state.
 
-## 12. Workstream J — Matrix
+## 13. Workstream J — Matrix / CommOS interoperability
 
-Matrix is optional. Do not add it to the core merely to solve the cellular requirement.
+Matrix is optional. Do not add it to the core merely to solve the cellular requirement. CommOS already defines Matrix as an adapter/fabric below the universal communication protocol; Aurum should inherit that boundary, not make Matrix a required transport.
 
 Use Matrix when a customer already operates Matrix or needs an open, customer-controlled communication/interoperability fabric and bridges. Matrix enters through the channel gateway like every other provider.
 
-## 13. Workstream K — OSS/provider evaluation
+## 14. Workstream K — OSS/provider evaluation
 
 Maintain a technology registry containing capability, project/provider, license, security status, maintenance/activity, deployment model, data handling, cost/performance, failure modes, exit strategy, adapter status and last review date.
 
 Before rebuilding infrastructure, the Tech Lead reviews the registry.
 
-## 14. New work-item DAG
+## 15. New work-item DAG
+### CommOS fusion extraction
+
+`CommOS source contracts → Aurum communication-kernel boundary → Aurum identity/evidence/policy adapters → production transports/gateways → delivery evidence`
+
+The initial extraction target is the reusable protocol/core subset, not the CommOS application. Preserve CommOS protocol tests as upstream conformance fixtures where licensing and source ownership permit. 
+
 
 ### Foundation
 W080 Durable Agent Runtime Adapter
+W099 CommOS Fusion and Communication Kernel (replaces the earlier Matrix-only W099)
 W081 Integration Intelligence
 W082 Universal Connection Broker
 W083 Progressive Capability Grants
 
-### Execution
+### Communications / execution
 W084 Deep Action Gateway + Reconciliation
 W085 Meeting Intelligence Gateway
 W086 Realtime Voice + Meeting Companion
@@ -213,11 +230,11 @@ W095 Unified Cross-Channel/Meeting/Telephony Identity Verification
 W096 Integration Intelligence End-to-End Fixture
 W097 Meeting + Cellular End-to-End Fixture
 W098 Persistent Agent Supervision/Recovery
-W099 Matrix Interoperability Adapter (optional/P2)
+W099 CommOS Fusion and Communication Kernel
 W100 Longitudinal S003 Conversion Benchmark
 W101 Final Post-S002 Production Certification
 
-## 15. Dependency relationships
+`W080 → W084, W086, W098`
 
 `W080 → W084, W086, W098`
 `W081 → W082, W083, W089, W096`
@@ -228,10 +245,10 @@ W101 Final Post-S002 Production Certification
 `W084 + W088 → W092 + W094`
 `W089 → all new provider adapters`
 `W092 + W084 + W040 → W100`
-`W095 + W030 + W002 → W087`
-`W096 + W097 + W098 + W100 → W101`
+`W095 + W030 + W002 + W099 → W087`
+`W096 + W097 + W098 + W100 + W099 → W101`
 
-## 16. Three-worker execution waves
+## 17. Three-worker execution waves
 
 ### Wave 0 — integrity
 Tech Lead: reconcile current main, deployed revision and W079 certification before feature work. Main has moved since the earlier certified revision.
@@ -239,7 +256,7 @@ Tech Lead: reconcile current main, deployed revision and W079 certification befo
 ### Wave 1
 Worker A — W080 Durable Agent Runtime
 Worker B — W081 Integration Intelligence
-Worker C — W087 Cellular Reachability
+Worker C — W099 CommOS Fusion + W087 Cellular Reachability
 
 ### Wave 2
 Worker A — W082 Universal Connection Broker
@@ -269,7 +286,7 @@ Worker C — Tech Lead release/security reconciliation
 ### Wave 7
 All workers support W100 S003 longitudinal simulation and W101 final production certification.
 
-## 17. Acceptance rules
+## 18. Acceptance rules
 
 Nothing is complete because an SDK was installed or a happy-path demo worked.
 
@@ -281,7 +298,9 @@ Every long-running workflow must survive worker/process loss.
 
 Every integration action must have an auditable authorization, result and reconciliation path.
 
-## 18. Product success metrics
+Every CommOS-derived transport capability must be independently conformance-tested inside Aurum before being treated as production-ready. Experimental/in-process CommOS adapters cannot be promoted merely by reuse.
+
+## 19. Product success metrics
 
 Track separately:
 - Aurum-primary adoption;
@@ -297,7 +316,7 @@ Track separately:
 - realized value;
 - time from first connection to first useful organizational insight.
 
-## 19. Final product sequence
+## 20. Final product sequence
 
 `Understand the organization`
 → `Reach everyone`
