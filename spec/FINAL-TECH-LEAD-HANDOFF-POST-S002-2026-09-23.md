@@ -1,575 +1,724 @@
-# Final Tech Lead Handoff — Aurum + CommOS Post-S002
+# Final Tech Lead Handoff — Aurum Post-S002 W080–W101
 
 **Repository:** `payswapdotorg/aurum-chat`  
-**Verified implementation baseline before this handoff document:**  `a3525a434de0ebc5dfcf9ab3333236bb4a987fdf`  
-**Takeover rule:** Tech Lead must fetch the repository's current `main` and reconcile it against this baseline before implementation.  
-**Frozen Aurum architecture:** v2.1  
+**Architecture:** Aurum v2.1 — FROZEN  
+**Scope:** **W080–W101 only**  
 **Maximum concurrent workers:** 3  
-**Canonical implementation plan:** `spec/POST-S002-COHERENT-IMPLEMENTATION-PLAN-2026-09-23.md`  
-**Canonical work catalog:** `spec/work-items/WORK-ITEM-CATALOG.md`  
-**Canonical DAG:** `spec/WORK-ITEM-DEPENDENCY-GRAPH.md`  
-**Simulation record:** `spec/SIMULATION-LEARNING-LOG.md`  
-**Technology research:** `spec/TECHNOLOGY-RESEARCH-2026-09-23.md`  
-**CommOS fusion assessment:** `spec/COMMOS-FUSION-REVIEW-2026-09-23.md`
+**Historical work outside W080–W101:** do not add to this implementation scope.
 
-## 1. Mission
+## 1. Takeover rule
 
-Implement the post-S002 architecture without creating two overlapping products.
+The Tech Lead must fetch the repository's current `main` at takeover time.
 
-**Aurum is the one product and organizational intelligence employee.**
+Do not assume that an earlier W079 certification applies to the current main. The exact W079 certification revision is historical evidence only. Reconcile the deployed production SHA with W079 before beginning new production-facing work.
 
-**Universal Comm OS is the communications substrate inside Aurum.**
+Repository truth order:
 
-The end-state is:
+1. source code and committed tests;
+2. actual live behavior;
+3. committed machine-generated evidence;
+4. frozen specification/contracts;
+5. issue/worklog prose.
 
-```text
-organization understanding
-        ↓
-persistent organizational employee
-        ↓
-one conversational/work surface
-        ↓
-reach every relevant person
-        ↓
-understand meetings
-        ↓
-connect every important system
-        ↓
-operate those systems
-        ↓
-verify/reconcile outcomes
-        ↓
-learn continuously
-        ↓
-become the primary work surface
-        ↓
-replace redundant front ends where safe
-```
+When these disagree, the higher item wins.
 
-## 2. Repository truth already established
+## 2. Read-first documents
 
-### Aurum
+Read these files before dispatching any worker:
 
-Aurum main is ahead of the exact W079 certification base. The comparison from W079 certified base is recorded as historical evidence only. The exact W079-certified revision is `c0ea5f78f8979d46029ac6124eff2bf0ebd6d988`. Do not inherit that certification onto a later SHA without re-running the release gate. and included additional release-certification code/files. Therefore the W079 verdict must not be inherited silently by current main.
+- `spec/ARCHITECTURE.md`
+- `spec/ARCHITECTURE-LOCK.md`
+- `spec/GOVERNANCE.md`
+- `spec/IMPLEMENTATION-STACK.md`
+- `spec/SIMULATION-LEARNING-LOG.md`
+- `spec/TECHNOLOGY-RESEARCH-2026-09-23.md`
+- `spec/POST-S002-COHERENT-IMPLEMENTATION-PLAN-2026-09-23.md`
+- `spec/work-items/WORK-ITEM-CATALOG.md`
+- `spec/WORK-ITEM-DEPENDENCY-GRAPH.md`
+- `spec/PRODUCTION-JOURNEY-CERTIFICATION-2026-09-23.md`
 
-### CommOS
+The implementation plan, work-item catalog and DAG are the operational source for W080–W101.
 
-CommOS main reviewed:
+## 3. Mission
 
-`9d1f24250e5037cb49b3499794c158f09caf4398`
+Evolve Aurum from a strong organizational-intelligence implementation into a persistent, provider-independent organizational work surface.
 
-The strongest reusable portions are the provider-neutral communication substrate:
+The target is not another dashboard or another chatbot.
 
-- Universal Identity/channel-link semantics;
-- identity verification state machine;
-- communication intent;
-- encrypted CommunicationBundle/proofs;
-- delivery state machine;
-- capability advertisements/cache;
-- routing;
-- transport interfaces;
-- gateway runtime;
-- DTN/store-and-forward concepts;
-- Android edge runtime foundations.
+The target is:
 
-The following must **not** become second Aurum subsystems:
+`understand organization → reach people → understand meetings → connect systems → operate systems → verify outcomes → learn → become primary work surface`
 
-- CommOS web/UI;
-- CommOS auth/user model;
-- CommOS singleton demo network;
-- CommOS business data model;
-- CommOS AI loop;
-- CommOS separate billing/analytics application.
+The organization should not need to reorganize itself around Aurum before receiving value.
 
-## 3. Important CommOS evidence warnings
+## 4. Frozen product principles
 
-These are hard preconditions for reuse.
+### 4.1 One organizational intelligence employee
 
-1. CommOS SMS/email/WhatsApp adapters are explicitly experimental in-process transcript adapters. They are not real production delivery.
-2. CommOS P4 Android is not fully validated; its worklog says P4.1-B validation is in progress and P4.2 BLE is blocked.
-3. The current CommOS main file `android/app/src/main/java/io/commos/edge/AndroidResourceSampler.kt` is only 14 bytes while the worklog describes a larger implementation. This is direct repository-vs-worklog evidence drift.
-4. CommOS P7 Matrix Fabric is not implemented.
-5. No root LICENSE/README/COPYING file was visible in the reviewed CommOS repository. Any external redistribution/extraction decision therefore needs an explicit licensing review even though internal reuse between these user-owned repositories is operationally possible.
+Aurum owns the organizational intelligence loop, CompanyModel, epistemics, goals, unknowns, missions, evidence, policy, outcomes and management context.
 
-Do not port a CommOS claim merely because its roadmap/worklog says it exists.
+### 4.2 Conversation is a channel
 
-## 4. Product rules frozen by this handoff
+Aurum Chat is the canonical Aurum conversational surface. Employees do not have to abandon the channels they already use.
 
-### One identity
+### 4.3 Universal reach
 
-A Person/Employee in Aurum remains the organizational identity authority.
+Aurum should be able to communicate with an employee through their available verified channel.
 
-CommOS channel identities map into Aurum's Person/Employee/ExternalIdentity records.
+Canonical user intent:
 
-### One policy authority
+> **“Tell Sarah the supplier meeting moved to 4pm.”**
 
-Aurum W009 remains the authority for whether Aurum may communicate, export, install, execute or otherwise act.
+Aurum resolves the employee and selects an authorized delivery path.
 
-### One evidence truth
+Fallback:
 
-CommOS delivery/proof events become Aurum communication evidence and audit facts.
+`preferred connected channel → SMS → voice`
 
-### Provider neutrality
+The recipient does **not** need Internet access or an Aurum account.
 
-Twilio, Telnyx, Africa's Talking, LiveKit, Zoom, Teams, Meet, Matrix, Nango, Composio, Pipedream, Modal, E2B, Inngest, Trigger.dev, Temporal, etc. are replaceable implementations.
+Where the sender has cellular service but no usable Internet data, an SMS/voice entry path to an Aurum organizational number should be supported where provider terms permit.
 
-No provider SDK enters an Aurum domain contract.
+If there is no available network/radio path at all, Aurum must explicitly report that it cannot reach the recipient.
 
-### Open source first
-
-Do not rebuild a capability already supplied by a mature OSS project unless licensing, security, maintenance, operational, performance or architectural constraints make reuse unsuitable.
-
-## 5. User experience rule
-
-Non-advanced users must choose outcomes, not technologies.
-
-Use:
-
-- **Best quality**
-- **Lowest cost**
-- **Most private**
-- **Fastest**
-- **Use my organization's service**
-- **Let Aurum choose**
-
-Advanced settings can expose exact provider names and technical configuration.
-
-When Aurum needs a provider for a concrete task, ask at the moment of need rather than forcing a technical setup tour during onboarding.
-
-## 6. Universal communication requirement
-
-The canonical user command is:
-
-> **"Aurum, tell Sarah the supplier meeting moved to 4pm."**
-
-Aurum should:
-
-1. resolve Sarah to the correct employee;
-2. inspect her available verified communication paths;
-3. choose the best permitted route;
-4. send via the preferred channel;
-5. fall back to SMS;
-6. fall back to voice where policy permits;
-7. report delivery status;
-8. retain the communication evidence;
-9. route any authorized reply back into Aurum.
-
-**The recipient does not need Internet or an Aurum account.**
-
-If the sender has cellular service but no Internet data, an SMS/voice entry path to an Aurum organizational number should be supported where telecom/provider terms permit.
-
-If there is no cellular, local network or peer-radio path at all, Aurum must report that no communication path exists.
-
-## 7. Meeting requirement
+### 4.4 Meetings are organizational evidence
 
 Aurum must be able to participate in:
 
 - Zoom;
 - Microsoft Teams;
 - Google Meet;
-- in-person meetings.
+- approved in-person meetings.
 
-Meeting intelligence enters the same evidence/CompanyModel/cognition loop.
+Meeting information enters the same identity, evidence, CompanyModel and cognition loop.
 
-Meeting participation is not a second knowledge store.
+There is no separate meeting knowledge store.
 
-## 8. Persistent-agent requirement
+### 4.5 Persistent actor, ephemeral workers
 
-Aurum is a persistent organizational actor with durable state.
+Aurum is persistent because its identity/state and workflows persist.
 
-It is **not** a permanently running container.
+Persistent:
 
-Durable:
-
-- identity;
-- memory/CompanyModel;
+- tenant/employee identity;
+- CompanyModel/memory;
 - goals;
 - unknowns;
-- missions;
+- LearningMissions;
 - policy;
 - integrations;
 - evidence;
 - executions;
-- outcomes.
+- outcomes;
+- agent/extension state.
 
 Ephemeral:
 
 - LLM execution;
 - browser sessions;
 - connector jobs;
-- specialist agents;
-- media processing;
 - code execution;
-- realtime sessions.
+- media processing;
+- realtime sessions;
+- specialist-agent workers.
 
-Worker death must not destroy Aurum.
+Worker/process death must not destroy Aurum state or mission progress.
 
-## 9. New work items
+### 4.6 Provider independence
+
+No provider is architecturally privileged.
+
+Providers are adapter implementations, not domain dependencies.
+
+A new provider should require:
+
+1. provider adapter;
+2. capability mapping;
+3. health/error mapping;
+4. credential/scope mapping;
+5. conformance tests;
+6. hot-swap evidence;
+
+and no core domain rewrite.
+
+### 4.7 Open-source reuse before rebuilding
+
+Before implementing substantial infrastructure, check the technology registry/research.
+
+Reuse a mature open-source component or create a thin adapter when licensing, security, maintenance, operations, performance and exit risk are acceptable.
+
+Do not rebuild a mature equivalent merely to avoid dependencies.
+
+### 4.8 User-facing choices are outcome-oriented
+
+Non-advanced users never need to understand providers or runtimes.
+
+Expose choices such as:
+
+- **Best quality**
+- **Fastest**
+- **Lowest cost**
+- **Most private**
+- **Use my organization's setup**
+- **Let Aurum choose**
+
+Technical provider names and configuration belong in advanced settings.
+
+A provider choice can be changed later.
+
+### 4.9 Provider spending is abstracted
+
+When a provider supports Aurum-mediated billing, present one Aurum billing experience and settle provider usage underneath.
+
+When direct customer billing is mandatory, explain that requirement without leaking provider mechanics into normal UX.
+
+Provider billing data must not become organizational truth.
+
+## 5. S002 findings driving the plan
+
+S002 simulated 11 industries, 3 firm sizes, 33 firms, 300 projects per firm, 9,900 projects and 7,150 professionals.
+
+Current simulated Aurum-only willingness was about 24.7%; a mature implementation scenario reached about 56.8%.
+
+The important finding is not the exact synthetic percentages. It is the mechanism:
+
+- Aurum's organizational memory and cross-project intelligence are broadly valuable;
+- specialized systems of record remain the main replacement barrier;
+- Aurum-primary is a nearer target than Aurum-only;
+- deep bidirectional integration matters more than adding another dashboard;
+- migration and dual-run reduce enterprise switching friction;
+- regulated industries require additional trust/deployment controls;
+- channel coverage increases access, but deep workflow execution increases replacement potential.
+
+Therefore implementation should prioritize making Aurum the **front door** to existing systems rather than demanding immediate system replacement.
+
+## 6. W080–W101 work items
 
 ### W080 — Durable Agent Runtime Adapter
-Durable workflow abstraction for long-running cognition, waiting, approval, retry, schedule and resume.
+Durable workflow abstraction for event-triggered cognition, schedules, long waits, approvals, retries, cancellation, resumptions and idempotency.
+
+Core proof:
+worker/process loss must not lose workflow state; an active workflow can resume deterministically.
 
 ### W081 — Integration Intelligence
-Discover authorized organizational tooling, explain why it matters, recommend connections and build the tenant Tool & System Inventory.
+Discover authorized organizational tooling, explain why each system matters, recommend safe connections and build the tenant-scoped Tool & System Inventory.
+
+Core proof:
+authorized discovery produces understandable recommendations without uncontrolled scanning.
 
 ### W082 — Universal Connection Broker
-OAuth/token/sync/webhook lifecycle behind provider-neutral gateway boundaries.
+Abstract OAuth, credentials, syncs and webhooks behind provider-neutral boundaries.
+
+Core proof:
+connect/revoke/refresh/checkpoint behavior survives provider errors and broker replacement.
 
 ### W083 — Progressive Capability Grants
-Read-only/shadow mode first; request narrowly scoped write/action permission only when needed.
+Start read-only. Ask for narrowly scoped write/action authority only when a concrete task requires it.
+
+Core proof:
+the user sees why the permission is necessary; denying it prevents the action; retry asks only for the missing authority.
 
 ### W084 — Deep Action Gateway and Reconciliation
-discover → inspect → propose → authorize → execute → verify → reconcile → evidence → outcome.
+Implement:
+
+`discover → inspect → propose → authorize → execute → verify → reconcile → evidence → outcome`
+
+Core proof:
+multi-system work can be initiated from Aurum and downstream state is verified.
 
 ### W085 — Meeting Intelligence Gateway
-Canonical meeting/session/transcript/artifact model plus native Zoom/Teams/Meet adapters and optional meeting-BaaS acceleration.
+Canonical meeting/session/transcript/artifact contracts plus native Zoom/Teams/Meet adapters and optional cross-platform acceleration.
+
+Core proof:
+participant identity, transcript/artifact and provenance enter the canonical evidence model.
 
 ### W086 — Realtime Voice and Meeting Companion
-Provider-neutral realtime gateway; LiveKit as leading implementation candidate.
+Provider-neutral realtime contracts with a replaceable LiveKit implementation.
+
+Core proof:
+live session start/stop, explicit consent/status, interruption, speaker attribution, live transcript, spoken response and durable meeting artifact.
 
 ### W087 — Cellular Reachability and Communication Fallback
-Reach Anyone over SMS/voice with multi-provider telecom routing and delivery/reply evidence.
+Implement the **Reach Anyone** capability over SMS/voice with multiple telecom adapters and routing/policy/cost logic.
+
+Core proof:
+manager → Aurum → verified employee → SMS, voice fallback if permitted, delivery evidence, optional reply back to Aurum.
 
 ### W088 — Aurum Edge Connector
 Customer-controlled runtime for private/on-prem APIs, MCP/OpenAPI, databases, files and approved browser adapters.
 
+Core proof:
+signed tenant-scoped jobs can reach private systems without creating a second control plane.
+
 ### W089 — Provider Adapter SDK and OSS Technology Registry
-Standard provider adapter lifecycle, conformance tests, capability/health mapping, hot-swap verification and technology evaluation records.
+Standardize adapter lifecycle and maintain technology evaluation records.
+
+Registry fields:
+
+`capability, provider/project, license, security, maintenance, deployment, data handling, cost/performance, failure modes, exit strategy, adapter status, last reviewed`
+
+Core proof:
+at least two materially different providers can satisfy a representative gateway contract.
 
 ### W090 — Aurum Provider Billing Gateway
-Aurum-mediated provider billing/usage where contractual terms permit.
+Abstract provider usage/cost/budget/settlement.
+
+Core proof:
+cost is attributable to tenant/capability/execution, budget policy can constrain usage, supported provider settlement is auditable and direct-billing exceptions do not break capability execution.
 
 ### W091 — User-Friendly Provider Choice UX
 Outcome-oriented provider selection and persistent preferences.
 
-### W092 — Vertical Extension Starter Kits
-Specialist packs for system-of-record-heavy industries without changing the Aurum core.
+Core proof:
+ordinary users never need provider jargon; advanced users can inspect/override where authorized.
 
-### W093 — Browser/Computer-Use Fallback
-Governed browser execution only when API/MCP/native integration is insufficient.
+### W092 — Vertical Extension Starter Kits
+Reusable specialist extension/agent packs and first deep integrations for system-of-record-heavy industries.
+
+Core proof:
+packs are installable, permission-scoped, versioned, auditable, removable and do not introduce vertical semantics into the core.
+
+### W093 — Browser and Computer-Use Fallback
+Governed browser automation only when native/API/MCP routes are unavailable or insufficient.
+
+Core proof:
+disposable isolated sessions, action traces, verification and reconciliation.
 
 ### W094 — Migration and Dual-Run Continuity
-Historical import, ID preservation, synchronization, legacy/Aurum comparison, rollback and progressive retirement.
+Historical import, identifier preservation, synchronization, legacy/Aurum comparison, rollback and progressive retirement.
+
+Core proof:
+Aurum and incumbent can run together without silent data loss or competing authority.
 
 ### W095 — Unified Cross-Channel/Meeting/Telephony Identity
-One employee across Aurum, communications, meetings, phone and Edge.
+Keep one organizational Person/Employee identity across messaging, meetings, SMS and voice.
+
+Core proof:
+one verified employee is recognized across multiple communication modalities; ambiguity never auto-merges.
 
 ### W096 — Integration Intelligence E2E Fixture
-End-to-end connection discovery, approval, verification, mapping, observation, action and reconciliation.
+Prove the complete connection discovery and action path.
+
+Core proof:
+
+`discover → recommend → approve → connect → verify → map → observe → request action scope → execute → reconcile → outcome`
 
 ### W097 — Meeting and Cellular E2E Fixture
-End-to-end meeting + SMS + voice path evidence.
+Prove meeting intelligence, Meeting Companion, SMS, voice and reply continuity.
+
+Core proof:
+supported real-provider evidence plus deterministic fallback fixture; recipient needs neither Internet nor Aurum.
 
 ### W098 — Persistent Agent Supervision and Recovery
-Durable health, waiting, reviews, budgets, retries and restart recovery.
+Prove persistent agent health, budgets, review schedules, waits and restart recovery.
 
-### W099 — CommOS Fusion and Communication Kernel
-Extract validated provider-neutral CommOS primitives into Aurum.
+Core proof:
+worker death does not terminate the organizational actor or lose lifecycle state.
 
-Matrix is an optional adapter inside this boundary, not core infrastructure.
+### W099 — Matrix Interoperability Adapter (Optional)
+Matrix is **optional interoperability**, not Aurum's messaging core.
+
+Implement only when customer/use-case evidence justifies it.
+
+Core proof:
+Matrix events normalize into canonical Aurum conversations/evidence and can be disabled without changing Aurum core messaging.
 
 ### W100 — Longitudinal S003 Conversion Benchmark
-Measure Aurum-primary and Aurum-only adoption after the new implementation.
+Repeat the S002 multi-industry simulation after these capabilities mature.
+
+Measure:
+
+- Aurum-primary willingness;
+- Aurum-only willingness;
+- context-switching reduction;
+- integration setup effort;
+- action success/reconciliation;
+- trust;
+- realized value.
+
+Do not present synthetic results as market forecasts.
 
 ### W101 — Final Post-S002 Production Certification
-Final production release gate.
+Certify the complete production experience.
 
-## 10. Dependency graph
+Required domains:
+
+- persistent cognition;
+- integrations;
+- deep actions;
+- cross-channel identity;
+- meetings;
+- realtime;
+- cellular reachability;
+- provider choice;
+- provider billing;
+- Edge;
+- vertical extensions;
+- browser fallback.
+
+## 7. Dependency DAG
 
 ```text
-                         ┌────────── W080 ──────────┐
-                         │                         │
-W079 integrity ─→ W099 CommOS kernel          W098
-                         │
-              ┌──────────┼───────────┐
-              ↓          ↓           ↓
-            W085       W087        W088
-              │          │
-              ↓          ↓
-            W086       W097
+W080 → W084, W085, W086, W098
 
-W081 → W082 → W083 → W084
-  │                  │
-  └→ W089            ├→ W092
-                     └→ W094
+W081 → W082, W083, W089, W096
 
-W099 + W002 + W030 → W095
+W082 + W083 + W009 → W084
+
+W085 → W086
+
+W002 + W030 + W085 + W086 + W087 → W095
+
+W084 + W088 → W092, W093
+
+W089 → W082, W090, optional W099
 
 W090 → W091
-W093 → W084
 
-W084 + W092 + W040 → W100
+W084 + W088 + W092 → W094
 
-W096 + W097 + W098 + W099 + W100 → W101
+W081 + W082 + W083 + W084 → W096
+
+W085 + W086 + W087 + W095 → W097
+
+W080 + W021 + W023 + W024 → W098
+
+W092 + W094 + W096 + W097 + W098 → W100
+
+W096 + W097 + W098 + W100 + production infrastructure → W101
 ```
 
-## 11. Three-worker execution plan
+## 8. Three-worker execution waves
 
 ### Wave 0 — Tech Lead only
 
-Do not start implementation until the Tech Lead:
-
-- reconciles current main against exact W079 certification revision;
-- records the exact new implementation baseline;
-- freezes CommOS source SHAs;
-- reconciles the CommOS AndroidResourceSampler contradiction;
-- confirms CommOS source/license status;
-- confirms no existing Aurum primitive is being duplicated.
+- fetch current main;
+- reconcile current deployment against exact W079 certification revision;
+- record current production/deployment SHA;
+- record new W080–W101 baseline SHA;
+- confirm current repository has all canonical post-S002 docs;
+- verify there are no dependency cycles;
+- freeze work-item ownership.
 
 ### Wave 1
 
-**Worker A — W080 Durable Agent Runtime**
-
-Own workflow abstraction and durable execution semantics.
-
-**Worker B — W081 Integration Intelligence**
-
-Own organizational tool discovery, recommendation and onboarding UX.
-
-**Worker C — W099 CommOS Fusion**
-
-Own extraction of the validated CommOS communication kernel into Aurum.
-
-No provider integrations yet beyond what is required to establish the kernel boundary.
+**Worker A:** W080 Durable Agent Runtime  
+**Worker B:** W081 Integration Intelligence  
+**Worker C:** W089 Provider Adapter SDK + OSS Technology Registry
 
 ### Wave 2
 
-**Worker A — W082 Universal Connection Broker**
-
-**Worker B — W085 Meeting Intelligence Gateway**
-
-**Worker C — W087 Cellular Reachability**
-
-W087 owns the manager→secretary Reach Anyone path and real telecom adapter boundary.
+**Worker A:** W082 Universal Connection Broker  
+**Worker B:** W085 Meeting Intelligence Gateway  
+**Worker C:** W087 Cellular Reachability
 
 ### Wave 3
 
-**Worker A — W083 Progressive Capability Grants + W084 Deep Actions**
-
-**Worker B — W086 LiveKit Realtime + Meeting Companion**
-
-**Worker C — W088 Aurum Edge Connector + W089 Provider/OSS Registry**
+**Worker A:** W083 Progressive Capability Grants + W084 Deep Actions  
+**Worker B:** W086 Realtime Voice + Meeting Companion  
+**Worker C:** W098 Persistent Agent Supervision + Recovery
 
 ### Wave 4
 
-**Worker A — W090 Provider Billing Gateway + W091 Provider Choice UX**
-
-**Worker B — W092 Vertical Extension Starter Kits**
-
-**Worker C — W093 Browser/Computer-Use Fallback**
+**Worker A:** W088 Aurum Edge Connector  
+**Worker B:** W090 Provider Billing Gateway  
+**Worker C:** W095 Unified Cross-Channel / Meeting / Telephony Identity
 
 ### Wave 5
 
-**Worker A — W094 Migration + Dual-Run Continuity**
-
-**Worker B — W095 Unified Cross-Channel/Meeting/Telephony Identity**
-
-**Worker C — W098 Persistent Agent Supervision and Recovery**
+**Worker A:** W091 User-Friendly Provider Choice UX  
+**Worker B:** W092 Vertical Extension Starter Kits  
+**Worker C:** W093 Browser / Computer-Use Fallback
 
 ### Wave 6
 
-**Worker A — W096 Integration Intelligence E2E**
-
-**Worker B — W097 Meeting + Cellular E2E**
-
-**Worker C — independent security/licensing/provider reconciliation**
+**Worker A:** W094 Migration + Dual Run  
+**Worker B:** W096 Integration Intelligence E2E  
+**Worker C:** W097 Meeting + Cellular E2E
 
 ### Wave 7
 
-Run W100 S003 against the mature implementation.
+**Worker A:** W099 Matrix interoperability only if customer/use-case evidence justifies it  
+**Worker B:** W100 Longitudinal S003 Conversion Benchmark  
+**Worker C:** Tech Lead security/licensing/provider reconciliation
 
-Then W101 final production certification.
+### Wave 8
 
-Matrix implementation may be scheduled whenever real customer/use-case evidence warrants it, but it must never block the cellular, meeting or general integration path.
+All workers support W101 final production certification.
 
-## 12. Worker non-overlap rules
+## 9. Worker operating rules
 
-- Only one worker owns a public gateway contract at a time.
-- Provider-specific work stays inside adapter folders.
-- UI workers do not modify domain semantics.
-- CommOS extraction may reuse source contracts/tests but may not introduce a second database truth or auth model.
-- No worker changes frozen Architecture v2.1.
-- If a requirement appears to require an architecture change, stop and report the required change to the Tech Lead.
-- Work items may be implemented together only when their public contracts are already stable and ownership boundaries are explicit.
+### Contract ownership
 
-## 13. Technology selection policy
+One worker owns a public contract at a time.
 
-### Durable workflow
+Dependent workers consume public contracts only.
 
-Keep the technology behind an Aurum workflow port.
+Cross-module internal imports remain forbidden.
 
-Current deployment-compatible choice remains Vercel Workflows.
+### Provider isolation
 
-Inngest / Trigger.dev / Temporal are replaceable candidates, not domain dependencies.
+Provider SDKs are confined to their adapter boundaries.
 
-### Execution
+Provider objects may not cross into Aurum domain contracts.
 
-- Modal: general scalable execution;
-- E2B: isolated code/computer-use execution;
-- normal workers/containers: ordinary background tasks.
+### Failure isolation
 
-### Realtime
+A provider outage must not become a domain failure.
 
-LiveKit is the leading realtime implementation, not a semantic dependency.
+The adapter converts provider-specific failure into canonical capability/error state.
 
-### Meetings
+### Persistence
 
-Native platform adapters first; Recall.ai/Meeting BaaS may accelerate cross-platform coverage.
+A worker can disappear at any point.
 
-### Integrations
+Long-running state must survive that disappearance.
 
-Nango is the leading connection/OAuth/sync candidate.
+### Authorization
 
-Composio/Pipedream/Workato/Merge/Speakeasy may be used behind provider-neutral boundaries when they materially reduce coverage or onboarding work.
+No consequential action bypasses W009 policy/authority.
 
-### Browser fallback
+### Evidence
 
-Stagehand/Browserbase/E2B only after API/MCP/native paths are unavailable or insufficient.
+No provider execution becomes authoritative merely because it returned success.
 
-### OSS
+External state must be verified and reconciled when the capability permits it.
 
-Before writing equivalent infrastructure, check the OSS registry created by W089.
+### Tenant isolation
 
-## 14. Required production behavior
+Every integration, meeting, telephony, realtime and Edge operation remains tenant-scoped.
 
-### Integration onboarding
+### Architecture lock
+
+Workers do not modify Architecture v2.1 silently.
+
+An architecture change requires explicit change control and versioning.
+
+## 10. User experience requirements
+
+The product should hide technical complexity.
+
+### First launch
+
+The organization gives Aurum permission to understand its environment.
+
+Aurum then discovers and explains the systems it finds.
+
+Do not require administrators to browse a connector catalog one system at a time unless discovery is unavailable.
+
+### When a new capability needs a provider
+
+Aurum asks:
+
+> **How should I handle this?**
+
+Then:
+
+> **Best quality**  
+> **Fastest**  
+> **Lowest cost**  
+> **Most private**  
+> **Use my organization's setup**  
+> **Let Aurum choose**
+
+Only authorized advanced users see the specific provider/runtime choice.
+
+### Progressive authority
+
+Default:
+
+**observe/read**
+
+Then:
+
+**recommend**
+
+Then, when required:
+
+**request the exact action permission**
+
+Then:
+
+**execute**
+
+Then:
+
+**verify**
+
+Then:
+
+**record outcome**
+
+## 11. Ideal integration journey
 
 ```text
 Connect organization
-→ Aurum surveys authorized tools
-→ Aurum explains why each matters
-→ approve recommended safe connections
-→ automatic connection
-→ automatic verification
-→ automatic mapping
-→ read-only learning
-→ ask for additional authority only when needed
-→ execution
-→ reconciliation
-→ learning
+    ↓
+Aurum surveys authorized tools
+    ↓
+Aurum explains why each matters
+    ↓
+Aurum recommends safe connections
+    ↓
+Admin approves
+    ↓
+Automatic authentication
+    ↓
+Automatic verification
+    ↓
+Identity/entity mapping
+    ↓
+Read-only learning
+    ↓
+Useful finding/action appears
+    ↓
+Aurum requests only required additional authority
+    ↓
+Authorized execution
+    ↓
+Verification + reconciliation
+    ↓
+Evidence + outcome
+    ↓
+CompanyModel learning
 ```
 
-### Communication
+## 12. Ideal communication journey
 
 ```text
-"Tell Sarah..."
-→ identity resolution
-→ best permitted channel
-→ SMS
-→ voice
-→ delivery evidence
-→ optional reply into Aurum
+Manager: "Tell Sarah the supplier meeting moved to 4pm."
+                  ↓
+             Aurum identity
+                  ↓
+          available channels
+                  ↓
+       preferred authorized route
+            ↙         ↘
+          SMS         voice
+            ↓           ↓
+              Sarah
+                  ↓
+           delivery evidence
+                  ↓
+        optional authorized reply
 ```
 
-### Meeting
+The recipient does not need Internet or an Aurum account.
+
+## 13. Ideal meeting journey
 
 ```text
-meeting
-→ consent/status
-→ transcript/media
-→ speaker attribution
-→ evidence
-→ decisions
-→ unknowns
-→ actions
-→ missions
-→ outcomes
+meeting starts
+    ↓
+consent / participation state
+    ↓
+media/transcript
+    ↓
+speaker identity
+    ↓
+evidence
+    ↓
+decisions / unknowns / actions
+    ↓
+missions / recommendations
+    ↓
+outcome
+    ↓
+CompanyModel learning
 ```
 
-### Persistent cognition
+## 14. Technology policy
 
-```text
-event
-→ durable execution
-→ worker
-→ evidence/result
-→ durable state
-→ next step
-```
+### Durable orchestration
 
-## 15. Final acceptance gates
+Keep orchestration behind an Aurum workflow port.
 
-A release cannot be called complete merely because a provider SDK or OSS component was installed.
+Current deployment-compatible infrastructure may be used while Inngest/Trigger.dev/Temporal remain replaceable candidates.
 
-The final gates require:
+### General execution
 
-1. **One product:** Aurum remains the sole organizational UX.
-2. **One identity:** no duplicated employee/person authority.
-3. **One policy authority:** Aurum W009 governs consequential communications/actions.
-4. **One evidence truth:** communication/delivery evidence enters Aurum audit/evidence.
-5. **Provider independence:** at least two materially different implementations can satisfy each important provider gateway without changing domain contracts.
-6. **CommOS conformance:** reused protocol primitives pass Aurum-side conformance tests.
-7. **Real cellular:** manager can reach an offline recipient by SMS and/or voice through a real provider.
-8. **Meeting intelligence:** real provider evidence for supported meeting platforms.
-9. **Persistent execution:** worker/process loss does not lose cognition state.
-10. **Integration Intelligence:** authorized organizational tooling can be discovered and connected without manual connector-by-connector setup.
-11. **Progressive authority:** read-only first; write/action authority is explicit and scoped.
-12. **Action reconciliation:** external writes are verified against resulting state.
-13. **Enterprise Edge:** private system path is proven without turning Edge into a second control plane.
-14. **Open-source due diligence:** adopted dependencies have explicit license/security/maintenance/exit records.
-15. **Simulation:** S003 shows movement in Aurum-primary/Aurum-only metrics.
-16. **Production certification:** W101 has two consecutive zero-failure/zero-blocked runs against one exact production deployment revision.
+Use Modal or equivalent scalable execution where appropriate.
 
-## 16. Final source-of-truth order
+### Isolated code/computer use
 
-When reports conflict:
+Use E2B or equivalent isolated sandboxes where appropriate.
 
-1. repository code;
-2. real live behavior;
-3. committed machine-generated evidence;
-4. frozen specs;
-5. worklog/issue prose.
+### Realtime
 
-The CommOS AndroidResourceSampler contradiction is the canonical example of why this order matters.
+Use LiveKit through a provider-neutral realtime gateway.
 
-## 17. Current roadmap status
+### Meeting capture
 
-```text
-FOUNDATION
-W001–W056  ✅ Delivered
+Prefer native platform APIs; use Recall/Meeting BaaS as an acceleration adapter when useful.
 
-PRODUCT / UX / DEPLOYMENT
-W057–W078  ✅ Delivered / evidenced
-W079       ✅ Certified on its exact recorded revision
-             ⚠ Current main is newer; re-certification required
+### Integrations
 
-POST-S002
-W080       ⬜ Durable Agent Runtime
-W081       ⬜ Integration Intelligence
-W082       ⬜ Universal Connection Broker
-W083       ⬜ Progressive Capability Grants
-W084       ⬜ Deep Action Gateway
-W085       ⬜ Meeting Intelligence Gateway
-W086       ⬜ Realtime Voice / Meeting Companion
-W087       ⬜ Cellular Reachability
-W088       ⬜ Aurum Edge Connector
-W089       ⬜ Provider SDK / OSS Registry
-W090       ⬜ Provider Billing Gateway
-W091       ⬜ User-Friendly Provider Choice
-W092       ⬜ Vertical Extension Starters
-W093       ⬜ Browser Fallback
-W094       ⬜ Migration / Dual Run
-W095       ⬜ Unified Identity
-W096       ⬜ Integration E2E
-W097       ⬜ Meeting + Cellular E2E
-W098       ⬜ Persistent Agent Supervision
-W099       ⬜ CommOS Fusion Kernel
-W100       ⬜ S003 Conversion Benchmark
-W101       ⬜ Final Production Certification
-```
+Use Nango or equivalent managed connection infrastructure behind Aurum gateways.
 
-## 18. Final strategic decision
+Use long-tail brokers only when they materially reduce coverage and preserve Aurum authority/audit semantics.
 
-Do not build two products.
+### Browser fallback
 
-Build:
+Use Stagehand/Browserbase/E2B-style execution only when native integration is insufficient.
 
-**Aurum — the organizational intelligence employee**
+### Matrix
 
-with:
+Optional W099 only. Never make Matrix a prerequisite for core Aurum communication.
 
-**Universal Comm OS — the reusable communication kernel underneath it.**
+## 15. OSS due diligence
 
-The communication kernel should make Aurum capable of reaching an employee wherever they are; the intelligence layer should decide **who, why, what, when and whether**; the transport layer should decide **how**; and the evidence layer should remember **what actually happened**.
+Before adopting a dependency, record:
 
-That separation is the key to achieving both universal organizational intelligence and universal reach without creating a monolith or provider lock-in.
+- what capability it solves;
+- license;
+- source availability;
+- security posture;
+- activity/maintenance;
+- deployment/control;
+- customer data handling;
+- performance and cost;
+- failure modes;
+- exit/replacement path.
+
+A mature open-source component should be reused when those checks pass and the adapter boundary remains healthy.
+
+## 16. Acceptance and certification
+
+A work item is complete only when its repository state and evidence satisfy the catalog.
+
+Do not accept:
+
+- mocks presented as real providers;
+- screenshots without actual functional paths;
+- provider SDK import without adapter isolation;
+- tests that bypass authorization;
+- local-only evidence for production claims;
+- worklog claims unsupported by code/evidence.
+
+W101 is the final release gate.
+
+It requires:
+
+- two consecutive production runs against one exact deployment revision;
+- zero failed mandatory journeys;
+- zero blocked mandatory journeys;
+- zero flaky mandatory journeys;
+- tenant isolation;
+- human-approval invariants;
+- provider independence evidence;
+- meeting/cellular evidence;
+- persistent-runtime recovery evidence;
+- integration/action reconciliation evidence;
+- rollback evidence.
+
+## 17. Definition of done for the whole W080–W101 program
+
+The program is complete only when an organization can reasonably experience Aurum as:
+
+**one persistent organizational employee**
+
+that can:
+
+**understand the company → reach employees wherever they are → participate in meetings → discover and connect the organization's tools → operate those tools under authority → verify results → learn from outcomes → remain useful without provider lock-in.**
+
+The system should progressively move the organization toward **Aurum-primary** operation and, where specialist capabilities and regulatory constraints allow, **Aurum-only** operation.
