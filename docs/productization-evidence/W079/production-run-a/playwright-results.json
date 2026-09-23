@@ -1,0 +1,852 @@
+{
+  "config": {
+    "configFile": "/home/z/aurum-cert-tree/playwright.certification.config.ts",
+    "rootDir": "/home/z/aurum-cert-tree/tests/browser/production",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": "/home/z/aurum-cert-tree/tests/browser/production/global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/home/z/aurum-cert-tree/docs/productization-evidence/W079/production-run-a/playwright-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/z/aurum-cert-tree/test-results/certification",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop",
+        "name": "desktop",
+        "testDir": "/home/z/aurum-cert-tree/tests/browser/production",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*-desktop\\.spec\\.ts/"
+        ],
+        "timeout": 300000
+      },
+      {
+        "outputDir": "/home/z/aurum-cert-tree/test-results/certification",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile",
+        "name": "mobile",
+        "testDir": "/home/z/aurum-cert-tree/tests/browser/production",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*-mobile\\.spec\\.ts/"
+        ],
+        "timeout": 300000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "j01-first-manager-desktop.spec.ts",
+      "file": "j01-first-manager-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J01 — first-time manager (desktop)",
+          "file": "j01-first-manager-desktop.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3082,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:15.994Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e7d808a3c099d506cc64-018c7d367c1ac50745fc",
+              "file": "j01-first-manager-desktop.spec.ts",
+              "line": 16,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j02-talk-to-aurum-desktop.spec.ts",
+      "file": "j02-talk-to-aurum-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J02 — talk to Aurum (desktop)",
+          "file": "j02-talk-to-aurum-desktop.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3476,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:19.282Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "92f70af9afba21b556db-f47d168c1b5bb38c975a",
+              "file": "j02-talk-to-aurum-desktop.spec.ts",
+              "line": 19,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j03-unprompted-discovery-desktop.spec.ts",
+      "file": "j03-unprompted-discovery-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J03 — unprompted discovery (desktop)",
+          "file": "j03-unprompted-discovery-desktop.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6164,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:22.777Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9ec7af77c4d0930319c4-7e562feec81199598e31",
+              "file": "j03-unprompted-discovery-desktop.spec.ts",
+              "line": 20,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j04-investigation-desktop.spec.ts",
+      "file": "j04-investigation-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J04 — risk/opportunity/process investigation (desktop)",
+          "file": "j04-investigation-desktop.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2995,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:28.965Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "089ccc9b0e13624e0005-b38aa081effdcd85b01a",
+              "file": "j04-investigation-desktop.spec.ts",
+              "line": 17,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j05-consequential-approval-desktop.spec.ts",
+      "file": "j05-consequential-approval-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J05 — consequential approval (desktop)",
+          "file": "j05-consequential-approval-desktop.spec.ts",
+          "line": 32,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 13486,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:32.013Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "99665a2c91e84eaa3833-d89437a2605f8ed67235",
+              "file": "j05-consequential-approval-desktop.spec.ts",
+              "line": 33,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j06-explainability-desktop.spec.ts",
+      "file": "j06-explainability-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J06 — explainability (desktop)",
+          "file": "j06-explainability-desktop.spec.ts",
+          "line": 15,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3559,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:45.524Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d5e50678ab30474c4119-3c1d0cf8c5eb2ec6a327",
+              "file": "j06-explainability-desktop.spec.ts",
+              "line": 16,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j07-learning-contribution-desktop.spec.ts",
+      "file": "j07-learning-contribution-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J07 — employee learning contribution (desktop)",
+          "file": "j07-learning-contribution-desktop.spec.ts",
+          "line": 34,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5435,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:49.112Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2fecdf423c123311986f-74c766812d84fe63506f",
+              "file": "j07-learning-contribution-desktop.spec.ts",
+              "line": 35,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j08-connections-desktop.spec.ts",
+      "file": "j08-connections-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J08 — company connections (desktop)",
+          "file": "j08-connections-desktop.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6200,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:18:54.570Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "2bd2ba614280c4c65414-327c0819a3d426f43256",
+              "file": "j08-connections-desktop.spec.ts",
+              "line": 17,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j09-byoa-desktop.spec.ts",
+      "file": "j09-byoa-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J09 — AI/BYOA (desktop)",
+          "file": "j09-byoa-desktop.spec.ts",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 6706,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:19:00.789Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dad19ef31ee1720156b1-c922830e2c432991b4df",
+              "file": "j09-byoa-desktop.spec.ts",
+              "line": 18,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j10-workforce-intervention-desktop.spec.ts",
+      "file": "j10-workforce-intervention-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J10 — workforce / agent intervention (desktop)",
+          "file": "j10-workforce-intervention-desktop.spec.ts",
+          "line": 30,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J10 — the intervention governance chain: gaps, alternatives, the gate and the workforce",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5191,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:19:07.509Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "33787a90973ced6f146a-c4597cfb0c66f8322294",
+              "file": "j10-workforce-intervention-desktop.spec.ts",
+              "line": 31,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j11-marketplace-desktop.spec.ts",
+      "file": "j11-marketplace-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J11 — marketplace / extensions (desktop)",
+          "file": "j11-marketplace-desktop.spec.ts",
+          "line": 30,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J11 — the marketplace: discovery, the public catalog and the install state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4272,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:19:12.715Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ea0aa138090699d09855-7bbc80659eeec0049027",
+              "file": "j11-marketplace-desktop.spec.ts",
+              "line": 31,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j12-developer-desktop.spec.ts",
+      "file": "j12-developer-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J12 — developer / API / MCP (desktop)",
+          "file": "j12-developer-desktop.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8250,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:19:17.021Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dfa13d97e06f237846a4-7df3d9e8b397f6b967cd",
+              "file": "j12-developer-desktop.spec.ts",
+              "line": 17,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j13-tenant-isolation-desktop.spec.ts",
+      "file": "j13-tenant-isolation-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J13 — tenant isolation (desktop)",
+          "file": "j13-tenant-isolation-desktop.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9468,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:19:25.287Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "018f48543fcfcb0c83cb-02c40814043574020574",
+              "file": "j13-tenant-isolation-desktop.spec.ts",
+              "line": 20,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j15-accessibility-desktop.spec.ts",
+      "file": "j15-accessibility-desktop.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J15 — accessibility / discoverability (desktop)",
+          "file": "j15-accessibility-desktop.spec.ts",
+          "line": 47,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "desktop",
+                  "projectName": "desktop",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2585,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:19:34.799Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "60fb2a0e9b18cefb86df-af3e1e1c7109005e5c37",
+              "file": "j15-accessibility-desktop.spec.ts",
+              "line": 48,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "j14-mobile-loop-mobile.spec.ts",
+      "file": "j14-mobile-loop-mobile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "J14 — mobile employee loop (390×844, touch)",
+          "file": "j14-mobile-loop-mobile.spec.ts",
+          "line": 13,
+          "column": 6,
+          "specs": [
+            {
+              "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 300000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile",
+                  "projectName": "mobile",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3467,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-23T16:19:38.070Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "40146485ce9814195948-a0abe225a6a65b88bd32",
+              "file": "j14-mobile-loop-mobile.spec.ts",
+              "line": 14,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-23T16:18:15.265Z",
+    "duration": 86412.113,
+    "expected": 15,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

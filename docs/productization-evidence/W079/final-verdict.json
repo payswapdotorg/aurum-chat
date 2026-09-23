@@ -1,0 +1,87 @@
+{
+  "verdict": "CERTIFIED READY",
+  "generatedAt": "2026-09-23T16:25:11.948Z",
+  "reasons": [],
+  "checks": [
+    {
+      "id": "runs.a-present",
+      "title": "Run A exists",
+      "status": "pass",
+      "detail": "Run A is present"
+    },
+    {
+      "id": "runs.b-present",
+      "title": "Run B exists",
+      "status": "pass",
+      "detail": "Run B is present"
+    },
+    {
+      "id": "runs.a-green",
+      "title": "Run A is 0 failed · 0 blocked · 0 flaky · 0 unexpected",
+      "status": "pass",
+      "detail": "Run A: 15 passed · 0 failed · 0 blocked · 0 flaky · 0 unexpected"
+    },
+    {
+      "id": "runs.b-green",
+      "title": "Run B is 0 failed · 0 blocked · 0 flaky · 0 unexpected",
+      "status": "pass",
+      "detail": "Run B: 15 passed · 0 failed · 0 blocked · 0 flaky · 0 unexpected"
+    },
+    {
+      "id": "identity.deployment-id",
+      "title": "the runs agree on the deployment id",
+      "status": "pass",
+      "detail": "Run A deployment id: dpl_42N21dKzTM6LfAf98EghUN4UFX9w · Run B deployment id: dpl_42N21dKzTM6LfAf98EghUN4UFX9w"
+    },
+    {
+      "id": "identity.commit-SHA",
+      "title": "the runs agree on the commit SHA",
+      "status": "pass",
+      "detail": "Run A commit SHA: c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 · Run B commit SHA: c0ea5f78f8979d46029ac6124eff2bf0ebd6d988"
+    },
+    {
+      "id": "identity.environment-label",
+      "title": "the runs agree on the environment label",
+      "status": "pass",
+      "detail": "Run A environment label: production · Run B environment label: production"
+    },
+    {
+      "id": "identity.database-backend-class",
+      "title": "the runs agree on the database backend class",
+      "status": "pass",
+      "detail": "Run A database backend class: postgres · Run B database backend class: postgres"
+    },
+    {
+      "id": "identity.hostname",
+      "title": "the runs agree on the hostname",
+      "status": "pass",
+      "detail": "Run A hostname: aurum-chat-livid.vercel.app · Run B hostname: aurum-chat-livid.vercel.app"
+    },
+    {
+      "id": "matrix.agreement",
+      "title": "the two runs agree on the journey matrix",
+      "status": "pass",
+      "detail": "all J01–J15 statuses identical across Run A and Run B"
+    }
+  ],
+  "runA": {
+    "dir": "docs/productization-evidence/W079/production-run-a",
+    "summary": {
+      "passed": 15,
+      "failed": 0,
+      "blocked": 0,
+      "flaky": 0,
+      "unexpected": 0
+    }
+  },
+  "runB": {
+    "dir": "docs/productization-evidence/W079/production-run-b",
+    "summary": {
+      "passed": 15,
+      "failed": 0,
+      "blocked": 0,
+      "flaky": 0,
+      "unexpected": 0
+    }
+  }
+}

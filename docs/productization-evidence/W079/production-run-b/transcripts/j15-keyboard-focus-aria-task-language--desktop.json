@@ -1,0 +1,86 @@
+{
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j15-accessibility-desktop.spec.ts",
+  "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-23T16:22:57.921Z",
+      "step": "sign in and land on the messenger",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.200Z",
+      "step": "the first Tab reaches the skip link, which becomes visible",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.235Z",
+      "step": "the skip link jumps to the content landmark",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.241Z",
+      "step": "walk the shell by keyboard — every stop focusable and visibly ringed",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.472Z",
+      "step": "screenshot: keyboard focus — the visible ring",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__keyboard-focus-the-visible-ring.png"
+    },
+    {
+      "at": "2026-09-23T16:22:59.472Z",
+      "step": "the messenger carries its ARIA landmark structure",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.597Z",
+      "step": "screenshot: the ARIA landmark structure",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-aria-landmark-structure.png"
+    },
+    {
+      "at": "2026-09-23T16:22:59.597Z",
+      "step": "command search speaks task language and navigates",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.815Z",
+      "step": "screenshot: command search — task language",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__command-search-task-language.png"
+    },
+    {
+      "at": "2026-09-23T16:22:59.815Z",
+      "step": "a no-match query offers task-language suggestions (no dead end)",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.872Z",
+      "step": "escape closes the dialog (keyboard discipline)",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:22:59.997Z",
+      "step": "a dead invitation link is an honest page with ways forward",
+      "url": "https://aurum-chat-livid.vercel.app/chat#product-main",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:23:00.455Z",
+      "step": "screenshot: the dead code — the honest no-dead-end page",
+      "url": "https://aurum-chat-livid.vercel.app/invite/not-a-live-code",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-dead-code-the-honest-no-dead-end-page.png"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "testId": "j06-the-why-drill-down-opens-the-causa-desktop:desktop",
+  "journeyId": "J06",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
+  "file": "tests/browser/production/j06-explainability-desktop.spec.ts",
+  "durationMs": 3549,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j06-the-why-drill-down-opens-the-causa-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-a/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-answer-carrying-its-why-affordance.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-explainability-trace-the-full-causal-chain.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-return-anchored-on-the-exact-originating-message.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j06-the-why-drill-down-opens-the-causa-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j06-the-why-drill-down-opens-the-causa-desktop-desktop.json"
+    ]
+  }
+}

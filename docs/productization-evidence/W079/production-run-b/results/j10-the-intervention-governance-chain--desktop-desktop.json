@@ -1,0 +1,28 @@
+{
+  "testId": "j10-the-intervention-governance-chain--desktop:desktop",
+  "journeyId": "J10",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J10 — the intervention governance chain: gaps, alternatives, the gate and the workforce",
+  "file": "tests/browser/production/j10-workforce-intervention-desktop.spec.ts",
+  "durationMs": 5146,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-b/transcripts/j10-the-intervention-governance-chain--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-more-hub-the-intervention-discovery.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-interventions-surface-gaps-alternatives-the-human-gate.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-workforce-surface-the-honest-read-model.png",
+      "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-agents-surface.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-b/errors/j10-the-intervention-governance-chain--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-b/results/j10-the-intervention-governance-chain--desktop-desktop.json"
+    ]
+  }
+}

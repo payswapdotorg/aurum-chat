@@ -1,0 +1,28 @@
+{
+  "testId": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop",
+  "journeyId": "J08",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
+  "file": "tests/browser/production/j08-connections-desktop.spec.ts",
+  "durationMs": 6184,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-contextual-prompt-connect-your-systems.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-connections-hub.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-configured-channel-registered-with-its-opaque-credential.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-verified-connection-the-hub-state-after-reload.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j08-a-contextual-prompt-leads-to-conne-desktop-desktop.json"
+    ]
+  }
+}

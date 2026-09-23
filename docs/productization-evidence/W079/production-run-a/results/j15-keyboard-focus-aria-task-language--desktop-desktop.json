@@ -1,0 +1,28 @@
+{
+  "testId": "j15-keyboard-focus-aria-task-language--desktop:desktop",
+  "journeyId": "J15",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
+  "file": "tests/browser/production/j15-accessibility-desktop.spec.ts",
+  "durationMs": 2577,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W079/production-run-a/transcripts/j15-keyboard-focus-aria-task-language--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W079/production-run-a/screenshots/j15-keyboard-focus-aria-task-language--desktop__keyboard-focus-the-visible-ring.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-aria-landmark-structure.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j15-keyboard-focus-aria-task-language--desktop__command-search-task-language.png",
+      "docs/productization-evidence/W079/production-run-a/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-dead-code-the-honest-no-dead-end-page.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W079/production-run-a/errors/j15-keyboard-focus-aria-task-language--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W079/production-run-a/results/j15-keyboard-focus-aria-task-language--desktop-desktop.json"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j03-unprompted-discovery-desktop.spec.ts",
+  "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-23T16:21:47.167Z",
+      "step": "sign in and pose the goals question through the starter",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:49.460Z",
+      "step": "pose the unknowns question in the same conversation",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=9088fc07-b862-4835-9064-b0e9f4736d94",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:50.459Z",
+      "step": "screenshot: the discovery questions — asked conversationally",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=9088fc07-b862-4835-9064-b0e9f4736d94",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-discovery-questions-asked-conversationally.png"
+    },
+    {
+      "at": "2026-09-23T16:21:50.459Z",
+      "step": "open the Intelligence hub from the rail",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=9088fc07-b862-4835-9064-b0e9f4736d94",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:51.089Z",
+      "step": "the chain surface renders the goal → mission navigation",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:51.290Z",
+      "step": "screenshot: the Intelligence hub — the chain surface",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-intelligence-hub-the-chain-surface.png"
+    },
+    {
+      "at": "2026-09-23T16:21:51.290Z",
+      "step": "the situation and capability-gap panels render",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:51.306Z",
+      "step": "the Learning hub carries the mission view",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:51.857Z",
+      "step": "screenshot: the Learning hub — missions and company knowledge",
+      "url": "https://aurum-chat-livid.vercel.app/learning",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-learning-hub-missions-and-company-knowledge.png"
+    },
+    {
+      "at": "2026-09-23T16:21:51.857Z",
+      "step": "return to the originating conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/learning",
+      "shot": null
+    }
+  ]
+}

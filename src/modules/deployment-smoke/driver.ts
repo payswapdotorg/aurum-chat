@@ -390,6 +390,20 @@ export async function runDeploymentSmoke(config: SmokeRunConfig): Promise<SmokeR
       workerToken,
       seamTokenGated,
       workerTokenStep: WORKER_TOKEN_STEP,
+      // W079 extension: the seeded demo journey checks are INAPPLICABLE
+      // to a target that reports itself as the production environment —
+      // the demo harness refuses to seed any production runtime by design
+      // (src/modules/demo/gate.ts; hard release gate "quick-sign-in/demo
+      // credentials OFF"), so a production target can never carry the
+      // seeded personas. On such a target those checks SKIP with this
+      // precise reason (the seeded-journeys acceptance is proven by the
+      // committed artifact-environment evidence; production proves the
+      // equivalent journeys through real users). Every non-production
+      // target keeps the exact original behavior: the seeded checks run
+      // and FAIL honestly when the demo world is missing.
+      seededInapplicable: health.environment === 'production',
+      seededInapplicableReason:
+        'the seeded demo journeys are inapplicable on the production environment — the demo harness never seeds a production runtime (demo gate: NODE_ENV=production / server database refuses), and the release gate requires demo credentials OFF in production; the seeded-journeys acceptance is proven on the artifact/preview evidence (docs/productization-evidence/W078/deployment-artifact-preview*), while production proves the same journeys through real sign-up (auth.* / chat.*) and the W079 browser matrix',
     });
     // The final health observation (post-activity) for the report.
     health = observeHealth(await client.get('/api/health'));
@@ -452,6 +466,9 @@ interface JourneyContext {
   workerToken: string | null;
   seamTokenGated: boolean;
   workerTokenStep: string;
+  /** W079: true when the target reports environment 'production' (the seeded demo checks are inapplicable there). */
+  seededInapplicable: boolean;
+  seededInapplicableReason: string;
 }
 
 async function runJourneyLayer(
@@ -546,6 +563,19 @@ async function runJourneyLayer(
   }
 
   // --- the seeded demo journeys -------------------------------------------------
+  if (context.seededInapplicable) {
+    for (const id of [
+      'seeded.persona-signin',
+      'seeded.conversation-list',
+      'seeded.thread',
+      'seeded.attention-turn',
+      'seeded.approval-decided',
+    ]) {
+      recorder.skipped(id, context.seededInapplicableReason, {
+        targetEnvironment: 'production',
+      });
+    }
+  } else {
   const manager = demoPersonaSpec('manager');
   const managerSignIn = await client.post('/api/auth/sign-in', {
     email: manager.email,
@@ -623,6 +653,7 @@ async function runJourneyLayer(
       }
     }
   }
+  } // end of the non-production seeded-demo branch (W079 production inapplicability)
 
   // --- durable execution semantics (the worker push seam) ------------------------
   const seamAccess =
@@ -751,15 +782,21 @@ async function runJourneyLayer(
   }
 
   // --- the two observability surfaces must agree (one process registry) ------------
-  const lateHealth = observeHealth(await client.get('/api/health'));
-  const lateSnapshot = observeWorkerSnapshot(
-    await client.get('/api/worker', tokenHeaders ?? undefined),
-  );
-  recorder.reasons(
-    'observability.surfaces-agree',
-    observabilitySurfacesAgreeReasons(lateHealth, lateSnapshot),
-    { healthWorker: lateHealth.workerMetrics, seamWorker: lateSnapshot.metrics },
-  );
+  // W079 extension: when the seam cannot be read (no worker token on a
+  // token-gated target) the check is already BLOCKED above — recording a
+  // second, failing entry for the same check id double-counts the verdict
+  // and mislabels an external precondition as a deployment defect.
+  if (seamAccess.ok) {
+    const lateHealth = observeHealth(await client.get('/api/health'));
+    const lateSnapshot = observeWorkerSnapshot(
+      await client.get('/api/worker', tokenHeaders ?? undefined),
+    );
+    recorder.reasons(
+      'observability.surfaces-agree',
+      observabilitySurfacesAgreeReasons(lateHealth, lateSnapshot),
+      { healthWorker: lateHealth.workerMetrics, seamWorker: lateSnapshot.metrics },
+    );
+  }
 
   // --- sign-out revokes the session ---------------------------------------------------
   const signOut = await client.post('/api/auth/sign-out', undefined, smokeCookie);

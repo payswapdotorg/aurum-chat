@@ -1,0 +1,561 @@
+{
+  "runLabel": "B",
+  "startedAt": "2026-09-23T16:21:30.223Z",
+  "finishedAt": "2026-09-23T16:23:05.553Z",
+  "target": "https://aurum-chat-livid.vercel.app",
+  "identity": {
+    "hostname": "aurum-chat-livid.vercel.app",
+    "deploymentId": "dpl_42N21dKzTM6LfAf98EghUN4UFX9w",
+    "commitSha": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+    "deploymentCreatedAt": "2026-09-23T04:15:26.369Z",
+    "certificationStartedAt": "2026-09-23T16:21:30.223Z",
+    "environmentLabel": "production",
+    "databaseBackendClass": "postgres",
+    "workerRuntimeState": {
+      "seamTokenGated": true,
+      "snapshotReachable": true,
+      "environment": "production",
+      "queueDepth": 0
+    },
+    "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --deployment-id dpl_42N21dKzTM6LfAf98EghUN4UFX9w --expect-commit c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 --deployment-created 2026-09-23T04:15:26.369Z --worker-token-file <redacted> --vercel-token-file <redacted>",
+    "repository": {
+      "remote": "https://github.com/payswapdotorg/aurum-chat.git",
+      "branch": "work/w079-production-certification",
+      "baseCommit": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+      "headCommit": "0dec595821d8e9d1cee127019b40d28c6e61c7c9"
+    }
+  },
+  "gates": [
+    {
+      "id": "matrix.consistency",
+      "title": "the J01–J15 matrix is the contract matrix",
+      "status": "pass",
+      "detail": "all 15 journeys declared with their mandatory proofs"
+    },
+    {
+      "id": "g1.health",
+      "title": "the production runtime is genuinely production (health contract)",
+      "status": "pass",
+      "detail": "/api/health status ok · environment production · db postgres (91 migrations) · queue/cache/lock redis · 0 refusals · 0 warnings",
+      "evidence": {
+        "httpStatus": 200,
+        "healthStatus": "ok",
+        "environment": "production",
+        "backends": {
+          "db": "postgres",
+          "queue": "redis",
+          "cache": "redis",
+          "lock": "redis",
+          "email": "resend",
+          "blob": "vercel-blob"
+        }
+      }
+    },
+    {
+      "id": "g1.quick-sign-in-off",
+      "title": "production quick-sign-in/demo credentials remain OFF",
+      "status": "pass",
+      "detail": "POST /api/auth/quick-sign-in answered 404 — the quick-access panel is off in the production runtime",
+      "evidence": {
+        "status": 404
+      }
+    },
+    {
+      "id": "g1.worker-authorization",
+      "title": "WORKER_TOKEN exists and worker authorization works",
+      "status": "pass",
+      "detail": "the seam is fail-closed (401 no/bad token) and the valid token reads the snapshot (environment production, queue depth 0)",
+      "evidence": {
+        "noTokenStatus": 401,
+        "badTokenStatus": 401,
+        "validStatus": 200,
+        "snapshotEnvironment": "production"
+      }
+    },
+    {
+      "id": "g1.deployment-identity",
+      "title": "the target is the expected production deployment (identity manifest)",
+      "status": "pass",
+      "detail": "the live production deployment is dpl_42N21dKzTM6LfAf98EghUN4UFX9w @ c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 (READY, created 2026-09-23T04:15:26.369Z)",
+      "evidence": {
+        "expectedDeploymentId": "dpl_42N21dKzTM6LfAf98EghUN4UFX9w",
+        "expectedCommitSha": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+        "observedDeploymentId": "dpl_42N21dKzTM6LfAf98EghUN4UFX9w",
+        "observedReadyState": "READY",
+        "observedCommitSha": "c0ea5f78f8979d46029ac6124eff2bf0ebd6d988",
+        "observedCreatedAt": "2026-09-23T04:15:26.369Z"
+      }
+    },
+    {
+      "id": "g3.w078-rerun",
+      "title": "the W078 hosted smoke rerun is green with zero blocked",
+      "status": "pass",
+      "detail": "27 passed · 0 failed · 0 blocked · 13 skipped (the seeded demo checks are inapplicable on production — the demo gate keeps the production runtime demo-free by design)",
+      "evidence": {
+        "summary": {
+          "total": 40,
+          "passed": 27,
+          "failed": 0,
+          "blocked": 0,
+          "skipped": 13
+        }
+      }
+    },
+    {
+      "id": "g3.browser-matrix",
+      "title": "the J01–J15 browser matrix runs against the hosted production URL (desktop + mobile)",
+      "status": "pass",
+      "detail": "15/15 browser tests green across 15 journey-context pairs — real production auth, zero-violation record attached"
+    }
+  ],
+  "repoGates": [
+    {
+      "command": "bun run typecheck",
+      "exitCode": 0,
+      "summary": "$ tsc --noEmit"
+    },
+    {
+      "command": "bun run test",
+      "exitCode": 0,
+      "summary": "  digest: 'NEXT_REDIRECT;replace;/onboarding;307;'\n}\nfatal: not a git repository (or any of the parent directories): .git\nfatal: not a git repository (or any of the parent directories): .git\nfatal: not a git repository (or any of the parent directories): .git\nfatal: not a git repository (or any of the parent directories): .git"
+    },
+    {
+      "command": "bun run arch",
+      "exitCode": 0,
+      "summary": "architecture check passed — module files: 480, app/mcp files: 278, tables checked: 149\n$ tsx scripts/check-architecture.ts"
+    },
+    {
+      "command": "bun run lint",
+      "exitCode": 0,
+      "summary": "$ eslint ."
+    }
+  ],
+  "w078": {
+    "label": "production-certification-run-b",
+    "summary": {
+      "total": 40,
+      "passed": 27,
+      "failed": 0,
+      "blocked": 0,
+      "skipped": 13
+    },
+    "reportPath": "docs/productization-evidence/W079/production-run-b/w078/smoke-report.json"
+  },
+  "journeys": [
+    {
+      "journeyId": "J01",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__anonymous-entry-the-production-sign-in-surface.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__onboarding-the-workspace-setup-surface.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__the-first-screen-the-messenger-with-its-starters.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+      ],
+      "detail": "observed as specified: anonymous → sign-in → onboarding → company → Chat"
+    },
+    {
+      "journeyId": "J02",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j02-a-composer-turn-runs-the-real-work-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j02-a-composer-turn-runs-the-real-work-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j02-a-composer-turn-runs-the-real-work-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-working-state-the-real-execution-is-running.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-answer-honest-company-state-delivered.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-evidence-backed-answer-with-its-citations.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j02-a-composer-turn-runs-the-real-work-desktop.json"
+      ],
+      "detail": "observed as specified: conversation list → thread → compose → working → answer → evidence"
+    },
+    {
+      "journeyId": "J03",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j03-the-discovery-chain-chat-starters--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j03-the-discovery-chain-chat-starters--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j03-the-discovery-chain-chat-starters--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-discovery-questions-asked-conversationally.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-intelligence-hub-the-chain-surface.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-learning-hub-missions-and-company-knowledge.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j03-the-discovery-chain-chat-starters--desktop.json"
+      ],
+      "detail": "observed as specified: goal/situation → gap → unknown → learning mission"
+    },
+    {
+      "journeyId": "J04",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j04-a-finding-drills-down-to-its-evide-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j04-a-finding-drills-down-to-its-evide-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j04-a-finding-drills-down-to-its-evide-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j04-a-finding-drills-down-to-its-evide-desktop.json"
+      ],
+      "detail": "observed as specified: finding → detail → evidence/action → return to originating conversation"
+    },
+    {
+      "journeyId": "J05",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j05-a-proposed-action-waits-at-the-hum-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-issued-invitation-shown-once.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-employee-joined-landing-in-the-company-chat.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approval-card-the-comparison-waiting-at-the-human-gate.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-decision-acknowledged-in-place.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approvals-surface-the-append-only-decision-trail.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+      ],
+      "detail": "observed as specified: recommendation → comparison → explicit human decision → activation → outcome"
+    },
+    {
+      "journeyId": "J06",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j06-the-why-drill-down-opens-the-causa-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j06-the-why-drill-down-opens-the-causa-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j06-the-why-drill-down-opens-the-causa-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-answer-carrying-its-why-affordance.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-explainability-trace-the-full-causal-chain.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-return-anchored-on-the-exact-originating-message.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j06-the-why-drill-down-opens-the-causa-desktop.json"
+      ],
+      "detail": "observed as specified: answer/action → Why → evidence/provenance → return to exact chat message"
+    },
+    {
+      "journeyId": "J07",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j07-the-learning-lane-mission-ask-plan-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j07-the-learning-lane-mission-ask-plan-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j07-the-learning-lane-mission-ask-plan-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-hub-the-live-mission.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-planner-decision-honest-on-the-record.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-contribution-and-reward-state.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-answer-in-chat.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j07-the-learning-lane-mission-ask-plan-desktop.json"
+      ],
+      "detail": "observed as specified: knowledge request in Chat → answer → acknowledgement → contribution/evidence → reward state"
+    },
+    {
+      "journeyId": "J08",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j08-a-contextual-prompt-leads-to-conne-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-contextual-prompt-connect-your-systems.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-connections-hub.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-configured-channel-registered-with-its-opaque-credential.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-verified-connection-the-hub-state-after-reload.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+      ],
+      "detail": "observed as specified: Chat/contextual prompt → Connections → configure/verify → return to investigation"
+    },
+    {
+      "journeyId": "J09",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j09-an-unavailable-provider-becomes-a--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j09-an-unavailable-provider-becomes-a--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j09-an-unavailable-provider-becomes-a--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-honest-answer-the-provider-prompt.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-ai-surface-no-accounts-yet-the-unavailable-state.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-registered-byoa-account-opaque-reference-only.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-routing-panel-the-usable-route.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__back-to-the-task-the-answer-still-evidence-backed.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j09-an-unavailable-provider-becomes-a--desktop.json"
+      ],
+      "detail": "observed as specified: unavailable capability/model → provider configuration → usable route → return to task"
+    },
+    {
+      "journeyId": "J10",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j10-the-intervention-governance-chain--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j10-the-intervention-governance-chain--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j10-the-intervention-governance-chain--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-more-hub-the-intervention-discovery.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-interventions-surface-gaps-alternatives-the-human-gate.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-workforce-surface-the-honest-read-model.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-agents-surface.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j10-the-intervention-governance-chain--desktop.json"
+      ],
+      "detail": "observed as specified: capability gap → alternatives → proposal → human approval → activation → lifecycle"
+    },
+    {
+      "journeyId": "J11",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j11-the-marketplace-discovery-the-publ-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j11-the-marketplace-discovery-the-publ-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j11-the-marketplace-discovery-the-publ-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-discovered-from-the-hub.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-public-catalog-the-governed-listing-state.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-installed-state-the-tenant-review-surface.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-developer-surface.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j11-the-marketplace-discovery-the-publ-desktop.json"
+      ],
+      "detail": "observed as specified: discover capability → public catalog/package → install/review state → return to task"
+    },
+    {
+      "journeyId": "J12",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j12-the-developer-console-discovery-ke-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j12-the-developer-console-discovery-ke-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j12-the-developer-console-discovery-ke-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-developer-console-discovered-from-the-hub.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-key-roster-the-recorded-grant.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-webhook-registered-with-its-delivery-contract.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-mcp-surface.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-revoked-keys-the-roster-retains-the-audit-trail.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j12-the-developer-console-discovery-ke-desktop.json"
+      ],
+      "detail": "observed as specified: discover from More/search → developer console → key/webhook/MCP surface → audit state"
+    },
+    {
+      "journeyId": "J13",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-recorded-activity-marker.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-created-through-the-real-flow.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-empty-conversation-list.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-isolated-surfaces.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-activity-preserved.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+      ],
+      "detail": "observed as specified: manager tenant activity → sign out → second tenant → no first-tenant data visible"
+    },
+    {
+      "journeyId": "J14",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "mobile",
+          "status": "pass",
+          "detail": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile green"
+        }
+      ],
+      "testIds": [
+        "j14-the-mobile-loop-list-full-screen-t-mobile:mobile"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j14-the-mobile-loop-list-full-screen-t-mobile.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-touch-chrome.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-conversation-list-home.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-full-screen-thread.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-composer.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-reply-landed.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-back-to-the-list.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j14-the-mobile-loop-list-full-screen-t-mobile.json"
+      ],
+      "detail": "observed as specified: mobile Chat list → full-screen thread → composer → reply → back to list"
+    },
+    {
+      "journeyId": "J15",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j15-keyboard-focus-aria-task-language--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j15-keyboard-focus-aria-task-language--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W079/production-run-b/transcripts/j15-keyboard-focus-aria-task-language--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__keyboard-focus-the-visible-ring.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-aria-landmark-structure.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__command-search-task-language.png",
+        "docs/productization-evidence/W079/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-dead-code-the-honest-no-dead-end-page.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W079/production-run-b/errors/j15-keyboard-focus-aria-task-language--desktop.json"
+      ],
+      "detail": "observed as specified: keyboard/focus/ARIA; task-language discovery; no dead-end/no-match states"
+    }
+  ],
+  "summary": {
+    "passed": 15,
+    "failed": 0,
+    "blocked": 0,
+    "flaky": 0,
+    "unexpected": 0
+  },
+  "verdict": "CERTIFIED READY",
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --deployment-id dpl_42N21dKzTM6LfAf98EghUN4UFX9w --expect-commit c0ea5f78f8979d46029ac6124eff2bf0ebd6d988 --deployment-created 2026-09-23T04:15:26.369Z --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "evidenceDir": "docs/productization-evidence/W079/production-run-b"
+}

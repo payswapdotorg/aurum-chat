@@ -1,0 +1,62 @@
+{
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j08-connections-desktop.spec.ts",
+  "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
+  "project": "desktop",
+  "runLabel": "A",
+  "steps": [
+    {
+      "at": "2026-09-23T16:18:54.606Z",
+      "step": "sign in and ask the contextual question in Chat",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:18:57.988Z",
+      "step": "screenshot: the contextual prompt — connect your systems",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=f1a7d069-c2da-4bf4-8641-a8d6a0aad112",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-contextual-prompt-connect-your-systems.png"
+    },
+    {
+      "at": "2026-09-23T16:18:57.988Z",
+      "step": "open the Connections hub from the rail",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=f1a7d069-c2da-4bf4-8641-a8d6a0aad112",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:18:58.630Z",
+      "step": "screenshot: the Connections hub",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-connections-hub.png"
+    },
+    {
+      "at": "2026-09-23T16:18:58.630Z",
+      "step": "configure a channel endpoint through the real form",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:18:59.080Z",
+      "step": "screenshot: the configured channel — registered with its opaque credential reference",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-configured-channel-registered-with-its-opaque-credential.png"
+    },
+    {
+      "at": "2026-09-23T16:18:59.081Z",
+      "step": "the connection is verified in the hub state",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:00.296Z",
+      "step": "screenshot: the verified connection — the hub state after reload",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-verified-connection-the-hub-state-after-reload.png"
+    },
+    {
+      "at": "2026-09-23T16:19:00.296Z",
+      "step": "return to the investigation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    }
+  ]
+}

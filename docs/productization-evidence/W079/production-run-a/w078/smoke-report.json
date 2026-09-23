@@ -1,0 +1,796 @@
+{
+  "label": "production-certification-run-a",
+  "target": "https://aurum-chat-livid.vercel.app",
+  "profile": "full",
+  "startedAt": "2026-09-23T16:18:04.665Z",
+  "finishedAt": "2026-09-23T16:18:14.329Z",
+  "expectedEnvironment": "production",
+  "summary": {
+    "total": 40,
+    "passed": 27,
+    "failed": 0,
+    "blocked": 0,
+    "skipped": 13
+  },
+  "results": [
+    {
+      "id": "routing.root-anonymous-gate",
+      "title": "anonymous root is gated to sign-in with a return path",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 307,
+        "location": "https://aurum-chat-livid.vercel.app/signin?next=%2F"
+      }
+    },
+    {
+      "id": "routing.chat-anonymous-gate",
+      "title": "anonymous /chat is gated to sign-in with next=/chat",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 307,
+        "location": "https://aurum-chat-livid.vercel.app/signin?next=%2Fchat"
+      }
+    },
+    {
+      "id": "routing.onboarding-gate",
+      "title": "anonymous /onboarding is gated to sign-in",
+      "category": "routing",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 307,
+        "location": "https://aurum-chat-livid.vercel.app/signin?next=%2Fonboarding"
+      }
+    },
+    {
+      "id": "routing.signin-renders",
+      "title": "/signin renders a real HTML page",
+      "category": "routing",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8"
+      }
+    },
+    {
+      "id": "routing.static-assets",
+      "title": "static assets referenced by the page are served",
+      "category": "routing",
+      "acceptance": "browser journeys pass on production dogfood",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "asset": "/_next/static/immutable/chunks/0m4f_knaps1dr.css",
+        "status": 200,
+        "contentType": "text/css; charset=utf-8"
+      }
+    },
+    {
+      "id": "health.contract",
+      "title": "/api/health answers with the full readiness contract",
+      "category": "health-readiness",
+      "acceptance": "health endpoint is green",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "healthStatus": "ok",
+        "environment": "production",
+        "backends": {
+          "db": "postgres",
+          "queue": "redis",
+          "cache": "redis",
+          "lock": "redis",
+          "email": "resend",
+          "blob": "vercel-blob"
+        }
+      }
+    },
+    {
+      "id": "health.green",
+      "title": "/api/health is green (db answers, schema applied, no refusals)",
+      "category": "health-readiness",
+      "acceptance": "health endpoint is green",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": "ok",
+        "migrations": 91,
+        "refusals": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "health.environment-label",
+      "title": "/api/health reports the expected environment label",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "the target reports 'production'",
+      "evidence": {
+        "observed": "production",
+        "expected": "production",
+        "hostedOnVercel": true
+      }
+    },
+    {
+      "id": "health.honest-refusal",
+      "title": "a production target without its domain-truth database refuses to serve (and says so precisely)",
+      "category": "health-readiness",
+      "acceptance": "health endpoint is green",
+      "layer": "hosted",
+      "status": "skipped",
+      "detail": "nothing to refuse — the target reports a serving database (no production refusal state to observe)",
+      "evidence": {
+        "status": "ok"
+      }
+    },
+    {
+      "id": "worker.retry-policy-surface",
+      "title": "the deployment surfaces its worker retry policy (guardrails)",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "guardrails": {
+          "workerMaxAttempts": 5,
+          "workerBatchLimit": 10,
+          "workerPollIntervalMs": 2000
+        }
+      }
+    },
+    {
+      "id": "worker.seam-auth-fail-closed",
+      "title": "the worker seam refuses unauthenticated and bad-token calls",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "noTokenStatus": 401,
+        "badTokenStatus": 401
+      }
+    },
+    {
+      "id": "observability.worker-snapshot",
+      "title": "GET /api/worker exposes queue depth and the metrics registry",
+      "category": "observability",
+      "acceptance": "queue depth and worker metrics are inspectable",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "environment": "production",
+        "queueDepth": 0,
+        "metrics": {
+          "jobsEnqueued": 0,
+          "jobsProcessed": 0,
+          "jobsSuspended": 0,
+          "jobsDuplicate": 0,
+          "jobsConflict": 0,
+          "jobsNotFound": 0,
+          "jobsRetried": 0,
+          "jobsDeadLettered": 0,
+          "idlePolls": 0,
+          "batches": 0,
+          "lastActivityAt": null
+        }
+      }
+    },
+    {
+      "id": "env.quick-signin-availability",
+      "title": "demo quick sign-in availability matches the runtime family",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "hosted",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 404,
+        "body": {
+          "error": "not_available",
+          "message": "quick sign-in is not available in this environment"
+        }
+      }
+    },
+    {
+      "id": "auth.signup",
+      "title": "a fresh visitor registers a real account and receives a session cookie",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "session": {
+            "principal": {
+              "id": "c8f50c2b-6524-4a40-9162-bf9537f4c680",
+              "email": "w078-smoke-mueb4c1l@aurum-smoke.test",
+              "displayName": "W078 Smoke Operator"
+            },
+            "company": null,
+            "expiresAt": "2026-09-30T16:18:08.593Z"
+          }
+        }
+      }
+    },
+    {
+      "id": "auth.session-no-company",
+      "title": "the fresh session reports no active company (onboarding state)",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "status": "no-company",
+          "principal": {
+            "id": "c8f50c2b-6524-4a40-9162-bf9537f4c680",
+            "email": "w078-smoke-mueb4c1l@aurum-smoke.test",
+            "displayName": "W078 Smoke Operator"
+          },
+          "company": null,
+          "companies": []
+        }
+      }
+    },
+    {
+      "id": "auth.chat-gated-pre-onboarding",
+      "title": "chat correctly refuses a company-less session (409 no_active_company)",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 409,
+        "body": {
+          "error": "no_active_company",
+          "message": "the session has no active company — complete onboarding first"
+        }
+      }
+    },
+    {
+      "id": "auth.onboarding-company",
+      "title": "company creation through onboarding selects the tenant",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "tenant": {
+            "id": "8204717a-c684-4893-a309-9c20dd2721de",
+            "name": "W078 Smoke Roasters",
+            "slug": "w078-smoke-mueb4c1l",
+            "createdAt": "2026-09-23T16:18:09.455Z",
+            "updatedAt": "2026-09-23T16:18:09.455Z"
+          },
+          "session": {
+            "principal": {
+              "id": "c8f50c2b-6524-4a40-9162-bf9537f4c680",
+              "email": "w078-smoke-mueb4c1l@aurum-smoke.test",
+              "displayName": "W078 Smoke Operator"
+            },
+            "company": {
+              "tenantId": "8204717a-c684-4893-a309-9c20dd2721de",
+              "workspaceId": null,
+              "role": "owner",
+              "authority": [
+                "actions:approve",
+                "actions:administer",
+                "agents:administer",
+                "extensions:administer",
+                "identity:attest",
+                "identity:link",
+                "llm:administer",
+                "rewards:administer",
+                "marketplace:submit",
+                "api:administer"
+              ]
+            },
+            "expiresAt": "2026-09-30T16:18:08.593Z"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing.root-authenticated-chat",
+      "title": "an authenticated session is routed from / to /chat",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 307,
+        "location": "https://aurum-chat-livid.vercel.app/chat"
+      }
+    },
+    {
+      "id": "chat.state-fresh",
+      "title": "chat state answers for the onboarded session",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "chat": "state",
+          "tenantId": "8204717a-c684-4893-a309-9c20dd2721de",
+          "generatedAt": "2026-09-23T16:18:10.256Z",
+          "view": {
+            "generatedAt": "2026-09-23T16:18:10.256Z",
+            "conversations": [],
+            "thread": null
+          }
+        }
+      }
+    },
+    {
+      "id": "chat.turn",
+      "title": "a composer turn runs the real workflow and returns the reply",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "conversationId": "9b9d54cf-01e0-4970-925a-8e6e851198ca",
+        "executionId": "6c24c92b-1005-4608-bd4b-23be3bf853e6"
+      }
+    },
+    {
+      "id": "chat.thread-persists",
+      "title": "the turn persists into the conversation thread",
+      "category": "routing",
+      "acceptance": "Chat is the primary root experience",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "conversationId": "9b9d54cf-01e0-4970-925a-8e6e851198ca",
+        "status": 200
+      }
+    },
+    {
+      "id": "seeded.persona-signin",
+      "title": "the seeded manager persona signs in through the real password path",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "skipped",
+      "detail": "the seeded demo journeys are inapplicable on the production environment — the demo harness never seeds a production runtime (demo gate: NODE_ENV=production / server database refuses), and the release gate requires demo credentials OFF in production; the seeded-journeys acceptance is proven on the artifact/preview evidence (docs/productization-evidence/W078/deployment-artifact-preview*), while production proves the same journeys through real sign-up (auth.* / chat.*) and the W079 browser matrix",
+      "evidence": {
+        "targetEnvironment": "production"
+      }
+    },
+    {
+      "id": "seeded.conversation-list",
+      "title": "the seeded demo conversation appears in the manager chat list",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "skipped",
+      "detail": "the seeded demo journeys are inapplicable on the production environment — the demo harness never seeds a production runtime (demo gate: NODE_ENV=production / server database refuses), and the release gate requires demo credentials OFF in production; the seeded-journeys acceptance is proven on the artifact/preview evidence (docs/productization-evidence/W078/deployment-artifact-preview*), while production proves the same journeys through real sign-up (auth.* / chat.*) and the W079 browser matrix",
+      "evidence": {
+        "targetEnvironment": "production"
+      }
+    },
+    {
+      "id": "seeded.thread",
+      "title": "the seeded thread opens with its recorded turns",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "skipped",
+      "detail": "the seeded demo journeys are inapplicable on the production environment — the demo harness never seeds a production runtime (demo gate: NODE_ENV=production / server database refuses), and the release gate requires demo credentials OFF in production; the seeded-journeys acceptance is proven on the artifact/preview evidence (docs/productization-evidence/W078/deployment-artifact-preview*), while production proves the same journeys through real sign-up (auth.* / chat.*) and the W079 browser matrix",
+      "evidence": {
+        "targetEnvironment": "production"
+      }
+    },
+    {
+      "id": "seeded.attention-turn",
+      "title": "the attention turn surfaces the seeded pending approval as a chat card",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "skipped",
+      "detail": "the seeded demo journeys are inapplicable on the production environment — the demo harness never seeds a production runtime (demo gate: NODE_ENV=production / server database refuses), and the release gate requires demo credentials OFF in production; the seeded-journeys acceptance is proven on the artifact/preview evidence (docs/productization-evidence/W078/deployment-artifact-preview*), while production proves the same journeys through real sign-up (auth.* / chat.*) and the W079 browser matrix",
+      "evidence": {
+        "targetEnvironment": "production"
+      }
+    },
+    {
+      "id": "seeded.approval-decided",
+      "title": "the pending approval is decided inline and the timeline reflects it",
+      "category": "seeded-journeys",
+      "acceptance": "seeded demo journeys work",
+      "layer": "journey",
+      "status": "skipped",
+      "detail": "the seeded demo journeys are inapplicable on the production environment — the demo harness never seeds a production runtime (demo gate: NODE_ENV=production / server database refuses), and the release gate requires demo credentials OFF in production; the seeded-journeys acceptance is proven on the artifact/preview evidence (docs/productization-evidence/W078/deployment-artifact-preview*), while production proves the same journeys through real sign-up (auth.* / chat.*) and the W079 browser matrix",
+      "evidence": {
+        "targetEnvironment": "production"
+      }
+    },
+    {
+      "id": "worker.dead-letter-invalid",
+      "title": "an invalid pushed envelope is dead-lettered with a precise reason",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "ok": true,
+          "mode": "push",
+          "environment": "production",
+          "processed": 1,
+          "outcomes": [
+            {
+              "status": "dead_letter",
+              "executionId": null,
+              "attempt": null,
+              "executionState": null,
+              "completedStages": null,
+              "correlationId": null,
+              "detail": "invalid job envelope: job kind must be 'cognition-stage'"
+            }
+          ],
+          "metrics": {
+            "jobsEnqueued": 0,
+            "jobsProcessed": 0,
+            "jobsSuspended": 0,
+            "jobsDuplicate": 0,
+            "jobsConflict": 0,
+            "jobsNotFound": 0,
+            "jobsRetried": 0,
+            "jobsDeadLettered": 0,
+            "idlePolls": 0,
+            "batches": 0,
+            "lastActivityAt": null
+          },
+          "queueDepth": 0
+        }
+      }
+    },
+    {
+      "id": "worker.idle-pull",
+      "title": "a pull-mode sweep of the drained queue reports idle honestly",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "ok": true,
+          "mode": "pull",
+          "environment": "production",
+          "processed": 0,
+          "outcomes": [
+            {
+              "status": "idle",
+              "executionId": null,
+              "attempt": null,
+              "executionState": null,
+              "completedStages": null,
+              "correlationId": null,
+              "detail": "queue empty"
+            }
+          ],
+          "metrics": {
+            "jobsEnqueued": 0,
+            "jobsProcessed": 0,
+            "jobsSuspended": 0,
+            "jobsDuplicate": 0,
+            "jobsConflict": 0,
+            "jobsNotFound": 0,
+            "jobsRetried": 0,
+            "jobsDeadLettered": 0,
+            "idlePolls": 1,
+            "batches": 1,
+            "lastActivityAt": null
+          },
+          "queueDepth": 0
+        }
+      }
+    },
+    {
+      "id": "worker.duplicate-acknowledged",
+      "title": "a redelivered (stale-stage) job is acknowledged as an idempotent duplicate",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "ok": true,
+          "mode": "push",
+          "environment": "production",
+          "processed": 1,
+          "outcomes": [
+            {
+              "status": "duplicate",
+              "executionId": "6c24c92b-1005-4608-bd4b-23be3bf853e6",
+              "attempt": 1,
+              "executionState": null,
+              "completedStages": null,
+              "correlationId": null,
+              "detail": "stale job acknowledged — execution 6c24c92b-1005-4608-bd4b-23be3bf853e6 is terminal (cognitive execution '6c24c92b-1005-4608-bd4b-23be3bf853e6' is completed — terminal executions cannot advance; start a new cycle instead)"
+            }
+          ],
+          "metrics": {
+            "jobsEnqueued": 0,
+            "jobsProcessed": 0,
+            "jobsSuspended": 0,
+            "jobsDuplicate": 1,
+            "jobsConflict": 0,
+            "jobsNotFound": 0,
+            "jobsRetried": 0,
+            "jobsDeadLettered": 0,
+            "idlePolls": 1,
+            "batches": 1,
+            "lastActivityAt": "2026-09-23T16:18:12.446Z"
+          },
+          "queueDepth": 0
+        }
+      }
+    },
+    {
+      "id": "worker.not-found-consumed",
+      "title": "a job for an unknown execution is consumed as not_found (never retried)",
+      "category": "durable-execution",
+      "acceptance": "worker/workflow retry and duplicate semantics are observed",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "status": 200,
+        "body": {
+          "ok": true,
+          "mode": "push",
+          "environment": "production",
+          "processed": 1,
+          "outcomes": [
+            {
+              "status": "not_found",
+              "executionId": "5988815f-ebed-40f7-ac88-6ddeff16feef",
+              "attempt": 1,
+              "executionState": null,
+              "completedStages": null,
+              "correlationId": null,
+              "detail": "execution 5988815f-ebed-40f7-ac88-6ddeff16feef is unknown in this tenant — job consumed, never retried"
+            }
+          ],
+          "metrics": {
+            "jobsEnqueued": 0,
+            "jobsProcessed": 0,
+            "jobsSuspended": 0,
+            "jobsDuplicate": 1,
+            "jobsConflict": 0,
+            "jobsNotFound": 1,
+            "jobsRetried": 0,
+            "jobsDeadLettered": 0,
+            "idlePolls": 1,
+            "batches": 1,
+            "lastActivityAt": "2026-09-23T16:18:12.741Z"
+          },
+          "queueDepth": 0
+        }
+      }
+    },
+    {
+      "id": "observability.metrics-advance",
+      "title": "worker metrics counters advance with observed job dispositions",
+      "category": "observability",
+      "acceptance": "queue depth and worker metrics are inspectable",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "metrics": {
+          "jobsEnqueued": 0,
+          "jobsProcessed": 0,
+          "jobsSuspended": 0,
+          "jobsDuplicate": 1,
+          "jobsConflict": 0,
+          "jobsNotFound": 1,
+          "jobsRetried": 0,
+          "jobsDeadLettered": 0,
+          "idlePolls": 1,
+          "batches": 1,
+          "lastActivityAt": "2026-09-23T16:18:12.741Z"
+        },
+        "queueDepth": 0
+      }
+    },
+    {
+      "id": "observability.surfaces-agree",
+      "title": "the health and worker observability surfaces report the same counters",
+      "category": "observability",
+      "acceptance": "queue depth and worker metrics are inspectable",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "healthWorker": {
+          "jobsEnqueued": 0,
+          "jobsProcessed": 0,
+          "jobsSuspended": 0,
+          "jobsDuplicate": 1,
+          "jobsConflict": 0,
+          "jobsNotFound": 1,
+          "jobsRetried": 0,
+          "jobsDeadLettered": 0,
+          "idlePolls": 1,
+          "batches": 1,
+          "lastActivityAt": "2026-09-23T16:18:12.741Z"
+        },
+        "seamWorker": {
+          "jobsEnqueued": 0,
+          "jobsProcessed": 0,
+          "jobsSuspended": 0,
+          "jobsDuplicate": 1,
+          "jobsConflict": 0,
+          "jobsNotFound": 1,
+          "jobsRetried": 0,
+          "jobsDeadLettered": 0,
+          "idlePolls": 1,
+          "batches": 1,
+          "lastActivityAt": "2026-09-23T16:18:12.741Z"
+        }
+      }
+    },
+    {
+      "id": "auth.signout",
+      "title": "sign-out revokes the session and clears the cookie",
+      "category": "authentication-onboarding",
+      "acceptance": "sign-in/onboarding works on the hosted deployment",
+      "layer": "journey",
+      "status": "pass",
+      "detail": "observed as specified",
+      "evidence": {
+        "signOutStatus": 200,
+        "sessionAfterStatus": 401
+      }
+    },
+    {
+      "id": "release.rollback-runbook",
+      "title": "the rollback runbook documents all four recovery cases",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "skipped",
+      "detail": "the repo layer runs only with --repo-root"
+    },
+    {
+      "id": "release.known-good-deployment",
+      "title": "a known-good deployment uid is recorded as the promote target",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "skipped",
+      "detail": "the repo layer runs only with --repo-root"
+    },
+    {
+      "id": "release.ci-gates",
+      "title": "CI runs the four repository gates before deploy",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "skipped",
+      "detail": "the repo layer runs only with --repo-root"
+    },
+    {
+      "id": "release.deployment-config",
+      "title": "the deployment configuration migrates before build and sweeps daily",
+      "category": "release-rollback",
+      "acceptance": "deployment rollback is documented",
+      "layer": "repo",
+      "status": "skipped",
+      "detail": "the repo layer runs only with --repo-root"
+    },
+    {
+      "id": "browser.suite-registered",
+      "title": "the real-browser journey suite is wired and evidenced (re-runnable against the hosted dogfood)",
+      "category": "release-rollback",
+      "acceptance": "browser journeys pass on production dogfood",
+      "layer": "repo",
+      "status": "skipped",
+      "detail": "the repo layer runs only with --repo-root"
+    },
+    {
+      "id": "env.demo-gate-refuses-production",
+      "title": "the demo seed gate refuses production runtimes and backends",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "repo",
+      "status": "skipped",
+      "detail": "the repo layer runs only with --repo-root"
+    },
+    {
+      "id": "env.matrix-documented",
+      "title": "the environment separation matrix is documented",
+      "category": "environment-separation",
+      "acceptance": "environment separation is verified",
+      "layer": "repo",
+      "status": "skipped",
+      "detail": "the repo layer runs only with --repo-root"
+    }
+  ],
+  "health": {
+    "httpStatus": 200,
+    "status": "ok",
+    "environment": "production",
+    "hostedOnVercel": true,
+    "dogfoodNotice": "internal/non-commercial dogfood while the free tier is used (plan §7)",
+    "dbBackend": "postgres",
+    "dbOk": true,
+    "migrations": 91,
+    "dbError": null,
+    "queueBackend": "redis",
+    "cacheBackend": "redis",
+    "lockBackend": "redis",
+    "emailBackend": "resend",
+    "blobBackend": "vercel-blob",
+    "refusals": [],
+    "warnings": [],
+    "workerMetricsPresent": true,
+    "workerMetrics": {
+      "jobsEnqueued": 0,
+      "jobsProcessed": 0,
+      "jobsSuspended": 0,
+      "jobsDuplicate": 1,
+      "jobsConflict": 0,
+      "jobsNotFound": 1,
+      "jobsRetried": 0,
+      "jobsDeadLettered": 0,
+      "idlePolls": 1,
+      "batches": 1,
+      "lastActivityAt": "2026-09-23T16:18:12.741Z"
+    },
+    "guardrails": {
+      "workerMaxAttempts": 5,
+      "workerBatchLimit": 10,
+      "workerPollIntervalMs": 2000
+    },
+    "cacheControl": "no-store",
+    "fetchError": null
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
+  "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
+  "project": "desktop",
+  "runLabel": "A",
+  "steps": [
+    {
+      "at": "2026-09-23T16:19:25.322Z",
+      "step": "sign in as the run manager and record tenant activity",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:26.782Z",
+      "step": "screenshot: the first tenant — the recorded activity marker",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-recorded-activity-marker.png"
+    },
+    {
+      "at": "2026-09-23T16:19:26.782Z",
+      "step": "sign out through the real button",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:28.500Z",
+      "step": "create the second tenant through the real flow",
+      "url": "https://aurum-chat-livid.vercel.app/signin",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:30.282Z",
+      "step": "screenshot: the second tenant — created through the real flow",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-created-through-the-real-flow.png"
+    },
+    {
+      "at": "2026-09-23T16:19:30.282Z",
+      "step": "no first-tenant data is visible in the conversation list",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:30.802Z",
+      "step": "screenshot: the second tenant — the empty conversation list",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-empty-conversation-list.png"
+    },
+    {
+      "at": "2026-09-23T16:19:30.802Z",
+      "step": "no first-tenant data on the intelligence or evidence surfaces",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:31.855Z",
+      "step": "screenshot: the second tenant — the isolated surfaces",
+      "url": "https://aurum-chat-livid.vercel.app/evidence",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-isolated-surfaces.png"
+    },
+    {
+      "at": "2026-09-23T16:19:31.855Z",
+      "step": "sign out and back into the first tenant — the activity is intact",
+      "url": "https://aurum-chat-livid.vercel.app/evidence",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:19:34.706Z",
+      "step": "screenshot: the first tenant — the activity preserved",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=a29c0acf-040b-4827-a74b-810fac95befc",
+      "shot": "docs/productization-evidence/W079/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-activity-preserved.png"
+    }
+  ]
+}

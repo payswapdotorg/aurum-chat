@@ -1,0 +1,44 @@
+{
+  "spec": "/home/z/aurum-cert-tree/tests/browser/production/j04-investigation-desktop.spec.ts",
+  "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-23T16:21:52.695Z",
+      "step": "sign in and ask the investigation question",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:54.961Z",
+      "step": "screenshot: the answer — the finding with its evidence citations",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=0bc29c70-f58e-4be7-961a-5c5e7fee31c1",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png"
+    },
+    {
+      "at": "2026-09-23T16:21:54.961Z",
+      "step": "follow the evidence citation to the detail surface",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=0bc29c70-f58e-4be7-961a-5c5e7fee31c1",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:55.362Z",
+      "step": "the observation detail carries its provenance",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D0bc29c70-f58e-4be7-961a-5c5e7fee31c1%23m-d0e0098d-aa91-4d51-910d-0911996f1829",
+      "shot": null
+    },
+    {
+      "at": "2026-09-23T16:21:55.504Z",
+      "step": "screenshot: the Evidence surface — the observation detail",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D0bc29c70-f58e-4be7-961a-5c5e7fee31c1%23m-d0e0098d-aa91-4d51-910d-0911996f1829",
+      "shot": "docs/productization-evidence/W079/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+    },
+    {
+      "at": "2026-09-23T16:21:55.504Z",
+      "step": "return to the originating conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D0bc29c70-f58e-4be7-961a-5c5e7fee31c1%23m-d0e0098d-aa91-4d51-910d-0911996f1829",
+      "shot": null
+    }
+  ]
+}
