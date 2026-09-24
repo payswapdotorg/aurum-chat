@@ -9,7 +9,20 @@
 //   embedding — Anthropic exposes no embeddings API: the registry carries no
 //     anthropic embedding model, so the adapter rejects the attempt loudly
 //     instead of faking one.
+//
+// W089 (Provider Adapter SDK): alongside its gateway-native LlmAdapter
+// translation duties, this adapter is a conforming ProviderAdapterDefinition
+// — the canonical lifecycle/error/capability contract shared by every
+// gateway (the second of the two-provider proof; see openai.ts). The
+// definition adds no execution method and no selection logic. Behavior of
+// the translation methods is UNCHANGED (the module's existing suites stay
+// green unmodified).
 
+import {
+  createProviderAdapterDefinition,
+  type CanonicalErrorCategory,
+  type ProviderAdapterDefinition,
+} from '@/modules/provider-sdk/contract';
 import { LlmError } from '../errors';
 import {
   asArray,
@@ -26,6 +39,32 @@ import {
 } from './types';
 
 const MAX_RESULT_TEXT = 262_144;
+
+/**
+ * Provider-specific error classification for the SDK's canonical taxonomy:
+ * the LlmError codes this adapter can produce (malformed responses, the
+ * loud unsupported-embedding rejection, the system-only mapping rejection)
+ * map onto the gateway-neutral categories; anything else falls through to
+ * the SDK's conservative heuristics.
+ */
+function classifyAnthropicError(error: unknown): CanonicalErrorCategory | null {
+  if (error instanceof LlmError) {
+    switch (error.code) {
+      case 'provider_malformed_response':
+        return 'malformed_response';
+      case 'unsupported_capability':
+      case 'unsupported_provider':
+        return 'unsupported_capability';
+      case 'invalid_llm_input':
+        return 'invalid_request';
+      case 'provider_unavailable':
+        return 'provider_unavailable';
+      default:
+        return null;
+    }
+  }
+  return null;
+}
 
 export function buildAnthropicCompletionRequest(input: WireCompletionInput): unknown {
   // Anthropic carries system prompts OUT of the message list (the `system`
@@ -89,7 +128,19 @@ function parseCompletion(payload: unknown): WireCompletionResult {
   };
 }
 
-export const anthropicAdapter: LlmAdapter = {
+/** The W089 SDK adapter definition (canonical lifecycle/error/capability surface). */
+export const anthropicDefinition: ProviderAdapterDefinition = createProviderAdapterDefinition({
+  gateway: 'llm',
+  provider: 'anthropic',
+  // Anthropic exposes no embeddings API — the capability declaration says
+  // so honestly (text-generation only), matching the registry and the loud
+  // embedding rejection below.
+  capabilities: ['text-generation'],
+  classifyError: classifyAnthropicError,
+});
+
+export const anthropicAdapter: LlmAdapter & ProviderAdapterDefinition = {
+  ...anthropicDefinition,
   provider: 'anthropic',
   buildCompletionRequest: buildAnthropicCompletionRequest,
   parseCompletionResponse: parseCompletion,
