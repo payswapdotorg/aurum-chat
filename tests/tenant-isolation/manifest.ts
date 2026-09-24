@@ -49,6 +49,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   learning: 'capability-sweep.test.ts',
   llm: 'experience-sweep.test.ts',
   marketplace: 'platform-sweep.test.ts',
+  meetings: 'meetings-sweep.test.ts',
   memory: 'evidence-sweep.test.ts',
   missions: 'cognition-sweep.test.ts',
   notifications: 'experience-sweep.test.ts',

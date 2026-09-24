@@ -511,6 +511,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the Aurum-owned durable orchestration port (W080 — event triggers, schedules, waits, retries, human approvals, resumptions, idempotency, cancellation, long-running cognition) behind which orchestration providers sit; it owns no user-facing route and is exercised by its own vitest suite',
   },
+  {
+    module: 'meetings',
+    label: 'The meeting intelligence gateway (W085)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the canonical meeting/session/transcript/artifact capture gateway (W085 — native Zoom/Teams/Meet adapters plus the cross-platform meeting-bot adapter) that lands meeting metadata, participant identity, transcripts, artifacts and provenance in the canonical evidence model; it owns no user-facing route yet — the meeting UX arrives with the realtime companion (W086) and the meeting E2E journeys (W097) — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
