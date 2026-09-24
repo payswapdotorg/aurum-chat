@@ -103,6 +103,7 @@ const TECHNICAL_UNIQUE_COLUMNS = new Set([
   'llm_executions.seq',
   'llm_availability_events.seq',
   'agent_runtime_availability_events.seq', // W035 copied the llm discipline; same rationale.
+  'broker_provider_health_events.seq', // W082 copied the llm availability discipline; same rationale.
 ]);
 
 /**

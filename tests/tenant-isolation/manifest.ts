@@ -31,6 +31,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   capabilities: 'cognition-sweep.test.ts',
   channels: 'experience-sweep.test.ts',
   cognition: 'cognition-sweep.test.ts',
+  'connection-broker': 'connection-broker-sweep.test.ts',
   contributions: 'evidence-sweep.test.ts',
   conversations: 'experience-sweep.test.ts',
   demo: 'foundation-sweep.test.ts',
