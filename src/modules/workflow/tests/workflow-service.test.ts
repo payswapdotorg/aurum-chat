@@ -19,7 +19,7 @@ import { closeDb, getDb } from '@/infra/db';
 import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import { appendEvent } from '@/modules/events/contract';
-import { EventsError } from '@/modules/events/contract';
+
 import * as workflowContract from '../contract';
 import { WorkflowError } from '../errors';
 import { runMigrations } from '../../../../scripts/migrate';

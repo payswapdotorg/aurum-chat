@@ -69,7 +69,6 @@ import {
   classifyStepResult,
   retryBackoffSeconds,
   stepIdempotencyKey,
-  type ClassifiedStepResult,
   type ClassifiedWaitSpec,
 } from './machine';
 import type { StepRow } from './service';

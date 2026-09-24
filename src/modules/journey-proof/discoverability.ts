@@ -493,6 +493,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'a verification harness, not a product capability: it certifies the J01–J15 journey matrix against the hosted production deployment (two-run same-revision rule) and owns no user-facing route',
   },
+  {
+    module: 'workflow',
+    label: 'The durable agent runtime (W080)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the Aurum-owned durable orchestration port (W080 — event triggers, schedules, waits, retries, human approvals, resumptions, idempotency, cancellation, long-running cognition) behind which orchestration providers sit; it owns no user-facing route and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(

@@ -315,6 +315,7 @@ describe('capability coverage', () => {
       'quality',
       'release-certification',
       'simulator',
+      'workflow',
     ]);
   });
 });

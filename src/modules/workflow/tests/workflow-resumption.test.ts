@@ -1088,24 +1088,28 @@ describe('pump composition with event triggers and schedules', () => {
         },
       },
     });
-    const dispatch = await dispatchWorkflowEvent(ctx, {
+    // A live run reports false.
+    const liveDispatch = await dispatchWorkflowEvent(ctx, {
       eventType: 'thing.happened',
       payload: {},
-      idempotencyKey: 'thing-cxl',
+      idempotencyKey: 'thing-cxl-live',
     });
-    await engine.pump(ctx);
+    const liveRun = liveDispatch.runsStarted[0]!;
+    const liveOutcome = await engine.pump(ctx);
+    expect(liveOutcome.status).toBe('processed');
+    expect(liveOutcome.runId).toBe(liveRun.id);
     expect(observedCancelled).toBe(false);
 
     // A cancelled run reports true (cooperative signal for long-running work).
-    const run2dispatch = await dispatchWorkflowEvent(ctx, {
+    const cancelledDispatch = await dispatchWorkflowEvent(ctx, {
       eventType: 'thing.happened',
       payload: {},
-      idempotencyKey: 'thing-cxl-2',
+      idempotencyKey: 'thing-cxl-dead',
     });
-    const run2 = run2dispatch.runsStarted[0]!;
+    const cancelledRun = cancelledDispatch.runsStarted[0]!;
     // Claim the step first so cancelRun takes the cooperative path.
-    await simulateDeadWorkerClaim(tenantPumpMisc, run2.id, 60);
-    await cancelRun(ctx, { runId: run2.id, reason: 'stop' });
+    await simulateDeadWorkerClaim(tenantPumpMisc, cancelledRun.id, 60);
+    await cancelRun(ctx, { runId: cancelledRun.id, reason: 'stop' });
     advance(61);
     const outcome = await engine.pump(ctx);
     expect(outcome.status).toBe('cancelled');
