@@ -8,8 +8,22 @@
 //   embedding → POST /v1/embeddings
 //     request  { model, input }
 //     response { data: [{embedding: [..]}], usage: {prompt_tokens} }
+//
+// W089 (Provider Adapter SDK): alongside its gateway-native LlmAdapter
+// translation duties, this adapter is a conforming ProviderAdapterDefinition
+// — the canonical lifecycle/error/capability contract shared by every
+// gateway. The definition is PURE metadata + error normalization: it adds
+// no execution method and no selection logic (routing stays in routing.ts).
+// Behavior of the translation methods is UNCHANGED (the module's existing
+// suites stay green unmodified).
 
+import {
+  createProviderAdapterDefinition,
+  type CanonicalErrorCategory,
+  type ProviderAdapterDefinition,
+} from '@/modules/provider-sdk/contract';
 import type { LlmProvider } from '../registry';
+import { LlmError } from '../errors';
 import {
   asArray,
   asObject,
@@ -29,6 +43,31 @@ import {
 
 const MAX_RESULT_TEXT = 262_144;
 const MAX_EMBEDDING_DIMENSIONS = 4_096;
+
+/**
+ * Provider-specific error classification for the SDK's canonical taxonomy:
+ * the LlmError codes this adapter can produce (or observe from the module's
+ * execution path) map onto the gateway-neutral categories; anything else
+ * falls through to the SDK's conservative heuristics.
+ */
+function classifyOpenAiError(error: unknown): CanonicalErrorCategory | null {
+  if (error instanceof LlmError) {
+    switch (error.code) {
+      case 'provider_malformed_response':
+        return 'malformed_response';
+      case 'unsupported_capability':
+      case 'unsupported_provider':
+        return 'unsupported_capability';
+      case 'invalid_llm_input':
+        return 'invalid_request';
+      case 'provider_unavailable':
+        return 'provider_unavailable';
+      default:
+        return null;
+    }
+  }
+  return null;
+}
 
 function buildCompletion(input: WireCompletionInput): unknown {
   const body: Record<string, unknown> = {
@@ -84,7 +123,16 @@ function parseEmbedding(payload: unknown): WireEmbeddingResult {
   };
 }
 
-export const openaiAdapter: LlmAdapter = {
+/** The W089 SDK adapter definition (canonical lifecycle/error/capability surface). */
+export const openaiDefinition: ProviderAdapterDefinition = createProviderAdapterDefinition({
+  gateway: 'llm',
+  provider: 'openai',
+  capabilities: ['text-generation', 'embedding'],
+  classifyError: classifyOpenAiError,
+});
+
+export const openaiAdapter: LlmAdapter & ProviderAdapterDefinition = {
+  ...openaiDefinition,
   provider: 'openai',
   buildCompletionRequest: buildCompletion,
   parseCompletionResponse: parseCompletion,

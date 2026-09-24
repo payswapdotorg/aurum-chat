@@ -430,6 +430,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'the AI providers surface (accounts, routing, availability, cost, hot-swap)',
   },
   {
+    module: 'provider-sdk',
+    label: 'The provider adapter SDK & OSS technology registry',
+    layer: 'L7',
+    routes: ['/ai'],
+    surfaces: ['hub-link', 'command-search'],
+    instrument: false,
+    note: 'the adapter SDK standard (lifecycle, conformance, hot-swap evidence) and the OSS technology registry behind the /ai provider surface; the registry review CLI is the Tech Lead surface (W089)',
+  },
+  {
     module: 'api',
     label: 'The public API (keys, scopes, webhooks)',
     layer: 'L7',
