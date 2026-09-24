@@ -312,6 +312,7 @@ describe('capability coverage', () => {
       'demo',
       'deployment-smoke',
       'journey-proof',
+      'meetings',
       'quality',
       'release-certification',
       'simulator',
