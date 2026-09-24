@@ -43,6 +43,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   freshness: 'evidence-sweep.test.ts',
   goals: 'evidence-sweep.test.ts',
   identity: 'foundation-sweep.test.ts',
+  'integration-intelligence': 'integration-intelligence-sweep.test.ts',
   'knowledge-acquisition': 'cognition-sweep.test.ts',
   'journey-proof': 'journey-proof-sweep.test.ts',
   learning: 'capability-sweep.test.ts',

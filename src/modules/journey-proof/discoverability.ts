@@ -118,6 +118,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'the connection hub’s destinations family (delivery state)',
   },
   {
+    module: 'integration-intelligence',
+    label: 'Tool & System Inventory, connection recommendations & verification',
+    layer: 'L1',
+    routes: ['/connections'],
+    surfaces: ['desktop-rail', 'command-search', 'hub-link'],
+    instrument: false,
+    note: 'the connection hub’s integration family (discovered systems, ranked read-only recommendations, verification state); the dedicated outcome-oriented UX arrives with the post-S002 waves (W091/W096)',
+  },
+  {
     module: 'memory',
     label: 'Knowledge entries & transactive memory',
     layer: 'L1',
