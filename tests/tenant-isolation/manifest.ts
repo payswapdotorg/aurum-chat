@@ -64,5 +64,6 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   sources: 'experience-sweep.test.ts',
   suppliers: 'cognition-sweep.test.ts',
   workforce: 'cognition-sweep.test.ts',
+  workflow: 'workflow-sweep.test.ts',
   world: 'foundation-sweep.test.ts',
 };
