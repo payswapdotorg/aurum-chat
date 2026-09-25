@@ -38,6 +38,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   contributions: 'evidence-sweep.test.ts',
   conversations: 'experience-sweep.test.ts',
   demo: 'foundation-sweep.test.ts',
+  'deep-actions': 'deep-actions-sweep.test.ts',
   'deployment-smoke': 'deployment-smoke-sweep.test.ts',
   destinations: 'experience-sweep.test.ts',
   environment: 'evidence-sweep.test.ts',

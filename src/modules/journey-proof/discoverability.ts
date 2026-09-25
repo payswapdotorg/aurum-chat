@@ -583,6 +583,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the progressive authority layer over connected systems (W083 — the safe read-only start per broker connection, per-task write/action authority asked through the actions module\'s W009 gate with a human-readable reason and the exact missing scope, denials that stop the write, and visible, scoped, auditable, revocable grants) composed over the actions/integration-intelligence/connection-broker contracts; it owns no user-facing route yet — the grant and approval surface arrives with the integration journeys (W084/W096) — and is exercised by its own vitest suite',
   },
+  {
+    module: 'deep-actions',
+    label: 'The deep action gateway and reconciliation (W084)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the deep action gateway (W084 — the discover→inspect→propose→authorize→execute→verify→reconcile pipeline that carries a multi-system task out of Aurum across external systems with evidence and outcome links, action-receipt and downstream-state verification, and reconciliation that detects mismatches and creates attention/evidence behind a provider-neutral transport port) composed over the actions/capability-grants/connection-broker/integration-intelligence/observations/epistemics/workflow contracts; it owns no user-facing route yet — the deep-action surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
