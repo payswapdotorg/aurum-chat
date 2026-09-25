@@ -1,7 +1,7 @@
 # Final Tech Lead Takeover Handoff — Aurum Post-W083
 
 **Repository:** `payswapdotorg/aurum-chat`  
-**Current main:** `06422f163e579fc1be26e50ee124a536d6e371d5`  
+**Current main:** `2f415e3c959f67b7507ae31e7c2cdaae9ba73871` (see §3a — W084/W095 reconciliation applied 2026-09-25)  
 **Architecture:** v2.1 — FROZEN  
 **Program scope:** W080–W101 only  
 **Maximum concurrent workers:** 3
@@ -103,51 +103,63 @@ Commit: `239502a671cd114f39af5243c6115dff3c498119`
 
 Actual implementation is present and delivered as W098.
 
+### 3a. Replay-session reconciliation applied 2026-09-25 (W084 + W095)
+
+The original handoff below was written from `main` only and missed two completed
+worker deliveries that lived on **unmerged delivery branches** pushed by replay
+sessions whose chat transcripts render empty (the known agent-mode len=0 lie —
+lesson family: registry/branch first, message-tree never a verdict):
+
+**W084 — Deep Action Gateway and Reconciliation ✅ (PR #106, squash `f3958e4`)**
+- Worker session `cad9ace9` ("Deep Action Gateway Implementation", dispatched 2026-09-25 16:12 UTC).
+- Branch `work/w084-deep-action-gateway-reconciliation` @ `8cf6a2be04fec0b41c0f751b35b57908089abeeb` (base `06422f1`).
+- New module `src/modules/deep-actions/` (contract exposing the discover→inspect→propose→authorize→execute→verify→reconcile pipeline, DeepActionTransport port, W080 workflow composition bindings, pure reconcile.ts, migrations/001, 26 unit + 16 integration tests) + repo-mandated registrations (journey-proof capability map, e2e instrument list, W044 sweep).
+- Integration-station verification (re-run, not inherited): typecheck PASS, lint PASS, arch PASS (module files 610 / tables 214), tests **5034 passed / 0 failed / 6 pre-existing skips** (every test file covered, chunked).
+- NOTE: a parallel lineage squash-merged the same branch again as PR #108 (`323efb6`, tree-identical no-op) — coordinate through this file and the PR record; never re-merge an already-merged delivery branch.
+
+**W095 — Unified Cross-Channel / Meeting / Telephony Identity Verification ✅ (PR #107, squash `2f415e3`)**
+- Worker session `d6badcd7` ("W095: Identity Verification Implementation", dispatched 2026-09-25 11:05 UTC).
+- Branch `work/w095-unified-identity-verification` — worker commit `2600fc5746c63c01dfd770182fa62cc9dd8345ec` (base `7eff0b0`, pre-W083) + reconciliation merge `c7973ba` onto post-W084 main (capability-map conflict resolved by keeping the W083+W084+W095 entries — the established registration-file pattern).
+- New module `src/modules/unified-identity/` (modality-scoped identity registry + ambiguity ledger + unified resolution/profile surface; meetings/realtime unification passes over the W085/W086 contracts; claim-gated trust ops reusing identity-module claims; 62 module tests + 4 W044 sweep tests) + registrations.
+- Integration-station verification at the exact merged tree: typecheck PASS, lint PASS, arch PASS (module files 618 / tables 217), tests **5100 passed / 0 failed / 6 pre-existing skips**; `2f415e3`'s tree is byte-identical to the verified tree (`ff0fec05`).
+
+**Flake fixed in the same finalization pass:** `contributions-service.test.ts` "validation series ascending" asserted insertion order, but the query orders by `(recorded_at ASC, id ASC)` — same-instant validations tie-break on random uuids (one CI failure observed on PR #107's first run; passed re-run; assertion now order-insensitive).
+
+Both sessions' transcripts, the W090-era "Continue Implementation" corpse and the empty "New Chat" phantoms were audited: no other unpushed delivery exists on any work/ branch as of `2f415e3`.
+
 ## 4. Remaining implementation frontier
 
-The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main**:
+The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`2f415e3`, post-reconciliation):
 
-- W084 — Deep Action Gateway and Reconciliation
 - W088 — Aurum Edge Connector
 - W091 — User-Friendly Provider Choice UX
 - W092 — Vertical Extension Starter Kits
 - W093 — Browser / Computer-Use Fallback
 - W094 — Migration and Dual-Run Continuity
-- W095 — Unified Cross-Channel / Meeting / Telephony Identity Verification
 - W096 — Integration Intelligence E2E Fixture
 - W097 — Meeting and Cellular E2E Fixture
 - W099 — Matrix Interoperability Adapter (optional)
 - W100 — Longitudinal S003 Conversion Benchmark
 - W101 — Final Post-S002 Production Certification
 
+W084 and W095 were removed from this list by the 2026-09-25 replay-session reconciliation (§3a).
+
 Do not mark any of these complete because their contracts, UI stubs or research documents exist. Require real repository implementation and evidence.
 
 ## 5. Immediate priority order
 
-### First: W084
-This is the highest-leverage missing capability because W088, W092, W093, W094 and W096 depend on it.
+### First wave (W084 dependency satisfied — dispatch now)
 
-Implement the canonical action path:
+With W084 merged, its dependents are unblocked. Recommended parallel wave:
 
-`discover → inspect → propose → authorize → execute → verify → reconcile → evidence → outcome`
+- **W088 — Aurum Edge Connector** (makes private/on-prem execution possible; consumes W084)
+- **W091 — User-Friendly Provider Choice UX** (unblocked since W090; outcome-oriented provider selection, technical choice only in advanced settings)
+- **W092 — Vertical Extension Starter Kits** (consumes W084 and W088 — start with the kit contracts while W088 completes; do not claim the dependent installation/execution path complete early)
 
-The executor must invoke W083 before any gated write. External success is not authoritative until verification/reconciliation has succeeded or the capability explicitly defines a safe verification alternative.
-
-### In parallel: W095 and W091
-Because W095 now has all of its required predecessor modules implemented, it is no longer blocked by W085/W086/W087. W091 is also unblocked because W090 is implemented and W089/W080 exist.
-
-W095 should unify identity across messaging, meeting, SMS and voice without weakening W002's anti-auto-merge rule.
-
-W091 should make provider choice outcome-oriented and expose technical provider selection only in advanced settings.
-
-### Then: W088 / W093 / W092 / W096 / W097
-Once W084 is green:
-
-- W088 makes private/on-prem execution possible;
-- W093 supplies the API-less/browser fallback;
-- W092 supplies specialist vertical extensions;
-- W096 proves the full integration onboarding path;
-- W097 proves meetings + cellular communication end-to-end.
+### Then: W093 / W096 / W097
+- W093 supplies the API-less/browser fallback (consumes W084);
+- W096 proves the full integration onboarding path (W081+W082+W083+W084 all in);
+- W097 proves meetings + cellular end-to-end (W085+W086+W087+W095 all in).
 
 ### Then: W094 / W100
 Migration needs deep actions plus Edge plus vertical capabilities. The longitudinal benchmark must run after those capabilities exist so it measures the intended S002 conversion levers.
@@ -160,32 +172,24 @@ W101 is a production gate, not a feature item. It must certify the final exact p
 
 ## 6. Recommended three-worker scheduling from current head
 
-### Current Wave A — dispatch now
+### Current Wave A — dispatch now (post-reconciliation)
 
-**Worker A: W084 — Deep Action Gateway + Reconciliation**  
-Own action contracts, execution adapter composition, W083 authority integration, verification/reconciliation and evidence/outcome links.
+**Worker A: W088 — Aurum Edge Connector**  
+Consumes W084 (now merged). Private/on-prem execution path behind the Edge boundary; provider objects never cross the gateway.
 
-**Worker B: W095 — Unified Cross-Channel / Meeting / Telephony Identity**  
-Own identity bridge only. No provider UI redesign and no transport rewrites.
-
-**Worker C: W091 — User-Friendly Provider Choice UX**  
+**Worker B: W091 — User-Friendly Provider Choice UX**  
 Own outcome-oriented provider selection/preferences and advanced technical override UX. No provider implementation changes.
+
+**Worker C: W092 — Vertical Extension Starter Kits**  
+Start with the kit contracts; the installation/execution path consumes W084 (merged) and W088 (in flight) — do not claim the dependent path complete before W088 lands.
 
 These three are independent at the public-contract level.
 
 ### Wave B — after Wave A dependencies are satisfied
 
-**Worker A: W088 — Aurum Edge Connector**  
-**Worker B: W092 — Vertical Extension Starter Kits**  
-**Worker C: W093 — Browser / Computer-Use Fallback**
-
-W092 and W093 must consume W084; W092 also consumes W088 according to the catalog/DAG, so the Tech Lead may keep Worker B occupied with starter contracts while W088 completes, but must not claim the dependent installation/execution path complete early.
-
-### Wave C
-
-**Worker A: W096 — Integration Intelligence E2E**  
-**Worker B: W097 — Meeting + Cellular E2E**  
-**Worker C: reconciliation/security/provider-failure verification
+**Worker A: W093 — Browser / Computer-Use Fallback** (consumes W084)
+**Worker B: W096 — Integration Intelligence E2E** (W081+W082+W083+W084 all in)
+**Worker C: W097 — Meeting + Cellular E2E** (W085+W086+W087+W095 all in)
 
 ### Wave D
 

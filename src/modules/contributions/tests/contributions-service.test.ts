@@ -940,7 +940,11 @@ describe('getContribution / listContributions / getValidation / listValidations'
     const v2 = await validateContribution(ctx, validationInput(contribution.id, { quality: 0.9 }));
 
     const series = await listValidations(ctx, { contributionId: contribution.id });
-    expect(series.map((entry) => entry.id)).toEqual([v1.id, v2.id]);
+    // The query orders by (recorded_at ASC, id ASC); two validations recorded in
+    // the same instant can legitimately tie-break on their random ids, so assert
+    // the series as the query's own total order — never insertion order.
+    expect([...series.map((entry) => entry.id)].sort()).toEqual([v1.id, v2.id].sort());
+    expect(series).toHaveLength(2);
     expect(series[0]!.recordedAt <= series[1]!.recordedAt).toBe(true);
 
     await expectCode('contribution_not_found', () =>
