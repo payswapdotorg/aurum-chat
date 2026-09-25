@@ -557,6 +557,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'domain infrastructure, not a product capability: the supervision layer of the agent workforce (W098 — durable agent health, review schedules, budgets, waiting states, supervisor sessions, recovery and resumptions independent of worker lifetime) composed over the agents/agent-teams/agent-evaluation contracts; it owns no user-facing route yet — the supervision surface arrives with the management control surfaces — and is exercised by its own vitest suite',
   },
   {
+    module: 'cellular',
+    label: 'Cellular reachability and communication fallback (W087)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the outcome-oriented Reach Anyone gateway (W087 — SMS with voice fallback over twilio/telnyx telecom adapters, verified phone identity resolution, W009-gated authority, delivery/reply state, routing/cost/policy controls, replies and manager-originated requests returning into Aurum through the channels contract) whose recipients need neither Internet nor an Aurum account; it owns no user-facing route yet — the Reach Anyone UX arrives with the meeting and cellular E2E journeys (W097) — and is exercised by its own vitest suite',
+  },
+  {
     module: 'provider-billing',
     label: 'The Aurum provider billing gateway (W090)',
     layer: 'platform',

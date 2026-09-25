@@ -30,6 +30,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   automation: 'cognition-sweep.test.ts',
   briefings: 'experience-sweep.test.ts',
   capabilities: 'cognition-sweep.test.ts',
+  cellular: 'cellular-sweep.test.ts',
   channels: 'experience-sweep.test.ts',
   cognition: 'cognition-sweep.test.ts',
   'connection-broker': 'connection-broker-sweep.test.ts',
