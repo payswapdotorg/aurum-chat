@@ -556,6 +556,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the supervision layer of the agent workforce (W098 — durable agent health, review schedules, budgets, waiting states, supervisor sessions, recovery and resumptions independent of worker lifetime) composed over the agents/agent-teams/agent-evaluation contracts; it owns no user-facing route yet — the supervision surface arrives with the management control surfaces — and is exercised by its own vitest suite',
   },
+  {
+    module: 'provider-billing',
+    label: 'The Aurum provider billing gateway (W090)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the provider billing gateway (W090 — provider payment/usage/budgets/receipts abstracted behind Aurum; Aurum-mediated settlement with auditable receipts when terms permit; direct customer billing as the explicit fallback) composed over the actions/llm/workflow/provider-sdk contracts; it owns no user-facing route yet — the billing surface arrives with the user-friendly provider choice UX (W091) — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
