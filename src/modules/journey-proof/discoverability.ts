@@ -574,6 +574,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the provider billing gateway (W090 — provider payment/usage/budgets/receipts abstracted behind Aurum; Aurum-mediated settlement with auditable receipts when terms permit; direct customer billing as the explicit fallback) composed over the actions/llm/workflow/provider-sdk contracts; it owns no user-facing route yet — the billing surface arrives with the user-friendly provider choice UX (W091) — and is exercised by its own vitest suite',
   },
+  {
+    module: 'capability-grants',
+    label: 'The progressive capability grants gateway (W083)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the progressive authority layer over connected systems (W083 — the safe read-only start per broker connection, per-task write/action authority asked through the actions module\'s W009 gate with a human-readable reason and the exact missing scope, denials that stop the write, and visible, scoped, auditable, revocable grants) composed over the actions/integration-intelligence/connection-broker contracts; it owns no user-facing route yet — the grant and approval surface arrives with the integration journeys (W084/W096) — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
