@@ -310,7 +310,9 @@ describe('capability coverage', () => {
     const instruments = CAPABILITY_ROUTES.filter((capability) => capability.instrument);
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'agent-supervision',
+      'capability-grants',
       'cellular',
+      'deep-actions',
       'demo',
       'deployment-smoke',
       'journey-proof',
