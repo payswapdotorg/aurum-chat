@@ -77,7 +77,7 @@ Actual implementation includes canonical meetings/sessions/transcripts/artifacts
 Important boundary: W085 is capture/intelligence ingestion. It does not itself provide live two-way realtime participation.
 
 ### W086 — Realtime Voice and Meeting Companion ✅
-Commit: `2495666f6a5f847...` (repository history; fetch exact SHA at takeover before citing in a release artifact)
+Commit: `2495666f6a5fbb6b6688b21e0fad24e1992691b4`
 
 Actual module exists under `src/modules/realtime` and exposes provider-neutral realtime sessions, LiveKit + OpenAI Realtime adapters, explicit consent/recording ledger, speaker attribution, interruption handling, spoken responses, durable meeting artifact finalization through W080 and provider-swap evidence.
 
