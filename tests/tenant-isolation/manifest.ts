@@ -63,6 +63,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   processes: 'cognition-sweep.test.ts',
   'provider-sdk': 'provider-sdk-sweep.test.ts',
   quality: 'evidence-sweep.test.ts',
+  realtime: 'realtime-sweep.test.ts',
   'release-certification': 'release-certification-sweep.test.ts',
   rewards: 'capability-sweep.test.ts',
   simulator: 'foundation-sweep.test.ts',
