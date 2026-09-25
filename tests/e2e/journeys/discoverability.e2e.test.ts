@@ -309,6 +309,7 @@ describe('capability coverage', () => {
   it('the instrument modules are exactly the declared verification harnesses', () => {
     const instruments = CAPABILITY_ROUTES.filter((capability) => capability.instrument);
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
+      'agent-supervision',
       'demo',
       'deployment-smoke',
       'journey-proof',

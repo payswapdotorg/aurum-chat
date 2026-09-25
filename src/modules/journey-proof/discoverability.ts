@@ -538,6 +538,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the canonical meeting/session/transcript/artifact capture gateway (W085 — native Zoom/Teams/Meet adapters plus the cross-platform meeting-bot adapter) that lands meeting metadata, participant identity, transcripts, artifacts and provenance in the canonical evidence model; it owns no user-facing route yet — the meeting UX arrives with the realtime companion (W086) and the meeting E2E journeys (W097) — and is exercised by its own vitest suite',
   },
+  {
+    module: 'agent-supervision',
+    label: 'Persistent agent supervision and recovery (W098)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the supervision layer of the agent workforce (W098 — durable agent health, review schedules, budgets, waiting states, supervisor sessions, recovery and resumptions independent of worker lifetime) composed over the agents/agent-teams/agent-evaluation contracts; it owns no user-facing route yet — the supervision surface arrives with the management control surfaces — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(

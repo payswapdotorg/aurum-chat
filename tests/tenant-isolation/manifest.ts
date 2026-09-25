@@ -21,6 +21,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   auth: 'foundation-sweep.test.ts',
   'agent-evaluation': 'capability-sweep.test.ts',
   'agent-recruitment': 'capability-sweep.test.ts',
+  'agent-supervision': 'agent-supervision-sweep.test.ts',
   'agent-teams': 'capability-sweep.test.ts',
   agents: 'capability-sweep.test.ts',
   api: 'platform-sweep.test.ts',
