@@ -574,6 +574,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the provider billing gateway (W090 — provider payment/usage/budgets/receipts abstracted behind Aurum; Aurum-mediated settlement with auditable receipts when terms permit; direct customer billing as the explicit fallback) composed over the actions/llm/workflow/provider-sdk contracts; it owns no user-facing route yet — the billing surface arrives with the user-friendly provider choice UX (W091) — and is exercised by its own vitest suite',
   },
+  {
+    module: 'unified-identity',
+    label: 'Unified cross-channel, meeting and telephony identity verification (W095)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the cross-modality identity-proof layer (W095 — one person stays one organizational identity across messaging, meetings, SMS, voice, realtime and Edge Connector paths) composed over the identity/people/meetings/realtime contracts: the modality-scoped identity registry for the paths beyond the identity module’s channel-provider vocabulary, the ambiguity ledger that keeps ambiguous matches external/unverified instead of auto-merging them, the unified resolution/profile surface, and the meetings/realtime participant unification passes; it owns no user-facing route yet — the identity-mapping UX it strengthens lives in the connection hub — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(

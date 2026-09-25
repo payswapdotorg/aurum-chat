@@ -320,6 +320,7 @@ describe('capability coverage', () => {
       'realtime',
       'release-certification',
       'simulator',
+      'unified-identity',
       'workflow',
     ]);
   });

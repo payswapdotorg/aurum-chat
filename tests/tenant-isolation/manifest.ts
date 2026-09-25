@@ -15,6 +15,10 @@
 // 18 modules merged since (W031…W056 families) are now claimed; the two
 // platform-surface modules (api, marketplace) get a dedicated
 // platform-sweep file alongside the five domain-family sweeps.
+//
+// v3 (W095): 'unified-identity' joins with its own sweep file — the
+// cross-modality identity registry, ambiguity ledger and evidence trail
+// the unified-identity module owns.
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -71,6 +75,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   simulator: 'foundation-sweep.test.ts',
   sources: 'experience-sweep.test.ts',
   suppliers: 'cognition-sweep.test.ts',
+  'unified-identity': 'unified-identity-sweep.test.ts',
   workforce: 'cognition-sweep.test.ts',
   workflow: 'workflow-sweep.test.ts',
   world: 'foundation-sweep.test.ts',
