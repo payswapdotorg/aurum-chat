@@ -315,6 +315,7 @@ describe('capability coverage', () => {
       'journey-proof',
       'meetings',
       'quality',
+      'realtime',
       'release-certification',
       'simulator',
       'workflow',

@@ -539,6 +539,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'domain infrastructure, not a product capability: the canonical meeting/session/transcript/artifact capture gateway (W085 — native Zoom/Teams/Meet adapters plus the cross-platform meeting-bot adapter) that lands meeting metadata, participant identity, transcripts, artifacts and provenance in the canonical evidence model; it owns no user-facing route yet — the meeting UX arrives with the realtime companion (W086) and the meeting E2E journeys (W097) — and is exercised by its own vitest suite',
   },
   {
+    module: 'realtime',
+    label: 'The realtime voice and meeting companion gateway (W086)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the provider-neutral realtime session contracts (W086 — Aurum voice, two-way meeting participation, the Meeting Companion and telephony/SIP over a replaceable LiveKit transport adapter) that own consent/recording state, speaker attribution, the live transcript, spoken Aurum responses and the durable meeting artifact; it owns no user-facing route yet — the companion UX arrives with the meeting E2E journeys (W097) — and is exercised by its own vitest suite',
+  },
+  {
     module: 'agent-supervision',
     label: 'Persistent agent supervision and recovery (W098)',
     layer: 'platform',
