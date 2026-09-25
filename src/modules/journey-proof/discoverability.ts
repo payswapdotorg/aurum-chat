@@ -565,6 +565,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the outcome-oriented Reach Anyone gateway (W087 — SMS with voice fallback over twilio/telnyx telecom adapters, verified phone identity resolution, W009-gated authority, delivery/reply state, routing/cost/policy controls, replies and manager-originated requests returning into Aurum through the channels contract) whose recipients need neither Internet nor an Aurum account; it owns no user-facing route yet — the Reach Anyone UX arrives with the meeting and cellular E2E journeys (W097) — and is exercised by its own vitest suite',
   },
+  {
+    module: 'provider-billing',
+    label: 'The Aurum provider billing gateway (W090)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the provider billing gateway (W090 — provider payment/usage/budgets/receipts abstracted behind Aurum; Aurum-mediated settlement with auditable receipts when terms permit; direct customer billing as the explicit fallback) composed over the actions/llm/workflow/provider-sdk contracts; it owns no user-facing route yet — the billing surface arrives with the user-friendly provider choice UX (W091) — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
