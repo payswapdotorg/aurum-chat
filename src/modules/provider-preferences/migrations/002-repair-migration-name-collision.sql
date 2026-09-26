@@ -62,6 +62,24 @@ BEGIN
 EXCEPTION WHEN undefined_object OR undefined_table THEN NULL;
 END $$;
 
+-- 1b-ii. the orphan's CONSTRAINT indexes kept their names through the table
+--     rename (PostgreSQL renames neither constraints nor their backing
+--     indexes) — free the two names the W091 events table below must
+--     recreate. Guarded by the orphan table's existence so fresh
+--     environments (001 applied — the good table already owns these names)
+--     never touch them: a CREATE TABLE IF NOT EXISTS would NOT restore a
+--     renamed constraint.
+DO $$
+BEGIN
+  IF to_regclass('public.provider_preference_events__orphaned_pre_w091') IS NOT NULL THEN
+    ALTER INDEX provider_preference_events_pkey
+      RENAME TO provider_preference_events_pkey__orphaned_pre_w091;
+    ALTER INDEX provider_preference_events_id_tenant_unique
+      RENAME TO provider_preference_events_id_tenant_unique__orphaned_pre_w091;
+  END IF;
+EXCEPTION WHEN undefined_object OR undefined_table THEN NULL;
+END $$;
+
 -- 1c. the unambiguous orphans (names the W091 schema never uses): preserve
 --     them under renamed names if they exist.
 DO $$
