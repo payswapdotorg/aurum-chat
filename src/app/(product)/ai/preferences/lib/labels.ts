@@ -11,7 +11,10 @@
 //
 // CLIENT-SAFETY: like the /ai surface's labels.ts, this module is
 // imported by client components (the controls) — pure data only, no
-// server imports; the vocabulary copies are locked to the module
+// server imports. The outcome vocabulary below is INLINED (never a
+// value import from the module contract — the contract re-exports the
+// service graph, which drags infra/db + pg into the browser bundle and
+// breaks the production build); the copy stays locked to the module
 // contract by the unit tests (no drift).
 
 import type {
@@ -19,11 +22,13 @@ import type {
   ProviderPreferenceOutcome,
   SelectionDecision,
 } from '@/modules/provider-preferences/contract';
-import { PROVIDER_PREFERENCE_OUTCOMES } from '@/modules/provider-preferences/contract';
 
 /** The client-safe outcome vocabulary copy (locked to the contract — see the unit tests). */
 export const PREFERENCE_OUTCOMES: readonly ProviderPreferenceOutcome[] = [
-  ...PROVIDER_PREFERENCE_OUTCOMES,
+  'cost',
+  'privacy',
+  'quality',
+  'speed',
 ];
 
 /** What each outcome MEANS, in one plain sentence (the form's help text). */
