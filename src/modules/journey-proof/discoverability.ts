@@ -601,6 +601,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the cross-modality identity-proof layer (W095 — one person stays one organizational identity across messaging, meetings, SMS, voice, realtime and Edge Connector paths) composed over the identity/people/meetings/realtime contracts: the modality-scoped identity registry for the paths beyond the identity module’s channel-provider vocabulary, the ambiguity ledger that keeps ambiguous matches external/unverified instead of auto-merging them, the unified resolution/profile surface, and the meetings/realtime participant unification passes; it owns no user-facing route yet — the identity-mapping UX it strengthens lives in the connection hub — and is exercised by its own vitest suite',
   },
+  {
+    module: 'provider-preferences',
+    label: 'User-friendly provider choice UX (W091)',
+    layer: 'L7',
+    routes: ['/ai/preferences', '/ai/preferences/advanced'],
+    surfaces: ['hub-link', 'command-search'],
+    instrument: false,
+    note: 'the outcome-oriented provider-choice experience: what matters when Aurum uses AI (cost, privacy, quality, speed or organizational policy) — the member and company preferences, the plain-words “why this option?” records, and the authorization-gated advanced settings where technical identity and reversible provider pins live (W091)',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
