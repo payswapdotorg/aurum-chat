@@ -267,6 +267,10 @@ const PAGE_MODULES: Record<string, RouteModule> = {
   },
   '/developer': { area: 'product', load: () => import('../../../src/app/(product)/developer/page') },
   '/ai': { area: 'product', load: () => import('../../../src/app/(product)/ai/page') },
+  '/provider-preferences': {
+    area: 'product',
+    load: () => import('../../../src/app/(product)/provider-preferences/page'),
+  },
   '/explain': { area: 'product', load: () => import('../../../src/app/(product)/explain/page') },
   '/explain/:kind/:id': {
     area: 'product',

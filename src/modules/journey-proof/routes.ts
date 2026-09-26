@@ -236,6 +236,15 @@ export const ROUTE_CATALOG: readonly RouteSpec[] = [
     mobileArea: null,
   },
   {
+    path: '/provider-preferences',
+    kind: 'page',
+    area: 'product',
+    auth: 'required',
+    title: 'Provider choice — what Aurum optimizes for',
+    file: 'src/app/(product)/provider-preferences/page.tsx',
+    mobileArea: null,
+  },
+  {
     path: '/explain',
     kind: 'page',
     area: 'product',

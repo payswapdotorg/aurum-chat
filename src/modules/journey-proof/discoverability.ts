@@ -439,6 +439,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'the AI providers surface (accounts, routing, availability, cost, hot-swap)',
   },
   {
+    module: 'provider-preferences',
+    label: 'The user-friendly provider choice UX (W091)',
+    layer: 'L7',
+    routes: ['/provider-preferences'],
+    surfaces: ['hub-link', 'command-search'],
+    instrument: false,
+    note: 'the outcome-first provider choice surface — preferences in plain language (privacy/cost/speed/reliability/balanced), plain-language routing explanations from the frozen snapshots, and the authorized technical override — composed over the llm/provider-billing/provider-sdk contracts',
+  },
+  {
     module: 'provider-sdk',
     label: 'The provider adapter SDK & OSS technology registry',
     layer: 'L7',

@@ -246,6 +246,61 @@ export const AI_DESTINATIONS: readonly {
 ];
 
 /**
+ * The provider-choice surface's keyboard destination (W091): pick what
+ * matters when Aurum chooses AI for you — privacy, cost, speed or
+ * reliability in plain language — keyboard-reachable by intent. Task
+ * language only (module words are search terms, never labels).
+ */
+export const PROVIDER_PREFERENCES_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'provider-choice',
+    title: 'Choose what matters when Aurum picks AI',
+    subtitle:
+      'Privacy, cost, speed or reliability — say what matters in plain words; Aurum explains every choice, technical settings stay advanced',
+    href: '/provider-preferences',
+    keywords: [
+      'choose',
+      'choice',
+      'what',
+      'matters',
+      'preference',
+      'preferences',
+      'privacy',
+      'private',
+      'cost',
+      'costs',
+      'cheap',
+      'cheaper',
+      'budget',
+      'speed',
+      'fast',
+      'faster',
+      'fastest',
+      'quality',
+      'reliable',
+      'reliability',
+      'explain',
+      'why',
+      'picked',
+      'picks',
+      'pick',
+      'picking',
+      'routing',
+      'order',
+      'switch',
+      'simple',
+      'plain',
+    ],
+  },
+];
+
+/**
 /**
  * The evidence/audit surface's keyboard destination (W065): the causal
  * evidence view — reconstruct any consequential answer or decision
@@ -389,6 +444,7 @@ export function buildShellCommands(): ShellCommand[] {
     ...EVIDENCE_DESTINATIONS.map((destination) => destination.href),
     ...INTERVENTION_DESTINATIONS.map((destination) => destination.href),
     ...AI_DESTINATIONS.map((destination) => destination.href),
+    ...PROVIDER_PREFERENCES_DESTINATIONS.map((destination) => destination.href),
     ...DEVELOPER_DESTINATIONS.map((destination) => destination.href),
     ...towerSurfaceLinks().map((link) => link.href),
     capabilityEntry('company').href,
@@ -490,6 +546,21 @@ export function buildShellCommands(): ShellCommand[] {
   for (const destination of AI_DESTINATIONS) {
     commands.push({
       id: `ai:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'spark',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W091 — the provider-choice destination (outcome preferences in plain
+  // language, plain-language routing explanations, authorized technical
+  // override; keyboard-reachable by intent).
+  for (const destination of PROVIDER_PREFERENCES_DESTINATIONS) {
+    commands.push({
+      id: `provider-preferences:${destination.id}`,
       title: destination.title,
       subtitle: destination.subtitle,
       group: 'Navigate',
