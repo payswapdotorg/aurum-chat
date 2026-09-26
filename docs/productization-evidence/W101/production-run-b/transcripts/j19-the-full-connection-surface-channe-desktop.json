@@ -1,0 +1,134 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j19-integrations-desktop.spec.ts",
+  "title": "J19 — the full connection surface: channels, a source, a destination, identities and the approval gate",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-26T15:43:09.978Z",
+      "step": "sign in and open the Connections hub",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:11.897Z",
+      "step": "screenshot: the Connections hub — the full connection surface",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-connections-hub-the-full-connection-surface.png"
+    },
+    {
+      "at": "2026-09-26T15:43:11.897Z",
+      "step": "the hub page carries the shell accessibility contract",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:11.928Z",
+      "step": "the channel family roster shows the run tenant’s channels",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:12.162Z",
+      "step": "screenshot: the channels family — the run tenant’s two channels",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-channels-family-the-run-tenant-s-two-channels.png"
+    },
+    {
+      "at": "2026-09-26T15:43:12.162Z",
+      "step": "register a source system through the real form",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:12.940Z",
+      "step": "screenshot: the source system — registered with its opaque credential reference",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-system-registered-with-its-opaque-credential-refe.png"
+    },
+    {
+      "at": "2026-09-26T15:43:12.940Z",
+      "step": "the source appears on the source-systems roster",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:13.748Z",
+      "step": "screenshot: the source-systems family — the registered inbound integration",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-systems-family-the-registered-inbound-integration.png"
+    },
+    {
+      "at": "2026-09-26T15:43:13.748Z",
+      "step": "register a destination through the real form",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:14.518Z",
+      "step": "screenshot: the destination — registered with its opaque credential reference",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destination-registered-with-its-opaque-credential-refere.png"
+    },
+    {
+      "at": "2026-09-26T15:43:14.518Z",
+      "step": "the destination appears on the destinations roster",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:15.395Z",
+      "step": "screenshot: the destinations family — the registered outbound integration",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destinations-family-the-registered-outbound-integration.png"
+    },
+    {
+      "at": "2026-09-26T15:43:15.395Z",
+      "step": "the identity & verification family renders its honest state and affordances",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:15.722Z",
+      "step": "screenshot: the identity family — the honest empty state and its affordances",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-family-the-honest-empty-state-and-its-affordanc.png"
+    },
+    {
+      "at": "2026-09-26T15:43:15.722Z",
+      "step": "an unknown identity lookup answers honestly (no dead end)",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:16.480Z",
+      "step": "screenshot: the identity lookup — the honest miss",
+      "url": "https://aurum-chat-livid.vercel.app/connections?identity_provider=email&identity_account=no-such-account%40aurum-cert.test#identities",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-lookup-the-honest-miss.png"
+    },
+    {
+      "at": "2026-09-26T15:43:16.480Z",
+      "step": "the hub’s session envelope carries the active tenant id",
+      "url": "https://aurum-chat-livid.vercel.app/connections?identity_provider=email&identity_account=no-such-account%40aurum-cert.test#identities",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:16.765Z",
+      "step": "the /approvals surface renders the human authority gate",
+      "url": "https://aurum-chat-livid.vercel.app/connections?identity_provider=email&identity_account=no-such-account%40aurum-cert.test#identities",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:17.265Z",
+      "step": "screenshot: the Approvals surface — the human authority gate the integration chain rides",
+      "url": "https://aurum-chat-livid.vercel.app/approvals",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-approvals-surface-the-human-authority-gate-the-integrati.png"
+    },
+    {
+      "at": "2026-09-26T15:43:17.265Z",
+      "step": "return to the conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/approvals",
+      "shot": null
+    }
+  ]
+}

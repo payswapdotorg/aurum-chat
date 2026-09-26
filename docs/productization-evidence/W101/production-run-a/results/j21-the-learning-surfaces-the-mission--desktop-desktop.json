@@ -1,0 +1,29 @@
+{
+  "testId": "j21-the-learning-surfaces-the-mission--desktop:desktop",
+  "journeyId": "J21",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J21 — the learning surfaces, the mission chain and the v1 missions read with real auth",
+  "file": "tests/browser/production/j21-durable-cognition-desktop.spec.ts",
+  "durationMs": 7167,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-a/transcripts/j21-the-learning-surfaces-the-mission--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-learning-hub-the-company-learning-surface.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-live-mission-durable-across-the-journey-boundaries.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-contributions-and-reward-state-the-honest-policy-note.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-mission-chain-the-objective-acquisitions-and-beliefs.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-developer-console-the-cognition-reader-grant-recorded.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-a/errors/j21-the-learning-surfaces-the-mission--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-a/results/j21-the-learning-surfaces-the-mission--desktop-desktop.json"
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "testId": "j16-the-connection-hub-channel-family--desktop:desktop",
+  "journeyId": "J16",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J16 — the connection hub channel family is proven; the v1 channel surface is probed and recorded",
+  "file": "tests/browser/production/j16-cross-channel-desktop.spec.ts",
+  "durationMs": 7910,
+  "error": null,
+  "violations": 0,
+  "blockedReasons": [
+    "the v1 public API owns no channel-family operations in the deployed revision a2db98a: its discovery document lists 49 operations (discovery/goals/unknowns/beliefs/missions/knowledge/observations/capabilities/agents/approvals/api-keys/webhooks) and none is channel-scoped — the route table is the locked, versioned public surface (W038) and the S003 channels module (W059-era connection hub) surfaced no v1 operations; the connection-hub channel surface itself was proven above"
+  ],
+  "blockedEvidence": {
+    "v1DiscoveryOperations": 49,
+    "v1ChannelFamilyOperations": [],
+    "v1AuthenticatedProbeStatus": 200,
+    "connectionHubChannelsProven": [
+      "email (J08)",
+      "slack (this journey)"
+    ]
+  },
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-a/transcripts/j16-the-connection-hub-channel-family--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-connections-hub-the-channel-family.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-second-channel-registered-with-its-opaque-credential-ref.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-channel-roster-the-tenant-scoped-envelope.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-developer-console-the-key-grant-recorded.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-a/errors/j16-the-connection-hub-channel-family--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-a/results/j16-the-connection-hub-channel-family--desktop-desktop.json"
+    ]
+  }
+}

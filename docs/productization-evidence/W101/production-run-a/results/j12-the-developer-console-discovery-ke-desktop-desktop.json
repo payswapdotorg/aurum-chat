@@ -1,0 +1,29 @@
+{
+  "testId": "j12-the-developer-console-discovery-ke-desktop:desktop",
+  "journeyId": "J12",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
+  "file": "tests/browser/production/j12-developer-desktop.spec.ts",
+  "durationMs": 7933,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-a/transcripts/j12-the-developer-console-discovery-ke-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j12-the-developer-console-discovery-ke-desktop__the-developer-console-discovered-from-the-hub.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j12-the-developer-console-discovery-ke-desktop__the-key-roster-the-recorded-grant.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j12-the-developer-console-discovery-ke-desktop__the-webhook-registered-with-its-delivery-contract.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j12-the-developer-console-discovery-ke-desktop__the-mcp-surface.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j12-the-developer-console-discovery-ke-desktop__the-revoked-keys-the-roster-retains-the-audit-trail.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-a/errors/j12-the-developer-console-discovery-ke-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-a/results/j12-the-developer-console-discovery-ke-desktop-desktop.json"
+    ]
+  }
+}

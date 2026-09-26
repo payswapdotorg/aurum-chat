@@ -81,6 +81,16 @@ export interface CertJourney {
   shot: (name: string) => Promise<void>;
   /** Assert ZERO console/network violations for the journey so far. */
   expectZeroViolations: () => void;
+  /**
+   * The honest BLOCKED channel (W101): record a machine-checkable reason
+   * a MANDATORY surface of this journey does not exist in the deployed
+   * revision. The test still has to PASS every provable assertion and end
+   * with zero violations — the blocked reasons fold the JOURNEY to status
+   * 'blocked' (run verdict BLOCKED, never CERTIFIED READY). Laundering
+   * discipline: a FAILING assertion still fails the test regardless of
+   * recorded blocked reasons; the reasons must cite the probe evidence.
+   */
+  recordBlocked: (reason: string, evidence?: Record<string, unknown>) => void;
 }
 
 /** The per-test record (folded into the digest by the global teardown). */
@@ -94,6 +104,10 @@ export interface TestRecord {
   durationMs: number;
   error: string | null;
   violations: number;
+  /** The honest BLOCKED reasons (W101; absent/empty for J01–J15). */
+  blockedReasons?: string[];
+  /** Machine-checkable probe results backing the blocked reasons. */
+  blockedEvidence?: Record<string, unknown>;
   evidence: {
     transcripts: string[];
     screenshots: string[];
@@ -156,6 +170,8 @@ export const certTest = baseTest.extend<{ cert: CertJourney }>({
     const violations: Violation[] = [];
     attachViolationCollectors(page, violations);
     const transcript: TranscriptEntry[] = [];
+    const blockedReasons: string[] = [];
+    const blockedEvidence: Record<string, unknown> = {};
     const journeyId = journeyIdOfTitle(testInfo.title);
     const context: 'desktop' | 'mobile' = testInfo.project.name === 'mobile' ? 'mobile' : 'desktop';
     const slug = `${journeySlug(journeyId, testInfo.title)}-${context}`;
@@ -191,6 +207,18 @@ export const certTest = baseTest.extend<{ cert: CertJourney }>({
           violations,
           'the production journey produced browser errors (console/pageerror/requestfailed/http)',
         ).toEqual([]);
+      },
+      recordBlocked: (reason: string, evidence?: Record<string, unknown>) => {
+        blockedReasons.push(reason);
+        if (evidence !== undefined) Object.assign(blockedEvidence, evidence);
+        // The transcript carries the blocked reason too — the evidence
+        // tree self-describes the exact missing surface.
+        transcript.push({
+          at: new Date().toISOString(),
+          step: `BLOCKED: ${reason}`,
+          url: page.url(),
+          shot: null,
+        });
       },
     };
 
@@ -236,6 +264,8 @@ export const certTest = baseTest.extend<{ cert: CertJourney }>({
           ? null
           : `${testInfo.error.message ?? String(testInfo.error)}`.slice(0, 800),
       violations: violations.length,
+      ...(blockedReasons.length > 0 ? { blockedReasons } : {}),
+      ...(Object.keys(blockedEvidence).length > 0 ? { blockedEvidence } : {}),
       evidence: {
         transcripts: [transcriptPath],
         screenshots,

@@ -1,7 +1,8 @@
-// W079 — the identity adapters and evidence renderers: the ten-field
+// W079/W101 — the identity adapters and evidence renderers: the ten-field
 // deployment identity, the health observation, the read-only Vercel
 // listing adapter, the identity verification gate, and the exact JSON /
-// markdown artifacts the evidence tree commits (contract §3/§9).
+// markdown artifacts the evidence tree commits (contract §3/§9) — with
+// the W101 program-stamped variants.
 
 import { describe, expect, it } from 'vitest';
 import {
@@ -136,6 +137,7 @@ describe('the deployment identity manifest (the ten contract fields)', () => {
 function sampleRun(): CertificationRunResult {
   return {
     runLabel: 'A',
+    program: 'W079',
     startedAt: '2026-09-23T10:00:00Z',
     finishedAt: '2026-09-23T11:00:00Z',
     target: 'https://aurum-chat-livid.vercel.app',
@@ -216,6 +218,46 @@ describe('the evidence renderers (contract §9)', () => {
     expect(markdown).toContain('**Run A:**');
     expect(markdown).toContain('**Run B:**');
     expect(markdown).toContain('bun run cert:production');
+  });
+
+  it('renders the W101 program-stamped artifacts (title, matrix range, blocked-channel note, rollback note, reproduction)', () => {
+    const w101Run = {
+      ...sampleRun(),
+      program: 'W101' as const,
+      evidenceDir: 'docs/productization-evidence/W101/production-run-a',
+      journeys: [
+        ...sampleRun().journeys,
+        {
+          journeyId: 'J17' as const,
+          status: 'blocked' as const,
+          contexts: [{ context: 'desktop' as const, status: 'blocked' as const, detail: 'the J17 surface does not exist in the deployed revision' }],
+          testIds: ['j17-x:desktop'],
+          transcripts: [],
+          screenshots: [],
+          errorCaptures: [],
+          detail: 'a mandatory surface does not exist in the deployed revision: the J17 surface does not exist in the deployed revision',
+        },
+      ],
+      summary: { passed: 21, failed: 0, blocked: 1, flaky: 0, unexpected: 0 },
+      verdict: 'BLOCKED' as const,
+    };
+    const runMarkdown = runReportToMarkdown(w101Run);
+    expect(runMarkdown).toContain('# W101 production journey certification — Run A');
+    expect(runMarkdown).toContain('Journey matrix (J01–J22)');
+    const finalMarkdown = finalCertificationToMarkdown({
+      verdict: 'BLOCKED',
+      runA: w101Run,
+      runB: { ...w101Run, runLabel: 'B' as const },
+      reasons: ['Run A journey J17 is BLOCKED: the J17 surface does not exist in the deployed revision'],
+      checks: [],
+      generatedAt: '2026-09-26T12:00:00Z',
+    });
+    expect(finalMarkdown).toContain('# W101 — Post-S002 Production Journey Certification');
+    expect(finalMarkdown).toContain('POST-S002-PRODUCTION-JOURNEY-MATRIX-W101-2026-09-26.md');
+    expect(finalMarkdown).toContain('The honest BLOCKED channel (W101 §2)');
+    expect(finalMarkdown).toContain('Rollback evidence (W101 acceptance)');
+    expect(finalMarkdown).toContain('--program w101');
+    expect(finalMarkdown).toContain('Run A journey J17 is BLOCKED');
   });
 
   it('names the blockers when the verdict is BLOCKED', () => {

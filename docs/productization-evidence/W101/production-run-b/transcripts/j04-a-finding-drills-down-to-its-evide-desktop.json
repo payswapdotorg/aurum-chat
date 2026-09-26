@@ -1,0 +1,44 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j04-investigation-desktop.spec.ts",
+  "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-26T15:41:48.499Z",
+      "step": "sign in and ask the investigation question",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:41:50.721Z",
+      "step": "screenshot: the answer — the finding with its evidence citations",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=832da78f-e100-4661-a7f9-0180ab4637b8",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png"
+    },
+    {
+      "at": "2026-09-26T15:41:50.721Z",
+      "step": "follow the evidence citation to the detail surface",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=832da78f-e100-4661-a7f9-0180ab4637b8",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:41:51.107Z",
+      "step": "the observation detail carries its provenance",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D832da78f-e100-4661-a7f9-0180ab4637b8%23m-956dc2fb-d306-4bf4-b3c3-f57c9ca9ffa4",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:41:51.227Z",
+      "step": "screenshot: the Evidence surface — the observation detail",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D832da78f-e100-4661-a7f9-0180ab4637b8%23m-956dc2fb-d306-4bf4-b3c3-f57c9ca9ffa4",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+    },
+    {
+      "at": "2026-09-26T15:41:51.227Z",
+      "step": "return to the originating conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D832da78f-e100-4661-a7f9-0180ab4637b8%23m-956dc2fb-d306-4bf4-b3c3-f57c9ca9ffa4",
+      "shot": null
+    }
+  ]
+}

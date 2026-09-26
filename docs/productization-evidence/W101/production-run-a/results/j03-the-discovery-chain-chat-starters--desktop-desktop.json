@@ -1,0 +1,27 @@
+{
+  "testId": "j03-the-discovery-chain-chat-starters--desktop:desktop",
+  "journeyId": "J03",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
+  "file": "tests/browser/production/j03-unprompted-discovery-desktop.spec.ts",
+  "durationMs": 5900,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-a/transcripts/j03-the-discovery-chain-chat-starters--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-discovery-questions-asked-conversationally.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-intelligence-hub-the-chain-surface.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-learning-hub-missions-and-company-knowledge.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-a/errors/j03-the-discovery-chain-chat-starters--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-a/results/j03-the-discovery-chain-chat-starters--desktop-desktop.json"
+    ]
+  }
+}

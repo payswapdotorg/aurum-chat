@@ -1,0 +1,74 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j17-meetings-desktop.spec.ts",
+  "title": "J17 — every legitimate production path to a meetings surface is exhausted and recorded honestly",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-26T15:43:03.215Z",
+      "step": "sign in as the run manager",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:04.433Z",
+      "step": "the product rail carries no meetings entry",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:04.548Z",
+      "step": "screenshot: the product rail — no meetings entry",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j17-every-legitimate-production-path-t-desktop__the-product-rail-no-meetings-entry.png"
+    },
+    {
+      "at": "2026-09-26T15:43:04.548Z",
+      "step": "the More capability hub carries no meetings surface",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:05.345Z",
+      "step": "screenshot: the More hub — no meetings capability",
+      "url": "https://aurum-chat-livid.vercel.app/more",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j17-every-legitimate-production-path-t-desktop__the-more-hub-no-meetings-capability.png"
+    },
+    {
+      "at": "2026-09-26T15:43:05.345Z",
+      "step": "the command search speaks task language and offers no meetings entry",
+      "url": "https://aurum-chat-livid.vercel.app/more",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:05.812Z",
+      "step": "screenshot: command search — no meetings entry",
+      "url": "https://aurum-chat-livid.vercel.app/more",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j17-every-legitimate-production-path-t-desktop__command-search-no-meetings-entry.png"
+    },
+    {
+      "at": "2026-09-26T15:43:05.826Z",
+      "step": "the v1 public API discovery document lists no meeting operations",
+      "url": "https://aurum-chat-livid.vercel.app/more",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:06.066Z",
+      "step": "record the honest BLOCKED reason",
+      "url": "https://aurum-chat-livid.vercel.app/more",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:06.066Z",
+      "step": "BLOCKED: the meetings surface does not exist in the deployed revision a2db98a: the meeting-intelligence module (W085 contract + W097 fixtures) owns no user-facing route and no v1 public API operation — the repo’s own discoverability map defers the meeting UX to the realtime companion (W086); every legitimate production path was probed and carries no meetings entry (rail, More hub, command search, v1 discovery: 49 operations, none meeting-scoped)",
+      "url": "https://aurum-chat-livid.vercel.app/more",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:06.066Z",
+      "step": "return to the conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/more",
+      "shot": null
+    }
+  ]
+}

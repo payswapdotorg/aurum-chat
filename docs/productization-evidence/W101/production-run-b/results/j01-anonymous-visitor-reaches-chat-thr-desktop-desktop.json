@@ -1,0 +1,27 @@
+{
+  "testId": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop",
+  "journeyId": "J01",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
+  "file": "tests/browser/production/j01-first-manager-desktop.spec.ts",
+  "durationMs": 2713,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-b/transcripts/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__anonymous-entry-the-production-sign-in-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__onboarding-the-workspace-setup-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__the-first-screen-the-messenger-with-its-starters.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-b/errors/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-b/results/j01-anonymous-visitor-reaches-chat-thr-desktop-desktop.json"
+    ]
+  }
+}

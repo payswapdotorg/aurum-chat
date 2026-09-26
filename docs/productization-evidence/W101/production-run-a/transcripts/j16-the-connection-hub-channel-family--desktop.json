@@ -1,0 +1,104 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j16-cross-channel-desktop.spec.ts",
+  "title": "J16 — the connection hub channel family is proven; the v1 channel surface is probed and recorded",
+  "project": "desktop",
+  "runLabel": "A",
+  "steps": [
+    {
+      "at": "2026-09-26T15:40:24.083Z",
+      "step": "sign in as the run manager and open the Connections hub",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:26.003Z",
+      "step": "screenshot: the Connections hub — the channel family",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-connections-hub-the-channel-family.png"
+    },
+    {
+      "at": "2026-09-26T15:40:26.003Z",
+      "step": "the hub page carries the shell accessibility contract",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:26.033Z",
+      "step": "register a second channel through the real form",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:27.258Z",
+      "step": "screenshot: the second channel — registered with its opaque credential reference",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-second-channel-registered-with-its-opaque-credential-ref.png"
+    },
+    {
+      "at": "2026-09-26T15:40:27.258Z",
+      "step": "the channel roster is tenant-scoped and verifiable",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:27.756Z",
+      "step": "screenshot: the channel roster — the tenant-scoped envelope",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-channel-roster-the-tenant-scoped-envelope.png"
+    },
+    {
+      "at": "2026-09-26T15:40:27.756Z",
+      "step": "the channel roster is stable across reload",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:28.154Z",
+      "step": "mint a read key through the real developer console",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:29.097Z",
+      "step": "the v1 public API answers with real production auth",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:29.396Z",
+      "step": "the v1 discovery document is the API’s honest self-description",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:30.236Z",
+      "step": "screenshot: the developer console — the key grant recorded",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W101/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-developer-console-the-key-grant-recorded.png"
+    },
+    {
+      "at": "2026-09-26T15:40:30.236Z",
+      "step": "revoke the read key (nothing minted outlives the journey)",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:31.578Z",
+      "step": "record the honest BLOCKED reason for the v1 channel surface",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:31.578Z",
+      "step": "BLOCKED: the v1 public API owns no channel-family operations in the deployed revision a2db98a: its discovery document lists 49 operations (discovery/goals/unknowns/beliefs/missions/knowledge/observations/capabilities/agents/approvals/api-keys/webhooks) and none is channel-scoped — the route table is the locked, versioned public surface (W038) and the S003 channels module (W059-era connection hub) surfaced no v1 operations; the connection-hub channel surface itself was proven above",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:40:31.578Z",
+      "step": "return to the conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    }
+  ]
+}

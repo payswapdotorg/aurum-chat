@@ -1,0 +1,33 @@
+{
+  "testId": "j19-the-full-connection-surface-channe-desktop:desktop",
+  "journeyId": "J19",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J19 — the full connection surface: channels, a source, a destination, identities and the approval gate",
+  "file": "tests/browser/production/j19-integrations-desktop.spec.ts",
+  "durationMs": 7739,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-b/transcripts/j19-the-full-connection-surface-channe-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-connections-hub-the-full-connection-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-channels-family-the-run-tenant-s-two-channels.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-system-registered-with-its-opaque-credential-refe.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-systems-family-the-registered-inbound-integration.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destination-registered-with-its-opaque-credential-refere.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destinations-family-the-registered-outbound-integration.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-family-the-honest-empty-state-and-its-affordanc.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-lookup-the-honest-miss.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-approvals-surface-the-human-authority-gate-the-integrati.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-b/errors/j19-the-full-connection-surface-channe-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-b/results/j19-the-full-connection-surface-channe-desktop-desktop.json"
+    ]
+  }
+}

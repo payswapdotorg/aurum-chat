@@ -40,6 +40,9 @@ interface BrowserRunDigest {
     file: string;
     durationMs: number;
     error: string | null;
+    /** The honest BLOCKED channel (W101) — carried verbatim, never filtered. */
+    blockedReasons?: string[];
+    blockedEvidence?: Record<string, unknown>;
   }[];
   violations: { testId: string; violations: number }[];
   evidence: {
@@ -85,6 +88,12 @@ export default async function globalTeardown(): Promise<void> {
       file: record.file,
       durationMs: record.durationMs,
       error: record.error,
+      ...(record.blockedReasons !== undefined && record.blockedReasons.length > 0
+        ? { blockedReasons: record.blockedReasons }
+        : {}),
+      ...(record.blockedEvidence !== undefined && Object.keys(record.blockedEvidence).length > 0
+        ? { blockedEvidence: record.blockedEvidence }
+        : {}),
     })),
     violations: records.map((record) => ({
       testId: record.testId,

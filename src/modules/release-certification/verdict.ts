@@ -10,6 +10,7 @@
 import type {
   BrowserRunDigest,
   CertificationCheck,
+  CertificationProgram,
   CertificationRunResult,
   CertificationStatus,
   CertificationVerdictKind,
@@ -17,7 +18,7 @@ import type {
   JourneyResult,
   RunSummary,
 } from './types';
-import { JOURNEY_MATRIX, journeySpec, requiredBrowserTests } from './matrix';
+import { journeySpec, programJourneys, requiredBrowserTests } from './matrix';
 
 /**
  * G1 — the production runtime is genuinely production (contract §4 G1).
@@ -137,11 +138,18 @@ export function workerAuthorizationReasons(observations: {
 /**
  * G3 — the browser proof used the hosted production URL (contract §4 G3):
  * the run digest must show the required desktop+mobile coverage, real
- * journeys with evidence, and the zero-violation discipline.
+ * journeys with evidence, and the zero-violation discipline. W101 note:
+ * a journey whose tests carry the honest blockedReasons channel does NOT
+ * fail this gate — the gate proves the matrix RAN with evidence; the
+ * block surfaces through the journey status and the run verdict (which
+ * can never be CERTIFIED READY with a blocked journey).
  */
-export function gateThreeReasons(digest: BrowserRunDigest): string[] {
+export function gateThreeReasons(
+  digest: BrowserRunDigest,
+  program: CertificationProgram = 'W079',
+): string[] {
   const reasons: string[] = [];
-  const required = requiredBrowserTests();
+  const required = requiredBrowserTests(program);
   for (const pair of required) {
     const test = digest.tests.find(
       (candidate) => candidate.journeyId === pair.journeyId && candidate.context === pair.context,
@@ -178,10 +186,22 @@ export function gateThreeReasons(digest: BrowserRunDigest): string[] {
   return reasons;
 }
 
-/** Fold a Playwright digest into per-journey results. */
-export function journeyResultsFromDigest(digest: BrowserRunDigest): JourneyResult[] {
+/**
+ * Fold a Playwright digest into per-journey results (program-scoped).
+ *
+ * The W101 honest BLOCKED channel: a test that PASSED at the Playwright
+ * level may carry non-empty `blockedReasons` (machine-checkable reasons a
+ * mandatory surface of the journey does not exist in the deployed
+ * revision). Such a journey folds to status 'blocked' with those reasons —
+ * never 'pass' (the run verdict stays BLOCKED) and never a silent skip. A
+ * FAILING test still dominates: a real defect is FAILED, not BLOCKED.
+ */
+export function journeyResultsFromDigest(
+  digest: BrowserRunDigest,
+  program: CertificationProgram = 'W079',
+): JourneyResult[] {
   const results: JourneyResult[] = [];
-  for (const spec of JOURNEY_MATRIX) {
+  for (const spec of programJourneys(program)) {
     const tests = digest.tests.filter((test) => test.journeyId === spec.id);
     const contexts = spec.contexts.map((context) => {
       const test = tests.find((candidate) => candidate.context === context);
@@ -193,6 +213,14 @@ export function journeyResultsFromDigest(digest: BrowserRunDigest): JourneyResul
         };
       }
       if (test.status === 'pass') {
+        const reasons = test.blockedReasons ?? [];
+        if (reasons.length > 0) {
+          return {
+            context,
+            status: 'blocked' as CertificationStatus,
+            detail: reasons.join('; ').slice(0, 400),
+          };
+        }
         return { context, status: 'pass' as CertificationStatus, detail: `${test.testId} green` };
       }
       if (test.status === 'flaky') {
@@ -204,10 +232,11 @@ export function journeyResultsFromDigest(digest: BrowserRunDigest): JourneyResul
         detail: `${test.testId} failed: ${test.error ?? 'no failure detail'}`.slice(0, 400),
       };
     });
-    const failing = contexts.filter((entry) => entry.status !== 'pass');
+    const failing = contexts.filter((entry) => entry.status === 'fail');
+    const blocked = contexts.filter((entry) => entry.status === 'blocked');
     results.push({
       journeyId: spec.id,
-      status: failing.length === 0 ? 'pass' : 'fail',
+      status: failing.length > 0 ? 'fail' : blocked.length > 0 ? 'blocked' : 'pass',
       contexts,
       testIds: tests.map((test) => test.testId),
       transcripts: digest.evidence.transcripts.filter((path) => path.includes(spec.id.toLowerCase())),
@@ -216,9 +245,13 @@ export function journeyResultsFromDigest(digest: BrowserRunDigest): JourneyResul
         path.includes(spec.id.toLowerCase()),
       ),
       detail:
-        failing.length === 0
-          ? `observed as specified: ${spec.mandatoryProof}`
-          : failing.map((entry) => entry.detail).join('; ').slice(0, 400),
+        failing.length > 0
+          ? failing.map((entry) => entry.detail).join('; ').slice(0, 400)
+          : blocked.length > 0
+            ? `a mandatory surface does not exist in the deployed revision: ${blocked
+                .map((entry) => entry.detail)
+                .join('; ').slice(0, 400)}`
+            : `observed as specified: ${spec.mandatoryProof}`,
     });
   }
   return results;
@@ -284,7 +317,10 @@ export function runVerdict(summary: RunSummary): CertificationVerdictKind {
  * journey matrix and the deployment identity (the same deployment
  * revision — a second run against a newly deployed revision does not
  * count as the deterministic rerun). Missing runs stay BLOCKED (the
- * honest external state), never silently green.
+ * honest external state), never silently green. W101: both runs must
+ * belong to the SAME program, and every BLOCKED journey's exact reason
+ * is carried into the final reasons (the acceptance names the blocker,
+ * never a vague count).
  */
 export function finalVerdict(
   runA: CertificationRunResult | null,
@@ -312,6 +348,22 @@ export function finalVerdict(
     return { verdict: 'BLOCKED', reasons, checks };
   }
 
+  // Both runs must belong to the same certification program.
+  const programOf = (run: CertificationRunResult): CertificationProgram => run.program ?? 'W079';
+  const sameProgram = programOf(runA) === programOf(runB);
+  record(
+    'runs.program-agreement',
+    'the runs certify the same program',
+    !sameProgram,
+    `Run A program ${programOf(runA)} · Run B program ${programOf(runB)}`,
+  );
+  if (!sameProgram) {
+    reasons.push(
+      `the runs do not certify the same program (Run A ${programOf(runA)} vs Run B ${programOf(runB)}) — a W079 pass and a W101 pass cannot pair into one two-run verdict`,
+    );
+  }
+  const program = programOf(runA);
+
   // Both runs must be fully green on their own.
   for (const run of [runA, runB]) {
     const green =
@@ -329,6 +381,16 @@ export function finalVerdict(
       reasons.push(
         `Run ${run.runLabel} is not fully green (${run.summary.failed} failed · ${run.summary.blocked} blocked · ${run.summary.flaky} flaky · ${run.summary.unexpected} unexpected)`,
       );
+      // The exact per-journey reasons — FAILED journeys name the first
+      // reproducible failure (contract §11); BLOCKED journeys name the
+      // exact missing surface (never a bare count).
+      for (const journey of run.journeys) {
+        if (journey.status === 'fail') {
+          reasons.push(`Run ${run.runLabel} journey ${journey.journeyId} FAILED: ${journey.detail}`);
+        } else if (journey.status === 'blocked') {
+          reasons.push(`Run ${run.runLabel} journey ${journey.journeyId} is BLOCKED: ${journey.detail}`);
+        }
+      }
     }
   }
 
@@ -356,9 +418,9 @@ export function finalVerdict(
     }
   }
 
-  // The journey matrix verdicts must agree.
+  // The journey matrix verdicts must agree (the program's mandatory set).
   const disagreement: string[] = [];
-  for (const spec of JOURNEY_MATRIX) {
+  for (const spec of programJourneys(program)) {
     const a = runA.journeys.find((journey) => journey.journeyId === spec.id);
     const b = runB.journeys.find((journey) => journey.journeyId === spec.id);
     if (a === undefined || b === undefined) {
@@ -372,7 +434,7 @@ export function finalVerdict(
     'the two runs agree on the journey matrix',
     disagreement.length > 0,
     disagreement.length === 0
-      ? 'all J01–J15 statuses identical across Run A and Run B'
+      ? `all ${program} journey statuses identical across Run A and Run B`
       : disagreement.join('; ').slice(0, 300),
   );
   if (disagreement.length > 0) {
@@ -398,13 +460,80 @@ export const G2_REPO_GATES: readonly { command: string; label: string }[] = [
   { command: 'bun run lint', label: 'lint' },
 ];
 
-/** The certification's journey-count invariant (J01–J15 all present). */
-export function journeyInventoryReasons(journeys: JourneyResult[]): string[] {
+/** The certification's journey-count invariant (the program's mandatory set, all present). */
+export function journeyInventoryReasons(
+  journeys: JourneyResult[],
+  program: CertificationProgram = 'W079',
+): string[] {
   const reasons: string[] = [];
-  for (const spec of JOURNEY_MATRIX) {
+  for (const spec of programJourneys(program)) {
     if (!journeys.some((journey) => journey.journeyId === spec.id)) {
       reasons.push(`${spec.id} (${journeySpec(spec.id).title}) is missing from the run`);
     }
+  }
+  return reasons;
+}
+
+/**
+ * The W101 rollback-evidence gate (the acceptance's rollback dimension).
+ * PURE evaluation over the observations the driver records: the
+ * deployment/health/worker seams' recorded state a rollback would
+ * preserve/restore, the prior READY production deployment (the known-good
+ * rollback target), and the committed rollback runbook + W078 operations
+ * evidence this certification links (never restates — contract §8). A
+ * missing precondition is BLOCKED (an external evidence gap), never a
+ * deployment defect.
+ */
+export function rollbackEvidenceReasons(input: {
+  healthSnapshot: { environment: string | null; dbBackend: string | null; dbMigrations: number | null } | null;
+  workerSnapshot: { environment: string | null; queueDepth: number | null; reachable: boolean } | null;
+  rollbackTarget: { deploymentId: string | null; commitSha: string | null; readyState: string | null } | null;
+  runbookPresent: boolean;
+  w078EvidencePresent: boolean;
+}): string[] {
+  const reasons: string[] = [];
+  if (input.healthSnapshot === null) {
+    reasons.push('the health seam snapshot was not recorded — the state a rollback preserves is unproven');
+  } else {
+    if (input.healthSnapshot.environment !== 'production') {
+      reasons.push(
+        `the health seam records environment '${input.healthSnapshot.environment}' (expected 'production' — the recorded state must be the production posture a rollback restores)`,
+      );
+    }
+    if (input.healthSnapshot.dbBackend !== 'postgres') {
+      reasons.push(
+        `the health seam records database backend '${input.healthSnapshot.dbBackend}' (expected 'postgres')`,
+      );
+    }
+    if (input.healthSnapshot.dbMigrations !== null && input.healthSnapshot.dbMigrations < 1) {
+      reasons.push(
+        `the health seam records ${input.healthSnapshot.dbMigrations} applied migrations (expected > 0)`,
+      );
+    }
+  }
+  if (input.workerSnapshot === null || !input.workerSnapshot.reachable) {
+    reasons.push('the worker seam snapshot was not recorded (authorized observability is unreachable)');
+  } else if (input.workerSnapshot.environment !== 'production') {
+    reasons.push(
+      `the worker seam records environment '${input.workerSnapshot.environment}' (expected 'production')`,
+    );
+  }
+  if (
+    input.rollbackTarget === null ||
+    input.rollbackTarget.deploymentId === null ||
+    input.rollbackTarget.readyState !== 'READY'
+  ) {
+    reasons.push(
+      'no prior READY production deployment is on record — the known-good rollback target is unproven',
+    );
+  }
+  if (!input.runbookPresent) {
+    reasons.push('the rollback runbook (docs/DEPLOYMENT.md §12) is not present in the repository');
+  }
+  if (!input.w078EvidencePresent) {
+    reasons.push(
+      'the committed W078 operations evidence tree (docs/productization-evidence/W078/) is not present — the rollback/operations records this certification links are missing',
+    );
   }
   return reasons;
 }

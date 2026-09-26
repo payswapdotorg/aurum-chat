@@ -1,0 +1,40 @@
+{
+  "testId": "j17-every-legitimate-production-path-t-desktop:desktop",
+  "journeyId": "J17",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J17 — every legitimate production path to a meetings surface is exhausted and recorded honestly",
+  "file": "tests/browser/production/j17-meetings-desktop.spec.ts",
+  "durationMs": 3699,
+  "error": null,
+  "violations": 0,
+  "blockedReasons": [
+    "the meetings surface does not exist in the deployed revision a2db98a: the meeting-intelligence module (W085 contract + W097 fixtures) owns no user-facing route and no v1 public API operation — the repo’s own discoverability map defers the meeting UX to the realtime companion (W086); every legitimate production path was probed and carries no meetings entry (rail, More hub, command search, v1 discovery: 49 operations, none meeting-scoped)"
+  ],
+  "blockedEvidence": {
+    "v1DiscoveryOperations": 49,
+    "v1MeetingFamilyOperations": [],
+    "navigationPathsProbed": [
+      "rail",
+      "More hub",
+      "command search",
+      "v1 discovery"
+    ]
+  },
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-a/transcripts/j17-every-legitimate-production-path-t-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j17-every-legitimate-production-path-t-desktop__the-product-rail-no-meetings-entry.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j17-every-legitimate-production-path-t-desktop__the-more-hub-no-meetings-capability.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j17-every-legitimate-production-path-t-desktop__command-search-no-meetings-entry.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-a/errors/j17-every-legitimate-production-path-t-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-a/results/j17-every-legitimate-production-path-t-desktop-desktop.json"
+    ]
+  }
+}

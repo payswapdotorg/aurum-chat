@@ -1,0 +1,29 @@
+{
+  "testId": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop",
+  "journeyId": "J13",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
+  "file": "tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
+  "durationMs": 9182,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-b/transcripts/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-recorded-activity-marker.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-created-through-the-real-flow.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-empty-conversation-list.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-isolated-surfaces.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-activity-preserved.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-b/errors/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-b/results/j13-a-second-tenant-sees-nothing-of-th-desktop-desktop.json"
+    ]
+  }
+}

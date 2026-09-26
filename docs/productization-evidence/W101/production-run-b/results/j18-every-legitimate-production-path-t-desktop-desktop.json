@@ -1,0 +1,41 @@
+{
+  "testId": "j18-every-legitimate-production-path-t-desktop:desktop",
+  "journeyId": "J18",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J18 — every legitimate production path to a cellular surface is exhausted; the module’s environment limit is recorded",
+  "file": "tests/browser/production/j18-cellular-desktop.spec.ts",
+  "durationMs": 3414,
+  "error": null,
+  "violations": 0,
+  "blockedReasons": [
+    "the cellular reachability surface does not exist in the deployed revision a2db98a: the cellular module (SMS/voice reachability) owns no user-facing route and no v1 public API operation (v1 discovery: 49 operations, none cellular/SMS/voice-scoped); environment limit as the module itself reports it: no transport is wired by default, so deliveries fail explicitly with provider_unavailable (retryable) — the contract-faithful production behavior cannot be observed through any user-visible surface in this revision"
+  ],
+  "blockedEvidence": {
+    "v1DiscoveryOperations": 49,
+    "v1CellularFamilyOperations": [],
+    "moduleReportedEnvironmentLimit": "provider_unavailable (no transport wired by default; retryable)",
+    "navigationPathsProbed": [
+      "rail",
+      "More hub",
+      "command search",
+      "v1 discovery"
+    ]
+  },
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-b/transcripts/j18-every-legitimate-production-path-t-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-b/screenshots/j18-every-legitimate-production-path-t-desktop__the-product-rail-no-cellular-entry.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j18-every-legitimate-production-path-t-desktop__the-more-hub-no-cellular-capability.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j18-every-legitimate-production-path-t-desktop__command-search-no-cellular-entry.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-b/errors/j18-every-legitimate-production-path-t-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-b/results/j18-every-legitimate-production-path-t-desktop-desktop.json"
+    ]
+  }
+}

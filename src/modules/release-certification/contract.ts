@@ -32,8 +32,10 @@ export type { CertificationRunConfig } from './driver';
 export {
   JOURNEY_MATRIX,
   JOURNEYS_LEAVING_CHAT,
+  PROGRAM_JOURNEYS,
   journeySpec,
   matrixConsistency,
+  programJourneys,
   requiredBrowserTests,
 } from './matrix';
 
@@ -46,6 +48,7 @@ export {
   journeyInventoryReasons,
   journeyResultsFromDigest,
   quickSignInOffReasons,
+  rollbackEvidenceReasons,
   runVerdict,
   summarizeRun,
   w078RerunReasons,
@@ -74,6 +77,7 @@ export type {
   BrowserContextKind,
   BrowserRunDigest,
   CertificationCheck,
+  CertificationProgram,
   CertificationRunResult,
   CertificationStatus,
   CertificationVerdictKind,
