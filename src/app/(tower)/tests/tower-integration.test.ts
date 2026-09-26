@@ -625,9 +625,18 @@ describe('the Management Control Tower over a fully seeded tenant', () => {
     const byKind = new Map(view.byKind.map((k) => [k.kind, k.count]));
     expect(byKind.get('invoice-entry')).toBe(4);
     expect(byKind.get('channel.message')).toBe(1);
+    // Newest first — but the five setup inserts can share a recorded_at
+    // millisecond (recorded_at is minted by the service clock; id DESC is
+    // only a tiebreak). Accept any same-millisecond record as "first" and
+    // assert the channel observation's fields by identity instead of by
+    // position (order-insensitive flake fix; cf. contributions-service fix).
     const entry = view.items[0]!;
-    expect(entry.id).toBe(channelObservation.id); // newest first
-    expect(entry.confidence.value).toBe(0.8);
+    expect(
+      entry.id === channelObservation.id ||
+        entry.recordedAt === channelObservation.recordedAt,
+    ).toBe(true);
+    const channelEntry = view.items.find((i) => i.id === channelObservation.id);
+    expect(channelEntry?.confidence.value).toBe(0.8);
   });
 
   it('Recommendations: the routed action feed with evaluation snapshots', async () => {
