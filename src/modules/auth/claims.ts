@@ -32,6 +32,14 @@ import type { TenantRole } from '@/modules/organizations/contract';
  * llm contract gates on exactly this string). It is TENANT-level like its
  * siblings; the list originally shipped without it, which made every
  * session unable to manage BYOA accounts.
+ *
+ * `provider-preferences:administer` (W091, same completion posture as
+ * `llm:administer`): the provider-preferences module's management claim —
+ * steering the company-wide AI outcome priority, pinning/clearing
+ * technical provider overrides and reading the technical selection detail
+ * are management actions (the module's contract gates on exactly this
+ * string). Ordinary members keep the full preference surface (their own
+ * preference and every jargon-free "why" read) WITHOUT the claim.
  */
 export const MANAGEMENT_CLAIMS: readonly string[] = [
   'actions:approve',
@@ -41,6 +49,7 @@ export const MANAGEMENT_CLAIMS: readonly string[] = [
   'identity:attest',
   'identity:link',
   'llm:administer',
+  'provider-preferences:administer',
   'rewards:administer',
   'marketplace:submit',
   'api:administer',

@@ -561,13 +561,25 @@ describe('suggestedHotSwapParameters', () => {
 // ---------------------------------------------------------------------------
 
 describe('AI destination in the shell command registry', () => {
-  it('the BYOA destination rides the shared registry exactly once', () => {
-    expect(AI_DESTINATIONS).toHaveLength(1);
-    expect(AI_DESTINATIONS[0]!.href).toBe('/ai');
+  it('the BYOA destination rides the shared registry exactly once (W091 added the preferences destinations)', () => {
+    // W091 extended the AI area's keyboard destinations with the
+    // outcome-oriented preferences surface and its authorized advanced
+    // settings. The W066 lock keeps its intent: the BYOA destination
+    // itself is registered EXACTLY ONCE — no duplicate registration.
+    expect(AI_DESTINATIONS.filter((destination) => destination.href === '/ai')).toHaveLength(1);
+    expect(AI_DESTINATIONS.map((destination) => destination.href)).toEqual([
+      '/ai/preferences',
+      '/ai/preferences/advanced',
+      '/ai',
+    ]);
     const commands = buildShellCommands();
     const aiCommands = commands.filter((command) => command.id.startsWith('ai:'));
-    expect(aiCommands).toHaveLength(1);
-    expect(aiCommands[0]!.target).toEqual({ kind: 'navigate', href: '/ai' });
+    expect(aiCommands).toHaveLength(3);
+    expect(aiCommands.map((command) => (command.target as { href: string }).href)).toEqual([
+      '/ai/preferences',
+      '/ai/preferences/advanced',
+      '/ai',
+    ]);
     // Keyboard-reachable by the names a manager would actually type.
     for (const query of ['byoa', 'provider', 'hot-swap', 'routing', 'ai']) {
       const matches = commands.filter(
@@ -577,7 +589,7 @@ describe('AI destination in the shell command registry', () => {
       );
       expect(matches.map((command) => command.id)).toContain('ai:byoa');
     }
-    // The registry keeps its unique-id invariant with the new command.
+    // The registry keeps its unique-id invariant with the new commands.
     expect(new Set(commands.map((command) => command.id)).size).toBe(commands.length);
   });
 

@@ -200,9 +200,10 @@ export const INTERVENTION_DESTINATIONS: readonly {
 ];
 
 /**
- * The AI-providers surface's keyboard destination (W066): BYOA accounts,
- * model availability, routing policy, cost/latency and hot-swap
- * verification (plan §2 Journey H), keyboard-reachable by name.
+ * The AI area's keyboard destinations (W066 + W091): the BYOA accounts
+ * surface and the outcome-oriented preferences surface with its
+ * authorized advanced settings — plan §2 Journey H, keyboard-reachable
+ * by name.
  */
 export const AI_DESTINATIONS: readonly {
   id: string;
@@ -211,6 +212,64 @@ export const AI_DESTINATIONS: readonly {
   href: string;
   keywords: string[];
 }[] = [
+  {
+    id: 'ai-preferences',
+    title: 'Choose what matters when Aurum uses AI',
+    subtitle:
+      'Cost, data protection, quality or speed — your priority and your company’s, changeable any time, with a plain-words reason for every choice',
+    href: '/ai/preferences',
+    keywords: [
+      'ai',
+      'preferences',
+      'preference',
+      'priorities',
+      'priority',
+      'choose',
+      'choice',
+      'what',
+      'matters',
+      'cost',
+      'privacy',
+      'data',
+      'protection',
+      'quality',
+      'speed',
+      'fast',
+      'cheap',
+      'expensive',
+      'why',
+      'reason',
+      'explain',
+      'spending',
+      'limit',
+      'budget',
+    ],
+  },
+  {
+    id: 'ai-preferences-advanced',
+    title: 'Advanced AI settings',
+    subtitle:
+      'Authorized administrators: technical provider detail, reversible provider pins per AI route, and the full record of every choice',
+    href: '/ai/preferences/advanced',
+    keywords: [
+      'advanced',
+      'technical',
+      'override',
+      'overrides',
+      'pin',
+      'pins',
+      'provider',
+      'providers',
+      'route',
+      'audit',
+      'record',
+      'records',
+      'administrator',
+      'authorized',
+      'ai',
+      'preferences',
+    ],
+  },
   {
     id: 'byoa',
     title: 'Add your own AI provider',
@@ -245,7 +304,6 @@ export const AI_DESTINATIONS: readonly {
   },
 ];
 
-/**
 /**
  * The evidence/audit surface's keyboard destination (W065): the causal
  * evidence view — reconstruct any consequential answer or decision
