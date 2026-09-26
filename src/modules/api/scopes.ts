@@ -20,8 +20,12 @@ import { ApiError } from './errors';
 
 /**
  * The closed capability-scope vocabulary of the v1 public API.
- * KEEP IN SYNC with the scopes CHECK constraint in
- * src/modules/api/migrations/001-api-keys.sql.
+ * KEEP IN SYNC with the scopes CHECK constraint on api_keys — installed by
+ * src/modules/api/migrations/001-api-keys.sql and EXTENDED by
+ * src/modules/api/migrations/003-api-channels-scopes.sql (W103 added the
+ * channels family; the repair discipline keeps applied migrations
+ * immutable, so the constraint's authoritative current shape lives in the
+ * highest-numbered migration).
  */
 export const API_SCOPES = [
   'goals:read',
@@ -34,6 +38,10 @@ export const API_SCOPES = [
   'agents:read',
   'approvals:read',
   'approvals:write',
+  // W103: the channels family (J16 — cross-channel communication): reads
+  // of the tenant's channel connections and connection management.
+  'channels:read',
+  'channels:write',
   'webhooks:manage',
   'api:administer',
 ] as const;

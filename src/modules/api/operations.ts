@@ -74,6 +74,18 @@ import type {
   AgentStatus,
 } from '@/modules/agents/contract';
 import {
+  getChannelConnection,
+  listChannelConnections,
+  registerChannelConnection,
+  setChannelConnectionStatus,
+} from '@/modules/channels/contract';
+import type {
+  ChannelConnectionStatus,
+  ChannelProvider,
+  ListChannelConnectionsQuery,
+  RegisterChannelConnectionInput,
+} from '@/modules/channels/contract';
+import {
   authorizeAction,
   decideApproval,
   getActionRequest,
@@ -394,4 +406,31 @@ export const OPERATIONS: Record<string, ApiOperationHandler> = {
     const input = requireRecordBody(body);
     return fanoutEvent(ctx, { eventId: input.eventId as string });
   },
+
+  // -- channels (W030/W059, surfaced W103): the tenant's channel
+  //    connections. The contract takes NO actor fields — the channels
+  //    module stamps createdBy from the TenantContext principal and the
+  //    kernel's api.operation audit event carries the attribution — so
+  //    unlike the mission handlers there is no actor default to apply.
+  //    Transport/challenge operations (receiveInbound, sendOutbound,
+  //    identity challenges, transport wiring) are deliberately NOT
+  //    public: raw provider envelopes and verification-code deliveries
+  //    are the connections hub's seams, not public-API shapes.
+  'channels.list': ({ ctx, query }) =>
+    listChannelConnections(ctx, {
+      provider: queryValue(query, 'provider') as ChannelProvider | undefined,
+      status: queryValue(query, 'status') as ChannelConnectionStatus | undefined,
+      limit: queryInt(query, 'limit'),
+    } satisfies ListChannelConnectionsQuery),
+  'channels.get': ({ ctx, params }) => getChannelConnection(ctx, params.connectionId ?? ''),
+  'channels.register': ({ ctx, body }) =>
+    registerChannelConnection(
+      ctx,
+      requireRecordBody(body) as unknown as RegisterChannelConnectionInput,
+    ),
+  'channels.status': ({ ctx, params, body }) =>
+    setChannelConnectionStatus(ctx, {
+      connectionId: params.connectionId ?? '',
+      status: requireRecordBody(body).status as ChannelConnectionStatus,
+    }),
 };

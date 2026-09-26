@@ -336,6 +336,35 @@ export const API_ROUTES: readonly ApiRouteSpec[] = [
     operation: 'webhooks.fanout',
     scope: 'webhooks:manage',
   },
+
+  // -- channels (the tenant's channel connections — the W030/W059
+  //    connection-hub capability surfaced for J16 cross-channel
+  //    communication). Connection management ONLY: the inbound/outbound
+  //    transport and identity-challenge seams stay behind the
+  //    connections hub (raw provider envelopes and verification codes
+  //    are not public-API shapes); `register` is idempotent and always
+  //    answers 201 with `created` distinguishing first registration
+  //    from an already-registered endpoint. ----------------------------
+  { method: 'GET', segments: ['channels'], operation: 'channels.list', scope: 'channels:read' },
+  {
+    method: 'GET',
+    segments: ['channels', ':connectionId'],
+    operation: 'channels.get',
+    scope: 'channels:read',
+  },
+  {
+    method: 'POST',
+    segments: ['channels'],
+    operation: 'channels.register',
+    scope: 'channels:write',
+    successStatus: CREATED,
+  },
+  {
+    method: 'PATCH',
+    segments: ['channels', ':connectionId', 'status'],
+    operation: 'channels.status',
+    scope: 'channels:write',
+  },
 ];
 
 export type RouteMatch =

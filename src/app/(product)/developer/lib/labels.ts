@@ -39,6 +39,9 @@ export const DEV_API_SCOPES: readonly ApiScope[] = [
   'agents:read',
   'approvals:read',
   'approvals:write',
+  // W103: the channels family (channel-connection reads + management).
+  'channels:read',
+  'channels:write',
   'webhooks:manage',
   'api:administer',
 ];
@@ -98,6 +101,16 @@ const SCOPE_COPY: Record<ApiScope, { label: string; explanation: string }> = {
   'approvals:write': {
     label: 'Approvals · write',
     explanation: 'Propose consequential actions and decide approval requests the key may decide.',
+  },
+  'channels:read': {
+    label: 'Channels · read',
+    explanation:
+      'List the tenant’s channel connections (WhatsApp, Slack, email…) and read one by id (GET /api/v1/channels…).',
+  },
+  'channels:write': {
+    label: 'Channels · write',
+    explanation:
+      'Register sending endpoints with opaque credential references and enable or disable them over the public API.',
   },
   'webhooks:manage': {
     label: 'Webhooks · manage',

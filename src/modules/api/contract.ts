@@ -35,13 +35,16 @@
 // WHAT THE SURFACE EXPOSES (capability-oriented, lock 31)
 //   Reads: goals (+versions), unknowns, beliefs, missions (+versions),
 //   knowledge (+evidence), observations (+lineage), capabilities (+gap
-//   analysis), agents (+execution traces), approvals (+decisions) — each
-//   through the owning module's contract and nothing else.
+//   analysis), agents (+execution traces), approvals (+decisions),
+//   channel connections — each through the owning module's contract and
+//   nothing else.
 //   Writes: requesting investigations (missions), the W009 approval
 //   workflow (authorizeAction — including proposing agent recruitment via
 //   the 'agent-recruitment' action kind — and decideApproval, which the
 //     actions module's own 'actions:approve' claim gate still governs),
-//   api keys and webhooks themselves.
+//   channel connection management (register + enable/disable — W103/J16;
+//   the transport/challenge seams stay hub-side), api keys and webhooks
+//   themselves.
 //   There is deliberately NO operation that reads or writes another
 //   module's tables, emits SQL on behalf of a caller, or exposes provider
 //   objects of any kind.
@@ -54,8 +57,8 @@
 //
 // Dependency posture: this module imports the contracts of organizations
 // (membership), events (audit + fanout), goals, missions, epistemics,
-// memory, observations, capabilities, agents and actions (the delegated
-// capabilities) — `all application contracts → api/mcp`
+// memory, observations, capabilities, agents, actions and channels (the
+// delegated capabilities) — `all application contracts → api/mcp`
 // (MODULE-DEPENDENCY-MAP.md). The MCP server (W039) reuses this same
 // discipline against the same contracts.
 // ============================================================================
