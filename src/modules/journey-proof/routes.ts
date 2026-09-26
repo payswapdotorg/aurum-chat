@@ -408,6 +408,17 @@ export const ROUTE_CATALOG: readonly RouteSpec[] = [
     file: 'src/app/(tower)/approvals/page.tsx',
     mobileArea: 'more',
   },
+  {
+    // W092 — the Vertical Kits surface (the tower's sixteenth page: an
+    // additive sibling, registered beside the W033 fifteen).
+    path: '/vertical-kits',
+    kind: 'page',
+    area: 'management',
+    auth: 'required',
+    title: 'Vertical kits',
+    file: 'src/app/(tower)/vertical-kits/page.tsx',
+    mobileArea: 'more',
+  },
 
   // --- the API surface (thin adapters — the developer console documents) --
   {

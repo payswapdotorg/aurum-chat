@@ -337,6 +337,20 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'the recruitment journey lives in the interventions surface',
   },
   {
+    // W092 — Vertical Extension Starter Kits: the tower's Vertical Kits
+    // surface (an additive sixteenth tower page beside the W033
+    // fifteen, linked from the tower navigation). The module itself is
+    // the tenant-side consumer of the marketplace's INSTALLABLE
+    // hand-off point; its edge path is declared pending W088.
+    module: 'vertical-kits',
+    label: 'Vertical extension starter kits (W092)',
+    layer: 'L4',
+    routes: ['/vertical-kits'],
+    surfaces: ['command-search', 'hub-link', 'drill-down'],
+    instrument: false,
+    note: 'the admin-managed catalog of vertical starter kits — versioned bundles of extension manifests, permission-scoped deep-action recipe templates and broker connection classes, installed through the governed marketplace catalog with append-only lifecycle audit; discovered from the command search (the marketplace area\u2019s keyboard destinations), the capability hub (the More page\u2019s extend family) and the tower navigation on every management page (the People & Systems group)',
+  },
+  {
     module: 'agent-evaluation',
     label: 'Agent evaluation',
     layer: 'L4',

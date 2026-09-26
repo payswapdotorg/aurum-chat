@@ -44,6 +44,9 @@ const GROUPS: NavGroup[] = [
     items: [
       { href: '/workforce', label: 'Workforce' },
       { href: '/agents', label: 'Agents' },
+      // W092 — the Vertical Kits surface (an additive row: the W033
+      // fifteen surfaces above stay untouched, in their registry order).
+      { href: '/vertical-kits', label: 'Vertical kits' },
     ],
   },
   {

@@ -290,6 +290,9 @@ const PAGE_MODULES: Record<string, RouteModule> = {
   '/evidence': { area: 'management', load: () => import('../../../src/app/(tower)/evidence/page') },
   '/recommendations': { area: 'management', load: () => import('../../../src/app/(tower)/recommendations/page') },
   '/approvals': { area: 'management', load: () => import('../../../src/app/(tower)/approvals/page') },
+  // W092 — the Vertical Kits tower surface (an additive loader beside the
+  // W033 fifteen).
+  '/vertical-kits': { area: 'management', load: () => import('../../../src/app/(tower)/vertical-kits/page') },
 };
 
 /** Every page route that must have a real module (the catalog ⇄ loader lock). */

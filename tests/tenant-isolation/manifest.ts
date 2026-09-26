@@ -19,6 +19,10 @@
 // v3 (W095): 'unified-identity' joins with its own sweep file — the
 // cross-modality identity registry, ambiguity ledger and evidence trail
 // the unified-identity module owns.
+//
+// v4 (W092): 'vertical-kits' joins with its own sweep file — the kit
+// installation lifecycle, grants, append-only events and recipe
+// references the vertical-kits module owns.
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -78,6 +82,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   sources: 'experience-sweep.test.ts',
   suppliers: 'cognition-sweep.test.ts',
   'unified-identity': 'unified-identity-sweep.test.ts',
+  'vertical-kits': 'vertical-kits-sweep.test.ts',
   workforce: 'cognition-sweep.test.ts',
   workflow: 'workflow-sweep.test.ts',
   world: 'foundation-sweep.test.ts',
