@@ -1,7 +1,7 @@
 # Final Tech Lead Takeover Handoff — Aurum Post-W083
 
 **Repository:** `payswapdotorg/aurum-chat`  
-**Current main:** `2f415e3c959f67b7507ae31e7c2cdaae9ba73871` (see §3a — W084/W095 reconciliation applied 2026-09-25)  
+**Current main:** `9f4f15b32a8d6bdbe222c926025d775640de9a14` (see §3a and the Wave A/B/D sections — W094 verified 2026-09-26)  
 **Architecture:** v2.1 — FROZEN  
 **Program scope:** W080–W101 only  
 **Maximum concurrent workers:** 3
@@ -169,16 +169,26 @@ Merge wave: PR #113 (08:04 UTC), PR #114 (08:22 UTC), PR #115 (08:40 UTC) — sq
 
 Final main `e37f1d4` verified at the exact merged tip: typecheck PASS, lint PASS, arch PASS (658/288/240), full suite 253 files/5341 tests/0 failed.
 
+### Wave D — W094 ✅ (PR #117, 2026-09-26)
+
+**W094 — Migration and Dual-Run Continuity ✅ (squash `9f4f15b`, PR #117)**
+- Branch `work/w094-migration-dual-run` @ `3507562`, base `b96abde` (the post-Wave-B handoff tip).
+- New module `src/modules/migration/` (staged import rounds — snapshot → transform → staged → review → commit, every imported record an evidence-shaped row carrying full provenance with a storage-level payload/provenance immutability trigger, abandoned rounds never become delta bases; the external↔Aurum identifier map per source system preserving natural-key identity within a source, cross-system collisions and ambiguous multi-entity matches raising explicit conflict records that link nothing until resolved — never auto-merged; dual-run as delta import rounds since the last COMMITTED round, NO live two-way sync, the incumbent reader port read-only by contract and unwired by default (`reader_unavailable` rather than a faked snapshot), a deterministic scripted fixture-incumbent double, comparison reports riding the W084 `reconcileOperation` verbatim (no second evidence model); commit-time verification composing the W084 DeepActionTransport port; sequestration rollback that quarantines without deleting; evidence-linked progressive retirement checkpoints dual-running → compare-clean → incumbent-read-only → incumbent-retired) + migrations/001-migration.sql (8 tables, tenant_id on every table) + 2 module suites + the W044 tenant-isolation sweep + registrations (discoverability instrument entry, e2e capability list, sweep manifest v6).
+- Naming deviation recorded honestly: the module landed as `src/modules/migration/` (the dispatch prompt's illustrative `migration-continuity` path was not followed literally; scope discipline held — no files outside the module plus the 3 union-additive registration seams).
+- Delivered by the parallel-lead session's worker; the replay-session dispatch of the same item was queue-dropped server-side (assistant placeholder len=0, the page's "Thinking…" a stale render) and was voided as a duplicate.
+- Integration-station verification at the exact merged tip `9f4f15b` (independent re-run): typecheck PASS, lint PASS, arch PASS (module files 667 / app-mcp 288 / tables 248), full suite **258 tracked test files — 5353 tests passed / 0 failed** (4 environment-gated file-level skips: real-Redis/real-Postgres URL seams unset in the sandbox). W094's own 43 tests green (11 service + 31 unit + 1 sweep).
+
+**Station-hygiene note (2026-09-26, binding for every future verification on this sandbox):** the 4GB box now OOM-kills a single-process `bun run test` (kernel `oom_kill`, 54-byte log). Run the suite CHUNKED: `git ls-files '*.test.ts' | rg -v '^tests/browser/'` (~258 files) split into ~33-file chunks, one `bunx vitest run --maxWorkers=2 <chunk>` per chunk. Do NOT pass `--reporter=basic` (removed in vitest 5 — instant startup error). Under concurrent chunks the embedded-PostgreSQL `beforeAll` boots exceed the 10s default `hookTimeout` on ~31 files — those are boot timeouts, NOT regressions: all 31 pass serialized (`--maxWorkers=1`, 624/624). Differential evidence: the same files passed in the `e37f1d4` morning battery, W094's own tests were green in the chunked run, and the failing set contained zero migration-module files. Also: long-running background jobs must be launched orphan-to-init — `( setsid nohup bash script >log 2>&1 < /dev/null & )` so the runner's PPID is 1 — or the between-tool-calls teardown tree-walk reaps them (console boot lesson 147 applies to the product repo too; setsid alone is not enough).
+
 ## 4. Remaining implementation frontier
 
-The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`e37f1d4`, post-Wave-B):
+The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`9f4f15b`, post-W094):
 
-- W094 — Migration and Dual-Run Continuity
 - W099 — Matrix Interoperability Adapter (optional)
 - W100 — Longitudinal S003 Conversion Benchmark
 - W101 — Final Post-S002 Production Certification
 
-W084, W095, Wave A (W088/W091/W092) and Wave B (W093/W096/W097) were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A / Wave B sections above).
+W084, W095, Wave A (W088/W091/W092), Wave B (W093/W096/W097) and W094 were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A / Wave B / Wave D sections above).
 
 Do not mark any of these complete because their contracts, UI stubs or research documents exist. Require real repository implementation and evidence.
 
@@ -188,17 +198,11 @@ Do not mark any of these complete because their contracts, UI stubs or research 
 
 ### Wave B (W093/W096/W097) — ✅ delivered 2026-09-26 (PRs #114/#115/#113)
 
-### Now: W094 — dispatch next
-- W094 (Migration and Dual-Run Continuity) is the only frontier item whose dependencies are all green; dispatch it as soon as worker capacity allows.
+### Now: W100 — dispatch next
+- W100 (Longitudinal S003 Conversion Benchmark) is the only frontier item whose dependencies are all green now that W094 is verified at `9f4f15b`; dispatch it as soon as worker capacity allows.
 
-### Then: W100
-The longitudinal benchmark must run after W094 exists so it measures the intended S002 conversion levers over the full migrated surface.
-
-### Optional: W099
-Matrix is optional and must not block the core program. Implement only with a customer/use-case reason documented in the work item evidence.
-
-### Final: W101
-W101 is a production gate, not a feature item. It must certify the final exact production revision.
+### Then: W099 (optional) / W101 (final)
+W099 (Matrix) remains optional and must not block the core program — implement only with a customer/use-case reason documented in the work item evidence. W101 is the production certification gate, not a feature item: it must certify the final exact production revision.
 
 ## 6. Recommended three-worker scheduling from current head
 
@@ -206,12 +210,11 @@ W101 is a production gate, not a feature item. It must certify the final exact p
 
 ### Wave B (W093/W096/W097) — ✅ delivered 2026-09-26
 
-### Wave D — dispatch now
+### Wave D — W094 ✅ delivered 2026-09-26 (PR #117)
 
-**Worker A: W094 — Migration + Dual Run**
-The only unblocked frontier item (all dependencies green at `e37f1d4`).
+**Worker A: W094 — Migration + Dual Run** — ✅ delivered and integration-verified at `9f4f15b`.
 
-**Worker B: W100 — Longitudinal S003 Conversion Benchmark** after W094 is truly green (W092/W096/W097/W098 already green; W094 is the last prerequisite).
+**Worker B: W100 — Longitudinal S003 Conversion Benchmark** — unblocked (W092/W096/W097/W098/W094 all green); dispatch next against base `9f4f15b`.
 
 **Worker C: remaining integration hardening / observability.**
 
