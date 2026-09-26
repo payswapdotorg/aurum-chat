@@ -1,0 +1,937 @@
+{
+  "schema": "aurum.meeting-cellular-fixture",
+  "version": 1,
+  "title": "W097 — Meeting and Cellular End-to-End Fixture",
+  "provenance": {
+    "baseCommit": "b0845049edc5c947a76c8876854839b3f2f15f7c",
+    "modulesRidden": [
+      "meetings (W085)",
+      "realtime (W086)",
+      "cellular (W087)",
+      "unified-identity (W095)",
+      "identity (W002)",
+      "people (W002)",
+      "actions (W009)",
+      "notifications (W031)",
+      "conversations (W029)",
+      "observations (W004)",
+      "workflow (W080)"
+    ],
+    "providerDoubles": {
+      "meetings": "raw zoom webhook envelopes in the documented adapter shape, parsed by the meetings module's private zoom adapter through receiveMeetingWebhook",
+      "realtime": "raw livekit event envelopes in the documented adapter shape, parsed by the realtime module's private livekit adapter through receiveRealtimeEvent, plus a scripted RealtimeTransport implementing the provider-neutral transport port",
+      "cellular": "raw twilio carrier envelopes in the documented adapter shape, parsed by the cellular module's private twilio adapter through receiveCellularEvent, plus a scripted CellularTransport implementing the provider-neutral delivery port",
+      "livePath": "no live telephony or meeting-provider credentials exist in this environment; every live path stays fixture-covered and is environment-dependent (see the delivery report)"
+    },
+    "doublesDiscipline": "the doubles implement the modules' own provider-neutral ports and reuse the documented adapter envelope shapes; no mock of the interpreter's own invention is asserted against"
+  },
+  "scenarios": [
+    {
+      "id": "golden-journey",
+      "proves": "meeting transcript and artifact ingestion, Meeting Companion session with consented recording, SMS fallback delivery with reply-to-Aurum continuity, voice fallback after SMS failure with spoken reply, and W095 recognition of ONE person (one organizational identity) at every modality hop: meeting, realtime, sms, voice, messaging.",
+      "world": {
+        "people": [
+          {
+            "key": "sarah",
+            "fullName": "Sarah Chen",
+            "employee": { "title": "Ops Lead", "department": "Operations" },
+            "verifiedIdentities": [
+              { "provider": "email", "providerAccountId": "sarah.chen@meridian.test", "evidence": "HR directory email" },
+              { "provider": "sms", "providerAccountId": "+15553100001", "evidence": "HR directory mobile (SMS)" },
+              { "provider": "voice", "providerAccountId": "+15553100001", "evidence": "HR directory mobile (voice)" }
+            ]
+          }
+        ],
+        "connections": {
+          "meetings": { "provider": "zoom", "providerAccountId": "zoom-w097-gold", "authKind": "credentials", "credentialRef": "secret-store://w097/zoom/gold", "displayName": "Meridian Zoom (golden)" },
+          "realtime": { "provider": "livekit", "providerAccountId": "lk-w097-gold", "authKind": "api_key", "credentialRef": "secret-store://w097/livekit/gold", "displayName": "Meridian LiveKit (golden)" },
+          "cellular": { "provider": "twilio", "providerAccountId": "AC-w097-gold", "phoneNumber": "+15550100000", "credentialRef": "secret-store://w097/twilio/gold", "displayName": "Meridian Ops line" }
+        },
+        "cellularPolicy": { "voiceFallback": "on_sms_failure", "smsMaxAttempts": 2, "retryBackoffSeconds": 60 },
+        "authorityPolicy": null
+      },
+      "baseTime": "2026-09-28T09:00:00Z",
+      "script": [
+        {
+          "op": "ingestMeeting",
+          "note": "1. meeting metadata",
+          "payload": {
+            "event": "meeting.updated",
+            "event_id": "gold-ev-meta",
+            "occurredAt": "2026-09-28T09:00:00Z",
+            "account": { "id": "zoom-w097-gold" },
+            "meeting": {
+              "id": "mtg-gold",
+              "title": "Supplier cold-chain review",
+              "agenda": "Demo time change, delivery risk",
+              "scheduled_start": "2026-09-28T09:00:00Z",
+              "scheduled_end": "2026-09-28T10:00:00Z",
+              "host": { "id": "zoom-sarah", "name": "Sarah Chen", "email": "sarah.chen@meridian.test" }
+            }
+          }
+        },
+        {
+          "op": "ingestMeeting",
+          "note": "2. session started (Sarah + an email-less guest)",
+          "bindSession": "review",
+          "payload": {
+            "event": "meeting.started",
+            "event_id": "gold-ev-start",
+            "occurredAt": "2026-09-28T09:00:30Z",
+            "account": { "id": "zoom-w097-gold" },
+            "meeting": { "id": "mtg-gold" },
+            "session": {
+              "id": "occ-gold",
+              "status": "started",
+              "started_at": "2026-09-28T09:00:30Z",
+              "ended_at": null,
+              "participants": [
+                { "id": "zoom-sarah", "name": "Sarah Chen", "email": "sarah.chen@meridian.test", "joined_at": "2026-09-28T09:00:30Z", "left_at": null },
+                { "id": "zoom-guest", "name": "Sam Supplier", "email": null, "joined_at": "2026-09-28T09:05:00Z", "left_at": null }
+              ]
+            }
+          }
+        },
+        {
+          "op": "ingestMeeting",
+          "note": "3. transcript with speaker attribution",
+          "payload": {
+            "event": "recording.transcript_completed",
+            "event_id": "gold-ev-tr",
+            "occurredAt": "2026-09-28T09:40:00Z",
+            "account": { "id": "zoom-w097-gold" },
+            "meeting": { "id": "mtg-gold" },
+            "session": { "id": "occ-gold" },
+            "transcript": {
+              "id": "tr-gold",
+              "language": "en-US",
+              "segments": [
+                { "participant_id": "zoom-sarah", "speaker_name": "Sarah", "started_at": "2026-09-28T09:01:00Z", "ended_at": "2026-09-28T09:01:20Z", "text": "The cold-chain supplier moved Thursday's demo to 15:00.", "confidence": 0.97 },
+                { "participant_id": "zoom-guest", "speaker_name": "Sam", "started_at": "2026-09-28T09:01:25Z", "ended_at": null, "text": "I can make 15:00.", "confidence": 0.88 }
+              ]
+            }
+          }
+        },
+        {
+          "op": "ingestMeeting",
+          "note": "4. recording artifact",
+          "payload": {
+            "event": "recording.completed",
+            "event_id": "gold-ev-art",
+            "occurredAt": "2026-09-28T09:45:00Z",
+            "account": { "id": "zoom-w097-gold" },
+            "meeting": { "id": "mtg-gold" },
+            "session": { "id": "occ-gold" },
+            "artifact": { "id": "rec-gold", "type": "recording", "name": "GMT20260928.mp4", "media_type": "video/mp4", "size_bytes": 2097152, "storage_ref": "provider://zoom/rec-gold", "checksum": "sha256:gold" }
+          }
+        },
+        {
+          "op": "ingestMeeting",
+          "note": "5. session ended",
+          "payload": {
+            "event": "meeting.ended",
+            "event_id": "gold-ev-end",
+            "occurredAt": "2026-09-28T09:57:00Z",
+            "account": { "id": "zoom-w097-gold" },
+            "meeting": { "id": "mtg-gold" },
+            "session": {
+              "id": "occ-gold",
+              "status": "ended",
+              "started_at": "2026-09-28T09:00:30Z",
+              "ended_at": "2026-09-28T09:57:00Z",
+              "participants": [
+                { "id": "zoom-sarah", "name": "Sarah Chen", "email": "sarah.chen@meridian.test", "joined_at": "2026-09-28T09:00:30Z", "left_at": "2026-09-28T09:57:00Z" },
+                { "id": "zoom-guest", "name": "Sam Supplier", "email": null, "joined_at": "2026-09-28T09:05:00Z", "left_at": "2026-09-28T09:57:00Z" }
+              ]
+            }
+          },
+          "expect": [
+            { "kind": "meetings", "meetings": 1, "sessions": 1, "transcripts": 1, "artifacts": 1, "accessEvents": 0, "participants": 2 },
+            { "kind": "observations", "channel": "zoom", "kinds": ["meeting.metadata", "meeting.session", "meeting.session", "meeting.transcript", "meeting.artifact"] }
+          ]
+        },
+        {
+          "op": "unifyMeetings",
+          "note": "6. the W095 meeting pass — Sarah links, the guest stays unverified",
+          "expect": [
+            { "kind": "unifySummary", "pass": "meetings", "considered": 2, "created": 2, "linked": 1, "ambiguous": 0, "linkRetained": 0, "skipped": 0 }
+          ]
+        },
+        {
+          "op": "assert",
+          "note": "7. W095 recognition at the MEETING hop — one person, one organizational identity",
+          "expect": [
+            { "kind": "unifiedResolution", "modality": "meeting", "provider": "zoom", "account": "zoom-sarah", "expect": "resolved", "person": "sarah" },
+            { "kind": "unifiedResolution", "modality": "meeting", "provider": "zoom", "account": "zoom-guest", "expect": "unverified" }
+          ]
+        },
+        {
+          "op": "startCompanion",
+          "note": "8. Meeting Companion session attaches to the canonical meeting session (read-only reference)",
+          "key": "companion",
+          "meetingSessionKey": "review",
+          "title": "Supplier cold-chain review — companion"
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "9. Sarah joins the companion room (email facet carried)",
+          "payload": {
+            "type": "participant.connected",
+            "event_id": "gold-rt-join",
+            "occurredAt": "2026-09-28T09:10:00Z",
+            "account": { "id": "lk-w097-gold" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "participant": { "identity": "p-sarah", "name": "Sarah Chen", "email": "sarah.chen@meridian.test", "phone": null }
+          }
+        },
+        {
+          "op": "recordConsent",
+          "note": "10. all-party consent for the recording (domain path)",
+          "sessionKey": "companion",
+          "participant": "p-sarah",
+          "consent": "granted"
+        },
+        {
+          "op": "startRecording",
+          "note": "11. recording under full consent",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "realtimeSession", "key": "companion", "recordingState": "recording" }
+          ]
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "12. live transcript turn with speaker attribution",
+          "payload": {
+            "type": "transcript.finalized",
+            "event_id": "gold-rt-tr",
+            "occurredAt": "2026-09-28T09:12:00Z",
+            "account": { "id": "lk-w097-gold" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "participant": { "identity": "p-sarah" },
+            "transcript": {
+              "participant_id": "p-sarah",
+              "speaker_name": "Sarah",
+              "started_at": "2026-09-28T09:12:00Z",
+              "ended_at": "2026-09-28T09:12:09Z",
+              "text": "Aurum, can you confirm everyone has acknowledged the 15:00 change?",
+              "confidence": 0.95
+            }
+          }
+        },
+        {
+          "op": "speak",
+          "note": "13. the companion speaks an attributed response",
+          "key": "summary",
+          "sessionKey": "companion",
+          "text": "Sarah — the guest participant and the supplier side are confirmed for 15:00; I will flag anyone who has not acknowledged by noon.",
+          "inReplyToParticipant": "p-sarah",
+          "expect": [
+            { "kind": "realtimeTurns", "sessionKey": "companion", "humanTexts": ["Aurum, can you confirm everyone has acknowledged the 15:00 change?"], "aurumResponseTexts": ["Sarah — the guest participant and the supplier side are confirmed for 15:00; I will flag anyone who has not acknowledged by noon."] }
+          ]
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "14. the spoken response completes",
+          "payload": {
+            "type": "response.completed",
+            "event_id": "gold-rt-done",
+            "occurredAt": "2026-09-28T09:13:00Z",
+            "account": { "id": "lk-w097-gold" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "response": { "id": { "$ref": "response", "key": "summary" } }
+          }
+        },
+        {
+          "op": "unifyRealtime",
+          "note": "15. the W095 realtime pass over the companion registry",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "unifySummary", "pass": "realtime", "considered": 2, "created": 1, "linked": 1, "ambiguous": 0, "linkRetained": 0, "skipped": 1 }
+          ]
+        },
+        {
+          "op": "assert",
+          "note": "16. W095 recognition at the REALTIME/COMPANION hop",
+          "expect": [
+            { "kind": "unifiedResolution", "modality": "realtime", "provider": "livekit", "account": "p-sarah", "expect": "resolved", "person": "sarah" }
+          ]
+        },
+        {
+          "op": "providerScript",
+          "note": "17. the provider double will report a recording artifact on stop",
+          "recordingArtifact": { "providerArtifactId": "egress-gold-1", "storageRef": "provider://livekit/egress-gold-1", "mediaType": "audio/ogg", "byteSize": 8192, "checksum": "sha256:beef" }
+        },
+        {
+          "op": "stopRecording",
+          "note": "18. stop the recording — the provider artifact is captured (opaque references)",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "realtimeSession", "key": "companion", "recordingState": "recorded" }
+          ]
+        },
+        {
+          "op": "stopSession",
+          "note": "19. end the companion session durably",
+          "sessionKey": "companion"
+        },
+        {
+          "op": "finalize",
+          "note": "20. drive the durable finalization workflow (W080) — transcript artifact + session-close observation",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "realtimeSession", "key": "companion", "status": "ended", "endedReason": "caller_stopped", "evidenceObservationKind": "realtime.session", "artifactKinds": ["recording", "transcript"] }
+          ]
+        },
+        {
+          "op": "reach",
+          "note": "21. 'Tell Sarah' — the outcome-oriented ask over the SMS fallback (recipient has neither Aurum nor Internet)",
+          "key": "tell-sarah",
+          "person": "sarah",
+          "kind": "tell",
+          "text": "The supplier demo moved to 15:00 today - please confirm you can make it.",
+          "expect": [
+            { "kind": "reach", "key": "tell-sarah", "status": "sent", "recipientKind": "verified_employee", "person": "sarah", "actionKind": "employee-messaging", "policySource": "tenant-default", "voiceFallback": "on_sms_failure", "sentAt": true, "actionRequestId": true },
+            { "kind": "transportSends", "sms": 1, "voice": 0 }
+          ]
+        },
+        {
+          "op": "ingestCellular",
+          "note": "22. carrier delivery receipt (DLR)",
+          "payload": { "MessageSid": { "$ref": "smsMessageId", "n": 1 }, "MessageStatus": "delivered", "AccountSid": "AC-w097-gold" },
+          "expect": [
+            { "kind": "reach", "key": "tell-sarah", "status": "delivered", "deliveredAt": true }
+          ]
+        },
+        {
+          "op": "ingestCellular",
+          "note": "23. Sarah replies over SMS — the reply RETURNS INTO AURUM (canonical transcript turn + reach correlation)",
+          "payload": { "From": "+15553100001", "To": "+15550100000", "Body": "Confirmed - I'll be there at 15:00.", "MessageSid": "SM-gold-reply-1", "AccountSid": "AC-w097-gold" },
+          "expect": [
+            { "kind": "reach", "key": "tell-sarah", "status": "replied", "repliedAt": true },
+            { "kind": "replies", "entries": [ { "inboundKind": "reach_reply", "channel": "sms", "person": "sarah", "reachKey": "tell-sarah", "textContains": "Confirmed" } ] },
+            { "kind": "replyInTranscript", "person": "sarah", "channel": "sms", "textContains": "Confirmed - I'll be there at 15:00." }
+          ]
+        },
+        {
+          "op": "assert",
+          "note": "24. W095 recognition at the SMS hop — the identity the reply carried",
+          "expect": [
+            { "kind": "unifiedResolution", "modality": "sms", "provider": "sms", "account": "+15553100001", "expect": "resolved", "person": "sarah" }
+          ]
+        },
+        {
+          "op": "providerScript",
+          "note": "25. the SMS leg of the next reach will terminally fail (deterministic double)",
+          "smsOutcome": "failed"
+        },
+        {
+          "op": "reach",
+          "note": "26. a second ask whose SMS leg fails",
+          "key": "remind-sarah",
+          "person": "sarah",
+          "kind": "ask",
+          "text": "Quick check: do you need the supplier pre-read before the 15:00 demo?",
+          "expect": [
+            { "kind": "reach", "key": "remind-sarah", "status": "pending", "smsAttemptsCount": 1, "nextAttemptAt": true },
+            { "kind": "transportSends", "sms": 2, "voice": 0 }
+          ]
+        },
+        {
+          "op": "elapse",
+          "note": "27. one retry backoff window",
+          "seconds": 61
+        },
+        {
+          "op": "pump",
+          "note": "28. the worker seam retries, exhausts the SMS budget and places the VOICE FALLBACK call",
+          "expect": [
+            { "kind": "transportSends", "sms": 3, "voice": 1 },
+            { "kind": "reach", "key": "remind-sarah", "status": "delivered", "deliveredAt": true, "voiceAttemptsCount": 1 },
+            { "kind": "attempts", "reachKey": "remind-sarah", "legs": ["sms:failed", "sms:failed", "voice:answered"], "providerAcks": true }
+          ]
+        },
+        {
+          "op": "ingestCellular",
+          "note": "29. Sarah answers by speaking during the call — the spoken reply returns into Aurum, correlated BY THE CALL",
+          "payload": { "CallSid": { "$ref": "callId", "n": 1 }, "From": "+15553100001", "To": "+15550100000", "AccountSid": "AC-w097-gold", "EventKey": "evt-gold-speech-1", "SpeechResult": "Yes - please send the pre-read tonight." },
+          "expect": [
+            { "kind": "reach", "key": "remind-sarah", "status": "replied", "repliedAt": true },
+            { "kind": "replies", "entries": [ { "inboundKind": "reach_reply", "channel": "voice", "person": "sarah", "reachKey": "remind-sarah", "textContains": "send the pre-read" } ] },
+            { "kind": "replyInTranscript", "person": "sarah", "channel": "voice", "textContains": "please send the pre-read tonight" },
+            { "kind": "unifiedResolution", "modality": "voice", "provider": "voice", "account": "+15553100001", "expect": "resolved", "person": "sarah" }
+          ]
+        },
+        {
+          "op": "ingestCellular",
+          "note": "30. the call completes with duration and recording captured",
+          "payload": { "CallSid": { "$ref": "callId", "n": 1 }, "From": "+15553100001", "To": "+15550100000", "AccountSid": "AC-w097-gold", "EventKey": "evt-gold-done-1", "CallStatus": "completed", "CallDuration": 38, "RecordingUrl": "https://recordings.invalid/gold-1" },
+          "expect": [
+            { "kind": "attempts", "reachKey": "remind-sarah", "legs": ["sms:failed", "sms:failed", "voice:completed"], "providerAcks": true }
+          ]
+        }
+      ],
+      "final": [
+        { "kind": "unifiedProfile", "person": "sarah", "verifiedModalities": 5, "modalities": ["messaging", "sms", "voice", "meeting", "realtime"], "note": "ONE person, ONE organizational identity, recognized across five communication modalities (the W095 acceptance, exceeded): the same E.164 is a verified SMS row AND a verified voice row — per-modality proof, one person" },
+        { "kind": "selfContainedEnvelopes", "legs": ["sms", "voice"], "note": "every outbound envelope is a plain PSTN message: E.164 addresses, plain text, no URL, no app deep-link, no Aurum account — the recipient needs neither Aurum nor Internet" },
+        { "kind": "attempts", "reachKey": "tell-sarah", "legs": ["sms:delivered"], "providerAcks": true, "note": "the provider-ack records: the carrier-accepted message id is durably recorded on the attempt" },
+        { "kind": "meetings", "meetings": 1, "sessions": 1, "transcripts": 1, "artifacts": 1, "accessEvents": 0, "participants": 2 },
+        { "kind": "observations", "channel": "zoom", "kinds": ["meeting.metadata", "meeting.session", "meeting.session", "meeting.transcript", "meeting.artifact"] },
+        { "kind": "foreignInvisible", "reachKey": "tell-sarah", "sessionKey": "companion", "person": "sarah", "note": "the tenant-isolation dimension: another tenant sees the whole chain as uniformly missing" }
+      ]
+    },
+    {
+      "id": "consent-and-policy-refusal",
+      "proves": "exact consent/policy behavior: with employee-messaging consent ABSENT the authority gate blocks the reach outright (nothing is sent, the refusal is recorded with its policy reason and is auditable, the asking manager is notified); after consent is granted a reach sends; after consent is REVOKED nothing more is sent; and on the realtime side the all-party consent floor refuses a recording without consent (explicit blocked event) and stops it on revocation.",
+      "world": {
+        "people": [
+          {
+            "key": "taylor",
+            "fullName": "Taylor Reed",
+            "employee": { "title": "Warehouse Coordinator", "department": "Operations" },
+            "verifiedIdentities": [
+              { "provider": "sms", "providerAccountId": "+15553100011", "evidence": "HR directory mobile" }
+            ]
+          }
+        ],
+        "connections": {
+          "meetings": { "provider": "zoom", "providerAccountId": "zoom-w097-consent", "authKind": "credentials", "credentialRef": "secret-store://w097/zoom/consent", "displayName": "Meridian Zoom (consent)" },
+          "realtime": { "provider": "livekit", "providerAccountId": "lk-w097-consent", "authKind": "api_key", "credentialRef": "secret-store://w097/livekit/consent", "displayName": "Meridian LiveKit (consent)" },
+          "cellular": { "provider": "twilio", "providerAccountId": "AC-w097-consent", "phoneNumber": "+15550100011", "credentialRef": "secret-store://w097/twilio/consent", "displayName": "Meridian Ops line (consent)" }
+        },
+        "cellularPolicy": null,
+        "authorityPolicy": null
+      },
+      "baseTime": "2026-09-28T10:00:00Z",
+      "script": [
+        {
+          "op": "setAuthorityPolicy",
+          "note": "1. consent ABSENT from the start: employee-messaging at the ASK level is forbidden",
+          "actionKind": "employee-messaging",
+          "forbiddenLevels": ["ASK"],
+          "noteText": "consent absent: employee messaging not consented"
+        },
+        {
+          "op": "reach",
+          "note": "2. the reach is blocked BEFORE anything is sent",
+          "key": "tell-absent",
+          "person": "taylor",
+          "kind": "tell",
+          "text": "The warehouse walk-through moved to 16:00.",
+          "failureNotification": { "provider": "email", "providerAccountId": "morgan@meridian.test" },
+          "expect": [
+            { "kind": "reach", "key": "tell-absent", "status": "blocked", "actionKind": "employee-messaging", "actionRequestId": true },
+            { "kind": "transportSends", "sms": 0, "voice": 0 },
+            { "kind": "actionRequest", "reachKey": "tell-absent", "status": "rejected", "evaluationOutcome": "forbidden", "decisions": [ { "by": "policy", "decision": "reject" } ] },
+            { "kind": "notifications", "kindOf": "cellular-reach-failed", "count": 1, "reachKey": "tell-absent" }
+          ]
+        },
+        {
+          "op": "retryReach",
+          "note": "3. a blocked request never reopens — the authority decision is stable",
+          "reachKey": "tell-absent",
+          "expectError": { "code": "reach_not_retryable" }
+        },
+        {
+          "op": "setAuthorityPolicy",
+          "note": "4. consent granted: the policy now allows employee messaging",
+          "actionKind": "employee-messaging",
+          "forbiddenLevels": [],
+          "approvalLevels": [],
+          "noteText": "consent granted"
+        },
+        {
+          "op": "reach",
+          "note": "5. with consent the reach sends",
+          "key": "tell-granted",
+          "person": "taylor",
+          "kind": "tell",
+          "text": "The warehouse walk-through is confirmed for 16:00.",
+          "expect": [
+            { "kind": "reach", "key": "tell-granted", "status": "sent", "person": "taylor" },
+            { "kind": "transportSends", "sms": 1, "voice": 0 }
+          ]
+        },
+        {
+          "op": "setAuthorityPolicy",
+          "note": "6. consent REVOKED: the policy forbids employee messaging again",
+          "actionKind": "employee-messaging",
+          "forbiddenLevels": ["ASK"],
+          "noteText": "consent revoked"
+        },
+        {
+          "op": "reach",
+          "note": "7. the revoked-consent reach is blocked — NOTHING new is sent, the refusal is recorded and auditable",
+          "key": "tell-revoked",
+          "person": "taylor",
+          "kind": "tell",
+          "text": "One more reminder for the walk-through.",
+          "failureNotification": { "provider": "email", "providerAccountId": "morgan@meridian.test" },
+          "expect": [
+            { "kind": "reach", "key": "tell-revoked", "status": "blocked", "actionRequestId": true },
+            { "kind": "transportSends", "sms": 1, "voice": 0 },
+            { "kind": "actionRequest", "reachKey": "tell-revoked", "status": "rejected", "evaluationOutcome": "forbidden", "decisions": [ { "by": "policy", "decision": "reject" } ] },
+            { "kind": "notifications", "kindOf": "cellular-reach-failed", "count": 2, "reachKey": "tell-revoked" }
+          ]
+        },
+        {
+          "op": "ingestMeeting",
+          "note": "8. a minimal meeting session for the companion",
+          "bindSession": "sync",
+          "payload": {
+            "event": "meeting.started",
+            "event_id": "consent-ev-start",
+            "occurredAt": "2026-09-28T10:20:00Z",
+            "account": { "id": "zoom-w097-consent" },
+            "meeting": { "id": "mtg-consent" },
+            "session": {
+              "id": "occ-consent",
+              "status": "started",
+              "started_at": "2026-09-28T10:20:30Z",
+              "ended_at": null,
+              "participants": [
+                { "id": "zoom-taylor", "name": "Taylor Reed", "email": null, "joined_at": "2026-09-28T10:20:30Z", "left_at": null }
+              ]
+            }
+          }
+        },
+        {
+          "op": "startCompanion",
+          "note": "9. the companion session",
+          "key": "companion",
+          "meetingSessionKey": "sync",
+          "title": "Ops sync — companion"
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "10. Taylor joins the companion room",
+          "payload": {
+            "type": "participant.connected",
+            "event_id": "consent-rt-join",
+            "occurredAt": "2026-09-28T10:21:00Z",
+            "account": { "id": "lk-w097-consent" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "participant": { "identity": "p-taylor", "name": "Taylor Reed", "email": null, "phone": null }
+          }
+        },
+        {
+          "op": "startRecording",
+          "note": "11. a recording WITHOUT all-party consent is refused — an explicit, auditable blocked event",
+          "sessionKey": "companion",
+          "expectError": { "code": "consent_required" },
+          "expect": [
+            { "kind": "realtimeEvents", "sessionKey": "companion", "eventKind": "recording.blocked", "count": 1, "source": "domain" }
+          ]
+        },
+        {
+          "op": "recordConsent",
+          "note": "12. Taylor grants consent (domain path)",
+          "sessionKey": "companion",
+          "participant": "p-taylor",
+          "consent": "granted"
+        },
+        {
+          "op": "startRecording",
+          "note": "13. under full consent the recording runs",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "realtimeSession", "key": "companion", "recordingState": "recording" }
+          ]
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "14. Taylor REVOKES consent mid-recording (provider path) — the recording stops",
+          "payload": {
+            "type": "consent.revoked",
+            "event_id": "consent-rt-revoke",
+            "occurredAt": "2026-09-28T10:25:00Z",
+            "account": { "id": "lk-w097-consent" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "participant": { "identity": "p-taylor" }
+          },
+          "expect": [
+            { "kind": "realtimeSession", "key": "companion", "recordingState": "recorded" },
+            { "kind": "realtimeEvents", "sessionKey": "companion", "eventKind": "consent.revoked", "count": 1 },
+            { "kind": "realtimeEvents", "sessionKey": "companion", "eventKind": "recording.stopped", "count": 1 }
+          ]
+        }
+      ],
+      "final": [
+        { "kind": "transportSends", "sms": 1, "voice": 0, "note": "exactly one SMS was ever sent across the whole scenario: the consented reach" },
+        { "kind": "replies", "count": 0, "note": "no reply continuity for blocked reaches — nothing was ever delivered" }
+      ]
+    },
+    {
+      "id": "manager-originated",
+      "proves": "a manager with no usable Internet data originates SMS and voice requests to Aurum's own number: both return into Aurum with person attribution and land as canonical conversation turns (the member-visible audit trail); Aurum sends nothing on this path.",
+      "deferred": [
+        {
+          "note": "authority-gate records for manager-originated inbound requests are not supported by the current contracts",
+          "missingContract": "the cellular contract records a manager-originated inbound request only as a cellular reply row (inboundKind 'inbound_request') with identity/person attribution and a conversations transcript turn; no action request (actions contract) is created and no authority-gate record exists for inbound requests — an inbound-request audit surface on the cellular or channels contract is the missing piece"
+        }
+      ],
+      "world": {
+        "people": [
+          {
+            "key": "morgan",
+            "fullName": "Morgan Boss",
+            "employee": { "title": "Operations Manager", "department": "Operations" },
+            "verifiedIdentities": [
+              { "provider": "sms", "providerAccountId": "+15553100021", "evidence": "HR directory mobile (SMS)" },
+              { "provider": "voice", "providerAccountId": "+15553100021", "evidence": "HR directory mobile (voice)" }
+            ]
+          }
+        ],
+        "connections": {
+          "meetings": null,
+          "realtime": null,
+          "cellular": { "provider": "twilio", "providerAccountId": "AC-w097-mgr", "phoneNumber": "+15550100021", "credentialRef": "secret-store://w097/twilio/mgr", "displayName": "Meridian Ops line (manager)" }
+        },
+        "cellularPolicy": null,
+        "authorityPolicy": null
+      },
+      "baseTime": "2026-09-28T11:00:00Z",
+      "script": [
+        {
+          "op": "ingestCellular",
+          "note": "1. the manager texts Aurum's own number — the SMS IS the request (no usable Internet data)",
+          "payload": { "From": "+15553100021", "To": "+15550100021", "Body": "Where do we stand on the cold-chain supplier demo?", "MessageSid": "SM-mgr-1", "AccountSid": "AC-w097-mgr" },
+          "expect": [
+            { "kind": "replies", "entries": [ { "inboundKind": "inbound_request", "channel": "sms", "person": "morgan", "reachKey": null, "textContains": "cold-chain supplier demo" } ] },
+            { "kind": "replyInTranscript", "person": "morgan", "channel": "sms", "textContains": "Where do we stand on the cold-chain supplier demo?" },
+            { "kind": "cellularEvents", "kinds": ["sms_reply"] }
+          ]
+        },
+        {
+          "op": "ingestCellular",
+          "note": "2. the manager calls Aurum's number — the call is observed",
+          "payload": { "CallSid": "CA-mgr-in-1", "From": "+15553100021", "To": "+15550100021", "AccountSid": "AC-w097-mgr", "EventKey": "evt-mgr-ring-1", "CallStatus": "ringing" },
+          "expect": [
+            { "kind": "cellularEvents", "kinds": ["call_status", "sms_reply"] }
+          ]
+        },
+        {
+          "op": "ingestCellular",
+          "note": "3. the manager speaks — the VOICE request returns into Aurum with attribution",
+          "payload": { "CallSid": "CA-mgr-in-1", "From": "+15553100021", "To": "+15550100021", "AccountSid": "AC-w097-mgr", "EventKey": "evt-mgr-speech-1", "SpeechResult": "Summarize the supplier demo status for me." },
+          "expect": [
+            { "kind": "replies", "entries": [ { "inboundKind": "inbound_request", "channel": "sms", "person": "morgan", "reachKey": null }, { "inboundKind": "inbound_request", "channel": "voice", "person": "morgan", "reachKey": null, "textContains": "Summarize the supplier demo status" } ] },
+            { "kind": "replyInTranscript", "person": "morgan", "channel": "voice", "textContains": "Summarize the supplier demo status for me." },
+            { "kind": "cellularEvents", "kinds": ["call_status", "sms_reply", "voice_reply"] }
+          ]
+        }
+      ],
+      "final": [
+        { "kind": "transportSends", "sms": 0, "voice": 0, "note": "Aurum sent NOTHING on the manager-originated path — the manager's own carrier action is the request" },
+        { "kind": "unifiedResolution", "modality": "sms", "provider": "sms", "account": "+15553100021", "expect": "resolved", "person": "morgan", "note": "W095 recognition at the manager hop" },
+        { "kind": "unifiedProfile", "person": "morgan", "verifiedModalities": 2, "modalities": ["sms", "voice"] },
+        { "kind": "foreignInvisible", "person": "morgan", "note": "another tenant cannot see the manager, the requests or the audit trail" }
+      ]
+    },
+    {
+      "id": "provider-failure",
+      "proves": "honest degradation at every link: a meeting access failure is an explicit access event AND an observation (a gap in meeting intelligence is never silent); a provider-side realtime failure fails the companion session explicitly and still finalizes durably; an unwired cellular transport is an explicit, retryable provider_unavailable failure that recovers on retry; and a voice fallback that is not answered terminally fails with its code and a visible failure notification.",
+      "world": {
+        "people": [
+          {
+            "key": "riley",
+            "fullName": "Riley Quinn",
+            "employee": { "title": "Field Technician", "department": "Field Ops" },
+            "verifiedIdentities": [
+              { "provider": "sms", "providerAccountId": "+15553100031", "evidence": "HR directory mobile" }
+            ]
+          }
+        ],
+        "connections": {
+          "meetings": { "provider": "zoom", "providerAccountId": "zoom-w097-fail", "authKind": "credentials", "credentialRef": "secret-store://w097/zoom/fail", "displayName": "Meridian Zoom (failure)" },
+          "realtime": { "provider": "livekit", "providerAccountId": "lk-w097-fail", "authKind": "api_key", "credentialRef": "secret-store://w097/livekit/fail", "displayName": "Meridian LiveKit (failure)" },
+          "cellular": { "provider": "twilio", "providerAccountId": "AC-w097-fail", "phoneNumber": "+15550100031", "credentialRef": "secret-store://w097/twilio/fail", "displayName": "Meridian Ops line (failure)" }
+        },
+        "cellularPolicy": { "voiceFallback": "on_sms_failure", "smsMaxAttempts": 1, "retryBackoffSeconds": 30 },
+        "authorityPolicy": null
+      },
+      "baseTime": "2026-09-28T12:00:00Z",
+      "script": [
+        {
+          "op": "ingestMeeting",
+          "note": "1. a meeting session to attach the companion to",
+          "bindSession": "sync",
+          "payload": {
+            "event": "meeting.started",
+            "event_id": "fail-ev-start",
+            "occurredAt": "2026-09-28T12:00:30Z",
+            "account": { "id": "zoom-w097-fail" },
+            "meeting": { "id": "mtg-fail" },
+            "session": {
+              "id": "occ-fail",
+              "status": "started",
+              "started_at": "2026-09-28T12:00:30Z",
+              "ended_at": null,
+              "participants": [
+                { "id": "zoom-riley", "name": "Riley Quinn", "email": null, "joined_at": "2026-09-28T12:00:30Z", "left_at": null }
+              ]
+            }
+          }
+        },
+        {
+          "op": "ingestMeeting",
+          "note": "2. the provider cannot deliver the recording — an EXPLICIT access failure (event + observation, never silent)",
+          "payload": {
+            "event": "meeting.access_denied",
+            "event_id": "fail-ev-access",
+            "occurredAt": "2026-09-28T12:05:00Z",
+            "account": { "id": "zoom-w097-fail" },
+            "access": { "code": "recording_unavailable", "detail": "Recording expired", "meeting_id": "mtg-fail" }
+          },
+          "expect": [
+            { "kind": "meetings", "meetings": 1, "sessions": 1, "transcripts": 0, "artifacts": 0, "accessEvents": 1, "participants": 1 },
+            { "kind": "observations", "channel": "zoom", "kinds": ["meeting.access", "meeting.session"] }
+          ]
+        },
+        {
+          "op": "startCompanion",
+          "note": "3. the companion session",
+          "key": "companion",
+          "meetingSessionKey": "sync",
+          "title": "Field sync — companion"
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "4. Riley joins the companion room",
+          "payload": {
+            "type": "participant.connected",
+            "event_id": "fail-rt-join",
+            "occurredAt": "2026-09-28T12:10:00Z",
+            "account": { "id": "lk-w097-fail" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "participant": { "identity": "p-riley", "name": "Riley Quinn", "email": null, "phone": null }
+          }
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "5. one live transcript turn",
+          "payload": {
+            "type": "transcript.finalized",
+            "event_id": "fail-rt-tr",
+            "occurredAt": "2026-09-28T12:11:00Z",
+            "account": { "id": "lk-w097-fail" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "participant": { "identity": "p-riley" },
+            "transcript": {
+              "participant_id": "p-riley",
+              "speaker_name": "Riley",
+              "started_at": "2026-09-28T12:11:00Z",
+              "ended_at": null,
+              "text": "Riley joining from the warehouse floor.",
+              "confidence": 0.91
+            }
+          }
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "6. the provider's agent dies — the session FAILS explicitly (queryable, never a silent gap)",
+          "payload": {
+            "type": "agent.failed",
+            "event_id": "fail-rt-agent",
+            "occurredAt": "2026-09-28T12:12:00Z",
+            "account": { "id": "lk-w097-fail" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "failure": { "code": "agent_disconnected", "detail": "agent worker died" }
+          },
+          "expect": [
+            { "kind": "realtimeSession", "key": "companion", "status": "failed", "errorCode": "agent_disconnected" }
+          ]
+        },
+        {
+          "op": "finalize",
+          "note": "7. the failed session still finalizes durably — the transcript artifact and session-close observation exist",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "realtimeSession", "key": "companion", "status": "failed", "evidenceObservationKind": "realtime.session", "artifactKinds": ["transcript"] }
+          ]
+        },
+        {
+          "op": "unwireCellular",
+          "note": "8. no cellular transport is wired (the provider is unreachable)"
+        },
+        {
+          "op": "reach",
+          "note": "9. an explicit, honest provider_unavailable failure — nothing silently swallowed",
+          "key": "tell-unwired",
+          "person": "riley",
+          "kind": "tell",
+          "text": "The site visit moved to 14:00.",
+          "expect": [
+            { "kind": "reach", "key": "tell-unwired", "status": "failed", "failureCode": "provider_unavailable" },
+            { "kind": "attempts", "reachKey": "tell-unwired", "legs": ["sms:failed", "voice:failed"] }
+          ]
+        },
+        {
+          "op": "rewireCellular",
+          "note": "10. the transport is wired back — the failure was retryable"
+        },
+        {
+          "op": "retryReach",
+          "note": "11. the retry opens a new delivery cycle and the message is sent",
+          "reachKey": "tell-unwired",
+          "expect": [
+            { "kind": "reach", "key": "tell-unwired", "status": "sent", "cycle": 2, "smsAttemptsCount": 1 },
+            { "kind": "transportSends", "sms": 1, "voice": 0 },
+            { "kind": "attempts", "reachKey": "tell-unwired", "legs": ["sms:failed", "sms:sent", "voice:failed"] }
+          ]
+        },
+        {
+          "op": "providerScript",
+          "note": "12. the SMS leg of the next reach is permanently rejected and the fallback call is not answered",
+          "smsOutcome": "rejected",
+          "voiceOutcome": "no_answer"
+        },
+        {
+          "op": "reach",
+          "note": "13. terminal degradation with the exact failure code and a visible notification",
+          "key": "ask-unanswered",
+          "person": "riley",
+          "kind": "ask",
+          "text": "Can you confirm the cold-chain reading at the dock?",
+          "failureNotification": { "provider": "email", "providerAccountId": "ops-lead@meridian.test" },
+          "expect": [
+            { "kind": "reach", "key": "ask-unanswered", "status": "failed", "failureCode": "voice_no_answer" },
+            { "kind": "transportSends", "sms": 2, "voice": 1 },
+            { "kind": "attempts", "reachKey": "ask-unanswered", "legs": ["sms:rejected", "voice:no_answer"] },
+            { "kind": "notifications", "kindOf": "cellular-reach-failed", "count": 1, "reachKey": "ask-unanswered" }
+          ]
+        }
+      ],
+      "final": [
+        { "kind": "meetings", "accessEvents": 1, "note": "the never-silent meeting gap: the failed access is a durable, queryable record" },
+        { "kind": "selfContainedEnvelopes", "legs": ["sms", "voice"] }
+      ]
+    },
+    {
+      "id": "ambiguous-identity",
+      "proves": "the W095 rule inside the meeting+cellular chain: a companion participant whose email facet belongs to one person and whose phone facet belongs to another stays EXTERNAL/UNVERIFIED — an OPEN ambiguity is recorded with both candidates, the identity is never auto-merged, neither person's profile gains the realtime modality, while the per-channel VERIFIED rows (the meeting participant, the SMS number) keep resolving their own person deterministically.",
+      "world": {
+        "people": [
+          {
+            "key": "alex",
+            "fullName": "Alex Kim",
+            "employee": { "title": "Procurement Analyst", "department": "Procurement" },
+            "verifiedIdentities": [
+              { "provider": "email", "providerAccountId": "alex.kim@meridian.test", "evidence": "HR directory email" }
+            ]
+          },
+          {
+            "key": "blair",
+            "fullName": "Blair Lopez",
+            "employee": { "title": "Logistics Coordinator", "department": "Logistics" },
+            "verifiedIdentities": [
+              { "provider": "sms", "providerAccountId": "+15553100041", "evidence": "HR directory mobile" }
+            ]
+          }
+        ],
+        "connections": {
+          "meetings": { "provider": "zoom", "providerAccountId": "zoom-w097-amb", "authKind": "credentials", "credentialRef": "secret-store://w097/zoom/amb", "displayName": "Meridian Zoom (ambiguous)" },
+          "realtime": { "provider": "livekit", "providerAccountId": "lk-w097-amb", "authKind": "api_key", "credentialRef": "secret-store://w097/livekit/amb", "displayName": "Meridian LiveKit (ambiguous)" },
+          "cellular": { "provider": "twilio", "providerAccountId": "AC-w097-amb", "phoneNumber": "+15550100041", "credentialRef": "secret-store://w097/twilio/amb", "displayName": "Meridian Ops line (ambiguous)" }
+        },
+        "cellularPolicy": null,
+        "authorityPolicy": null
+      },
+      "baseTime": "2026-09-28T13:00:00Z",
+      "script": [
+        {
+          "op": "ingestMeeting",
+          "note": "1. Alex hosts a meeting — a single email facet, unambiguous",
+          "bindSession": "review",
+          "payload": {
+            "event": "meeting.started",
+            "event_id": "amb-ev-start",
+            "occurredAt": "2026-09-28T13:00:30Z",
+            "account": { "id": "zoom-w097-amb" },
+            "meeting": { "id": "mtg-amb" },
+            "session": {
+              "id": "occ-amb",
+              "status": "started",
+              "started_at": "2026-09-28T13:00:30Z",
+              "ended_at": null,
+              "participants": [
+                { "id": "zoom-alex", "name": "Alex Kim", "email": "alex.kim@meridian.test", "joined_at": "2026-09-28T13:00:30Z", "left_at": null }
+              ]
+            }
+          }
+        },
+        {
+          "op": "unifyMeetings",
+          "note": "2. the meeting pass links Alex — one facet, one person",
+          "expect": [
+            { "kind": "unifySummary", "pass": "meetings", "considered": 1, "created": 1, "linked": 1, "ambiguous": 0, "linkRetained": 0, "skipped": 0 },
+            { "kind": "unifiedResolution", "modality": "meeting", "provider": "zoom", "account": "zoom-alex", "expect": "resolved", "person": "alex" }
+          ]
+        },
+        {
+          "op": "startCompanion",
+          "note": "3. the companion session",
+          "key": "companion",
+          "meetingSessionKey": "review",
+          "title": "Procurement review — companion"
+        },
+        {
+          "op": "ingestRealtime",
+          "note": "4. a participant joins whose facets DISAGREE: Alex's email, Blair's phone",
+          "payload": {
+            "type": "participant.connected",
+            "event_id": "amb-rt-join",
+            "occurredAt": "2026-09-28T13:10:00Z",
+            "account": { "id": "lk-w097-amb" },
+            "room": { "id": { "$ref": "room", "key": "companion" } },
+            "participant": { "identity": "p-amb-1", "name": "Alex Kim (mobile)", "email": "alex.kim@meridian.test", "phone": "+15553100041" }
+          }
+        },
+        {
+          "op": "unifyRealtime",
+          "note": "5. the ambiguity guard: TWO distinct candidate persons → OPEN ambiguity, NEVER auto-merged",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "unifySummary", "pass": "realtime", "considered": 2, "created": 1, "linked": 0, "ambiguous": 1, "linkRetained": 0, "skipped": 1 },
+            { "kind": "ambiguities", "status": "open", "count": 1, "persons": ["alex", "blair"] },
+            { "kind": "unifiedResolution", "modality": "realtime", "provider": "livekit", "account": "p-amb-1", "expect": "unverified" }
+          ]
+        },
+        {
+          "op": "assert",
+          "note": "6. the ambiguous identity belongs to NEITHER person — no profile gains the realtime modality",
+          "expect": [
+            { "kind": "unifiedProfile", "person": "alex", "verifiedModalities": 2, "modalities": ["messaging", "meeting"] },
+            { "kind": "unifiedProfile", "person": "blair", "verifiedModalities": 1, "modalities": ["sms"] }
+          ]
+        },
+        {
+          "op": "unifyRealtime",
+          "note": "7. a second pass REFRESHES the open ambiguity — no duplicate stacking, still unverified",
+          "sessionKey": "companion",
+          "expect": [
+            { "kind": "unifySummary", "pass": "realtime", "considered": 2, "created": 0, "linked": 0, "ambiguous": 1, "linkRetained": 0, "skipped": 1 },
+            { "kind": "ambiguities", "status": "open", "count": 1 },
+            { "kind": "unifiedResolution", "modality": "realtime", "provider": "livekit", "account": "p-amb-1", "expect": "unverified" }
+          ]
+        },
+        {
+          "op": "reach",
+          "note": "8. the per-channel contrast: the number's OWN verified sms row resolves Blair deterministically (per-row verification — not a merge); the ambiguous realtime identity stays unverified",
+          "key": "tell-blair",
+          "phoneNumber": "+15553100041",
+          "kind": "tell",
+          "text": "The procurement review moved to 15:30.",
+          "expect": [
+            { "kind": "reach", "key": "tell-blair", "status": "sent", "recipientKind": "verified_employee", "person": "blair", "actionKind": "employee-messaging" },
+            { "kind": "transportSends", "sms": 1, "voice": 0 }
+          ]
+        }
+      ],
+      "final": [
+        { "kind": "unifiedResolution", "modality": "realtime", "provider": "livekit", "account": "p-amb-1", "expect": "unverified", "note": "the ambiguous match stays external/unverified — never auto-merged (the W095 rule)" },
+        { "kind": "selfContainedEnvelopes", "legs": ["sms"] }
+      ]
+    }
+  ]
+}
