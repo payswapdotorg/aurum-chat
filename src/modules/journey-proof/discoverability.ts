@@ -628,6 +628,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the customer-controlled edge runtime boundary (W088 — a tenant-scoped, outbound-only connector that executes signed tenant-scoped job envelopes against private/on-prem APIs, MCP/OpenAPI services, databases, file shares and approved browser adapters, with local secret handling, a twice-checked capability allowlist, heartbeat health/version reporting, and results normalized onto the W084 deep-action transport shapes) composed over the deep-actions contract (its transport port) with the W082 credentialRef discipline passing straight through; it owns no user-facing route yet — the edge-management surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite plus the tenant-isolation sweep',
   },
+  {
+    module: 'computer-use',
+    label: 'The browser and computer-use fallback (W093)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the governed last-resort browser executor (W093 — used only where APIs/MCP/native adapters are insufficient) composed over the deep-actions contract (the W084 reconciliation re-used verbatim for observed-state verification, evidence and attention — no second evidence model) with the W082 opaque-credentialRef discipline sharpened per task (browser profiles and credential stores are per tenant AND per task, materialized only inside the isolated session), a frozen step allowlist (URL/domain globs + permitted verbs, checked at creation, at dispatch and driver-side) and a step budget, disposable resumable sessions checkpointed on verified steps, and per-step screenshot/action-trace evidence; it owns no user-facing route yet — the fallback surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite plus the tenant-isolation sweep',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
