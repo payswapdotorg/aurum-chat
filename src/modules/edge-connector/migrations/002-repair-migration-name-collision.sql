@@ -37,6 +37,23 @@ BEGIN
   END IF;
 END $$;
 
+-- 1a-ii. the renamed orphan's CONSTRAINT indexes kept their names (PostgreSQL
+--     renames neither constraints nor their backing indexes) — free the two
+--     names the W088 jobs table below must recreate. Guarded by the orphan
+--     table's existence so fresh environments (001 applied — the good table
+--     already owns these names) never touch them: a CREATE TABLE IF NOT
+--     EXISTS would NOT restore a renamed constraint.
+DO $$
+BEGIN
+  IF to_regclass('public.edge_jobs__orphaned_pre_w088') IS NOT NULL THEN
+    ALTER INDEX edge_jobs_pkey
+      RENAME TO edge_jobs_pkey__orphaned_pre_w088;
+    ALTER INDEX edge_jobs_id_tenant_unique
+      RENAME TO edge_jobs_id_tenant_unique__orphaned_pre_w088;
+  END IF;
+EXCEPTION WHEN undefined_object OR undefined_table THEN NULL;
+END $$;
+
 -- 1b. the unambiguous orphans (names the W088 schema never uses).
 DO $$
 BEGIN
