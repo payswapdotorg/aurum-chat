@@ -2,13 +2,14 @@
 // handleHealthGet in src/app/api/health/lib.ts, driven directly without
 // booting Next.js. Real db port against the embedded PostgreSQL.
 //
-//   * ok shape: component labels, guardrails, migration count, worker
-//     metrics — and NO tenant data (the readiness surface must stay
-//     deployment-shape only);
+//   * ok shape: component labels, guardrails, migration count, the W102
+//     table census, worker metrics — and NO tenant data (the readiness
+//     surface must stay deployment-shape only);
 //   * degraded: production with readiness refusals/warnings still
 //     answers 200 with an explicit status;
-//   * error → 503: the domain-truth database unreachable, or the schema
-//     not applied — readiness fails closed;
+//   * error → 503: the domain-truth database unreachable, the schema
+//     not applied, or the schema DIVERGED from the migration set (the
+//     W102 table census) — readiness fails closed;
 //   * the route adapter sets cache-control: no-store (route.ts).
 
 process.env.AURUM_DB = 'embedded';
@@ -18,7 +19,7 @@ delete process.env.REDIS_URL;
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { closeDb, getDb } from '@/infra/db';
-import { handleHealthGet } from '../lib';
+import { EXPECTED_TABLE_CENSUS, handleHealthGet } from '../lib';
 import { runMigrations } from '../../../../../scripts/migrate';
 
 beforeAll(async () => {
@@ -53,7 +54,12 @@ describe('health/readiness — the ok shape', () => {
       status: string;
       environment: { environment: string; dogfoodNotice: string | null };
       components: {
-        db: { backend: string; ok: boolean; migrations: number | null };
+        db: {
+          backend: string;
+          ok: boolean;
+          migrations: number | null;
+          tables: { census: number; expected: number; missing: string[] } | null;
+        };
         queue: { backend: string };
         email: { backend: string };
         blob: { backend: string };
@@ -68,6 +74,11 @@ describe('health/readiness — the ok shape', () => {
     expect(body.components.db.backend).toBe('embedded');
     expect(body.components.db.ok).toBe(true);
     expect(body.components.db.migrations).toBeGreaterThanOrEqual(40);
+    expect(body.components.db.tables).toEqual({
+      census: EXPECTED_TABLE_CENSUS,
+      expected: EXPECTED_TABLE_CENSUS,
+      missing: [],
+    });
     expect(body.components.queue.backend).toBe('memory');
     expect(body.components.email.backend).toBe('memory');
     expect(body.components.blob.backend).toBe('memory');
@@ -157,6 +168,48 @@ describe('health/readiness — error (fail closed)', () => {
     } finally {
       await closeDb();
       await runMigrations(getDb());
+    }
+  });
+
+  it('503 when the schema has drifted — a complete ledger but a missing table (the W102 incident shape)', async () => {
+    // The production failure mode: _migrations is complete, but the
+    // tables the migrations were supposed to create are absent. The
+    // census must flip the db component to not-ok — a green ledger
+    // count alone can never prove readiness again.
+    const db = getDb();
+    await db.query('DROP TABLE provider_preference_settings');
+    try {
+      const result = await handleHealthGet();
+      expect(result.status).toBe(503);
+      const body = result.body as {
+        status: string;
+        components: {
+          db: {
+            ok: boolean;
+            migrations: number | null;
+            tables: { census: number; expected: number; missing: string[] } | null;
+            error: string | null;
+          };
+        };
+      };
+      expect(body.status).toBe('error');
+      expect(body.components.db.ok).toBe(false);
+      // The ledger still reports every migration applied — that is the
+      // point: the ledger alone says nothing about the schema.
+      expect(body.components.db.migrations).toBeGreaterThanOrEqual(40);
+      expect(body.components.db.tables).toEqual({
+        census: EXPECTED_TABLE_CENSUS - 1,
+        expected: EXPECTED_TABLE_CENSUS,
+        missing: ['provider_preference_settings'],
+      });
+      expect(body.components.db.error).toContain('schema drift');
+    } finally {
+      // This is the LAST test of the suite on purpose: the dropped table
+      // cannot be restored by re-running the runner (the name-keyed
+      // ledger records its migrations as applied and skips them — the
+      // exact blind spot this census exists to catch). Nothing follows
+      // this test; the shared database closes in afterAll.
+      await closeDb();
     }
   });
 });
