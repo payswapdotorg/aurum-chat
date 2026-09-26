@@ -146,39 +146,53 @@ Both sessions' transcripts, the W090-era "Continue Implementation" corpse and th
 
 Final main `17c7796` is byte-identical to the last verified reconciliation tree (empty `git diff`).
 
+### Wave B — W093 / W096 / W097 ✅ (PRs #114/#115/#113, 2026-09-26)
+
+Delivered by the parallel-lead session's workers (the replay-session dispatches of the same work items were destroyed or queue-stalled by the 2026-09-26 05:35–05:55 UTC peak-hours capacity crisis and were voided as duplicates — no duplicate trees, all branch content identical to the work-item contracts below).
+
+**W093 — Browser / Computer-Use Fallback ✅ (squash `737e67e`, PR #114)**
+- Branch `work/w093-computer-use-fallback` @ `9eba6d2`, base `b084504`.
+- New module `src/modules/computer-use/` (governed last-resort browser executor composed over the deep-actions contract — `reconcileOperation` re-used verbatim, no second evidence model; per-(tenant,task) browser profiles and credential stores via the W082 opaque credentialRef discipline sharpened per task; frozen step allowlist checked at creation/dispatch/driver-side; step budget; disposable resumable sessions checkpointed on verified steps; per-step screenshot/action-trace evidence) + migration 001-computer-use.sql (tenant_id on every table, ADR-0001) + 2 module suites + tenant-isolation sweep + registrations (discoverability instrument entry v5, sweep manifest).
+- Integration-station verification at `9eba6d2` (independent re-run): typecheck PASS, lint PASS, arch PASS (658 files/288 app-mcp/240 tables), full suite 251 files/5324 tests/0 failed.
+
+**W096 — Integration Intelligence E2E Fixture ✅ (squash `e37f1d4`, PR #115)**
+- Branch `work/w096-integration-intelligence-e2e` @ `5ffeb2c`, base `b084504`.
+- Machine-readable fixture suite `tests/e2e/fixtures/integration-intelligence/` (versioned `fixture.schema.json` as the contract of record with a JSON-Schema-subset evaluator that refuses to silently skip keywords; happy-path / provider-failure / denied-scope / tenant-isolation cases) + executor that executes every step against the REAL W081–W084 module services (integration-intelligence, connection-broker, capability-grants, deep-actions) with deterministic provider doubles (ScriptedDirectoryTransport, ScriptedBrokerBackend, ScriptedVerificationTransport, ScriptedDeepActionTransport), verifying durable records (table rows, append-only event ledgers, contract reads, provider-side double state) + the journey suite `tests/e2e/journeys/integration-intelligence.e2e.test.ts`; contract-only import discipline throughout.
+- Integration-station verification at `5ffeb2c` (independent re-run): typecheck PASS, lint PASS, arch PASS (649/288/235), full suite 249 files/5294 tests/0 failed.
+
+**W097 — Meeting and Cellular E2E Fixture ✅ (squash `c71f2e2`, PR #113)**
+- Branch `work/w097-meeting-cellular-e2e` @ `06b195f`, base `b084504`.
+- `tests/e2e/fixtures/meeting-cellular/` (versioned schema `aurum.meeting-cellular-fixture` v1, schema/version-refusing interpreter; real module contracts W085/W086/W087/W095/W002/W009/W031/W029/W004/W080 against embedded PostgreSQL; provider doubles in documented adapter shapes fed through the real webhook/edge seams; consent/policy, provider-failure, ambiguous-identity, recipient-without-Aurum, manager-originated cases; honest machine-readable DEFERRED record for the manager-originated authority-gate contract gap; honest live-vs-fixture labeling — no live telephony credentials in environment) + journey suite + 1427-line fixture runner.
+- Integration-station verification at `06b195f` (independent re-run): typecheck PASS, lint PASS, arch PASS (649/288/235), full suite 249 files/5289 tests/0 failed.
+
+Merge wave: PR #113 (08:04 UTC), PR #114 (08:22 UTC), PR #115 (08:40 UTC) — squash-merged sequentially; #115 also carried an order-insensitive flake fix in `src/app/(tower)/tests/tower-integration.test.ts` (same-millisecond `recorded_at` tiebreak, cf. the contributions-service precedent). No conflicts (W096/W097 are pure additions; W093's registration edits are pure additions on the b084504 base).
+
+Final main `e37f1d4` verified at the exact merged tip: typecheck PASS, lint PASS, arch PASS (658/288/240), full suite 253 files/5341 tests/0 failed.
+
 ## 4. Remaining implementation frontier
 
-The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`17c7796`, post-Wave-A):
+The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`e37f1d4`, post-Wave-B):
 
-- W093 — Browser / Computer-Use Fallback
 - W094 — Migration and Dual-Run Continuity
-- W096 — Integration Intelligence E2E Fixture
-- W097 — Meeting and Cellular E2E Fixture
 - W099 — Matrix Interoperability Adapter (optional)
 - W100 — Longitudinal S003 Conversion Benchmark
 - W101 — Final Post-S002 Production Certification
 
-W084, W095 and Wave A (W088/W091/W092) were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A section above).
+W084, W095, Wave A (W088/W091/W092) and Wave B (W093/W096/W097) were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A / Wave B sections above).
 
 Do not mark any of these complete because their contracts, UI stubs or research documents exist. Require real repository implementation and evidence.
 
 ## 5. Immediate priority order
 
-### First wave (W084 dependency satisfied — dispatch now)
+### First wave (W088/W091/W092) — ✅ delivered 2026-09-26 (PRs #110/#111/#112)
 
-With W084 merged, its dependents are unblocked. Recommended parallel wave:
+### Wave B (W093/W096/W097) — ✅ delivered 2026-09-26 (PRs #114/#115/#113)
 
-- **W088 — Aurum Edge Connector** (makes private/on-prem execution possible; consumes W084)
-- **W091 — User-Friendly Provider Choice UX** (unblocked since W090; outcome-oriented provider selection, technical choice only in advanced settings)
-- **W092 — Vertical Extension Starter Kits** (consumes W084 and W088 — start with the kit contracts while W088 completes; do not claim the dependent installation/execution path complete early)
+### Now: W094 — dispatch next
+- W094 (Migration and Dual-Run Continuity) is the only frontier item whose dependencies are all green; dispatch it as soon as worker capacity allows.
 
-### Then: W093 / W096 / W097
-- W093 supplies the API-less/browser fallback (consumes W084);
-- W096 proves the full integration onboarding path (W081+W082+W083+W084 all in);
-- W097 proves meetings + cellular end-to-end (W085+W086+W087+W095 all in).
-
-### Then: W094 / W100
-Migration needs deep actions plus Edge plus vertical capabilities. The longitudinal benchmark must run after those capabilities exist so it measures the intended S002 conversion levers.
+### Then: W100
+The longitudinal benchmark must run after W094 exists so it measures the intended S002 conversion levers over the full migrated surface.
 
 ### Optional: W099
 Matrix is optional and must not block the core program. Implement only with a customer/use-case reason documented in the work item evidence.
@@ -188,30 +202,18 @@ W101 is a production gate, not a feature item. It must certify the final exact p
 
 ## 6. Recommended three-worker scheduling from current head
 
-### Current Wave A — dispatch now (post-reconciliation)
+### Wave A (W088/W091/W092) — ✅ delivered 2026-09-26
 
-**Worker A: W088 — Aurum Edge Connector**  
-Consumes W084 (now merged). Private/on-prem execution path behind the Edge boundary; provider objects never cross the gateway.
+### Wave B (W093/W096/W097) — ✅ delivered 2026-09-26
 
-**Worker B: W091 — User-Friendly Provider Choice UX**  
-Own outcome-oriented provider selection/preferences and advanced technical override UX. No provider implementation changes.
-
-**Worker C: W092 — Vertical Extension Starter Kits**  
-Start with the kit contracts; the installation/execution path consumes W084 (merged) and W088 (in flight) — do not claim the dependent path complete before W088 lands.
-
-These three are independent at the public-contract level.
-
-### Wave B — after Wave A dependencies are satisfied
-
-**Worker A: W093 — Browser / Computer-Use Fallback** (consumes W084)
-**Worker B: W096 — Integration Intelligence E2E** (W081+W082+W083+W084 all in)
-**Worker C: W097 — Meeting + Cellular E2E** (W085+W086+W087+W095 all in)
-
-### Wave D
+### Wave D — dispatch now
 
 **Worker A: W094 — Migration + Dual Run**
-**Worker B: W100 — Longitudinal S003 Conversion Benchmark** after W092/W094/W096/W097/W098 are all truly green.
-**Worker C: remaining integration hardening / observability.
+The only unblocked frontier item (all dependencies green at `e37f1d4`).
+
+**Worker B: W100 — Longitudinal S003 Conversion Benchmark** after W094 is truly green (W092/W096/W097/W098 already green; W094 is the last prerequisite).
+
+**Worker C: remaining integration hardening / observability.**
 
 ### Wave E
 
