@@ -74,6 +74,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   people: 'foundation-sweep.test.ts',
   processes: 'cognition-sweep.test.ts',
   'provider-billing': 'provider-billing-sweep.test.ts',
+  'provider-preferences': 'provider-preferences-sweep.test.ts',
   'provider-sdk': 'provider-sdk-sweep.test.ts',
   quality: 'evidence-sweep.test.ts',
   realtime: 'realtime-sweep.test.ts',

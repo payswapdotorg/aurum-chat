@@ -4104,3 +4104,373 @@ a.aurum-explain-row-meta {
   vertical-align: middle;
   margin-right: 6px;
 }
+
+/* ===========================================================================
+   AI preferences (W091) — the /ai/preferences surface's styles.
+   Scoped under aurum-pref-*; the same ShareNet-dominant system the
+   shell defines (warm off-white canvas, soft graphite, hairlines,
+   status pills, restrained motion — no new chrome vocabulary). The
+   ORDINARY surface speaks outcomes only; the ADVANCED surface
+   (aurum-pref-provider/-override/-record) is where technical identity
+   is allowed to render at all.
+   =========================================================================== */
+
+.aurum-pref-resolved {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* The ordered outcome priority (what matters, in order). */
+.aurum-pref-order {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.aurum-pref-order li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.aurum-pref-rank {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--fill);
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.aurum-pref-outcome {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.aurum-pref-first-tag {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-radius: var(--radius-s);
+  padding: 3px 8px;
+}
+
+.aurum-pref-note {
+  font-size: 12px;
+  color: var(--muted-ink);
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+.aurum-pref-tenant {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* The priority picker (the forms' ordered-outcome selects). */
+.aurum-pref-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aurum-pref-picker-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.aurum-pref-picker-label {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.aurum-pref-picker-hint {
+  font-size: 11.5px;
+  color: var(--faint-ink);
+  line-height: 1.45;
+}
+
+.aurum-pref-policy-toggle {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  padding: 10px 12px;
+  background: var(--fill);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+.aurum-pref-policy-toggle input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  accent-color: var(--accent-deep);
+  flex: none;
+}
+
+/* The action status line (pending / error / ok), the ai surface's
+   discipline: aria-live carries the state, color never works alone. */
+.aurum-pref-status {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12.5px;
+  min-height: 18px;
+  margin: 0;
+}
+
+.aurum-pref-pending {
+  color: var(--muted-ink);
+}
+
+.aurum-pref-error {
+  color: var(--risk-text);
+  font-weight: 600;
+}
+
+.aurum-pref-ok {
+  color: var(--accent-ink);
+}
+
+.aurum-pref-inline-action {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* The "why this option?" feed. */
+.aurum-pref-why-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aurum-pref-why {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aurum-pref-why-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-pref-why-capability {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
+.aurum-pref-why-age {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
+.aurum-pref-why-text {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.aurum-pref-why-meta {
+  font-size: 11.5px;
+  color: var(--muted-ink);
+  margin: 0;
+}
+
+/* The quiet inline link (page-head meta + panel notes). */
+a.aurum-quiet-link {
+  color: var(--accent-ink);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+a.aurum-quiet-link:hover {
+  border-bottom-color: var(--accent);
+}
+
+a.aurum-quiet-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- The ADVANCED surface (technical identity renders HERE only) ---- */
+
+.aurum-pref-providers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aurum-pref-provider {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-pref-provider-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-pref-provider-meta {
+  font-size: 12px;
+  color: var(--muted-ink);
+  margin: 0;
+}
+
+.aurum-pref-accounts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
+.aurum-pref-overrides {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aurum-pref-override {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-pref-override-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-pref-override-scope {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.aurum-pref-override-reason {
+  font-size: 12.5px;
+  color: var(--ink);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.aurum-pref-override-meta {
+  font-size: 11.5px;
+  color: var(--faint-ink);
+  margin: 0;
+}
+
+.aurum-pref-record {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  padding: 14px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aurum-pref-record-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-pref-record-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.aurum-pref-record-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aurum-pref-record-facts dt {
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--faint-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.aurum-pref-record-facts dd {
+  font-size: 13px;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .aurum-pref-first-tag {
+    display: none;
+  }
+
+  .aurum-pref-why-age {
+    margin-left: 0;
+  }
+}
