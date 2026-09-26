@@ -127,13 +127,29 @@ lesson family: registry/branch first, message-tree never a verdict):
 
 Both sessions' transcripts, the W090-era "Continue Implementation" corpse and the empty "New Chat" phantoms were audited: no other unpushed delivery exists on any work/ branch as of `2f415e3`.
 
+### Wave A — W088 / W091 / W092 ✅ (PRs #110/#111/#112, 2026-09-26)
+
+**W088 — Aurum Edge Connector ✅ (squash `a385209`)**
+- Worker session `w088-edge-connector` (agents tab, GLM-5.3, Full-Stack). Final tip `aa4fb86` (the worker self-integrated a parallel attempt and fixed the integration pins itself).
+- New module `src/modules/edge-connector/` (signed tenant-scoped job envelopes, outbound-only claim protocol, local secret handling via opaque credentialRef, twice-checked capability allowlist, heartbeat health/version reporting, result normalization onto the W084 deep-action transport shapes, DeepActionTransport adapter) + migrations + 3 test suites + registrations (discoverability instrument entry, tenant-isolation sweep).
+- Integration-station verification at `aa4fb86`: typecheck PASS, lint PASS, arch PASS (629 files/223 tables), full suite 240 files/5158 tests/0 failed.
+
+**W091 — User-Friendly Provider Choice UX ✅ (squash `7b7ff1e`)**
+- Worker session `w091-provider-ux`. Final tip `36639d3` (worker merged its parallel delivery as superseded).
+- New module `src/modules/provider-preferences/` + product routes `/ai/preferences` (+`/advanced`) riding the llm contract only (no llm internals touched): outcome preference profiles (cost/privacy/quality/speed/policy), jargon-free default surface, explanation rendering from frozen LlmRoutingSnapshot machine reasons, authorization-gated advanced technical override through the existing `UpdateAiProviderAccountInput` path + sweep tests + registrations.
+- Reconciled with post-W088 main (union on discoverability); verified at the exact merged tree: typecheck PASS, lint PASS, arch PASS (637/228), full suite 245 files/5247 tests/0 failed.
+
+**W092 — Vertical Extension Starter Kits ✅ (squash `17c7796`)**
+- Worker session `w092-vertical-kits`. Final tip `85b49ec` ("delivery" commit).
+- New module `src/modules/vertical-kits/` (versioned signed-manifest kit registry, install/uninstall lifecycle with grant review riding the W009 gate, kit-scoped capability grants + invocation ledger, two shipped starter kits — legal case management + accounting ledger ERP — with all vertical semantics in manifests, core stays industry-independent, DEFERRED-ON-W088 VerticalKitEdge seam declared honestly) + sweep tests + registrations.
+- Reconciled with post-W091 main (three-way union on discoverability: vertical-kits + provider-preferences + edge-connector); verified at the exact merged tree: typecheck PASS, lint PASS, arch PASS (649/235), full suite 248 files/5283 tests/0 failed.
+
+Final main `17c7796` is byte-identical to the last verified reconciliation tree (empty `git diff`).
+
 ## 4. Remaining implementation frontier
 
-The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`2f415e3`, post-reconciliation):
+The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`17c7796`, post-Wave-A):
 
-- W088 — Aurum Edge Connector
-- W091 — User-Friendly Provider Choice UX
-- W092 — Vertical Extension Starter Kits
 - W093 — Browser / Computer-Use Fallback
 - W094 — Migration and Dual-Run Continuity
 - W096 — Integration Intelligence E2E Fixture
@@ -142,7 +158,7 @@ The following work is **not yet evidenced by a W-numbered implementation commit 
 - W100 — Longitudinal S003 Conversion Benchmark
 - W101 — Final Post-S002 Production Certification
 
-W084 and W095 were removed from this list by the 2026-09-25 replay-session reconciliation (§3a).
+W084, W095 and Wave A (W088/W091/W092) were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A section above).
 
 Do not mark any of these complete because their contracts, UI stubs or research documents exist. Require real repository implementation and evidence.
 
