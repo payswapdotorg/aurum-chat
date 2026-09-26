@@ -593,6 +593,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'domain infrastructure, not a product capability: the deep action gateway (W084 — the discover→inspect→propose→authorize→execute→verify→reconcile pipeline that carries a multi-system task out of Aurum across external systems with evidence and outcome links, action-receipt and downstream-state verification, and reconciliation that detects mismatches and creates attention/evidence behind a provider-neutral transport port) composed over the actions/capability-grants/connection-broker/integration-intelligence/observations/epistemics/workflow contracts; it owns no user-facing route yet — the deep-action surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite',
   },
   {
+    module: 'edge-connector',
+    label: 'The Aurum Edge Connector (W088)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the customer-controlled edge runtime (W088 — signed tenant-scoped jobs over an outbound-only claim protocol executed against private/on-prem APIs, MCP, OpenAPI, databases, file shares and approved browser adapters, with local secret handling, a capability allowlist re-checked at the edge, health/version reporting and result normalization into the canonical deep-action shapes, holding no second organizational truth store) composed over the deep-actions contract (the provider-neutral transport port it implements); it owns no user-facing route yet — the edge surfaces arrive with the integration E2E journeys (W093/W096) — and is exercised by its own vitest suite',
+  },
+  {
     module: 'unified-identity',
     label: 'Unified cross-channel, meeting and telephony identity verification (W095)',
     layer: 'platform',
