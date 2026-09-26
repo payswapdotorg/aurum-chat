@@ -1,0 +1,503 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "integration-intelligence-tenant-isolation",
+  "title": "W096 tenant-isolation variant — the full chain for two tenants side by side, zero cross-tenant leakage at every table the chain touches",
+  "description": "The complete discover > recommend > approve > connect > verify > map > observe > request-scope > execute > reconcile > outcome chain runs for TWO fresh tenants (alpha and beta), each with its own directory source, discovered system, broker connection, grants and deep-action task. The final isolation-probe step then proves the tenant boundary at the application level (the W044 sweep doctrine): every chain table holds EXACTLY the per-tenant row counts (no row landed in, leaked into or duplicated by the other tenant), cross-tenant contract reads fail with each module's uniform not-found code, the other tenant's discovery source is refused as unauthorized BEFORE any transport interaction, and even an omnipotent-claims principal of one tenant stays blind to the other's records.",
+  "chain": [
+    "discover",
+    "recommend",
+    "approve",
+    "connect",
+    "verify",
+    "map",
+    "observe",
+    "request-scope",
+    "execute",
+    "reconcile",
+    "outcome"
+  ],
+  "variant": {
+    "providerFailure": false,
+    "deniedScope": false,
+    "tenantIsolation": true
+  },
+  "tenants": [
+    {
+      "key": "alpha",
+      "source": "fresh",
+      "label": "tenant alpha — the full chain",
+      "directorySource": {
+        "provider": "notion",
+        "displayName": "Northwind Tooling Directory",
+        "providerAccountId": "ws-w096-iso-a",
+        "authKind": "oauth"
+      },
+      "orgContext": {
+        "goal": {
+          "title": "Reduce customer churn",
+          "objective": "Keep the customers we already have instead of constantly replacing them",
+          "desiredState": "At-risk customers are identified and helped before they leave",
+          "horizonEnd": "2027-03-31T00:00:00Z",
+          "priority": "high",
+          "successCriteria": "Quarterly churn below 3 percent",
+          "ownerLabel": "Sarah (Head of Success)"
+        },
+        "unknown": {
+          "question": "Which customers are at risk of leaving?",
+          "consequence": "Without this we learn about churn only when the cancellation arrives"
+        },
+        "capability": {
+          "name": "Customer success management",
+          "description": "Proactively tracking and helping at-risk accounts"
+        }
+      },
+      "directoryWindow": [
+        {
+          "externalId": "app-alpha-crm",
+          "displayName": "Alpha CRM",
+          "capabilityClasses": ["customer-records"]
+        }
+      ],
+      "systems": {
+        "crm": { "displayName": "Alpha CRM", "connectionKey": "iso-crm" }
+      }
+    },
+    {
+      "key": "beta",
+      "source": "fresh",
+      "label": "tenant beta — the full chain, side by side",
+      "directorySource": {
+        "provider": "notion",
+        "displayName": "Southbay Tooling Directory",
+        "providerAccountId": "ws-w096-iso-b",
+        "authKind": "oauth"
+      },
+      "orgContext": {
+        "goal": {
+          "title": "Reduce customer churn",
+          "objective": "Keep the customers we already have instead of constantly replacing them",
+          "desiredState": "At-risk customers are identified and helped before they leave",
+          "horizonEnd": "2027-03-31T00:00:00Z",
+          "priority": "high",
+          "successCriteria": "Quarterly churn below 3 percent",
+          "ownerLabel": "Dana (Head of Success)"
+        },
+        "unknown": {
+          "question": "Which customers are at risk of leaving?",
+          "consequence": "Without this we learn about churn only when the cancellation arrives"
+        },
+        "capability": {
+          "name": "Customer success management",
+          "description": "Proactively tracking and helping at-risk accounts"
+        }
+      },
+      "directoryWindow": [
+        {
+          "externalId": "app-beta-crm",
+          "displayName": "Beta CRM",
+          "capabilityClasses": ["customer-records"]
+        }
+      ],
+      "systems": {
+        "crm": { "displayName": "Beta CRM", "connectionKey": "iso-crm" }
+      }
+    }
+  ],
+  "actors": [
+    {
+      "key": "integration-admin-alpha",
+      "tenant": "alpha",
+      "authority": ["integration-intelligence:administer"]
+    },
+    { "key": "aurum-member-alpha", "tenant": "alpha", "authority": [] },
+    { "key": "company-approver-alpha", "tenant": "alpha", "authority": ["actions:approve"] },
+    {
+      "key": "omnipotent-beta",
+      "tenant": "beta",
+      "authority": [
+        "actions:approve",
+        "actions:administer",
+        "integration-intelligence:administer",
+        "capability-grants:administer",
+        "connection-broker:administer"
+      ]
+    },
+    {
+      "key": "integration-admin-beta",
+      "tenant": "beta",
+      "authority": ["integration-intelligence:administer"]
+    },
+    { "key": "aurum-member-beta", "tenant": "beta", "authority": [] },
+    { "key": "company-approver-beta", "tenant": "beta", "authority": ["actions:approve"] }
+  ],
+  "broker": { "adapter": "embedded", "provider": "salesforce" },
+  "verification": { "unreachableCapabilities": [] },
+  "deepAction": {
+    "taskContext": {
+      "description": "Close out the Q1 renewals after the signed contracts landed",
+      "requestedFor": "Q1 close"
+    },
+    "operations": [
+      {
+        "key": "file-crm",
+        "system": "crm",
+        "capabilityKey": "write.customer-records",
+        "target": "cust-4042",
+        "payload": { "stage": "onboarding-complete", "healthScore": 82 },
+        "expectation": { "stage": "onboarding-complete", "healthScore": 82 }
+      }
+    ],
+    "seededStates": [
+      {
+        "system": "crm",
+        "target": "cust-4042",
+        "state": { "stage": "onboarding", "healthScore": 55, "owner": "Ruth" }
+      }
+    ],
+    "transientFailureTargets": [],
+    "permanentRefusalTargets": [],
+    "skipApplyTargets": []
+  },
+  "steps": [
+    {
+      "phase": "discover",
+      "title": "the admin authorizes this tenant's directory source and Aurum surveys the authorized tooling",
+      "invokes": [
+        { "op": "create-org-context", "as": "integration-admin" },
+        { "op": "register-directory-source", "as": "integration-admin" },
+        { "op": "grant-discovery-source", "as": "integration-admin" },
+        { "op": "run-discovery", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_discovery_grants", "where": { "status": "active" }, "rows": 1 },
+          { "table": "integration_systems", "rows": 1 },
+          { "table": "integration_recommendations", "where": { "status": "proposed" }, "rows": 1 },
+          { "table": "observations", "where": { "kind": "directory.system.discovered" }, "rows": 1 },
+          { "table": "sources", "where": { "provider": "notion" }, "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "list-systems",
+            "as": "aurum-member",
+            "assert": { "length": 1 }
+          },
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "connectionStatus": "discovered",
+              "whyItMatters.basis": "org-context"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "recommend",
+      "title": "the safe-by-default recommendation feed",
+      "invokes": [{ "op": "list-recommendations", "as": "aurum-member" }],
+      "expect": {
+        "durable": [{ "table": "integration_recommendations", "rows": 1 }],
+        "contract": [
+          {
+            "read": "list-recommendations",
+            "as": "aurum-member",
+            "assert": {
+              "length": 1,
+              "0.connectionMode": "read-only",
+              "0.systemId": { "systemRef": "crm" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "approve",
+      "title": "the read-only connection is approved through the actions authority gate",
+      "invokes": [
+        { "op": "submit-recommendation-batch", "as": "aurum-member" },
+        {
+          "op": "decide-recommendation-batch",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "read-only is fine"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendation_batches", "where": { "status": "approved" }, "rows": 1 },
+          { "table": "integration_recommendations", "where": { "status": "approved" }, "rows": 1 },
+          { "table": "action_requests", "where": { "action_kind": "integration-connection", "status": "approved" }, "rows": 1 },
+          { "kind": "action-kind-decisions", "actionKind": "integration-connection", "decision": "approve", "rows": 1 }
+        ]
+      }
+    },
+    {
+      "phase": "connect",
+      "title": "the approved recommendation becomes a connected system and the broker issues the live connection",
+      "invokes": [
+        { "op": "connect-system", "system": "crm", "as": "aurum-member" },
+        { "op": "initiate-broker-connection", "system": "crm", "as": "aurum-member" },
+        { "op": "complete-broker-connection", "system": "crm", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendations", "where": { "status": "connected" }, "rows": 1 },
+          { "table": "integration_verification_runs", "where": { "status": "verified" }, "rows": 1 },
+          { "table": "broker_connections", "where": { "status": "connected" }, "rows": 1 },
+          { "table": "broker_connection_events", "where": { "event": "connected" }, "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": { "connectionStatus": "connected", "health": "healthy" }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "verify",
+      "title": "explicit re-verification through the wired probe transport",
+      "invokes": [{ "op": "verify-system", "system": "crm", "as": "aurum-member" }],
+      "expect": {
+        "durable": [{ "table": "integration_verification_runs", "rows": 2 }]
+      }
+    },
+    {
+      "phase": "map",
+      "title": "the progressive-access envelope (read floor conferred, write gated)",
+      "invokes": [{ "op": "establish-connection-access", "system": "crm", "as": "aurum-member" }],
+      "expect": {
+        "durable": [
+          { "table": "capability_access", "rows": 1 },
+          { "table": "capability_grants", "rows": 0 }
+        ],
+        "contract": [
+          {
+            "read": "get-connection-access",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": { "connectionMode": "read-only", "activeGrants.length": 0 }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "observe",
+      "title": "the frozen single-system plan, its execution surface and the immutable pre-state evidence",
+      "invokes": [
+        { "op": "create-deep-action", "as": "aurum-member" },
+        { "op": "discover-execution-surface", "as": "aurum-member" },
+        { "op": "inspect-targets", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "inspected" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "pending" }, "rows": 1 },
+          { "table": "deep_action_surface", "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.pre-state" }, "rows": 1 }
+        ],
+        "transport": [{ "probe": "inspect-call-count", "expect": 1 }]
+      }
+    },
+    {
+      "phase": "request-scope",
+      "title": "the ask-later write authority is requested and granted",
+      "invokes": [
+        { "op": "request-capability-authority", "system": "crm", "as": "aurum-member" },
+        {
+          "op": "decide-grant-request",
+          "system": "crm",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "needed for the close"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "capability_grant_requests", "where": { "status": "approved" }, "rows": 1 },
+          { "table": "capability_grants", "where": { "status": "active" }, "rows": 1 },
+          { "table": "action_requests", "where": { "action_kind": "capability-grant", "status": "approved" }, "rows": 1 }
+        ]
+      }
+    },
+    {
+      "phase": "execute",
+      "title": "the proposal through the W009 gate, the authority invocation and the write with its opaque receipt",
+      "invokes": [
+        { "op": "propose-deep-action", "as": "aurum-member" },
+        {
+          "op": "decide-deep-action-gate",
+          "via": "contract",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "approved for execution"
+        },
+        { "op": "authorize-deep-action", "as": "aurum-member" },
+        { "op": "execute-deep-action", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "action_requests", "where": { "action_kind": "deep-action", "status": "approved" }, "rows": 1 },
+          { "table": "deep_action_tasks", "where": { "status": "executed" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "executed" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "receipt_status": "accepted" }, "rows": 1 },
+          { "table": "deep_action_idempotency", "rows": 1 }
+        ],
+        "transport": [{ "probe": "execute-call-count", "expect": 1 }]
+      }
+    },
+    {
+      "phase": "reconcile",
+      "title": "two-sided verification and the clean reconciliation",
+      "invokes": [
+        { "op": "verify-deep-action", "as": "aurum-member" },
+        { "op": "reconcile-deep-action", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "reconciled" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "matched" }, "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.reconciliation-mismatch" }, "rows": 0 }
+        ],
+        "transport": [{ "probe": "inspect-call-count", "expect": 2 }]
+      }
+    },
+    {
+      "phase": "outcome",
+      "title": "the per-tenant durable outcome of record",
+      "invokes": [],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_events", "rows": 9 },
+          { "table": "capability_invocations", "where": { "outcome": "allowed" }, "rows": 3 },
+          { "table": "capability_invocations", "where": { "outcome": "denied" }, "rows": 0 },
+          { "table": "observations", "where": { "kind": "deep-action.pre-state" }, "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 1 }
+        ],
+        "events": {
+          "read": "deep-action-events",
+          "as": "aurum-member",
+          "equalsReversed": [
+            "created",
+            "surface-discovered",
+            "targets-inspected",
+            "proposed",
+            "authorized",
+            "operation-executed",
+            "executed",
+            "verified",
+            "reconciled"
+          ]
+        }
+      }
+    }
+  ],
+  "finalSteps": [
+    {
+      "phase": "isolation-probe",
+      "title": "zero cross-tenant leakage at every table the chain touches, and uniform not-found at every contract boundary",
+      "invokes": [
+        { "op": "get-deep-action", "as": "aurum-member-beta", "ofTenant": "alpha", "expectError": "task_not_found" },
+        { "op": "get-system", "as": "aurum-member-beta", "systemOf": "alpha", "expectError": "system_not_found" },
+        { "op": "get-broker-connection", "as": "aurum-member-beta", "systemOf": "alpha", "expectError": "connection_not_found" },
+        { "op": "get-recommendation-batch", "as": "aurum-member-beta", "ofTenant": "alpha", "expectError": "batch_not_found" },
+        { "op": "get-connection-access", "as": "aurum-member-beta", "systemOf": "alpha", "expectError": "access_not_found" },
+        { "op": "run-discovery-through-source", "as": "aurum-member-beta", "sourceOf": "alpha", "expectError": "discovery_not_authorized" },
+        { "op": "get-deep-action", "as": "omnipotent-beta", "ofTenant": "alpha", "expectError": "task_not_found" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_discovery_grants", "tenant": "alpha", "rows": 1 },
+          { "table": "integration_discovery_grants", "tenant": "beta", "rows": 1 },
+          { "table": "integration_systems", "tenant": "alpha", "rows": 1 },
+          { "table": "integration_systems", "tenant": "beta", "rows": 1 },
+          { "table": "integration_recommendations", "tenant": "alpha", "rows": 1 },
+          { "table": "integration_recommendations", "tenant": "beta", "rows": 1 },
+          { "table": "integration_recommendation_batches", "tenant": "alpha", "rows": 1 },
+          { "table": "integration_recommendation_batches", "tenant": "beta", "rows": 1 },
+          { "table": "integration_verification_runs", "tenant": "alpha", "rows": 2 },
+          { "table": "integration_verification_runs", "tenant": "beta", "rows": 2 },
+          { "table": "broker_connections", "tenant": "alpha", "rows": 1 },
+          { "table": "broker_connections", "tenant": "beta", "rows": 1 },
+          { "table": "broker_connection_events", "tenant": "alpha", "rows": 2 },
+          { "table": "broker_connection_events", "tenant": "beta", "rows": 2 },
+          { "table": "capability_access", "tenant": "alpha", "rows": 1 },
+          { "table": "capability_access", "tenant": "beta", "rows": 1 },
+          { "table": "capability_grant_requests", "tenant": "alpha", "rows": 1 },
+          { "table": "capability_grant_requests", "tenant": "beta", "rows": 1 },
+          { "table": "capability_grants", "tenant": "alpha", "rows": 1 },
+          { "table": "capability_grants", "tenant": "beta", "rows": 1 },
+          { "table": "capability_grant_events", "tenant": "alpha", "rows": 3 },
+          { "table": "capability_grant_events", "tenant": "beta", "rows": 3 },
+          { "table": "capability_invocations", "tenant": "alpha", "rows": 3 },
+          { "table": "capability_invocations", "tenant": "beta", "rows": 3 },
+          { "table": "deep_action_tasks", "tenant": "alpha", "rows": 1 },
+          { "table": "deep_action_tasks", "tenant": "beta", "rows": 1 },
+          { "table": "deep_action_operations", "tenant": "alpha", "rows": 1 },
+          { "table": "deep_action_operations", "tenant": "beta", "rows": 1 },
+          { "table": "deep_action_surface", "tenant": "alpha", "rows": 1 },
+          { "table": "deep_action_surface", "tenant": "beta", "rows": 1 },
+          { "table": "deep_action_events", "tenant": "alpha", "rows": 9 },
+          { "table": "deep_action_events", "tenant": "beta", "rows": 9 },
+          { "table": "deep_action_idempotency", "tenant": "alpha", "rows": 1 },
+          { "table": "deep_action_idempotency", "tenant": "beta", "rows": 1 },
+          { "table": "action_requests", "tenant": "alpha", "rows": 3 },
+          { "table": "action_requests", "tenant": "beta", "rows": 3 },
+          { "table": "action_approval_decisions", "tenant": "alpha", "rows": 3 },
+          { "table": "action_approval_decisions", "tenant": "beta", "rows": 3 },
+          { "table": "observations", "tenant": "alpha", "where": { "kind": "directory.system.discovered" }, "rows": 1 },
+          { "table": "observations", "tenant": "beta", "where": { "kind": "directory.system.discovered" }, "rows": 1 },
+          { "table": "observations", "tenant": "alpha", "where": { "kind": "deep-action.pre-state" }, "rows": 1 },
+          { "table": "observations", "tenant": "beta", "where": { "kind": "deep-action.pre-state" }, "rows": 1 },
+          { "table": "observations", "tenant": "alpha", "where": { "kind": "deep-action.post-state" }, "rows": 1 },
+          { "table": "observations", "tenant": "beta", "where": { "kind": "deep-action.post-state" }, "rows": 1 },
+          { "table": "sources", "tenant": "alpha", "rows": 1 },
+          { "table": "sources", "tenant": "beta", "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "list-systems",
+            "as": "aurum-member-alpha",
+            "assert": { "length": 1 }
+          },
+          {
+            "read": "list-systems",
+            "as": "aurum-member-beta",
+            "assert": { "length": 1 }
+          },
+          {
+            "read": "list-deep-actions",
+            "as": "aurum-member-beta",
+            "assert": { "length": 1 }
+          },
+          {
+            "read": "list-capability-grants",
+            "as": "aurum-member-beta",
+            "assert": { "length": 1 }
+          },
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member-alpha",
+            "ofTenant": "alpha",
+            "assert": { "displayName": "Alpha CRM" }
+          },
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member-beta",
+            "ofTenant": "beta",
+            "assert": { "displayName": "Beta CRM" }
+          }
+        ],
+        "transport": [{ "probe": "execute-call-count", "expect": 2 }]
+      }
+    }
+  ]
+}
