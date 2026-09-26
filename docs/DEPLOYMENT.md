@@ -137,6 +137,14 @@ time (below), are idempotent, and are safe on every deployment.
 - Build command (`bun run vercel:build`) applies migrations before
   `next build`, so every preview/staging/production deployment migrates
   its own database as part of the build.
+- **W102 — schema verification:** after applying (or skipping) the
+  migration set, the runner VERIFIES the schema it vouches for — every
+  table any migration declares with CREATE TABLE must exist as a public
+  BASE TABLE (the `_migrations` ledger records migration NAMES, never
+  content, so a name-recorded-but-content-diverged database can carry a
+  complete ledger while serving 500s). On mismatch the runner exits
+  non-zero with the exact missing-table list, breaking the DEPLOY at
+  build time instead of serving 500s at runtime.
 - CI runs a migration smoke against a real postgres:16 service container
   (`.github/workflows/ci.yml`), then the real-provider integration
   suite (real PostgreSQL + real Redis) — the same backends production
@@ -173,7 +181,10 @@ Neon Free connection budget).
 data):
 
 - `status: ok` — db answers (`SELECT 1`) and the schema is applied
-  (`_migrations` count), no readiness notes;
+  (`_migrations` count) AND matches the migration set (the W102 table
+  census: the count of public BASE TABLEs plus a small representative
+  set — a complete ledger with a diverged schema is NOT ready), no
+  readiness notes;
 - `status: degraded` — serving, but readiness notes exist (production
   warnings like a missing `REDIS_URL`);
 - `status: error` + HTTP 503 — the database is unreachable or the
@@ -309,6 +320,75 @@ Resend free-tier constraint: the provided key is sending-restricted and no
 sending domain is verified, so `onboarding@resend.dev` delivers only to the
 account owner's address. To send to arbitrary recipients, verify a domain at
 resend.com and set `EMAIL_FROM`.
+
+### W102 — production schema reconciliation; preview-database operator action item (2026-09-27)
+
+The W101 final certification caught production serving HTTP 500 on
+`/ai/preferences` and `/ai/preferences/advanced` for every tenant while
+`/api/health` stayed green. Root cause (verified by direct production
+Postgres inspection): the project's `DATABASE_URL` targets
+`[production, preview]`, and PREVIEW deployments of superseded
+parallel-lineage worker branches had run their build-command migrations
+— different DDL under the SAME migration filenames — against the SHARED
+production Neon database first; the name-keyed `_migrations` ledger then
+skipped the merged generation's identically-named migrations forever.
+Production was missing 14 current-generation tables (provider-preferences,
+vertical-kits, edge-connector) and carried 12 empty orphan tables of the
+superseded generation instead (4 sharing current table names in different
+shapes, 8 unambiguous debris).
+
+The repair shipped in two coordinated generations (one repair truth, no
+parallel migrations):
+
+1. **PR #122 + #123 (merged, deployed):** the three
+   `002-repair-migration-name-collision.sql` migrations — one per module —
+   renamed the superseded generation's tables, indexes, triggers and
+   constraint-indexes to `__orphaned_pre_w0XX` names (renames only,
+   nothing dropped; every orphan verified 0 rows in production), then
+   created the current schema with `IF NOT EXISTS`/guarded triggers.
+   Production is repaired and `/ai/preferences` answers 200. #123 added
+   the guarded renames for orphan constraint-index NAMES that collided
+   with the new tables (42P07) — a class the first PGlite simulation
+   missed and the W102 simulation suite now pins.
+2. **W102 (this delivery):** the three `003-drop-orphaned-debris.sql`
+   migrations complete the reconciliation by dropping the preserved
+   empty debris (count-guarded: a non-empty orphan is kept and the
+   census below then fails LOUDLY instead of destroying data), so the
+   production schema census equals every fresh environment. Idempotent
+   and a no-op wherever no debris exists.
+
+Two systemic guards now catch this class of divergence:
+
+1. **Build time** — `scripts/migrate.ts` verifies after every run that
+   every table any discovered migration declares with `CREATE TABLE`
+   exists as a public BASE TABLE, and exits non-zero with the exact
+   missing-table list (a drifted database can no longer deploy — the
+   incident's complete-ledger/divergent-schema state fails the build).
+2. **Runtime** — `/api/health` validates a table census (public BASE
+   TABLE count + a representative set) in addition to the ledger count;
+   a drifted database reports `status: error` 503 instead of a green
+   `ok`.
+
+The simulated-divergence suite
+(`tests/e2e/platform/schema-reconciliation.test.ts`) reconstructs the
+audited production shape — complete ledger, the 12 orphans in their
+audited shapes INCLUDING the constraint-index collisions, the regular
+index and trigger namesakes — and proves the drift guard fails on that
+state, that taking the colliding index names fails with "already
+exists" (the 42P07 class), and that `bun run migrate` converges the
+database to the current schema with census parity.
+
+**OPERATOR ACTION ITEM — the durable fix (Vercel project setting, for
+the tech lead):** separate the `DATABASE_URL` targets so preview
+deployments can never migrate the production database again. In the
+Vercel project settings, change `DATABASE_URL` to target `Production`
+only, and add a separate `DATABASE_URL` scoped to `Preview` pointing at
+an isolated Neon branch database (the §3 matrix) — preview builds then
+run their migrations against their own disposable branch. Until this is
+done, every branch pushed to the repository still migrates the shared
+production database at preview-build time (the reconciliation guards
+make that state LOUD rather than silent, but the isolation is the real
+fix).
 
 ### Execution model as instantiated (the W077 binding correction)
 
