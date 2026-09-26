@@ -246,6 +246,39 @@ async function buildNotificationsSection(
 }
 
 /**
+ * The anonymous shell view (W101): the chrome's honest no-session state.
+ *
+ * The shell chrome exists for anonymous visitors too — the product layout
+ * resolves the session read-only and renders the quiet "no company" state
+ * (W076). A session-scoped chrome fetch can still race a session END while
+ * the page is live: the sign-out navigation (the POST clears the cookie,
+ * the SPA shell is still mounted), a hydration completing after a fast
+ * sign-out click, or a session expiring mid-view. Those racing fetches used
+ * to 401 — a console error visible to real users on every such transition.
+ * The anonymous view answers them with 200 and zero tenant data, exactly
+ * what the layout renders server-side for anonymous visitors.
+ */
+export function buildAnonymousShellView(): ShellStateView {
+  return {
+    generatedAt: new Date().toISOString(),
+    tenantId: '',
+    principalId: '',
+    workspace: null,
+    company: { ok: false, reason: 'unavailable' },
+    notifications: {
+      ok: false,
+      reason: null,
+      items: [],
+      totalShown: 0,
+      attentionCount: 0,
+    },
+    principal: null,
+    companies: [],
+    role: null,
+  };
+}
+
+/**
  * Compose the shell state for one request. Never throws: every section
  * degrades on its own. `generatedAt` is the assembly time of the view.
  *
