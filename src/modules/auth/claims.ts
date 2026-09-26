@@ -40,6 +40,18 @@ import type { TenantRole } from '@/modules/organizations/contract';
  * are management actions (the module's contract gates on exactly this
  * string). Ordinary members keep the full preference surface (their own
  * preference and every jargon-free "why" read) WITHOUT the claim.
+ *
+ * `vertical-kits:administer` (W105, same completion posture as its two
+ * siblings): the vertical-kits module's management claim — registering
+ * kit versions in the tenant's registry, running kit verification and
+ * driving the kit install lifecycle (install, the grant review's
+ * aftermath, activate/suspend/resume/remove) are management actions (the
+ * module's contract gates on exactly this string, W092). The claim
+ * originally shipped outside this list, which made every session unable
+ * to administer the vertical starter kits through the product surface —
+ * W105 gives the kits their user-visible marketplace path, and the
+ * interim mapping completes with it. Platform claims stay absent as
+ * before; this one is TENANT-level like its siblings.
  */
 export const MANAGEMENT_CLAIMS: readonly string[] = [
   'actions:approve',
@@ -53,6 +65,7 @@ export const MANAGEMENT_CLAIMS: readonly string[] = [
   'rewards:administer',
   'marketplace:submit',
   'api:administer',
+  'vertical-kits:administer',
 ];
 
 /** Derive the authority claims for a verified tenant role. */
