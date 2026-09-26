@@ -23,6 +23,11 @@
 // v4 (W088): 'edge-connector' joins with its own sweep file — the
 // customer-controlled edge runtimes, allowlists, heartbeats, signed
 // jobs and lifecycle events the edge-connector module owns.
+//
+// v5 (W093): 'computer-use' joins with its own sweep file — the governed
+// browser fallback's durable tasks, frozen step plans, disposable
+// per-(tenant,task)-profile sessions and lifecycle events the
+// computer-use module owns.
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -42,6 +47,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   cellular: 'cellular-sweep.test.ts',
   channels: 'experience-sweep.test.ts',
   cognition: 'cognition-sweep.test.ts',
+  'computer-use': 'computer-use-sweep.test.ts',
   'connection-broker': 'connection-broker-sweep.test.ts',
   contributions: 'evidence-sweep.test.ts',
   conversations: 'experience-sweep.test.ts',

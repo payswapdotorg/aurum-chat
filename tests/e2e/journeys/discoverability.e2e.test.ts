@@ -312,6 +312,7 @@ describe('capability coverage', () => {
       'agent-supervision',
       'capability-grants',
       'cellular',
+      'computer-use',
       'deep-actions',
       'demo',
       'deployment-smoke',
