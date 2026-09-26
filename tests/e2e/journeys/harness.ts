@@ -265,6 +265,10 @@ const PAGE_MODULES: Record<string, RouteModule> = {
     area: 'product',
     load: () => import('../../../src/app/(product)/marketplace/package/[packageId]/page'),
   },
+  '/marketplace/kit/:kitKey': {
+    area: 'product',
+    load: () => import('../../../src/app/(product)/marketplace/kit/[kitKey]/page'),
+  },
   '/developer': { area: 'product', load: () => import('../../../src/app/(product)/developer/page') },
   '/ai': { area: 'product', load: () => import('../../../src/app/(product)/ai/page') },
   '/ai/preferences': {
@@ -485,6 +489,10 @@ export function concretePathFor(
       return `/interventions/teams/${context.teamId}`;
     case '/marketplace/package/:packageId':
       return `/marketplace/package/${anchorId(report, 'marketplace', 'vendor-package')}`;
+    case '/marketplace/kit/:kitKey':
+      // The shipped starter kits' keys are static (W092/W105) — the legal
+      // kit is the natural concrete instance for the sweep.
+      return '/marketplace/kit/legal-case-management';
     case '/marketplace/installed/:extensionKey':
       return '/marketplace/installed/roast-batch-tracker';
     case '/explain/:kind/:id':

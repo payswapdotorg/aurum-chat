@@ -372,6 +372,40 @@ export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
         icon: 'marketplace',
         note: null,
       },
+      {
+        id: 'marketplace-kits',
+        label: 'Explore vertical starter kits',
+        summary:
+          'Signed starter kits for system-of-record-heavy industries — legal & case management, accounting & ledger ERP — installed through their own governed lifecycle.',
+        // The catalog page carries the kits section (anchored #vertical-kits);
+        // the hub entry targets the route, the command search lands on the
+        // anchor (the /more#keyboard precedent).
+        href: '/marketplace',
+        keywords: [
+          'marketplace',
+          'kit',
+          'kits',
+          'vertical',
+          'starter',
+          'industry',
+          'specialist',
+          'legal',
+          'case',
+          'matter',
+          'docket',
+          'law',
+          'firm',
+          'accounting',
+          'ledger',
+          'erp',
+          'journal',
+          'bookkeeping',
+          'finance',
+          'install',
+        ],
+        icon: 'marketplace',
+        note: null,
+      },
     ],
   },
   {

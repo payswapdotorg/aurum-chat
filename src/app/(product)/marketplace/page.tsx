@@ -21,6 +21,7 @@ import {
   parseKindFilter,
   publicBrowsingContext,
 } from './lib/views';
+import { buildKitCatalogSection } from './lib/kits';
 import {
   EmptyState,
   ErrorState,
@@ -55,6 +56,7 @@ export default async function MarketplacePage({
   const rawKind = Array.isArray(params['kind']) ? (params['kind'][0] ?? null) : (params['kind'] ?? null);
   const kindFilter = parseKindFilter(rawKind);
   const view = await buildCatalogView(ctx, kindFilter);
+  const kits = await buildKitCatalogSection(ctx);
 
   const tabs = KIND_TABS.map((tab) => ({
     ...tab,
@@ -66,8 +68,8 @@ export default async function MarketplacePage({
     <>
       <PageHead
         title="Marketplace"
-        description="Extensions and governed agent packages — general software capabilities for your Aurum, not a fixed feature catalog. Every listing passed automated verification AND platform review before it became installable; publication and installation are separate states."
-        meta={<span>Live catalog · {view.total} listing{view.total === 1 ? '' : 's'} shown</span>}
+        description="Extensions, governed agent packages and first-party vertical starter kits — capabilities for your Aurum, not a fixed feature catalog. Packages passed automated verification AND platform review before they became installable; the signed starter kits install through their own governed lifecycle. Publication and installation are always separate states."
+        meta={<span>Live catalog · {view.total} listing{view.total === 1 ? '' : 's'} + {kits.total} starter kit{kits.total === 1 ? '' : 's'} shown</span>}
       />
       {!scoped ? (
         <div className="aurum-notice">
@@ -195,6 +197,83 @@ export default async function MarketplacePage({
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      {/* --- the W092 vertical starter kits (J22's user-visible path) --- */}
+      <section
+        className="aurum-panel"
+        id="vertical-kits"
+        aria-labelledby="aurum-mkt-kits-title"
+        style={{ marginTop: 18 }}
+      >
+        <h2 className="aurum-panel-title" id="aurum-mkt-kits-title">
+          <span>Vertical starter kits</span>
+        </h2>
+        <p className="aurum-panel-blurb">
+          First-party, signed starter kits for system-of-record-heavy industries —
+          not third-party catalog packages: everything vertical lives inside each
+          kit&apos;s versioned, digest-signed manifest, and installation follows the
+          kits&apos; own governed lifecycle (register → verify → install → grant review
+          → activate) — never the package chain above.
+        </p>
+        {!kits.ok ? (
+          <ErrorState
+            title="Kits unavailable"
+            detail="The starter kits could not be read right now. Nothing about your scope changed — try again in a moment."
+            retryHref={`/marketplace${scopeQuery}#vertical-kits`}
+          />
+        ) : kits.items.length === 0 ? (
+          <EmptyState
+            title="No starter kits shipped"
+            hint="The vertical-kits module ships no starter content in this build."
+          />
+        ) : (
+          <>
+            <ul className="aurum-item-list">
+              {kits.items.map((kit) => (
+                <li key={kit.kitKey}>
+                  <div className="aurum-item-head">
+                    <Link
+                      className="aurum-mkt-item-title"
+                      href={`/marketplace/kit/${kit.kitKey}${scopeQuery}`}
+                    >
+                      {kit.displayName}
+                    </Link>
+                    <StatusPill tone={kit.stateTone}>{kit.stateLabel}</StatusPill>
+                  </div>
+                  <div className="aurum-item-foot">
+                    <span className="aurum-mono">{kit.kitKey} · v{kit.version}</span>
+                    <Tag>Vertical starter kit · {kit.verticalKey}</Tag>
+                    <Tag>{kit.capabilityCount} capabilit{kit.capabilityCount === 1 ? 'y' : 'ies'}</Tag>
+                    <Tag>digest {kit.manifestDigest.slice(0, 10)}…</Tag>
+                    {kits.tenantScoped && kit.tenant !== null ? (
+                      kit.tenant.registered === null ? (
+                        <Tag>not registered in your company</Tag>
+                      ) : (
+                        <Tag>v{kit.tenant.registered.version} · {kit.tenant.registered.verificationState}</Tag>
+                      )
+                    ) : null}
+                  </div>
+                  {kit.description === '' ? null : (
+                    <p className="aurum-item-text">{kit.description}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {kits.registryUnavailable ? (
+              <p className="aurum-item-text" style={{ marginTop: 8 }}>
+                Your kit registry could not be read right now — the tenant states
+                above may be stale. The shipped content itself still stands.
+              </p>
+            ) : null}
+            {!scoped ? (
+              <p className="aurum-item-text" style={{ marginTop: 8 }}>
+                Sign in to see your company&apos;s registry and install state for each
+                kit, and to install one.
+              </p>
+            ) : null}
+          </>
         )}
       </section>
 

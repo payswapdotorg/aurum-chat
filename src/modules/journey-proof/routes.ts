@@ -218,6 +218,15 @@ export const ROUTE_CATALOG: readonly RouteSpec[] = [
     mobileArea: null,
   },
   {
+    path: '/marketplace/kit/:kitKey',
+    kind: 'page',
+    area: 'product',
+    auth: 'public',
+    title: 'One vertical starter kit (W092 — signed manifest, verification, install lifecycle)',
+    file: 'src/app/(product)/marketplace/kit/[kitKey]/page.tsx',
+    mobileArea: null,
+  },
+  {
     path: '/developer',
     kind: 'page',
     area: 'product',
@@ -687,6 +696,15 @@ export const ROUTE_CATALOG: readonly RouteSpec[] = [
     auth: 'required',
     title: 'Installed-extension governance',
     file: 'src/app/api/product/marketplace/extension/[extensionKey]/[action]/route.ts',
+    mobileArea: null,
+  },
+  {
+    path: '/api/product/marketplace/kit/:kitKey/:action',
+    kind: 'api',
+    area: 'api',
+    auth: 'required',
+    title: 'Vertical-starter-kit lifecycle actions (W105)',
+    file: 'src/app/api/product/marketplace/kit/[kitKey]/[action]/route.ts',
     mobileArea: null,
   },
   {

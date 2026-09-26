@@ -14,6 +14,11 @@
 //   extension: deploy | rollback | activate | suspend | resume | deprecate
 //   developer: create-extension-package | create-agent-package |
 //              request-build | advance-build | cancel-build
+//   kit (W105): register | verify | install | decide-review | activate |
+//              suspend | resume | remove — the vertical-kits module's own
+//              lifecycle (kits NEVER ride the extension install flow;
+//              'register' freezes the SHIPPED starter manifest, never
+//              client-supplied content)
 //
 // The read side is the server pages themselves (view builders above);
 // these handlers are the product's ONLY write surface for the area.
@@ -44,6 +49,18 @@ import {
 } from '@/modules/marketplace/contract';
 import { installPackage } from './install';
 import type { InstallReport } from './install';
+import { findShippedKit } from './kits';
+import {
+  activateKit,
+  decideKitReview,
+  installKit,
+  listKitVersions,
+  registerKitVersion,
+  removeKit,
+  resumeKit,
+  runKitVerification,
+  suspendKit,
+} from '@/modules/vertical-kits/contract';
 
 export type ApiErrorStatus = 400 | 401 | 403 | 404 | 409 | 500;
 
@@ -676,5 +693,278 @@ export async function handleDeveloperAction(
     }
   } catch (error) {
     return marketplaceApiError(error);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/product/marketplace/kit/<kitKey>/<action>
+// ---------------------------------------------------------------------------
+
+export const KIT_ACTIONS = [
+  'register',
+  'verify',
+  'install',
+  'decide-review',
+  'activate',
+  'suspend',
+  'resume',
+  'remove',
+] as const;
+
+export type KitAction = (typeof KIT_ACTIONS)[number];
+
+export function isKitAction(value: string): value is KitAction {
+  return (KIT_ACTIONS as readonly string[]).includes(value);
+}
+
+/**
+ * Map a vertical-kits (or actions) module error to an API outcome — the
+ * same code-carrying discipline as `marketplaceApiError`.
+ */
+export function verticalKitsApiError(error: unknown): ApiError {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code: unknown }).code)
+      : null;
+  const message =
+    error instanceof Error ? error.message : 'unexpected vertical-kits failure';
+  if (code === null) {
+    return apiError(500, 'internal', message);
+  }
+  if (code === 'forbidden' || code === 'unauthorized') {
+    return apiError(403, code, message);
+  }
+  if (
+    code === 'invalid_context' ||
+    code === 'invalid_input' ||
+    code === 'invalid_query' ||
+    code === 'invalid_decision'
+  ) {
+    return apiError(400, code, message);
+  }
+  if (
+    code === 'kit_version_not_found' ||
+    code === 'installation_not_found' ||
+    code === 'verification_not_found' ||
+    code === 'integration_not_found' ||
+    code === 'action_request_not_found' ||
+    code === 'kit_not_shipped'
+  ) {
+    return apiError(404, code, message);
+  }
+  if (
+    code === 'kit_not_verified' ||
+    code === 'kit_already_installed' ||
+    code === 'kit_verification_failed' ||
+    code === 'version_not_monotonic' ||
+    code === 'installation_not_pending_review' ||
+    code === 'installation_not_active' ||
+    code === 'installation_not_lifecycle_state' ||
+    code === 'not_pending' ||
+    code === 'separation_of_duties' ||
+    code === 'policy_conflict' ||
+    code === 'edge_unavailable' ||
+    code === 'invalid_edge_result'
+  ) {
+    return apiError(409, code, message);
+  }
+  return apiError(400, code, message);
+}
+
+export type ParsedKitVerifyBody =
+  | { ok: true; kitVersionId: string }
+  | { ok: false; error: string };
+
+/** The kit verify body: the registered version id to re-examine. */
+export function parseKitVerifyBody(body: unknown): ParsedKitVerifyBody {
+  const parsed = parseIdBody(body, 'kitVersionId');
+  if (!parsed.ok) return { ok: false, error: parsed.error };
+  return { ok: true, kitVersionId: parsed.id };
+}
+
+export type ParsedKitInstallBody =
+  | { ok: true; version: string | null; justification: string | null }
+  | { ok: false; error: string };
+
+/** The kit install body: version optional (defaults to the latest registered), justification optional. */
+export function parseKitInstallBody(body: unknown): ParsedKitInstallBody {
+  if (!isRecord(body)) return { ok: false, error: 'body must be a JSON object' };
+  const version = body['version'];
+  if (version !== undefined && version !== null && typeof version !== 'string') {
+    return { ok: false, error: "'version' must be a string or null" };
+  }
+  const versionText = (version as string | null | undefined)?.trim() || null;
+  const justification = body['justification'];
+  if (justification !== undefined && justification !== null && typeof justification !== 'string') {
+    return { ok: false, error: "'justification' must be a string or null" };
+  }
+  const justificationText = (justification as string | null | undefined)?.trim() || null;
+  return { ok: true, version: versionText, justification: justificationText };
+}
+
+export type ParsedKitReviewBody =
+  | { ok: true; installationId: string; decision: 'approve' | 'reject'; note: string | null }
+  | { ok: false; error: string };
+
+/** The kit grant-review decision body (decideKitReview's input). */
+export function parseKitReviewBody(body: unknown): ParsedKitReviewBody {
+  if (!isRecord(body)) return { ok: false, error: 'body must be a JSON object' };
+  const installationId = body['installationId'];
+  if (typeof installationId !== 'string' || installationId.trim() === '') {
+    return { ok: false, error: "'installationId' is required — the pending install being decided" };
+  }
+  const decision = body['decision'];
+  if (decision !== 'approve' && decision !== 'reject') {
+    return { ok: false, error: "'decision' must be 'approve' or 'reject'" };
+  }
+  const note = body['note'];
+  if (note !== undefined && note !== null && typeof note !== 'string') {
+    return { ok: false, error: "'note' must be a string or null" };
+  }
+  return {
+    ok: true,
+    installationId,
+    decision,
+    note: (note as string | null | undefined) ?? null,
+  };
+}
+
+export type ParsedKitLifecycleBody =
+  | { ok: true; installationId: string; reason: string | null }
+  | { ok: false; error: string };
+
+/** The kit lifecycle body (activate/suspend/resume/remove): installationId + optional reason. */
+export function parseKitLifecycleBody(body: unknown): ParsedKitLifecycleBody {
+  if (!isRecord(body)) return { ok: false, error: 'body must be a JSON object' };
+  const installationId = body['installationId'];
+  if (typeof installationId !== 'string' || installationId.trim() === '') {
+    return { ok: false, error: "'installationId' is required — the installation being governed" };
+  }
+  const reason = body['reason'];
+  if (reason !== undefined && reason !== null && typeof reason !== 'string') {
+    return { ok: false, error: "'reason' must be a string or null" };
+  }
+  return {
+    ok: true,
+    installationId,
+    reason: (reason as string | null | undefined)?.trim() || null,
+  };
+}
+
+/** What a kit action returns (the module's own honest read of what moved). */
+export type KitActionResult =
+  | { status: 200; body: Record<string, unknown> }
+  | ApiError;
+
+/**
+ * Handle one vertical-kit action (W105). Every action maps to exactly
+ * ONE vertical-kits contract operation; 'register' freezes the SHIPPED
+ * starter manifest of the kit key (the body never carries content).
+ * Each response carries what actually moved — the registered version,
+ * the recorded run, or the installation detail — never a filler.
+ */
+export async function handleKitAction(
+  request: Request,
+  kitKey: string,
+  action: KitAction,
+  body: unknown,
+): Promise<KitActionResult> {
+  const context = await writeContextFromRequest(request);
+  if (!context.ok) {
+    return marketplaceContextError(context.failure, context.detail);
+  }
+  const ctx = context.context;
+
+  try {
+    switch (action) {
+      case 'register': {
+        // The shipped starter manifest is the seed this surface offers —
+        // never client-supplied content (findShippedKit resolves the
+        // module's own export; an unknown key is an honest 404).
+        const manifest = findShippedKit(kitKey);
+        if (manifest === null) {
+          return apiError(
+            404,
+            'kit_not_shipped',
+            `no shipped starter kit '${kitKey}' exists`,
+          );
+        }
+        const result = await registerKitVersion(ctx, { manifest });
+        return { status: 200, body: { action, ok: true, version: result.version } };
+      }
+      case 'verify': {
+        const parsed = parseKitVerifyBody(body);
+        if (!parsed.ok) return apiError(400, 'invalid_body', parsed.error);
+        const run = await runKitVerification(ctx, { kitVersionId: parsed.kitVersionId });
+        return { status: 200, body: { action, ok: true, run } };
+      }
+      case 'install': {
+        const parsed = parseKitInstallBody(body);
+        if (!parsed.ok) return apiError(400, 'invalid_body', parsed.error);
+        // The version defaults to the tenant's latest registered version
+        // of this kit (the registry's own order — never a guess).
+        let version = parsed.version;
+        if (version === null) {
+          const versions = await listKitVersions(ctx, { kitKey });
+          const latest = versions[0];
+          if (latest === undefined) {
+            return apiError(
+              404,
+              'kit_version_not_found',
+              `no kit '${kitKey}' version is registered in this tenant — register the shipped starter version first`,
+            );
+          }
+          version = latest.version;
+        }
+        const installation = await installKit(ctx, {
+          kitKey,
+          version,
+          justification: parsed.justification,
+        });
+        return { status: 200, body: { action, ok: true, installation } };
+      }
+      case 'decide-review': {
+        const parsed = parseKitReviewBody(body);
+        if (!parsed.ok) return apiError(400, 'invalid_body', parsed.error);
+        const installation = await decideKitReview(ctx, {
+          installationId: parsed.installationId,
+          decision: parsed.decision,
+          note: parsed.note,
+        });
+        return { status: 200, body: { action, ok: true, installation } };
+      }
+      case 'activate': {
+        const parsed = parseKitLifecycleBody(body);
+        if (!parsed.ok) return apiError(400, 'invalid_body', parsed.error);
+        const installation = await activateKit(ctx, { installationId: parsed.installationId });
+        return { status: 200, body: { action, ok: true, installation } };
+      }
+      case 'suspend': {
+        const parsed = parseKitLifecycleBody(body);
+        if (!parsed.ok) return apiError(400, 'invalid_body', parsed.error);
+        const installation = await suspendKit(ctx, {
+          installationId: parsed.installationId,
+          reason: parsed.reason,
+        });
+        return { status: 200, body: { action, ok: true, installation } };
+      }
+      case 'resume': {
+        const parsed = parseKitLifecycleBody(body);
+        if (!parsed.ok) return apiError(400, 'invalid_body', parsed.error);
+        const installation = await resumeKit(ctx, { installationId: parsed.installationId });
+        return { status: 200, body: { action, ok: true, installation } };
+      }
+      case 'remove': {
+        const parsed = parseKitLifecycleBody(body);
+        if (!parsed.ok) return apiError(400, 'invalid_body', parsed.error);
+        const installation = await removeKit(ctx, {
+          installationId: parsed.installationId,
+          reason: parsed.reason,
+        });
+        return { status: 200, body: { action, ok: true, installation } };
+      }
+    }
+  } catch (error) {
+    return verticalKitsApiError(error);
   }
 }

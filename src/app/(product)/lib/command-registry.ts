@@ -68,6 +68,35 @@ export const MARKETPLACE_DESTINATIONS: readonly {
     href: '/marketplace/developer',
     keywords: ['marketplace', 'developer', 'builder', 'publish', 'review', 'submit', 'build', 'package'],
   },
+  {
+    id: 'kits',
+    title: 'Explore vertical starter kits',
+    subtitle:
+      'Signed starter kits for system-of-record-heavy industries — legal & case management, accounting & ledger ERP',
+    href: '/marketplace#vertical-kits',
+    keywords: [
+      'marketplace',
+      'kit',
+      'kits',
+      'vertical',
+      'starter',
+      'industry',
+      'specialist',
+      'legal',
+      'case',
+      'matter',
+      'docket',
+      'law',
+      'firm',
+      'accounting',
+      'ledger',
+      'erp',
+      'journal',
+      'bookkeeping',
+      'finance',
+      'install',
+    ],
+  },
 ];
 
 /**

@@ -161,6 +161,9 @@ function concretePath(pattern: string): string {
       return `/interventions/teams/${teamId}`;
     case '/marketplace/package/:packageId':
       return `/marketplace/package/${anchorId(report, 'marketplace', 'vendor-package')}`;
+    case '/marketplace/kit/:kitKey':
+      // The shipped starter kits' keys are static (W092/W105).
+      return '/marketplace/kit/legal-case-management';
     case '/marketplace/installed/:extensionKey':
       return '/marketplace/installed/roast-batch-tracker';
     case '/explain/:kind/:id':
