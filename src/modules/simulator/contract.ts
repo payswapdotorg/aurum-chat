@@ -130,6 +130,73 @@ export {
   validateRevealQuery,
 } from './validation';
 
+// The S003 Longitudinal Conversion Benchmark (W100) — the pure population
+// and criterion surface: the S002 multi-industry switching study re-run
+// with capabilities MEASURED instead of assumed. The harness composes the
+// real module contracts and scores them through this surface; the scoring
+// is pure, deterministic and carries its design constants in the open
+// (never hidden ground truth — the simulator's hidden facts stay behind
+// the evaluation surface).
+export {
+  S003_BASELINE_COST_MODEL,
+  S003_CHANNEL_SURFACE,
+  S003_FACTOR_KEYS,
+  S003_FACTOR_WEIGHTS,
+  S003_FIRM_SIZES,
+  S003_HETEROGENEITY_SIGMA,
+  S003_INDUSTRIES,
+  S003_MATURATION_ASSUMPTIONS,
+  S003_MATURITY_CREDITS,
+  S003_MATURE_LEVERS,
+  S003_MATURE_STATE_PROJECTS,
+  S003_MONTHS_PER_SCENARIO,
+  S003_PROJECTS_PER_MONTH,
+  S003_ROLES,
+  S003_ROSTER_PATTERN,
+  S003_ROLE_EMPLOYEE_INDEX,
+  S003_SCORE_INTERCEPT,
+  S003_THRESHOLD_ONLY,
+  S003_THRESHOLD_PRIMARY,
+  clamp01,
+  round6,
+  s003AffinityDraw,
+  s003Cohort,
+  s003LatentScore,
+  s003SeedFor,
+} from './s003-world';
+export type {
+  S003FactorKey,
+  S003LeverKey,
+  S003Role,
+} from './s003-world';
+export {
+  S003_EXPECTED_GOVERNANCE_EVENTS,
+  S003_ROLE_FRICTION_BASE,
+  S003_TRUST_SURFACES,
+  aggregateS003Scenario,
+  composeS003FirmResult,
+  scoreS003Scenario,
+  s003LeversForFirm,
+  s003PartialMaturityForFirm,
+} from './s003-scoring';
+export type {
+  S003CohortScenarioAggregate,
+  S003ComposedMeasurement,
+  S003FirmResult,
+  S003FirmScenarioResult,
+  S003FirmSpec,
+  S003IncumbentSystemSpec,
+  S003IndustrySpec,
+  S003LoopMeasurement,
+  S003MaturationAssumption,
+  S003MatureLever,
+  S003MonthMeasurement,
+  S003ProfessionalResult,
+  S003ProfessionalSpec,
+  S003Results,
+  S003SizeSpec,
+} from './s003-types';
+
 export type {
   AdvanceMonthInput,
   GetCompanyQuery,

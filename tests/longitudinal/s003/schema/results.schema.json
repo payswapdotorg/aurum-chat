@@ -1,0 +1,776 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "aurum:w100-s003-results:1",
+  "title": "W100 S003 Longitudinal Conversion Benchmark raw results (schemaVersion 1)",
+  "description": "The machine-readable, versioned shape of the S003 raw results — the committed contract of record for the S002 switching-study re-run with capabilities measured. The refusing interpreter (tests/longitudinal/s003/interpret.ts) validates every results document against THIS schema and refuses anything it cannot fully check: an unknown schemaVersion, an unimplemented keyword or a structural violation is a hard error, never a silent skip. The document is a pure function of the committed seeds: no ids, no timestamps, no wall-clock values — the same seed reproduces byte-identical results.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "benchmarkId",
+    "study",
+    "interpretation",
+    "design",
+    "firms",
+    "cohort"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "benchmarkId": { "const": "s003-longitudinal-conversion" },
+    "study": { "type": "string", "minLength": 1 },
+    "interpretation": { "type": "string", "minLength": 100 },
+    "design": { "$ref": "#/definitions/design" },
+    "firms": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/firm" }
+    },
+    "cohort": { "$ref": "#/definitions/cohort" }
+  },
+  "definitions": {
+    "design": {
+      "type": "object",
+      "required": [
+        "monthsPerScenario",
+        "projectsPerMonth",
+        "matureStateProjects",
+        "cohort",
+        "factorWeights",
+        "scoreIntercept",
+        "thresholdOnly",
+        "thresholdPrimary",
+        "heterogeneitySigma",
+        "baselineCostModel",
+        "maturityCredits",
+        "channelSurface",
+        "maturationAssumptions",
+        "matureLevers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "monthsPerScenario": { "type": "integer", "minimum": 1, "maximum": 24 },
+        "projectsPerMonth": { "type": "integer", "minimum": 1 },
+        "matureStateProjects": { "type": "integer", "minimum": 1 },
+        "cohort": {
+          "type": "object",
+          "required": ["industries", "sizes", "firms", "professionals"],
+          "additionalProperties": false,
+          "properties": {
+            "industries": { "type": "integer", "minimum": 1 },
+            "sizes": { "type": "integer", "minimum": 1 },
+            "firms": { "type": "integer", "minimum": 1 },
+            "professionals": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "factorWeights": {
+          "type": "object",
+          "required": [
+            "organizationalIntelligenceValue",
+            "oneWorkSurface",
+            "channelAccessibility",
+            "roleFit",
+            "contextSwitchingReduction",
+            "incumbentIndependence",
+            "specialistIndependence",
+            "reEntryRelief",
+            "governanceHeadroom",
+            "migrationEase",
+            "roleSwitchEase"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "organizationalIntelligenceValue": { "type": "number" },
+            "oneWorkSurface": { "type": "number" },
+            "channelAccessibility": { "type": "number" },
+            "roleFit": { "type": "number" },
+            "contextSwitchingReduction": { "type": "number" },
+            "incumbentIndependence": { "type": "number" },
+            "specialistIndependence": { "type": "number" },
+            "reEntryRelief": { "type": "number" },
+            "governanceHeadroom": { "type": "number" },
+            "migrationEase": { "type": "number" },
+            "roleSwitchEase": { "type": "number" }
+          }
+        },
+        "scoreIntercept": { "type": "number" },
+        "thresholdOnly": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "thresholdPrimary": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "heterogeneitySigma": { "type": "number", "minimum": 0, "maximum": 1 },
+        "baselineCostModel": {
+          "type": "object",
+          "required": [
+            "manualSetupMinutesPerSystem",
+            "reEntryMinutesPerTask",
+            "switchesPerManualExecution",
+            "switchesPerManualInvestigationStep",
+            "manualInvestigationMinutesPerStep",
+            "approvalMinutes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "manualSetupMinutesPerSystem": { "type": "number", "minimum": 0 },
+            "reEntryMinutesPerTask": { "type": "number", "minimum": 0 },
+            "switchesPerManualExecution": { "type": "number", "minimum": 0 },
+            "switchesPerManualInvestigationStep": { "type": "number", "minimum": 0 },
+            "manualInvestigationMinutesPerStep": { "type": "number", "minimum": 0 },
+            "approvalMinutes": { "type": "number", "minimum": 0 }
+          }
+        },
+        "maturityCredits": {
+          "type": "object",
+          "required": ["composedSorCredit", "kitCredit", "governanceCredit", "migrationCredit"],
+          "additionalProperties": false,
+          "properties": {
+            "composedSorCredit": { "type": "number", "minimum": 0, "maximum": 1 },
+            "kitCredit": { "type": "number", "minimum": 0, "maximum": 1 },
+            "governanceCredit": { "type": "number", "minimum": 0, "maximum": 1 },
+            "migrationCredit": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "channelSurface": { "type": "integer", "minimum": 1 },
+        "maturationAssumptions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["key", "label", "maturity", "contracts", "note"],
+            "additionalProperties": false,
+            "properties": {
+              "key": { "type": "string", "minLength": 1 },
+              "label": { "type": "string", "minLength": 1 },
+              "maturity": { "enum": ["real", "partial", "none"] },
+              "contracts": { "type": "array", "items": { "type": "string" } },
+              "note": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "matureLevers": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["key", "label", "contracts"],
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "enum": [
+                  "integration-discovery",
+                  "connection-lifecycle",
+                  "progressive-grants",
+                  "deep-action-execution",
+                  "migration-continuity",
+                  "vertical-kit",
+                  "channel-coverage",
+                  "edge-jobs",
+                  "browser-fallback",
+                  "agent-supervision"
+                ]
+              },
+              "label": { "type": "string", "minLength": 1 },
+              "contracts": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "monthMeasurement": {
+      "type": "object",
+      "required": [
+        "month",
+        "topic",
+        "steps",
+        "firstChoiceKind",
+        "firstChoiceLabel",
+        "firstChoiceCorrect",
+        "firstChoiceTotal",
+        "medianSteps",
+        "meanSteps",
+        "predictionErrorMean",
+        "metOrExceededRate",
+        "realizedValueSum",
+        "netVarianceSum",
+        "windowPlans",
+        "windowCostMinor",
+        "observations",
+        "meanConfidence",
+        "shareWithConfidenceBasis",
+        "learningRecorded"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "month": { "type": "integer", "minimum": 1 },
+        "topic": { "type": "string" },
+        "steps": { "type": "integer", "minimum": 0 },
+        "firstChoiceKind": { "enum": ["person", "system", null] },
+        "firstChoiceLabel": { "type": ["string", "null"] },
+        "firstChoiceCorrect": { "type": ["integer", "null"] },
+        "firstChoiceTotal": { "type": "integer", "minimum": 0 },
+        "medianSteps": { "type": ["number", "null"] },
+        "meanSteps": { "type": ["number", "null"] },
+        "predictionErrorMean": { "type": ["number", "null"] },
+        "metOrExceededRate": { "type": ["number", "null"] },
+        "realizedValueSum": { "type": ["number", "null"] },
+        "netVarianceSum": { "type": ["number", "null"] },
+        "windowPlans": { "type": ["integer", "null"] },
+        "windowCostMinor": { "type": ["number", "null"] },
+        "observations": { "type": ["integer", "null"] },
+        "meanConfidence": { "type": ["number", "null"] },
+        "shareWithConfidenceBasis": { "type": ["number", "null"] },
+        "learningRecorded": { "type": "boolean" }
+      }
+    },
+    "loopMeasurement": {
+      "type": "object",
+      "required": [
+        "months",
+        "totalSteps",
+        "meanSteps",
+        "firstChoiceCorrectRate",
+        "meanPredictionError",
+        "evidenceMeanConfidence",
+        "evidenceShareWithConfidenceBasis",
+        "totalRealizedValueSum",
+        "meanNetVariance",
+        "totalWindowCostMinor",
+        "interventionsExecuted",
+        "participationByRole",
+        "channelsOfLoop"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "months": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/monthMeasurement" }
+        },
+        "totalSteps": { "type": "integer", "minimum": 0 },
+        "meanSteps": { "type": "number", "minimum": 0 },
+        "firstChoiceCorrectRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "meanPredictionError": { "type": "number", "minimum": 0 },
+        "evidenceMeanConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "evidenceShareWithConfidenceBasis": { "type": "number", "minimum": 0, "maximum": 1 },
+        "totalRealizedValueSum": { "type": "number" },
+        "meanNetVariance": { "type": "number" },
+        "totalWindowCostMinor": { "type": "number", "minimum": 0 },
+        "interventionsExecuted": { "type": "integer", "minimum": 0 },
+        "participationByRole": {
+          "type": "object",
+          "required": ["controller", "operations", "support", "fulfillment", "analyst"],
+          "additionalProperties": false,
+          "properties": {
+            "controller": { "type": "integer", "minimum": 0 },
+            "operations": { "type": "integer", "minimum": 0 },
+            "support": { "type": "integer", "minimum": 0 },
+            "fulfillment": { "type": "integer", "minimum": 0 },
+            "analyst": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "channelsOfLoop": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "composedMeasurement": {
+      "type": "object",
+      "required": [
+        "leverInvocations",
+        "effort",
+        "coverage",
+        "deepAction",
+        "migration",
+        "kit",
+        "browser",
+        "edge",
+        "channels",
+        "supervision",
+        "trust"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "leverInvocations": {
+          "type": "object",
+          "required": [
+            "integration-discovery",
+            "connection-lifecycle",
+            "progressive-grants",
+            "deep-action-execution",
+            "migration-continuity",
+            "vertical-kit",
+            "channel-coverage",
+            "edge-jobs",
+            "browser-fallback",
+            "agent-supervision"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "integration-discovery": { "type": "integer", "minimum": 0 },
+            "connection-lifecycle": { "type": "integer", "minimum": 0 },
+            "progressive-grants": { "type": "integer", "minimum": 0 },
+            "deep-action-execution": { "type": "integer", "minimum": 0 },
+            "migration-continuity": { "type": "integer", "minimum": 0 },
+            "vertical-kit": { "type": "integer", "minimum": 0 },
+            "channel-coverage": { "type": "integer", "minimum": 0 },
+            "edge-jobs": { "type": "integer", "minimum": 0 },
+            "browser-fallback": { "type": "integer", "minimum": 0 },
+            "agent-supervision": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "effort": {
+          "type": "object",
+          "required": ["contractCalls", "approvals", "elapsedSimulatedMinutes"],
+          "additionalProperties": false,
+          "properties": {
+            "contractCalls": { "type": "integer", "minimum": 0 },
+            "approvals": { "type": "integer", "minimum": 0 },
+            "elapsedSimulatedMinutes": { "type": "number", "minimum": 0 }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "required": [
+            "systemsDiscovered",
+            "systemsConnected",
+            "systemsVerified",
+            "systemsWithWritePath",
+            "channelsWithEvidence"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "systemsDiscovered": { "type": "integer", "minimum": 0 },
+            "systemsConnected": { "type": "integer", "minimum": 0 },
+            "systemsVerified": { "type": "integer", "minimum": 0 },
+            "systemsWithWritePath": { "type": "integer", "minimum": 0 },
+            "channelsWithEvidence": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "deepAction": {
+          "type": "object",
+          "required": [
+            "tasks",
+            "operations",
+            "opsExecuted",
+            "opsReconciledClean",
+            "opsMismatched",
+            "preStateEvidence",
+            "postStateEvidence",
+            "mismatchUnknowns"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "tasks": { "type": "integer", "minimum": 0 },
+            "operations": { "type": "integer", "minimum": 0 },
+            "opsExecuted": { "type": "integer", "minimum": 0 },
+            "opsReconciledClean": { "type": "integer", "minimum": 0 },
+            "opsMismatched": { "type": "integer", "minimum": 0 },
+            "preStateEvidence": { "type": "integer", "minimum": 0 },
+            "postStateEvidence": { "type": "integer", "minimum": 0 },
+            "mismatchUnknowns": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "migration": {
+          "type": "object",
+          "required": [
+            "roundsCommitted",
+            "recordsImported",
+            "identifierMappings",
+            "conflictsSurfaced",
+            "divergencesSurfaced"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "roundsCommitted": { "type": "integer", "minimum": 0 },
+            "recordsImported": { "type": "integer", "minimum": 0 },
+            "identifierMappings": { "type": "integer", "minimum": 0 },
+            "conflictsSurfaced": { "type": "integer", "minimum": 0 },
+            "divergencesSurfaced": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "kit": {
+          "type": "object",
+          "required": ["installed", "active", "capabilitiesInvoked"],
+          "additionalProperties": false,
+          "properties": {
+            "installed": { "type": "boolean" },
+            "active": { "type": "boolean" },
+            "capabilitiesInvoked": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "browser": {
+          "type": "object",
+          "required": ["tasks", "stepsVerified"],
+          "additionalProperties": false,
+          "properties": {
+            "tasks": { "type": "integer", "minimum": 0 },
+            "stepsVerified": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "edge": {
+          "type": "object",
+          "required": ["jobsIssued", "jobsSucceeded"],
+          "additionalProperties": false,
+          "properties": {
+            "jobsIssued": { "type": "integer", "minimum": 0 },
+            "jobsSucceeded": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "channels": {
+          "type": "object",
+          "required": ["messagesOutbound", "smsReachAttempts", "meetingsIngested"],
+          "additionalProperties": false,
+          "properties": {
+            "messagesOutbound": { "type": "integer", "minimum": 0 },
+            "smsReachAttempts": { "type": "integer", "minimum": 0 },
+            "meetingsIngested": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "supervision": {
+          "type": "object",
+          "required": ["agentsSupervised", "executionsAdmitted", "healthObservations"],
+          "additionalProperties": false,
+          "properties": {
+            "agentsSupervised": { "type": "integer", "minimum": 0 },
+            "executionsAdmitted": { "type": "integer", "minimum": 0 },
+            "healthObservations": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "trust": {
+          "type": "object",
+          "required": [
+            "gateDecisionsRecorded",
+            "actionRequestsSubmitted",
+            "verificationRunsClean",
+            "verificationRunsTotal",
+            "auditLedgersWithEntries"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "gateDecisionsRecorded": { "type": "integer", "minimum": 0 },
+            "actionRequestsSubmitted": { "type": "integer", "minimum": 0 },
+            "verificationRunsClean": { "type": "integer", "minimum": 0 },
+            "verificationRunsTotal": { "type": "integer", "minimum": 0 },
+            "auditLedgersWithEntries": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "professional": {
+      "type": "object",
+      "required": [
+        "role",
+        "roleFit",
+        "roleSwitchEase",
+        "affinityDraw",
+        "score",
+        "willingOnly",
+        "willingPrimary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "enum": ["controller", "operations", "support", "fulfillment", "analyst"]
+        },
+        "roleFit": { "type": "number", "minimum": 0, "maximum": 1 },
+        "roleSwitchEase": { "type": "number", "minimum": 0, "maximum": 1 },
+        "affinityDraw": { "type": "number", "minimum": -1, "maximum": 1 },
+        "score": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "willingOnly": { "type": "boolean" },
+        "willingPrimary": { "type": "boolean" }
+      }
+    },
+    "firmScenario": {
+      "type": "object",
+      "required": ["scenario", "seed", "months", "loop", "composed", "factors", "professionals", "measurements"],
+      "additionalProperties": false,
+      "properties": {
+        "scenario": { "enum": ["baseline", "mature"] },
+        "seed": { "type": "integer", "minimum": 0 },
+        "months": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/monthMeasurement" }
+        },
+        "loop": { "$ref": "#/definitions/loopMeasurement" },
+        "composed": { "$ref": "#/definitions/composedMeasurement" },
+        "factors": {
+          "type": "object",
+          "required": [
+            "organizationalIntelligenceValue",
+            "oneWorkSurface",
+            "channelAccessibility",
+            "roleFit",
+            "contextSwitchingReduction",
+            "incumbentIndependence",
+            "specialistIndependence",
+            "reEntryRelief",
+            "governanceHeadroom",
+            "migrationEase",
+            "roleSwitchEase"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "organizationalIntelligenceValue": { "type": "number" },
+            "oneWorkSurface": { "type": "number" },
+            "channelAccessibility": { "type": "number" },
+            "roleFit": { "type": "number" },
+            "contextSwitchingReduction": { "type": "number" },
+            "incumbentIndependence": { "type": "number" },
+            "specialistIndependence": { "type": "number" },
+            "reEntryRelief": { "type": "number" },
+            "governanceHeadroom": { "type": "number" },
+            "migrationEase": { "type": "number" },
+            "roleSwitchEase": { "type": "number" }
+          }
+        },
+        "professionals": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/professional" }
+        },
+        "measurements": {
+          "type": "object",
+          "required": ["contextSwitching", "setupEffort", "trust", "realizedValue"],
+          "additionalProperties": false,
+          "properties": {
+            "contextSwitching": {
+              "type": "object",
+              "required": [
+                "switchesAvoidedPerTask",
+                "reductionVsNoAurum",
+                "manualExecutions",
+                "composedExecutions",
+                "amortizedSetupSwitches"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "switchesAvoidedPerTask": { "type": "number" },
+                "reductionVsNoAurum": { "type": "number", "minimum": 0, "maximum": 1 },
+                "manualExecutions": { "type": "number", "minimum": 0 },
+                "composedExecutions": { "type": "integer", "minimum": 0 },
+                "amortizedSetupSwitches": { "type": "number", "minimum": 0 }
+              }
+            },
+            "setupEffort": {
+              "type": "object",
+              "required": ["origin", "minutes", "steps", "approvals", "perSystemMinutes"],
+              "additionalProperties": false,
+              "properties": {
+                "origin": { "enum": ["baseline-cost-model", "measured"] },
+                "minutes": { "type": "number", "minimum": 0 },
+                "steps": { "type": "integer", "minimum": 0 },
+                "approvals": { "type": "integer", "minimum": 0 },
+                "perSystemMinutes": { "type": "number", "minimum": 0 }
+              }
+            },
+            "trust": {
+              "type": "object",
+              "required": [
+                "score",
+                "evidenceConfidenceBasis",
+                "gateDiscipline",
+                "verificationLedger",
+                "evidenceChain",
+                "auditTrail",
+                "attentionRecords"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "score": { "type": "number", "minimum": 0, "maximum": 1 },
+                "evidenceConfidenceBasis": { "type": "number", "minimum": 0, "maximum": 1 },
+                "gateDiscipline": { "type": "number", "minimum": 0, "maximum": 1 },
+                "verificationLedger": { "type": "number", "minimum": 0, "maximum": 1 },
+                "evidenceChain": { "type": "number", "minimum": 0, "maximum": 1 },
+                "auditTrail": { "type": "number", "minimum": 0, "maximum": 1 },
+                "attentionRecords": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "realizedValue": {
+              "type": "object",
+              "required": [
+                "realizedValueSum",
+                "netVarianceSum",
+                "meanPredictionError",
+                "missionCostMinor",
+                "attributableShare"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "realizedValueSum": { "type": "number" },
+                "netVarianceSum": { "type": "number" },
+                "meanPredictionError": { "type": "number" },
+                "missionCostMinor": { "type": "number" },
+                "attributableShare": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "firm": {
+      "type": "object",
+      "required": [
+        "key",
+        "industryKey",
+        "industryLabel",
+        "sizeKey",
+        "seed",
+        "baseline",
+        "mature",
+        "delta",
+        "leversComposed",
+        "partialMaturity"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z]+-[a-z]+$" },
+        "industryKey": { "type": "string", "pattern": "^[a-z]+$" },
+        "industryLabel": { "type": "string", "minLength": 1 },
+        "sizeKey": { "enum": ["small", "medium", "large"] },
+        "seed": { "type": "integer", "minimum": 0 },
+        "baseline": { "$ref": "#/definitions/firmScenario" },
+        "mature": { "$ref": "#/definitions/firmScenario" },
+        "delta": {
+          "type": "object",
+          "required": [
+            "aurumOnlyShare",
+            "aurumPrimaryShare",
+            "latentScoreMean",
+            "contextSwitchingReduction",
+            "setupEffortMinutes",
+            "trust",
+            "attributableRealizedShare"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "aurumOnlyShare": { "type": "number", "minimum": -1, "maximum": 1 },
+            "aurumPrimaryShare": { "type": "number", "minimum": -1, "maximum": 1 },
+            "latentScoreMean": { "type": "number" },
+            "contextSwitchingReduction": { "type": "number" },
+            "setupEffortMinutes": { "type": "number" },
+            "trust": { "type": "number" },
+            "attributableRealizedShare": { "type": "number" }
+          }
+        },
+        "leversComposed": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "integration-discovery",
+              "connection-lifecycle",
+              "progressive-grants",
+              "deep-action-execution",
+              "migration-continuity",
+              "vertical-kit",
+              "channel-coverage",
+              "edge-jobs",
+              "browser-fallback",
+              "agent-supervision"
+            ]
+          }
+        },
+        "partialMaturity": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "scenarioAggregate": {
+      "type": "object",
+      "required": [
+        "professionals",
+        "aurumOnlyShare",
+        "aurumPrimaryShare",
+        "latentScoreMean",
+        "trustMean",
+        "setupEffortMinutesMean",
+        "contextSwitchingReductionMean",
+        "attributableRealizedShareMean",
+        "byIndustry",
+        "bySize"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "professionals": { "type": "integer", "minimum": 1 },
+        "aurumOnlyShare": { "type": "number", "minimum": 0, "maximum": 1 },
+        "aurumPrimaryShare": { "type": "number", "minimum": 0, "maximum": 1 },
+        "latentScoreMean": { "type": "number", "minimum": 0, "maximum": 1 },
+        "trustMean": { "type": "number", "minimum": 0, "maximum": 1 },
+        "setupEffortMinutesMean": { "type": "number", "minimum": 0 },
+        "contextSwitchingReductionMean": { "type": "number", "minimum": 0, "maximum": 1 },
+        "attributableRealizedShareMean": { "type": "number", "minimum": 0, "maximum": 1 },
+        "byIndustry": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["industryKey", "professionals", "aurumOnlyShare", "aurumPrimaryShare"],
+            "additionalProperties": false,
+            "properties": {
+              "industryKey": { "type": "string" },
+              "professionals": { "type": "integer", "minimum": 1 },
+              "aurumOnlyShare": { "type": "number", "minimum": 0, "maximum": 1 },
+              "aurumPrimaryShare": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "bySize": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["sizeKey", "professionals", "aurumOnlyShare", "aurumPrimaryShare"],
+            "additionalProperties": false,
+            "properties": {
+              "sizeKey": { "enum": ["small", "medium", "large"] },
+              "professionals": { "type": "integer", "minimum": 1 },
+              "aurumOnlyShare": { "type": "number", "minimum": 0, "maximum": 1 },
+              "aurumPrimaryShare": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "cohort": {
+      "type": "object",
+      "required": ["baseline", "mature", "headline"],
+      "additionalProperties": false,
+      "properties": {
+        "baseline": { "$ref": "#/definitions/scenarioAggregate" },
+        "mature": { "$ref": "#/definitions/scenarioAggregate" },
+        "headline": {
+          "type": "object",
+          "required": [
+            "aurumOnlyShare",
+            "aurumPrimaryShare",
+            "contextSwitchingReduction",
+            "setupEffortMinutes",
+            "trust",
+            "attributableRealizedShare"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "aurumOnlyShare": { "$ref": "#/definitions/baselineMatureDelta" },
+            "aurumPrimaryShare": { "$ref": "#/definitions/baselineMatureDelta" },
+            "contextSwitchingReduction": { "$ref": "#/definitions/baselineMatureDelta" },
+            "setupEffortMinutes": { "$ref": "#/definitions/baselineMatureDelta" },
+            "trust": { "$ref": "#/definitions/baselineMatureDelta" },
+            "attributableRealizedShare": { "$ref": "#/definitions/baselineMatureDelta" }
+          }
+        }
+      }
+    },
+    "baselineMatureDelta": {
+      "type": "object",
+      "required": ["baseline", "mature", "delta"],
+      "additionalProperties": false,
+      "properties": {
+        "baseline": { "type": "number" },
+        "mature": { "type": "number" },
+        "delta": { "type": "number" }
+      }
+    }
+  }
+}
