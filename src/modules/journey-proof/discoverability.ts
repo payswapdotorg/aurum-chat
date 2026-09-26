@@ -637,6 +637,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the governed last-resort browser executor (W093 — used only where APIs/MCP/native adapters are insufficient) composed over the deep-actions contract (the W084 reconciliation re-used verbatim for observed-state verification, evidence and attention — no second evidence model) with the W082 opaque-credentialRef discipline sharpened per task (browser profiles and credential stores are per tenant AND per task, materialized only inside the isolated session), a frozen step allowlist (URL/domain globs + permitted verbs, checked at creation, at dispatch and driver-side) and a step budget, disposable resumable sessions checkpointed on verified steps, and per-step screenshot/action-trace evidence; it owns no user-facing route yet — the fallback surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite plus the tenant-isolation sweep',
   },
+  {
+    module: 'migration',
+    label: 'Migration and dual-run continuity (W094)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the migration and dual-run continuity layer (W094 — import history, preserve identifiers, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement) composed over the integration-intelligence/connection-broker/deep-actions/vertical-kits contracts: the staged import rounds (snapshot → transform → staged → review → commit, every imported record an evidence-shaped row with full provenance and storage-level payload immutability), the external↔Aurum identifier map per source system with explicit cross-system-collision and ambiguous-match conflict records that are never auto-merged, the dual-run delta rounds and structured comparison reports that surface divergences using the W084 reconciliation semantics (never a second action pipeline — the module holds no write path to the incumbent), commit-time verification reads that compose the W084 DeepActionTransport port (edge-backed for private/on-prem incumbents through the edge-connector), sequestration rollback that quarantines without deleting, and the evidence-linked retirement checkpoints (dual-running → compare-clean → incumbent-read-only → incumbent-retired); it owns no user-facing route yet — the migration surface arrives with the customer-journey work — and is exercised by its own vitest suite plus the tenant-isolation sweep',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
