@@ -84,6 +84,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   sources: 'experience-sweep.test.ts',
   suppliers: 'cognition-sweep.test.ts',
   'unified-identity': 'unified-identity-sweep.test.ts',
+  'vertical-kits': 'vertical-kits-sweep.test.ts',
   workforce: 'cognition-sweep.test.ts',
   workflow: 'workflow-sweep.test.ts',
   world: 'foundation-sweep.test.ts',
