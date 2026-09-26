@@ -1,11 +1,11 @@
 {
   "config": {
-    "configFile": "/home/z/my-project/aurum-chat/playwright.certification.config.ts",
-    "rootDir": "/home/z/my-project/aurum-chat/tests/browser/production",
+    "configFile": "/home/z/aurum-integration/playwright.certification.config.ts",
+    "rootDir": "/home/z/aurum-integration/tests/browser/production",
     "forbidOnly": false,
     "fullyParallel": false,
     "globalSetup": null,
-    "globalTeardown": "/home/z/my-project/aurum-chat/tests/browser/production/global-teardown.ts",
+    "globalTeardown": "/home/z/aurum-integration/tests/browser/production/global-teardown.ts",
     "globalTimeout": 0,
     "grep": {},
     "grepInvert": null,
@@ -22,7 +22,7 @@
       [
         "json",
         {
-          "outputFile": "/home/z/my-project/aurum-chat/docs/productization-evidence/W101/production-run-b/playwright-results.json"
+          "outputFile": "/home/z/aurum-integration/docs/productization-evidence/W101/production-run-b/playwright-results.json"
         }
       ]
     ],
@@ -33,7 +33,7 @@
     "quiet": false,
     "projects": [
       {
-        "outputDir": "/home/z/my-project/aurum-chat/test-results/certification",
+        "outputDir": "/home/z/aurum-integration/test-results/certification",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -41,7 +41,7 @@
         },
         "id": "desktop",
         "name": "desktop",
-        "testDir": "/home/z/my-project/aurum-chat/tests/browser/production",
+        "testDir": "/home/z/aurum-integration/tests/browser/production",
         "testIgnore": [],
         "testMatch": [
           "/.*-desktop\\.spec\\.ts/"
@@ -49,7 +49,7 @@
         "timeout": 300000
       },
       {
-        "outputDir": "/home/z/my-project/aurum-chat/test-results/certification",
+        "outputDir": "/home/z/aurum-integration/test-results/certification",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -57,7 +57,7 @@
         },
         "id": "mobile",
         "name": "mobile",
-        "testDir": "/home/z/my-project/aurum-chat/tests/browser/production",
+        "testDir": "/home/z/aurum-integration/tests/browser/production",
         "testIgnore": [],
         "testMatch": [
           "/.*-mobile\\.spec\\.ts/"
@@ -103,12 +103,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2726,
+                      "duration": 3192,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:41:36.094Z",
+                      "startTime": "2026-09-26T18:24:54.923Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -154,12 +154,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3455,
+                      "duration": 5112,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:41:38.908Z",
+                      "startTime": "2026-09-26T18:24:58.225Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -205,12 +205,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6060,
+                      "duration": 8090,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:41:42.381Z",
+                      "startTime": "2026-09-26T18:25:03.382Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -256,12 +256,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2799,
+                      "duration": 4577,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:41:48.462Z",
+                      "startTime": "2026-09-26T18:25:11.501Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -307,12 +307,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 12706,
+                      "duration": 13614,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:41:51.280Z",
+                      "startTime": "2026-09-26T18:25:16.095Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -358,12 +358,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3533,
+                      "duration": 3898,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:04.001Z",
+                      "startTime": "2026-09-26T18:25:29.727Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -409,12 +409,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4778,
+                      "duration": 7114,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:07.550Z",
+                      "startTime": "2026-09-26T18:25:33.640Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -460,12 +460,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5390,
+                      "duration": 7250,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:12.345Z",
+                      "startTime": "2026-09-26T18:25:40.773Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -511,12 +511,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7925,
+                      "duration": 6846,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:17.767Z",
+                      "startTime": "2026-09-26T18:25:48.051Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -562,12 +562,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5168,
+                      "duration": 6044,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:25.708Z",
+                      "startTime": "2026-09-26T18:25:54.921Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -613,12 +613,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3903,
+                      "duration": 4172,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:30.904Z",
+                      "startTime": "2026-09-26T18:26:00.998Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -664,12 +664,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 8028,
+                      "duration": 8653,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:34.822Z",
+                      "startTime": "2026-09-26T18:26:05.200Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -715,12 +715,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9199,
+                      "duration": 9679,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:42.867Z",
+                      "startTime": "2026-09-26T18:26:13.882Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -766,12 +766,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2701,
+                      "duration": 2622,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:52.082Z",
+                      "startTime": "2026-09-26T18:26:23.597Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -817,12 +817,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 8366,
+                      "duration": 8985,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:42:54.801Z",
+                      "startTime": "2026-09-26T18:26:26.240Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -868,12 +868,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3299,
+                      "duration": 4401,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:43:03.181Z",
+                      "startTime": "2026-09-26T18:26:35.242Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -919,12 +919,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3429,
+                      "duration": 3791,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:43:06.495Z",
+                      "startTime": "2026-09-26T18:26:39.666Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -970,12 +970,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7749,
+                      "duration": 7810,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:43:09.941Z",
+                      "startTime": "2026-09-26T18:26:43.474Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1007,7 +1007,7 @@
           "specs": [
             {
               "title": "J20 — outcome preferences, the authorization-gated advanced area and the provider/billing surfaces",
-              "ok": false,
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -1020,56 +1020,18 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 1862,
-                      "error": {
-                        "message": "Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
-                        "stack": "Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n    at /home/z/my-project/aurum-chat/tests/browser/production/j20-provider-choice-billing-desktop.spec.ts:39:7",
-                        "location": {
-                          "file": "/home/z/my-project/aurum-chat/tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
-                          "column": 7,
-                          "line": 39
-                        },
-                        "snippet": "  37 |       preferencesResponse?.status(),\n  38 |       'the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)',\n> 39 |     ).toBe(200);\n     |       ^\n  40 |     await expect(page.getByRole('heading', { name: /AI preferences/i }).first()).toBeVisible();\n  41 |     await cert.shot('AI preferences — the outcome-oriented surface');\n  42 |"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum-chat/tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
-                            "column": 7,
-                            "line": 39
-                          },
-                          "message": "Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m\n\n  37 |       preferencesResponse?.status(),\n  38 |       'the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)',\n> 39 |     ).toBe(200);\n     |       ^\n  40 |     await expect(page.getByRole('heading', { name: /AI preferences/i }).first()).toBeVisible();\n  41 |     await cert.shot('AI preferences — the outcome-oriented surface');\n  42 |\n    at /home/z/my-project/aurum-chat/tests/browser/production/j20-provider-choice-billing-desktop.spec.ts:39:7"
-                        },
-                        {
-                          "location": {
-                            "file": "/home/z/my-project/aurum-chat/tests/browser/production/fixtures.ts",
-                            "column": 7,
-                            "line": 281
-                          },
-                          "message": "Error: [teardown] the production journey ended with browser violations: [{\"kind\":\"http\",\"detail\":\"500 \",\"url\":\"https://aurum-chat-livid.vercel.app/ai/preferences\",\"at\":\"2026-09-26T15:43:19.459Z\"},{\"kind\":\"console\",\"detail\":\"Failed to load resource: the server responded with a status of 500 ()\",\"url\":\"https://aurum-chat-livid.vercel.app/ai/preferences\",\"at\":\"2026-09-26T15:43:19.468Z\"},{\"kind\":\"pageerror\",\"detail\":\"Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\",\"url\":\"https://aurum-chat-livid.vercel.app/ai/preferences\",\"at\":\"2026-09-26T15:43:19.534Z\"}]\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 20\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"at\": \"2026-09-26T15:43:19.459Z\",\u001b[39m\n\u001b[31m+     \"detail\": \"500 \",\u001b[39m\n\u001b[31m+     \"kind\": \"http\",\u001b[39m\n\u001b[31m+     \"url\": \"https://aurum-chat-livid.vercel.app/ai/preferences\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"at\": \"2026-09-26T15:43:19.468Z\",\u001b[39m\n\u001b[31m+     \"detail\": \"Failed to load resource: the server responded with a status of 500 ()\",\u001b[39m\n\u001b[31m+     \"kind\": \"console\",\u001b[39m\n\u001b[31m+     \"url\": \"https://aurum-chat-livid.vercel.app/ai/preferences\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"at\": \"2026-09-26T15:43:19.534Z\",\u001b[39m\n\u001b[31m+     \"detail\": \"Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.\",\u001b[39m\n\u001b[31m+     \"kind\": \"pageerror\",\u001b[39m\n\u001b[31m+     \"url\": \"https://aurum-chat-livid.vercel.app/ai/preferences\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   at fixtures.ts:281\n\n  279 |       violations,\n  280 |       `[teardown] the production journey ended with browser violations: ${JSON.stringify(violations)}`,\n> 281 |     ).toEqual([]);\n      |       ^\n  282 |   },\n  283 | });\n  284 |\n    at Object.cert (/home/z/my-project/aurum-chat/tests/browser/production/fixtures.ts:281:7)"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 10777,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:43:17.705Z",
+                      "startTime": "2026-09-26T18:26:51.305Z",
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/z/my-project/aurum-chat/test-results/certification/j20-provider-choice-billin-7a10e-e-provider-billing-surfaces-desktop/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/z/my-project/aurum-chat/tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
-                        "column": 7,
-                        "line": 39
-                      }
+                      "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
               "id": "85ff53be071b1602a90d-d4e209b1a9880939ce14",
@@ -1107,15 +1069,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 7371,
+                      "duration": 7551,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:43:20.233Z",
+                      "startTime": "2026-09-26T18:27:02.105Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1158,15 +1120,15 @@
                   "projectName": "desktop",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 6144,
+                      "duration": 7015,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:43:27.710Z",
+                      "startTime": "2026-09-26T18:27:09.674Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1209,15 +1171,15 @@
                   "projectName": "mobile",
                   "results": [
                     {
-                      "workerIndex": 2,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3470,
+                      "duration": 4054,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-09-26T15:43:34.528Z",
+                      "startTime": "2026-09-26T18:27:17.556Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1237,11 +1199,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-26T15:41:35.424Z",
-    "duration": 122709.473,
-    "expected": 21,
+    "startTime": "2026-09-26T18:24:54.124Z",
+    "duration": 147643.446,
+    "expected": 22,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

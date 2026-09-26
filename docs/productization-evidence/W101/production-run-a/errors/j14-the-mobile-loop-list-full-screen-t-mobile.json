@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j14-mobile-loop-mobile.spec.ts",
+  "spec": "/home/z/aurum-integration/tests/browser/production/j14-mobile-loop-mobile.spec.ts",
   "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
   "project": "mobile",
   "runLabel": "A",

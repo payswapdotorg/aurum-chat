@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
   "file": "tests/browser/production/j06-explainability-desktop.spec.ts",
-  "durationMs": 3663,
+  "durationMs": 3571,
   "error": null,
   "violations": 0,
   "evidence": {

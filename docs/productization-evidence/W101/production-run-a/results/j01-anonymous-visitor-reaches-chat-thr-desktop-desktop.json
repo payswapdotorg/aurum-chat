@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
   "file": "tests/browser/production/j01-first-manager-desktop.spec.ts",
-  "durationMs": 2966,
+  "durationMs": 3273,
   "error": null,
   "violations": 0,
   "evidence": {

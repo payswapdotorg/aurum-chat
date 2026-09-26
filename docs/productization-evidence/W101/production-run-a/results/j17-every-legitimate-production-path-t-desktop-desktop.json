@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J17 — every legitimate production path to a meetings surface is exhausted and recorded honestly",
   "file": "tests/browser/production/j17-meetings-desktop.spec.ts",
-  "durationMs": 3699,
+  "durationMs": 3484,
   "error": null,
   "violations": 0,
   "blockedReasons": [

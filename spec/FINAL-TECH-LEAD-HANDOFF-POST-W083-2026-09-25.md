@@ -192,14 +192,32 @@ Final main `e37f1d4` verified at the exact merged tip: typecheck PASS, lint PASS
 
 **Station-hygiene note (2026-09-26, binding for every future verification on this sandbox):** the 4GB box now OOM-kills a single-process `bun run test` (kernel `oom_kill`, 54-byte log). Run the suite CHUNKED: `git ls-files '*.test.ts' | rg -v '^tests/browser/'` (~259 files) split into ~33-file chunks, one `bunx vitest run --maxWorkers=2 <chunk>` per chunk. Do NOT pass `--reporter=basic` (removed in vitest 5 — instant startup error). Under concurrent chunks the embedded-PostgreSQL `beforeAll` boots exceed the 10s default `hookTimeout` on ~30-40 files — those are boot timeouts, NOT regressions: all pass serialized (`--maxWorkers=1`; verified twice — 31 files/624 tests for W094, 38 files/735 tests for W100). Also watch for OOM-SIGKILL'd workers ("Worker exited unexpectedly with signal SIGKILL") — retry those files serialized too (2 such files for W100, both green on retry). Long-running background jobs must be launched orphan-to-init — `( setsid nohup bash script >log 2>&1 < /dev/null & )` so the runner's PPID is 1 — or the between-tool-calls teardown tree-walk reaps them (console boot lesson 147 applies to the product repo too; setsid alone is not enough).
 
+### Wave F — W101 final certification ✅ executed (PR #121 + repair chain #120/#122/#123 + the 8ddd0df two-run certification, 2026-09-26)
+
+**W101 — Final Post-S002 Production Certification — executed; final verdict BLOCKED (18/0/4/0/0 in both runs, zero failures)**
+- Campaign history: PR #121 (parallel lead, squash `9b1a231`) delivered the certification machinery — the J16–J22 journey matrix extending the W079 machinery, the honest BLOCKED channel (laundering-proof), the rollback-evidence gate, the program model (`--program w079|w101`) — plus the first two-run certification of `dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT` @ `a2db98a` (15:38/15:41 UTC): verdict FAILED — J13 (shell anonymous fetch 401s) and J20 (`/ai/preferences` 500 for every tenant; root cause: production Neon carried an older schema generation for provider-preferences/vertical-kits/edge-connector — preview deployments sharing the production DATABASE_URL had applied parallel-lineage branch migrations, and the name-based `_migrations` ledger then skipped the merged generation DDL), J16/J17/J18/J22 BLOCKED with exact missing-surface reasons.
+- Repair chain (merged, all verified): PR #120 `850b85b` (anonymous chrome view for session-less fetches — the J13 fix), PR #122 `d1c0960` (migration name-collision repair: `EXCEPTION WHEN undefined_object OR undefined_table` guards on the ALTER TRIGGER renames + `IF NOT EXISTS` on the generator-missed unique index; both fresh-path and production-like-seed paths verified in sim), PR #123 `8ddd0df` (constraint-index name-collision repair: to_regclass-guarded constraint-index renames — PostgreSQL renames neither constraints nor their backing indexes on table rename; sim re-seeded with the REAL constraint state, 8 placement assertions + fresh-path integrity checks). The repair was ALSO applied directly to production Neon with the canonical idempotent transaction-per-file runner (read-only probes first): ledger 130, 12 orphan tables preserved under `__orphaned` names, constraint indexes on the right tables; `/ai/preferences` → HTTP 200 verified live (J20 fixed on the current deployment).
+- Certified revision: `dpl_ERGp4se2zC49sTr81YhLEYNMkqYD` @ `8ddd0df1bca25f60f1bf94b181aad664b3b29e23` (production, READY, created 2026-09-26T17:20:32.587Z) — the git-integration auto-deploy fired 3s after PR #123's merge push. The free-tier "100/100 api-deployments" quota turned out to bind only API-created deployments; git auto-deploys were unaffected (no V13 API deploy needed).
+- The two-run same-revision certification (this station, 2026-09-26 18:03–18:27 UTC, target `https://aurum-chat-livid.vercel.app`): Run A 18:03:49–18:06:13 and Run B 18:24:39–18:27:21, both against the SAME deployment, G2 repo gates phase-split per run via `--repo-gates-from` (Run A: gates recorded at 8ddd0df 17:21–17:23 UTC; Run B: FRESH executions 18:07–18:22 UTC — typecheck exit 0, lint exit 0, arch exit 0 (667/288/248), serialized chunked suite 259 tracked files → 5,439 passed / 6 skipped / 0 failed — byte-identical profile to Run A: deterministic suite, same revision).
+- Results (identical in both runs): G1 all PASS — health (production, postgres **130 migrations**, redis queue/cache/lock, 0 refusals · 0 warnings), quick-sign-in off (404), worker seam fail-closed (401 no/bad token; valid token reads the production snapshot, queue depth 0), deployment identity (`dpl_ERGp4se2zC49sTr81YhLEYNMkqYD` @ `8ddd0df` READY), rollback evidence (prior READY production deployment as known-good rollback target + runbook docs/DEPLOYMENT.md §12 + linked W078 tree). G3: W078 hosted smoke 27 passed · 0 failed · 0 blocked · 13 skipped (production stays demo-free by design) and the browser matrix **22/22 green across 22 journey-context pairs, zero console/network violations** — J13 and J20 now PASS (both first-campaign failures fixed). Journey matrix: J01–J15 PASS, J19 PASS, J20 PASS, J21 PASS; J16/J17/J18/J22 BLOCKED (the four §4 missing surfaces).
+- Final verdict (finalizer, 18:27:28 UTC): **BLOCKED** — both runs 18 passed · 0 failed · 4 blocked · 0 flaky · 0 unexpected, identical matrices, same deployment identity. Artifacts: `docs/productization-evidence/W101/final-verdict.json`, the regenerated `W101-PRODUCTION-JOURNEY-CERTIFICATION.md`, and the full `production-run-a` / `production-run-b` evidence trees (screenshots, transcripts, error captures, digests — machine-generated by the same executions). The finalizer's rule: CERTIFIED READY requires 0 failed · 0 blocked · 0 flaky · 0 unexpected in BOTH runs plus matrix and deployment-identity agreement — anything less stays BLOCKED (or FAILED), never laundered.
+- Wording note for future readers: the J16/J17/J18/J22 blocked-reason texts cite "the deployed revision a2db98a" — that string is the v1 route-table LOCK revision (W038's versioned public surface), not the run's deployment. The runs are bound to `dpl_ERGp4` @ `8ddd0df` (each run's `deployment-identity.json` is authoritative); the v1 surface is unchanged since a2db98a, so the blocked assertions remain accurate.
+- Station hygiene this cycle: a stray W079-program Run A (15:30 UTC, default program, the diagnosis drive behind PR #120) had overwritten the FROZEN W079 evidence tree in the station's working copy — reverted (`git checkout -- docs/`) BEFORE the W101 runs; the frozen 2026-09-23 W079 evidence is intact at HEAD. The Wave E suite law was applied throughout (serialized per-chunk foreground runs, zero OOM, zero flake-class retries).
+
 ## 4. Remaining implementation frontier
 
-The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`73d00ec`, post-W100):
+**W101 was EXECUTED 2026-09-26** as the two-run same-revision production certification of `dpl_ERGp4se2zC49sTr81YhLEYNMkqYD` @ `8ddd0df` (Run A 18:03–18:06 UTC, Run B 18:24–18:27 UTC; both runs **18 passed · 0 failed · 4 blocked · 0 flaky · 0 unexpected**, identical journey matrices, same deployment identity). **Final verdict: BLOCKED — never laundered** (contract §2/§11; the finalizer refuses to convert blocked journeys). Everything provable through the real production surfaces is proven green twice; the four blockers each name a product surface that exists in **no** deployed revision:
+
+- J16 — the v1 public API owns no channel-family operations (its locked route table lists 49 operations, none channel-scoped; the W059-era channels module was never surfaced through it);
+- J17 — the meetings surface (user-facing route or v1 operation) does not exist; the repo's own discoverability map defers the meeting UX to the W086 realtime companion;
+- J18 — the cellular reachability surface does not exist (no user-facing route, no v1 operation; no transport wired by default — deliveries fail explicitly with `provider_unavailable`, environment limit as the module itself reports it);
+- J22 — the W092 vertical kits own no user-visible path (the two signed starter kits live module-side only; kit surfacing is deferred to the vertical journeys).
+
+The only remaining core program item is a **decision plus (if chosen) product work**: (a) build the four user-visible surfaces and re-run the two-run certification at the new tip (the machinery is in place: `bun run cert:production -- --program w101 --run a|b --deployment-id <dpl> --expect-commit <sha> --repo-gates-from <dir> …` then `--finalize`), or (b) accept the BLOCKED verdict as the terminal current-state record. Remaining optional item:
 
 - W099 — Matrix Interoperability Adapter (optional)
-- W101 — Final Post-S002 Production Certification
 
-W084, W095, Wave A (W088/W091/W092), Wave B (W093/W096/W097), W094 and W100 were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A / Wave B / Wave D / Wave E sections above).
+W084, W095, Wave A (W088/W091/W092), Wave B (W093/W096/W097), W094, W100 and the W101 certification execution were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A / Wave B / Wave D / Wave E / Wave F sections above).
 
 Do not mark any of these complete because their contracts, UI stubs or research documents exist. Require real repository implementation and evidence.
 
@@ -209,8 +227,8 @@ Do not mark any of these complete because their contracts, UI stubs or research 
 
 ### Wave B (W093/W096/W097) — ✅ delivered 2026-09-26 (PRs #114/#115/#113)
 
-### Now: W101 — final certification
-- W101 (Final Post-S002 Production Certification) is the only remaining core frontier item; all its work-item dependencies (W096/W097/W098/W100) are green at `73d00ec`. It needs production infrastructure and two consecutive same-revision green runs.
+### W101 — executed 2026-09-26: final verdict BLOCKED (zero failures)
+- Two consecutive same-revision certification runs completed at `dpl_ERGp4se2zC49sTr81YhLEYNMkqYD` @ `8ddd0df` (Run A 18:03–18:06 UTC + Run B 18:24–18:27 UTC, fresh G2 gates per run, 22/22 browser matrix zero-violation twice, W078 hosted smoke 27/0/0/13 twice). The two failures of the 15:38 UTC campaign are FIXED: J13 (shell anonymous fetch 401s — PR #120) and J20 (`/ai/preferences` 500 — PR #122/#123 + the production Neon repair, ledger 130). The verdict stays BLOCKED on the four documented missing product surfaces (§4) — the build-surfaces-and-recertify vs accept-current-state decision is the only core frontier left.
 
 ### Optional: W099
 W099 (Matrix adapter) remains optional — only with a documented customer/use-case justification; it must not block W101.
@@ -234,7 +252,7 @@ W099 (Matrix adapter) remains optional — only with a documented customer/use-c
 ### Remaining waves
 
 **W099 — Matrix adapter only if justified** (optional; must not block W101).
-**W101 — final certification**: all workers support production certification against one exact deployment revision, with two consecutive green runs.
+**W101 — certification machinery delivered and executed** (PR #121 + Wave F): the two-run same-revision certification of the exact released revision is complete with the honest BLOCKED verdict; a CERTIFIED READY verdict additionally requires the four §4 product surfaces to exist and the cert re-run at the new tip.
 
 ## 7. W083/W087 reality checks before declaring “cellular is finished”
 
@@ -246,11 +264,11 @@ The same rule applies to W085/W086: provider adapters and canonical contracts ar
 
 ## 8. Current production/release state
 
-W079 certification is historical and bound to its exact recorded deployment revision. Do not reuse that verdict for the current W083 head.
+W079 certification is historical and bound to its exact recorded deployment revision. Do not reuse that verdict for the current head.
 
-The current GitHub combined status for `06422f...` reports a successful Vercel check. The connected Vercel project inspection was not available through the current Vercel API session (403), so do not infer the current deployment identity, production environment variables or live database/worker state from that single status check.
+**The W101 certification is bound to `dpl_ERGp4se2zC49sTr81YhLEYNMkqYD` @ `8ddd0df1bca25f60f1bf94b181aad664b3b29e23`** (production, READY, created 2026-09-26T17:20:32.587Z — git-integration auto-deploy 3s after PR #123's merge push; the earlier "100/100 api-deployments quota" block applies to API-created deployments only, git auto-deploys were unaffected). Production at that revision: `/api/health` ok — environment production, postgres **130 migrations** (the W088/W091/W092 name-collision repair applied directly to production Neon with the canonical idempotent runner; 12 orphan tables preserved under `__orphaned` names; constraint indexes on the right tables), queue/cache/lock redis (polished-yeti-167554.upstash.io), email resend, blob vercel-blob, 0 refusals 0 warnings; `/ai/preferences` 200 (J20 fixed); worker seam fail-closed (401 no/bad token) with the valid token reading the production snapshot. Vercel project `prj_PljFx5DnZ1MCqQ5bA1uK6G1o8gFy` (team `ekonplacidegmailcoms-projects`), production domain `aurum-chat-livid.vercel.app`. Evidence: `docs/productization-evidence/W101/` (final-verdict.json + W101-PRODUCTION-JOURNEY-CERTIFICATION.md + production-run-a/b trees).
 
-Before W101, independently verify:
+For any FUTURE deployment, independently verify:
 
 - exact production deployment ID;
 - exact deployment SHA;

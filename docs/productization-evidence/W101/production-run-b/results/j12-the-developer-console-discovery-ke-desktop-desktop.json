@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
   "file": "tests/browser/production/j12-developer-desktop.spec.ts",
-  "durationMs": 8018,
+  "durationMs": 8626,
   "error": null,
   "violations": 0,
   "evidence": {

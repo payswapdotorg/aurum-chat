@@ -1,9 +1,9 @@
 {
   "hostname": "aurum-chat-livid.vercel.app",
-  "deploymentId": "dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT",
-  "commitSha": "a2db98a25b5ff9756fa849d3e196a80bafba1104",
-  "deploymentCreatedAt": "2026-09-26T12:52:52.665Z",
-  "certificationStartedAt": "2026-09-26T15:41:25.548Z",
+  "deploymentId": "dpl_ERGp4se2zC49sTr81YhLEYNMkqYD",
+  "commitSha": "8ddd0df1bca25f60f1bf94b181aad664b3b29e23",
+  "deploymentCreatedAt": "2026-09-26T17:20:32.587Z",
+  "certificationStartedAt": "2026-09-26T18:24:39.524Z",
   "environmentLabel": "production",
   "databaseBackendClass": "postgres",
   "workerRuntimeState": {
@@ -12,11 +12,11 @@
     "environment": "production",
     "queueDepth": 0
   },
-  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w101 --deployment-id dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT --expect-commit a2db98a25b5ff9756fa849d3e196a80bafba1104 --deployment-created 2026-09-26T12:52:52.665Z --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w101 --deployment-id dpl_ERGp4se2zC49sTr81YhLEYNMkqYD --expect-commit 8ddd0df1bca25f60f1bf94b181aad664b3b29e23 --deployment-created 2026-09-26T17:20:32.587Z --worker-token-file <redacted> --vercel-token-file <redacted>",
   "repository": {
     "remote": "https://github.com/payswapdotorg/aurum-chat.git",
     "branch": "work/w101-final-certification",
     "baseCommit": "a2db98a25b5ff9756fa849d3e196a80bafba1104",
-    "headCommit": "a2db98a25b5ff9756fa849d3e196a80bafba1104"
+    "headCommit": "8ddd0df1bca25f60f1bf94b181aad664b3b29e23"
   }
 }

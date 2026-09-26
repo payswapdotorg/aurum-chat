@@ -1,79 +1,79 @@
 {
-  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j07-learning-contribution-desktop.spec.ts",
+  "spec": "/home/z/aurum-integration/tests/browser/production/j07-learning-contribution-desktop.spec.ts",
   "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
   "project": "desktop",
   "runLabel": "B",
   "steps": [
     {
-      "at": "2026-09-26T15:42:07.585Z",
+      "at": "2026-09-26T18:25:33.678Z",
       "step": "sign in as the run manager",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-26T15:42:08.826Z",
+      "at": "2026-09-26T18:25:35.416Z",
       "step": "the integration registers a learning mission via the public API",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-26T15:42:09.119Z",
+      "at": "2026-09-26T18:25:35.828Z",
       "step": "the Learning hub renders the mission",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-26T15:42:09.687Z",
+      "at": "2026-09-26T18:25:36.570Z",
       "step": "screenshot: the Learning hub — the live mission",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-hub-the-live-mission.png"
     },
     {
-      "at": "2026-09-26T15:42:09.687Z",
+      "at": "2026-09-26T18:25:36.570Z",
       "step": "open the mission chain — the ask planner lives there",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-26T15:42:10.101Z",
+      "at": "2026-09-26T18:25:37.197Z",
       "step": "the ask planner runs and decides honestly",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/9853d599-2b3c-42a1-aa80-b68577be8ead",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/1ff2392a-f753-41c3-9938-c00c6beb9d48",
       "shot": null
     },
     {
-      "at": "2026-09-26T15:42:10.320Z",
+      "at": "2026-09-26T18:25:37.427Z",
       "step": "screenshot: the planner decision — honest, on the record",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/9853d599-2b3c-42a1-aa80-b68577be8ead",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/1ff2392a-f753-41c3-9938-c00c6beb9d48",
       "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-planner-decision-honest-on-the-record.png"
     },
     {
-      "at": "2026-09-26T15:42:10.320Z",
+      "at": "2026-09-26T18:25:37.427Z",
       "step": "the contribution and reward state panels render",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/9853d599-2b3c-42a1-aa80-b68577be8ead",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/1ff2392a-f753-41c3-9938-c00c6beb9d48",
       "shot": null
     },
     {
-      "at": "2026-09-26T15:42:10.899Z",
+      "at": "2026-09-26T18:25:38.202Z",
       "step": "screenshot: the contribution and reward state",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-contribution-and-reward-state.png"
     },
     {
-      "at": "2026-09-26T15:42:10.899Z",
+      "at": "2026-09-26T18:25:38.203Z",
       "step": "the chat learning intent answers from live company state",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-26T15:42:12.314Z",
+      "at": "2026-09-26T18:25:40.741Z",
       "step": "screenshot: the learning answer in chat",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=806a20fb-a5fe-4af4-8273-abe3f9621190",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=e07ba33e-5f55-4a1a-9a93-a1734f3560fc",
       "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-answer-in-chat.png"
     },
     {
-      "at": "2026-09-26T15:42:12.314Z",
+      "at": "2026-09-26T18:25:40.741Z",
       "step": "the conversation is preserved (the cross-surface return)",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=806a20fb-a5fe-4af4-8273-abe3f9621190",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=e07ba33e-5f55-4a1a-9a93-a1734f3560fc",
       "shot": null
     }
   ]

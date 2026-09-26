@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J18 — every legitimate production path to a cellular surface is exhausted; the module’s environment limit is recorded",
   "file": "tests/browser/production/j18-cellular-desktop.spec.ts",
-  "durationMs": 3414,
+  "durationMs": 3779,
   "error": null,
   "violations": 0,
   "blockedReasons": [

@@ -2,17 +2,28 @@
   "testId": "j20-outcome-preferences-the-authorizat-desktop:desktop",
   "journeyId": "J20",
   "context": "desktop",
-  "status": "fail",
+  "status": "pass",
   "title": "J20 — outcome preferences, the authorization-gated advanced area and the provider/billing surfaces",
   "file": "tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
-  "durationMs": 1674,
-  "error": "Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m",
-  "violations": 3,
+  "durationMs": 10615,
+  "error": null,
+  "violations": 0,
   "evidence": {
     "transcripts": [
       "docs/productization-evidence/W101/production-run-a/transcripts/j20-outcome-preferences-the-authorizat-desktop.json"
     ],
-    "screenshots": [],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__ai-preferences-the-outcome-oriented-surface.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-honest-default-the-attribution-pill.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-personal-priority-the-attribution-flipped-honestly.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-company-priority-set-by-the-authorized-administrator.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-explanations-feed-the-honest-empty-state.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-authorized-technical-view.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-foreign-record-the-uniform-honest-refusal.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-ai-surface-the-provider-catalog-cost-and-routing-panels.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-member-view-no-company-preference-form.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-honest-refusal-for-a-plain-member.png"
+    ],
     "errorCaptures": [
       "docs/productization-evidence/W101/production-run-a/errors/j20-outcome-preferences-the-authorizat-desktop.json"
     ],

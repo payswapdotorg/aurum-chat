@@ -1,15 +1,15 @@
 {
   "runLabel": "A",
   "program": "W101",
-  "startedAt": "2026-09-26T15:38:48.463Z",
-  "finishedAt": "2026-09-26T15:41:07.671Z",
+  "startedAt": "2026-09-26T18:03:49.081Z",
+  "finishedAt": "2026-09-26T18:06:13.876Z",
   "target": "https://aurum-chat-livid.vercel.app",
   "identity": {
     "hostname": "aurum-chat-livid.vercel.app",
-    "deploymentId": "dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT",
-    "commitSha": "a2db98a25b5ff9756fa849d3e196a80bafba1104",
-    "deploymentCreatedAt": "2026-09-26T12:52:52.665Z",
-    "certificationStartedAt": "2026-09-26T15:38:48.463Z",
+    "deploymentId": "dpl_ERGp4se2zC49sTr81YhLEYNMkqYD",
+    "commitSha": "8ddd0df1bca25f60f1bf94b181aad664b3b29e23",
+    "deploymentCreatedAt": "2026-09-26T17:20:32.587Z",
+    "certificationStartedAt": "2026-09-26T18:03:49.081Z",
     "environmentLabel": "production",
     "databaseBackendClass": "postgres",
     "workerRuntimeState": {
@@ -18,12 +18,12 @@
       "environment": "production",
       "queueDepth": 0
     },
-    "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --program w101 --deployment-id dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT --expect-commit a2db98a25b5ff9756fa849d3e196a80bafba1104 --deployment-created 2026-09-26T12:52:52.665Z --worker-token-file <redacted> --vercel-token-file <redacted>",
+    "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --program w101 --deployment-id dpl_ERGp4se2zC49sTr81YhLEYNMkqYD --expect-commit 8ddd0df1bca25f60f1bf94b181aad664b3b29e23 --deployment-created 2026-09-26T17:20:32.587Z --worker-token-file <redacted> --vercel-token-file <redacted>",
     "repository": {
       "remote": "https://github.com/payswapdotorg/aurum-chat.git",
       "branch": "work/w101-final-certification",
       "baseCommit": "a2db98a25b5ff9756fa849d3e196a80bafba1104",
-      "headCommit": "a2db98a25b5ff9756fa849d3e196a80bafba1104"
+      "headCommit": "8ddd0df1bca25f60f1bf94b181aad664b3b29e23"
     }
   },
   "gates": [
@@ -37,7 +37,7 @@
       "id": "g1.health",
       "title": "the production runtime is genuinely production (health contract)",
       "status": "pass",
-      "detail": "/api/health status ok · environment production · db postgres (127 migrations) · queue/cache/lock redis · 0 refusals · 0 warnings",
+      "detail": "/api/health status ok · environment production · db postgres (130 migrations) · queue/cache/lock redis · 0 refusals · 0 warnings",
       "evidence": {
         "httpStatus": 200,
         "healthStatus": "ok",
@@ -77,26 +77,26 @@
       "id": "g1.deployment-identity",
       "title": "the target is the expected production deployment (identity manifest)",
       "status": "pass",
-      "detail": "the live production deployment is dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT @ a2db98a25b5ff9756fa849d3e196a80bafba1104 (READY, created 2026-09-26T12:52:52.665Z)",
+      "detail": "the live production deployment is dpl_ERGp4se2zC49sTr81YhLEYNMkqYD @ 8ddd0df1bca25f60f1bf94b181aad664b3b29e23 (READY, created 2026-09-26T17:20:32.587Z)",
       "evidence": {
-        "expectedDeploymentId": "dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT",
-        "expectedCommitSha": "a2db98a25b5ff9756fa849d3e196a80bafba1104",
-        "observedDeploymentId": "dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT",
+        "expectedDeploymentId": "dpl_ERGp4se2zC49sTr81YhLEYNMkqYD",
+        "expectedCommitSha": "8ddd0df1bca25f60f1bf94b181aad664b3b29e23",
+        "observedDeploymentId": "dpl_ERGp4se2zC49sTr81YhLEYNMkqYD",
         "observedReadyState": "READY",
-        "observedCommitSha": "a2db98a25b5ff9756fa849d3e196a80bafba1104",
-        "observedCreatedAt": "2026-09-26T12:52:52.665Z"
+        "observedCommitSha": "8ddd0df1bca25f60f1bf94b181aad664b3b29e23",
+        "observedCreatedAt": "2026-09-26T17:20:32.587Z"
       }
     },
     {
       "id": "rollback.evidence",
       "title": "the rollback evidence surface is on record (seam state, rollback target, runbook, W078 link)",
       "status": "pass",
-      "detail": "the seams' recorded state a rollback preserves: environment production · db postgres (127 migrations) · worker production (queue depth 0); the known-good rollback target is dpl_6L2yDPtyNH2g8LBfCwmsUZfU7yBH @ 73d00ecbabc9402dde8374671d18108a2958d2e0 (READY); the runbook (docs/DEPLOYMENT.md §12) and the W078 operations evidence tree are linked, not restated",
+      "detail": "the seams' recorded state a rollback preserves: environment production · db postgres (130 migrations) · worker production (queue depth 0); the known-good rollback target is dpl_GuQSNP9nj3eDT4Lc38Y2EhLgWsF5 @ 850b85bb9a05a78636e15d5cb6614d40fd872a77 (READY); the runbook (docs/DEPLOYMENT.md §12) and the W078 operations evidence tree are linked, not restated",
       "evidence": {
         "healthSeam": {
           "environment": "production",
           "dbBackend": "postgres",
-          "dbMigrations": 127
+          "dbMigrations": 130
         },
         "workerSeam": {
           "environment": "production",
@@ -104,10 +104,10 @@
           "seamTokenGated": true
         },
         "rollbackTarget": {
-          "deploymentId": "dpl_6L2yDPtyNH2g8LBfCwmsUZfU7yBH",
+          "deploymentId": "dpl_GuQSNP9nj3eDT4Lc38Y2EhLgWsF5",
           "readyState": "READY",
-          "createdAt": "2026-09-26T12:50:52.878Z",
-          "commitSha": "73d00ecbabc9402dde8374671d18108a2958d2e0"
+          "createdAt": "2026-09-26T15:46:42.407Z",
+          "commitSha": "850b85bb9a05a78636e15d5cb6614d40fd872a77"
         },
         "runbook": "docs/DEPLOYMENT.md §12 Rollback",
         "w078Evidence": "docs/productization-evidence/W078/"
@@ -131,30 +131,30 @@
     {
       "id": "g3.browser-matrix",
       "title": "the J01–J22 browser matrix runs against the hosted production URL (desktop + mobile)",
-      "status": "fail",
-      "detail": "1 browser journey(s) captured console/network violations: j20-outcome-preferences-the-authorizat-desktop:desktop(3)"
+      "status": "pass",
+      "detail": "22/22 browser tests green across 22 journey-context pairs — real production auth, zero-violation record attached"
     }
   ],
   "repoGates": [
     {
-      "command": "bun run typecheck",
+      "command": "bunx tsc --noEmit",
       "exitCode": 0,
-      "summary": "tsc --noEmit — clean (0 errors) on the W101 delivery tree"
+      "summary": "$ tsc --noEmit\nexit=0 — at 8ddd0df (d1c0960 + #123 constraint-index amendments), the exact tree the suite and the pending deployment certify."
     },
     {
-      "command": "bun run test",
+      "command": "serialized chunked vitest run --maxWorkers=1, 8 chunks x ~33 files (station-hygiene: maxWorkers=2 main process was OOM-killed twice on the 4GB box, dmesg-verified; serialization also clears the embedded-PG hookTimeout flake class in-pass — the 15:24 serialized retry was 51/51)",
       "exitCode": 0,
-      "summary": "5439 passed · 0 failed · 6 skipped (env-conditional: worker-realpostgres ×2, worker-realredis ×3, redis-rest ×1) — executed per-file in 9 chunks on the 2-CPU sandbox (the full suite exceeds the runner's single-command window); every chunk green on the final W101 delivery tree"
+      "summary": "G2 tests gate at 8ddd0df content (real execution, single serialized pass, zero retries needed): 259 tracked test files (browser matrix excluded — G3 runs it). Chunk results (chunked-suite-d1c0960-repair-run-a.log, 17:03-17:21 UTC): 1) 33/33 files, 771/771 tests; 2) 31 passed + 2 env-gated skips, 617 passed + 6 skipped; 3) 33/33, 852; 4) 33/33, 837; 5) 33/33, 853; 6) 33/33, 692; 7) 33/33, 596; 8) 28/28, 221. NET: 257 files passed + 2 file-level env-gated skips (real-Redis/real-Postgres URL seams unset — documented), 5,439 tests passed / 6 skipped / 0 failed, all 8 chunk exits 0. Includes PR #121's release-certification tests (+24) and runs WITH the three 002-repair migrations present (fresh-path verified: the W088/W091/W092 modules' 001s then idempotent 002 no-ops — the constraint-index guards prove fresh-path integrity in the sim)."
     },
     {
-      "command": "bun run arch",
+      "command": "bunx tsx scripts/check-architecture.ts",
       "exitCode": 0,
-      "summary": "architecture check passed — module files: 667, app/mcp files: 288, tables checked: 248"
+      "summary": "architecture check passed — module files: 667, app/mcp files: 288, tables checked: 248 — at 8ddd0df (d1c0960 + #123). The three 002-repair migrations add no tables beyond the W088/W091/W092 modules' declared 248."
     },
     {
-      "command": "bun run lint",
+      "command": "bunx eslint .",
       "exitCode": 0,
-      "summary": "eslint . — clean (0 problems) on the W101 delivery tree"
+      "summary": "$ eslint .\nexit=0 — at 8ddd0df. (First run flagged only the station's scratch probe scripts previously parked under .verify-logs/w101/*.ts — moved to /home/z/w101-scratch, outside the repo workdir; zero repo-code findings.)"
     }
   ],
   "w078": {
@@ -687,12 +687,12 @@
     },
     {
       "journeyId": "J20",
-      "status": "fail",
+      "status": "pass",
       "contexts": [
         {
           "context": "desktop",
-          "status": "fail",
-          "detail": "j20-outcome-preferences-the-authorizat-desktop:desktop failed: Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m"
+          "status": "pass",
+          "detail": "j20-outcome-preferences-the-authorizat-desktop:desktop green"
         }
       ],
       "testIds": [
@@ -701,11 +701,22 @@
       "transcripts": [
         "docs/productization-evidence/W101/production-run-a/transcripts/j20-outcome-preferences-the-authorizat-desktop.json"
       ],
-      "screenshots": [],
+      "screenshots": [
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__ai-preferences-the-outcome-oriented-surface.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-honest-default-the-attribution-pill.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-personal-priority-the-attribution-flipped-honestly.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-company-priority-set-by-the-authorized-administrator.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-explanations-feed-the-honest-empty-state.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-authorized-technical-view.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-foreign-record-the-uniform-honest-refusal.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-ai-surface-the-provider-catalog-cost-and-routing-panels.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-member-view-no-company-preference-form.png",
+        "docs/productization-evidence/W101/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-honest-refusal-for-a-plain-member.png"
+      ],
       "errorCaptures": [
         "docs/productization-evidence/W101/production-run-a/errors/j20-outcome-preferences-the-authorizat-desktop.json"
       ],
-      "detail": "j20-outcome-preferences-the-authorizat-desktop:desktop failed: Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m"
+      "detail": "observed as specified: /ai/preferences outcome preferences + explanations; /ai/preferences/advanced authorization-gated; provider/billing surfaces"
     },
     {
       "journeyId": "J21",
@@ -766,13 +777,13 @@
     }
   ],
   "summary": {
-    "passed": 17,
-    "failed": 2,
+    "passed": 18,
+    "failed": 0,
     "blocked": 4,
     "flaky": 0,
     "unexpected": 0
   },
-  "verdict": "FAILED",
-  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --program w101 --deployment-id dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT --expect-commit a2db98a25b5ff9756fa849d3e196a80bafba1104 --deployment-created 2026-09-26T12:52:52.665Z --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "verdict": "BLOCKED",
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --program w101 --deployment-id dpl_ERGp4se2zC49sTr81YhLEYNMkqYD --expect-commit 8ddd0df1bca25f60f1bf94b181aad664b3b29e23 --deployment-created 2026-09-26T17:20:32.587Z --worker-token-file <redacted> --vercel-token-file <redacted>",
   "evidenceDir": "docs/productization-evidence/W101/production-run-a"
 }

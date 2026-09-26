@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
   "file": "tests/browser/production/j09-byoa-desktop.spec.ts",
-  "durationMs": 7914,
+  "durationMs": 6835,
   "error": null,
   "violations": 0,
   "evidence": {

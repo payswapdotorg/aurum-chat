@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
   "file": "tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
-  "durationMs": 9581,
+  "durationMs": 9451,
   "error": null,
   "violations": 0,
   "evidence": {

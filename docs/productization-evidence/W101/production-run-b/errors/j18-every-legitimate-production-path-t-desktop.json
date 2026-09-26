@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j18-cellular-desktop.spec.ts",
+  "spec": "/home/z/aurum-integration/tests/browser/production/j18-cellular-desktop.spec.ts",
   "title": "J18 — every legitimate production path to a cellular surface is exhausted; the module’s environment limit is recorded",
   "project": "desktop",
   "runLabel": "B",

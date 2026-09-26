@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
   "file": "tests/browser/production/j15-accessibility-desktop.spec.ts",
-  "durationMs": 2688,
+  "durationMs": 2611,
   "error": null,
   "violations": 0,
   "evidence": {

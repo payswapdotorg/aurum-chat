@@ -1,7 +1,7 @@
 {
   "total": 22,
-  "passed": 21,
-  "failed": 1,
+  "passed": 22,
+  "failed": 0,
   "flaky": 0,
   "skipped": 0,
   "tests": [
@@ -12,7 +12,7 @@
       "status": "pass",
       "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
       "file": "tests/browser/production/j01-first-manager-desktop.spec.ts",
-      "durationMs": 2713,
+      "durationMs": 3177,
       "error": null
     },
     {
@@ -22,7 +22,7 @@
       "status": "pass",
       "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
       "file": "tests/browser/production/j02-talk-to-aurum-desktop.spec.ts",
-      "durationMs": 3445,
+      "durationMs": 5077,
       "error": null
     },
     {
@@ -32,7 +32,7 @@
       "status": "pass",
       "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
       "file": "tests/browser/production/j03-unprompted-discovery-desktop.spec.ts",
-      "durationMs": 6045,
+      "durationMs": 8058,
       "error": null
     },
     {
@@ -42,7 +42,7 @@
       "status": "pass",
       "title": "J04 — a finding drills down to its evidence and returns to the conversation",
       "file": "tests/browser/production/j04-investigation-desktop.spec.ts",
-      "durationMs": 2783,
+      "durationMs": 4565,
       "error": null
     },
     {
@@ -52,7 +52,7 @@
       "status": "pass",
       "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
       "file": "tests/browser/production/j05-consequential-approval-desktop.spec.ts",
-      "durationMs": 12693,
+      "durationMs": 13604,
       "error": null
     },
     {
@@ -62,7 +62,7 @@
       "status": "pass",
       "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
       "file": "tests/browser/production/j06-explainability-desktop.spec.ts",
-      "durationMs": 3525,
+      "durationMs": 3889,
       "error": null
     },
     {
@@ -72,7 +72,7 @@
       "status": "pass",
       "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
       "file": "tests/browser/production/j07-learning-contribution-desktop.spec.ts",
-      "durationMs": 4767,
+      "durationMs": 7105,
       "error": null
     },
     {
@@ -82,7 +82,7 @@
       "status": "pass",
       "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
       "file": "tests/browser/production/j08-connections-desktop.spec.ts",
-      "durationMs": 5372,
+      "durationMs": 7234,
       "error": null
     },
     {
@@ -92,7 +92,7 @@
       "status": "pass",
       "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
       "file": "tests/browser/production/j09-byoa-desktop.spec.ts",
-      "durationMs": 7914,
+      "durationMs": 6835,
       "error": null
     },
     {
@@ -102,7 +102,7 @@
       "status": "pass",
       "title": "J10 — the intervention governance chain: gaps, alternatives, the gate and the workforce",
       "file": "tests/browser/production/j10-workforce-intervention-desktop.spec.ts",
-      "durationMs": 5148,
+      "durationMs": 6016,
       "error": null
     },
     {
@@ -112,7 +112,7 @@
       "status": "pass",
       "title": "J11 — the marketplace: discovery, the public catalog and the install state",
       "file": "tests/browser/production/j11-marketplace-desktop.spec.ts",
-      "durationMs": 3888,
+      "durationMs": 4157,
       "error": null
     },
     {
@@ -122,7 +122,7 @@
       "status": "pass",
       "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
       "file": "tests/browser/production/j12-developer-desktop.spec.ts",
-      "durationMs": 8018,
+      "durationMs": 8626,
       "error": null
     },
     {
@@ -132,7 +132,7 @@
       "status": "pass",
       "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
       "file": "tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
-      "durationMs": 9182,
+      "durationMs": 9647,
       "error": null
     },
     {
@@ -142,7 +142,7 @@
       "status": "pass",
       "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
       "file": "tests/browser/production/j14-mobile-loop-mobile.spec.ts",
-      "durationMs": 3438,
+      "durationMs": 4038,
       "error": null
     },
     {
@@ -152,7 +152,7 @@
       "status": "pass",
       "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
       "file": "tests/browser/production/j15-accessibility-desktop.spec.ts",
-      "durationMs": 2688,
+      "durationMs": 2611,
       "error": null
     },
     {
@@ -162,7 +162,7 @@
       "status": "pass",
       "title": "J16 — the connection hub channel family is proven; the v1 channel surface is probed and recorded",
       "file": "tests/browser/production/j16-cross-channel-desktop.spec.ts",
-      "durationMs": 8339,
+      "durationMs": 8975,
       "error": null,
       "blockedReasons": [
         "the v1 public API owns no channel-family operations in the deployed revision a2db98a: its discovery document lists 49 operations (discovery/goals/unknowns/beliefs/missions/knowledge/observations/capabilities/agents/approvals/api-keys/webhooks) and none is channel-scoped — the route table is the locked, versioned public surface (W038) and the S003 channels module (W059-era connection hub) surfaced no v1 operations; the connection-hub channel surface itself was proven above"
@@ -184,7 +184,7 @@
       "status": "pass",
       "title": "J17 — every legitimate production path to a meetings surface is exhausted and recorded honestly",
       "file": "tests/browser/production/j17-meetings-desktop.spec.ts",
-      "durationMs": 3290,
+      "durationMs": 4379,
       "error": null,
       "blockedReasons": [
         "the meetings surface does not exist in the deployed revision a2db98a: the meeting-intelligence module (W085 contract + W097 fixtures) owns no user-facing route and no v1 public API operation — the repo’s own discoverability map defers the meeting UX to the realtime companion (W086); every legitimate production path was probed and carries no meetings entry (rail, More hub, command search, v1 discovery: 49 operations, none meeting-scoped)"
@@ -207,7 +207,7 @@
       "status": "pass",
       "title": "J18 — every legitimate production path to a cellular surface is exhausted; the module’s environment limit is recorded",
       "file": "tests/browser/production/j18-cellular-desktop.spec.ts",
-      "durationMs": 3414,
+      "durationMs": 3779,
       "error": null,
       "blockedReasons": [
         "the cellular reachability surface does not exist in the deployed revision a2db98a: the cellular module (SMS/voice reachability) owns no user-facing route and no v1 public API operation (v1 discovery: 49 operations, none cellular/SMS/voice-scoped); environment limit as the module itself reports it: no transport is wired by default, so deliveries fail explicitly with provider_unavailable (retryable) — the contract-faithful production behavior cannot be observed through any user-visible surface in this revision"
@@ -231,18 +231,18 @@
       "status": "pass",
       "title": "J19 — the full connection surface: channels, a source, a destination, identities and the approval gate",
       "file": "tests/browser/production/j19-integrations-desktop.spec.ts",
-      "durationMs": 7739,
+      "durationMs": 7801,
       "error": null
     },
     {
       "testId": "j20-outcome-preferences-the-authorizat-desktop:desktop",
       "journeyId": "J20",
       "context": "desktop",
-      "status": "fail",
+      "status": "pass",
       "title": "J20 — outcome preferences, the authorization-gated advanced area and the provider/billing surfaces",
       "file": "tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
-      "durationMs": 1832,
-      "error": "Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m"
+      "durationMs": 10744,
+      "error": null
     },
     {
       "testId": "j21-the-learning-surfaces-the-mission--desktop:desktop",
@@ -251,7 +251,7 @@
       "status": "pass",
       "title": "J21 — the learning surfaces, the mission chain and the v1 missions read with real auth",
       "file": "tests/browser/production/j21-durable-cognition-desktop.spec.ts",
-      "durationMs": 7315,
+      "durationMs": 7534,
       "error": null
     },
     {
@@ -261,7 +261,7 @@
       "status": "pass",
       "title": "J22 — the marketplace, installed-governance and developer surfaces are proven; the kit path is recorded",
       "file": "tests/browser/production/j22-specialist-execution-desktop.spec.ts",
-      "durationMs": 6121,
+      "durationMs": 6990,
       "error": null,
       "blockedReasons": [
         "the W092 vertical kits own no user-visible path in the deployed revision a2db98a: the two signed starter kits (legal-case-management, accounting-ledger-erp) live in the vertical-kits module (versioned manifests, invocation ledger) with no user-facing route — the repo’s own discoverability map defers kit surfacing to the vertical journeys; the marketplace catalog surfaces governed extension/agent packages only (the live registry is empty — nothing has been published yet) and the installed surface governs installed extensions; the marketplace, installed-package governance, honest not-found and developer publish surfaces were proven above"
@@ -360,7 +360,7 @@
     },
     {
       "testId": "j20-outcome-preferences-the-authorizat-desktop:desktop",
-      "violations": 3
+      "violations": 0
     },
     {
       "testId": "j21-the-learning-surfaces-the-mission--desktop:desktop",
@@ -476,6 +476,16 @@
       "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-family-the-honest-empty-state-and-its-affordanc.png",
       "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-lookup-the-honest-miss.png",
       "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-approvals-surface-the-human-authority-gate-the-integrati.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__ai-preferences-the-outcome-oriented-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-honest-default-the-attribution-pill.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-personal-priority-the-attribution-flipped-honestly.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-company-priority-set-by-the-authorized-administrator.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-explanations-feed-the-honest-empty-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-authorized-technical-view.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-foreign-record-the-uniform-honest-refusal.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-ai-surface-the-provider-catalog-cost-and-routing-panels.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-member-view-no-company-preference-form.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-honest-refusal-for-a-plain-member.png",
       "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-learning-hub-the-company-learning-surface.png",
       "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-live-mission-durable-across-the-journey-boundaries.png",
       "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-contributions-and-reward-state-the-honest-policy-note.png",

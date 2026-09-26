@@ -1,5 +1,5 @@
 {
-  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j04-investigation-desktop.spec.ts",
+  "spec": "/home/z/aurum-integration/tests/browser/production/j04-investigation-desktop.spec.ts",
   "title": "J04 — a finding drills down to its evidence and returns to the conversation",
   "project": "desktop",
   "runLabel": "B",

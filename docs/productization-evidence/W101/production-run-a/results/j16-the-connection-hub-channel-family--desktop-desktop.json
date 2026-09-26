@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J16 — the connection hub channel family is proven; the v1 channel surface is probed and recorded",
   "file": "tests/browser/production/j16-cross-channel-desktop.spec.ts",
-  "durationMs": 7910,
+  "durationMs": 8227,
   "error": null,
   "violations": 0,
   "blockedReasons": [

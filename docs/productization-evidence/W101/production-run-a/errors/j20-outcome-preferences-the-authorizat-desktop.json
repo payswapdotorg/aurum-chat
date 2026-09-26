@@ -1,29 +1,10 @@
 {
-  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
+  "spec": "/home/z/aurum-integration/tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
   "title": "J20 — outcome preferences, the authorization-gated advanced area and the provider/billing surfaces",
   "project": "desktop",
   "runLabel": "A",
-  "violationCount": 3,
-  "violations": [
-    {
-      "kind": "http",
-      "detail": "500 ",
-      "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
-      "at": "2026-09-26T15:40:49.419Z"
-    },
-    {
-      "kind": "console",
-      "detail": "Failed to load resource: the server responded with a status of 500 ()",
-      "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
-      "at": "2026-09-26T15:40:49.425Z"
-    },
-    {
-      "kind": "pageerror",
-      "detail": "Error: Minified React error #441; visit https://react.dev/errors/441 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
-      "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
-      "at": "2026-09-26T15:40:49.490Z"
-    }
-  ],
+  "violationCount": 0,
+  "violations": [],
   "documentedFilter": [
     "favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)",
     "net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)",

@@ -1,23 +1,23 @@
 {
   "run": "A",
   "target": "https://aurum-chat-livid.vercel.app",
-  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --program w101 --deployment-id dpl_GyA2kEBgUmpwwRKPYwN4pnDv9wTT --expect-commit a2db98a25b5ff9756fa849d3e196a80bafba1104 --deployment-created 2026-09-26T12:52:52.665Z --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run a --program w101 --deployment-id dpl_ERGp4se2zC49sTr81YhLEYNMkqYD --expect-commit 8ddd0df1bca25f60f1bf94b181aad664b3b29e23 --deployment-created 2026-09-26T17:20:32.587Z --worker-token-file <redacted> --vercel-token-file <redacted>",
   "evidenceDir": "docs/productization-evidence/W101/production-run-a",
   "repoGates": [
     {
-      "command": "bun run typecheck",
+      "command": "bunx tsc --noEmit",
       "exitCode": 0
     },
     {
-      "command": "bun run test",
+      "command": "serialized chunked vitest run --maxWorkers=1, 8 chunks x ~33 files (station-hygiene: maxWorkers=2 main process was OOM-killed twice on the 4GB box, dmesg-verified; serialization also clears the embedded-PG hookTimeout flake class in-pass — the 15:24 serialized retry was 51/51)",
       "exitCode": 0
     },
     {
-      "command": "bun run arch",
+      "command": "bunx tsx scripts/check-architecture.ts",
       "exitCode": 0
     },
     {
-      "command": "bun run lint",
+      "command": "bunx eslint .",
       "exitCode": 0
     }
   ],

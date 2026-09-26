@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
   "file": "tests/browser/production/j07-learning-contribution-desktop.spec.ts",
-  "durationMs": 5586,
+  "durationMs": 6111,
   "error": null,
   "violations": 0,
   "evidence": {

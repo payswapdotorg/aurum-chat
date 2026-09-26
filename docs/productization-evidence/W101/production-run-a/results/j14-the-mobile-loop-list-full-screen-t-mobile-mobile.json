@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
   "file": "tests/browser/production/j14-mobile-loop-mobile.spec.ts",
-  "durationMs": 3423,
+  "durationMs": 3716,
   "error": null,
   "violations": 0,
   "evidence": {

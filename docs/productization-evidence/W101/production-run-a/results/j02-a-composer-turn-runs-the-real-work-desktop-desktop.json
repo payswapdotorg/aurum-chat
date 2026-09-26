@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
   "file": "tests/browser/production/j02-talk-to-aurum-desktop.spec.ts",
-  "durationMs": 4481,
+  "durationMs": 3431,
   "error": null,
   "violations": 0,
   "evidence": {

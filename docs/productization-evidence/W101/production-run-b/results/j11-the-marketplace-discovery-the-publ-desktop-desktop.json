@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J11 — the marketplace: discovery, the public catalog and the install state",
   "file": "tests/browser/production/j11-marketplace-desktop.spec.ts",
-  "durationMs": 3888,
+  "durationMs": 4157,
   "error": null,
   "violations": 0,
   "evidence": {

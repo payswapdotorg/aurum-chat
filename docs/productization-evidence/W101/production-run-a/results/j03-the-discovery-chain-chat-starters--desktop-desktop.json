@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
   "file": "tests/browser/production/j03-unprompted-discovery-desktop.spec.ts",
-  "durationMs": 5900,
+  "durationMs": 5257,
   "error": null,
   "violations": 0,
   "evidence": {

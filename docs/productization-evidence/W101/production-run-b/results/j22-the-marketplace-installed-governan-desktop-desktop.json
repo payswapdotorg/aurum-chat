@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J22 — the marketplace, installed-governance and developer surfaces are proven; the kit path is recorded",
   "file": "tests/browser/production/j22-specialist-execution-desktop.spec.ts",
-  "durationMs": 6121,
+  "durationMs": 6990,
   "error": null,
   "violations": 0,
   "blockedReasons": [
