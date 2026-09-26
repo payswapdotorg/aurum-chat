@@ -19,6 +19,10 @@
 // v3 (W095): 'unified-identity' joins with its own sweep file — the
 // cross-modality identity registry, ambiguity ledger and evidence trail
 // the unified-identity module owns.
+//
+// v4 (W088): 'edge-connector' joins with its own sweep file — the
+// customer-controlled edge runtimes, allowlists, heartbeats, signed
+// jobs and lifecycle events the edge-connector module owns.
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -44,6 +48,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   demo: 'foundation-sweep.test.ts',
   'deep-actions': 'deep-actions-sweep.test.ts',
   'deployment-smoke': 'deployment-smoke-sweep.test.ts',
+  'edge-connector': 'edge-connector-sweep.test.ts',
   destinations: 'experience-sweep.test.ts',
   environment: 'evidence-sweep.test.ts',
   epistemics: 'evidence-sweep.test.ts',

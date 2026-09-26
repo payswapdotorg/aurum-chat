@@ -610,6 +610,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: false,
     note: 'the outcome-oriented provider-choice experience: what matters when Aurum uses AI (cost, privacy, quality, speed or organizational policy) — the member and company preferences, the plain-words “why this option?” records, and the authorization-gated advanced settings where technical identity and reversible provider pins live (W091)',
   },
+  {
+    module: 'edge-connector',
+    label: 'The Aurum Edge Connector (W088)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the customer-controlled edge runtime boundary (W088 — a tenant-scoped, outbound-only connector that executes signed tenant-scoped job envelopes against private/on-prem APIs, MCP/OpenAPI services, databases, file shares and approved browser adapters, with local secret handling, a twice-checked capability allowlist, heartbeat health/version reporting, and results normalized onto the W084 deep-action transport shapes) composed over the deep-actions contract (its transport port) with the W082 credentialRef discipline passing straight through; it owns no user-facing route yet — the edge-management surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite plus the tenant-isolation sweep',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
