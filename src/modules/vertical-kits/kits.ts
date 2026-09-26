@@ -1,496 +1,475 @@
-// The starter-kit registry (W092) — THE DATA, AND ONLY THE DATA.
+// The first-class starter kit content of the vertical-kits module (W092).
 //
-// The two starter kits this work item ships live here as versioned
-// data records. Everything else in this module (validation, service,
-// reads, the tower surface) is INDUSTRY-BLIND: it validates, installs,
-// audits and removes whatever records the registry carries, with zero
-// kit-specific or industry-specific branching. The core-independence
-// test under tests/ pins both directions at grep level:
+// "Create reusable specialist extension/agent starter kits and first deep
+//  integrations for system-of-record-heavy industries without moving
+//  vertical semantics into Aurum core."
 //
-//   * no kit-content term of this file appears in ANY other module of
-//     the repository (vertical semantics never enter core);
-//   * no kit-content term appears in this module outside THIS file
-//     (the module's own logic stays generic).
+// Two system-of-record-heavy verticals ship as first-class content:
 //
-// CONTENT HONESTY: the two kits are SYNTHETIC but STRUCTURALLY VALID
-// against every contract they ride — real permission vocabularies, the
-// extensions module's own consistency rules, the W081 capability-class
-// registry, the W082 provider vocabulary and the W084 operation bounds.
-// The metadata says exactly what each kit is and is not (see the
-// notIncluded lists); the edgeExecution field declares which recipes
-// expect the W088 Edge Connector and renders 'pending-w088' — no edge
-// execution exists or is claimed at this base.
+//   * LEGAL_CASE_MANAGEMENT_KIT  ('legal-case-management') — the law-firm
+//     / legal-operations vertical: matters, dockets, engagement letters.
+//   * ACCOUNTING_LEDGER_ERP_KIT  ('accounting-ledger-erp') — the
+//     accounting / ledger-ERP vertical: chart of accounts, journal
+//     entries, receivables/payables, period close.
+//
+// EVERYTHING vertical lives inside these manifests — the capability
+// declarations, the starter extension/agent definitions, the vertical
+// data-schema hints and the edge-integration declarations. No core
+// module names, stores or interprets anything vertical (the work item's
+// hard boundary); a kit is registered into a tenant's registry through
+// `registerKitVersion` (the module's exported content is the seed
+// tenants register), verified by the same deterministic checks as any
+// other kit, and installed through the governed lifecycle.
+//
+// The starter component definitions are DEFINITIONS, not deployed
+// software: materializing them into the tenant's extension/agent
+// registries follows those modules' own governed lifecycles downstream.
+// The edge integrations declare the system-of-record surfaces the kit
+// will reach THROUGH the Edge Connector once W088 lands — until then
+// they are honestly reported as 'deferred-on-w088' by the status
+// surface.
+//
+// The capability keys follow the W081 read./write. plain-language
+// convention; the agent definitions use the agents module's closed
+// permission-scope and runtime-provider vocabularies; the extension
+// definitions follow the W025 manifest shape with its exact permission ↔
+// capability consistency (validated by the extensions module's own pure
+// rule sets during kit verification).
 
-import { parseSemver } from '@/modules/extensions/contract';
-import type { VerticalKitDefinition } from './types';
+import type { VerticalKitManifest } from './types';
 
 // ---------------------------------------------------------------------------
-// W092 starter kit 1 — professional services (time / expense /
-// engagement systems of record)
+// (a) Legal / case management
 // ---------------------------------------------------------------------------
 
-const PROFESSIONAL_SERVICES: VerticalKitDefinition = {
-  kitKey: 'professional-services',
+export const LEGAL_CASE_MANAGEMENT_KIT: VerticalKitManifest = {
+  kitSchemaVersion: 1,
+  kitKey: 'legal-case-management',
   version: '1.0.0',
-  versionParts: parseSemver('1.0.0')!,
-  metadata: {
-    industry: 'Professional services',
-    description:
-      'Starter kit for professional-services organizations whose systems of record are ' +
-      'engagement/project trackers and time-and-expense ledgers: two composed extension ' +
-      'integrations, one multi-system deep-action recipe template, and the broker ' +
-      'connection classes the kit needs.',
-    outcomes: [
-      'Engagement and time records surface beside goals and evidence without manual exports',
-      'Month-end engagement close becomes one proposed, authorized and reconciled deep action',
-      'Extension capability is granted exactly at the declared footprint and removable',
-    ],
-    notIncluded: [
-      'No real provider credentials, tenant data or live system access — template content is synthetic',
-      'Edge execution is PENDING W088: edge-expecting recipes validate and render, but never execute',
-      'No time-sheet parsing or billing-math logic — data interpretation stays with the tenant and its agents',
-    ],
-  },
-  permissionFootprint: [
-    'state:read',
-    'state:write',
-    'ui:render',
-    'schedule:run',
-    'events:subscribe',
-    'external:participate',
-  ],
-  connectionRequirements: [
+  verticalKey: 'legal',
+  displayName: 'Legal & Case Management Starter Kit',
+  description:
+    'Specialist starter kit for legal operations: matter intake and lifecycle, court docket and deadline watching, engagement-letter drafting support, and billing-record visibility for law firms and legal departments.',
+  requiredCapabilities: [
     {
-      key: 'ps-engagement-sor',
-      label: 'Engagement / project tracking system of record',
-      brokerProvider: 'jira',
-      capabilityClasses: ['project-tracking', 'document-collaboration'],
+      key: 'read.case-matters',
+      label: 'Read matters, engagement records and client references',
+      dataCategories: ['case-records', 'client-identity', 'privileged-notes'],
+      mode: 'read',
     },
     {
-      key: 'ps-financial-sor',
-      label: 'Time, expense and billing system of record',
-      brokerProvider: 'quickbooks',
-      capabilityClasses: ['accounting-finance', 'billing-payments'],
+      key: 'write.case-matters',
+      label: 'Open, update and close matters',
+      dataCategories: ['case-records', 'client-identity'],
+      mode: 'write',
+    },
+    {
+      key: 'read.docket-calendar',
+      label: 'Read court dockets, hearings and statutory deadlines',
+      dataCategories: ['docket-records', 'deadlines'],
+      mode: 'read',
+    },
+    {
+      key: 'write.docket-entries',
+      label: 'Record docket entries and calendar deadline changes',
+      dataCategories: ['docket-records', 'deadlines'],
+      mode: 'write',
+    },
+    {
+      key: 'read.billing-records',
+      label: 'Read time entries and matter billing records',
+      dataCategories: ['billing-records', 'time-entries'],
+      mode: 'read',
     },
   ],
-  extensionManifests: [
+  extensionDefinitions: [
     {
-      connectionKey: 'ps-engagement-sor',
-      systemOfRecord: 'Engagement and project tracker',
-      manifest: {
-        extensionKey: 'ps-engagement-sync',
-        version: '1.0.0',
-        manifestSchemaVersion: 1,
-        displayName: 'Engagement Sync',
-        description:
-          'Mirrors engagement and project records into tenant-scoped state and renders the ' +
-          'engagement panel in the control tower.',
-        hostRuntime: { minVersion: '1.0.0', maxVersion: null },
-        requestedPermissions: ['state:read', 'state:write', 'ui:render', 'events:subscribe', 'external:participate'],
-        stateScope: 'tenant',
-        uiSurfaces: ['control-tower-panel'],
-        schedules: [],
-        eventSubscriptions: ['goal.updated', 'person.updated'],
-        externalParticipants: [
-          { label: 'Engagement system of record', origin: 'https://engagement-sor.example.test' },
-        ],
-        telemetry: false,
-        quotas: {
-          maxStateBytes: 1_048_576,
-          maxScheduleInvocationsPerDay: 0,
-          maxExternalCallsPerDay: 5_000,
-        },
-      },
-    },
-    {
-      connectionKey: 'ps-financial-sor',
-      systemOfRecord: 'Time and expense ledger',
-      manifest: {
-        extensionKey: 'ps-time-expense-bridge',
-        version: '1.0.0',
-        manifestSchemaVersion: 1,
-        displayName: 'Time & Expense Bridge',
-        description:
-          'Pulls time and expense entries on a schedule and keeps a tenant-scoped cache ' +
-          'of the synced entries.',
-        hostRuntime: { minVersion: '1.0.0', maxVersion: null },
-        requestedPermissions: [
-          'state:read',
-          'state:write',
-          'schedule:run',
-          'external:participate',
-        ],
-        stateScope: 'tenant',
-        uiSurfaces: [],
-        schedules: [{ name: 'daily-timesheet-pull', cron: '0 6 * * *' }],
-        eventSubscriptions: [],
-        externalParticipants: [
-          { label: 'Time and expense system of record', origin: 'https://time-expense-sor.example.test' },
-        ],
-        telemetry: false,
-        quotas: {
-          maxStateBytes: 4_194_304,
-          maxScheduleInvocationsPerDay: 4,
-          maxExternalCallsPerDay: 10_000,
-        },
-      },
-    },
-  ],
-  deepActionRecipes: [
-    {
-      recipeKey: 'close-engagement-month',
+      definitionKey: 'matter-intake-form',
+      displayName: 'Matter intake form',
       description:
-        'Close one engagement month across the systems of record: post the finalized ' +
-        'time-and-expense entries, then issue the engagement invoice, each write verified ' +
-        'against its expected downstream state.',
-      operations: [
-        {
-          key: 'post-month-timesheets',
-          connectionKey: 'ps-financial-sor',
-          capabilityKey: 'write.accounting-finance',
-          targetTemplate: 'ledger/engagements/:engagementId/month/:period',
-          payload: { entryKind: 'timesheet-batch', status: 'finalized' },
-          expectation: { postingStatus: 'posted', reviewState: 'locked' },
-        },
-        {
-          key: 'issue-engagement-invoice',
-          connectionKey: 'ps-financial-sor',
-          capabilityKey: 'write.billing-payments',
-          targetTemplate: 'invoices/engagements/:engagementId',
-          payload: { invoiceKind: 'engagement-month', periodSource: 'posted-timesheets' },
-          expectation: { invoiceState: 'issued' },
-        },
-      ],
-    },
-  ],
-  edgeExecution: {
-    recipeKeys: [],
-    note:
-      'No recipe of this kit expects the Edge Connector: month-end close is a batch flow ' +
-      'over broker connections. The field is still validated and renders pending-w088 ' +
-      'for any future recipe that declares edge expectations.',
-  },
-};
-
-// ---------------------------------------------------------------------------
-// v1.1.0 — the minor upgrade of the same kit: the engagement sync's
-// external-call quota rises, and the time & expense bridge ADDS sync-
-// health telemetry — a REAL permission-set change (the 1.1.0 footprint
-// grows by 'telemetry:emit'), so an upgrade visibly REPLACES the grant
-// set instead of mutating it in place, and both states stay on the
-// append-only audit trail.
-// ---------------------------------------------------------------------------
-
-const PROFESSIONAL_SERVICES_V1_1_0: VerticalKitDefinition = {
-  kitKey: 'professional-services',
-  version: '1.1.0',
-  versionParts: parseSemver('1.1.0')!,
-  metadata: {
-    industry: 'Professional services',
-    description:
-      'Starter kit for professional-services organizations whose systems of record are ' +
-      'engagement/project trackers and time-and-expense ledgers: two composed extension ' +
-      'integrations, one multi-system deep-action recipe template, and the broker ' +
-      'connection classes the kit needs. v1.1.0 adds sync-health telemetry to the ' +
-      'time & expense bridge.',
-    outcomes: [
-      'Engagement and time records surface beside goals and evidence without manual exports',
-      'Month-end engagement close becomes one proposed, authorized and reconciled deep action',
-      'Extension capability is granted exactly at the declared footprint and removable',
-    ],
-    notIncluded: [
-      'No real provider credentials, tenant data or live system access — template content is synthetic',
-      'Edge execution is PENDING W088: edge-expecting recipes validate and render, but never execute',
-      'No time-sheet parsing or billing-math logic — data interpretation stays with the tenant and its agents',
-    ],
-  },
-  permissionFootprint: [
-    'state:read',
-    'state:write',
-    'ui:render',
-    'schedule:run',
-    'events:subscribe',
-    'external:participate',
-    'telemetry:emit',
-  ],
-  connectionRequirements: [
-    {
-      key: 'ps-engagement-sor',
-      label: 'Engagement / project tracking system of record',
-      brokerProvider: 'jira',
-      capabilityClasses: ['project-tracking', 'document-collaboration'],
-    },
-    {
-      key: 'ps-financial-sor',
-      label: 'Time, expense and billing system of record',
-      brokerProvider: 'quickbooks',
-      capabilityClasses: ['accounting-finance', 'billing-payments'],
-    },
-  ],
-  extensionManifests: [
-    {
-      connectionKey: 'ps-engagement-sor',
-      systemOfRecord: 'Engagement and project tracker',
-      manifest: {
-        extensionKey: 'ps-engagement-sync',
-        version: '1.1.0',
-        manifestSchemaVersion: 1,
-        displayName: 'Engagement Sync',
-        description:
-          'Mirrors engagement and project records into tenant-scoped state and renders the ' +
-          'engagement panel in the control tower (v1.1.0 raises the external-call ceiling).',
-        hostRuntime: { minVersion: '1.0.0', maxVersion: null },
-        requestedPermissions: ['state:read', 'state:write', 'ui:render', 'events:subscribe', 'external:participate'],
-        stateScope: 'tenant',
-        uiSurfaces: ['control-tower-panel'],
-        schedules: [],
-        eventSubscriptions: ['goal.updated', 'person.updated'],
-        externalParticipants: [
-          { label: 'Engagement system of record', origin: 'https://engagement-sor.example.test' },
-        ],
-        telemetry: false,
-        quotas: {
-          maxStateBytes: 1_048_576,
-          maxScheduleInvocationsPerDay: 0,
-          maxExternalCallsPerDay: 8_000,
-        },
-      },
-    },
-    {
-      connectionKey: 'ps-financial-sor',
-      systemOfRecord: 'Time and expense ledger',
-      manifest: {
-        extensionKey: 'ps-time-expense-bridge',
-        version: '1.1.0',
-        manifestSchemaVersion: 1,
-        displayName: 'Time & Expense Bridge',
-        description:
-          'Pulls time and expense entries on a schedule, keeps a tenant-scoped cache and ' +
-          'emits telemetry on sync health (v1.1.0 adds the telemetry capability).',
-        hostRuntime: { minVersion: '1.0.0', maxVersion: null },
-        requestedPermissions: [
-          'state:read',
-          'state:write',
-          'schedule:run',
-          'external:participate',
-          'telemetry:emit',
-        ],
-        stateScope: 'tenant',
-        uiSurfaces: [],
-        schedules: [{ name: 'daily-timesheet-pull', cron: '0 6 * * *' }],
-        eventSubscriptions: [],
-        externalParticipants: [
-          { label: 'Time and expense system of record', origin: 'https://time-expense-sor.example.test' },
-        ],
-        telemetry: true,
-        quotas: {
-          maxStateBytes: 4_194_304,
-          maxScheduleInvocationsPerDay: 4,
-          maxExternalCallsPerDay: 10_000,
-        },
-      },
-    },
-  ],
-  deepActionRecipes: [
-    {
-      recipeKey: 'close-engagement-month',
-      description:
-        'Close one engagement month across the systems of record: post the finalized ' +
-        'time-and-expense entries, then issue the engagement invoice, each write verified ' +
-        'against its expected downstream state.',
-      operations: [
-        {
-          key: 'post-month-timesheets',
-          connectionKey: 'ps-financial-sor',
-          capabilityKey: 'write.accounting-finance',
-          targetTemplate: 'ledger/engagements/:engagementId/month/:period',
-          payload: { entryKind: 'timesheet-batch', status: 'finalized' },
-          expectation: { postingStatus: 'posted', reviewState: 'locked' },
-        },
-        {
-          key: 'issue-engagement-invoice',
-          connectionKey: 'ps-financial-sor',
-          capabilityKey: 'write.billing-payments',
-          targetTemplate: 'invoices/engagements/:engagementId',
-          payload: { invoiceKind: 'engagement-month', periodSource: 'posted-timesheets' },
-          expectation: { invoiceState: 'issued' },
-        },
-      ],
-    },
-  ],
-  edgeExecution: {
-    recipeKeys: [],
-    note:
-      'No recipe of this kit expects the Edge Connector: month-end close is a batch flow ' +
-      'over broker connections. The field is still validated and renders pending-w088 ' +
-      'for any future recipe that declares edge expectations.',
-  },
-};
-
-// ---------------------------------------------------------------------------
-// W092 starter kit 2 — logistics operations (shipment / inventory
-// systems of record)
-// ---------------------------------------------------------------------------
-
-const LOGISTICS_OPERATIONS: VerticalKitDefinition = {
-  kitKey: 'logistics-operations',
-  version: '1.0.0',
-  versionParts: parseSemver('1.0.0')!,
-  metadata: {
-    industry: 'Logistics operations',
-    description:
-      'Starter kit for logistics operators whose systems of record are order/shipment ' +
-      'trackers and workflow automations: two composed extension integrations, one ' +
-      'latency-sensitive deep-action recipe template that declares edge expectations, ' +
-      'and the broker connection classes the kit needs.',
-    outcomes: [
-      'Shipment and order records surface beside goals and evidence without manual exports',
-      'Expedite replanning becomes one proposed, authorized and reconciled deep action',
-      'Extension capability is granted exactly at the declared footprint and removable',
-    ],
-    notIncluded: [
-      'No real provider credentials, tenant data or live system access — template content is synthetic',
-      'Edge execution is PENDING W088: the edge-expecting recipe validates and renders, but never executes',
-      'The W081 vocabulary has no inventory capability class yet — templates ride the existing order and workflow classes; an inventory class arrives with its own work item',
-    ],
-  },
-  permissionFootprint: [
-    'state:read',
-    'state:write',
-    'schedule:run',
-    'events:subscribe',
-    'external:participate',
-    'telemetry:emit',
-  ],
-  connectionRequirements: [
-    {
-      key: 'shipment-order-sor',
-      label: 'Order and shipment system of record',
-      brokerProvider: 'salesforce',
-      capabilityClasses: ['customer-records', 'sales-pipeline'],
-    },
-    {
-      key: 'shipment-workflow-sor',
-      label: 'Shipment workflow automation system of record',
-      brokerProvider: 'zapier',
-      capabilityClasses: ['workflows-automation'],
-    },
-  ],
-  extensionManifests: [
-    {
-      connectionKey: 'shipment-order-sor',
-      systemOfRecord: 'Order and shipment tracker',
-      manifest: {
-        extensionKey: 'logistics-shipment-tracker',
-        version: '1.0.0',
-        manifestSchemaVersion: 1,
-        displayName: 'Shipment Tracker',
-        description:
-          'Subscribes to shipment events from the order system of record, keeps a ' +
-          'tenant-scoped mirror and emits telemetry on shipment health.',
-        hostRuntime: { minVersion: '1.0.0', maxVersion: null },
-        requestedPermissions: [
-          'state:read',
-          'state:write',
-          'events:subscribe',
-          'external:participate',
-          'telemetry:emit',
-        ],
-        stateScope: 'tenant',
-        uiSurfaces: [],
-        schedules: [],
-        eventSubscriptions: ['goal.updated', 'observation.recorded'],
-        externalParticipants: [
-          { label: 'Order and shipment system of record', origin: 'https://shipment-sor.example.test' },
-        ],
-        telemetry: true,
-        quotas: {
-          maxStateBytes: 4_194_304,
-          maxScheduleInvocationsPerDay: 0,
-          maxExternalCallsPerDay: 20_000,
-        },
-      },
-    },
-    {
-      connectionKey: 'shipment-workflow-sor',
-      systemOfRecord: 'Shipment workflow automation',
-      manifest: {
-        extensionKey: 'logistics-inventory-writer',
-        version: '1.0.0',
-        manifestSchemaVersion: 1,
-        displayName: 'Inventory Writeback',
-        description:
-          'Runs the nightly inventory reconciliation writeback into the workflow system ' +
-          'of record from install-scoped state.',
-        hostRuntime: { minVersion: '1.0.0', maxVersion: null },
-        requestedPermissions: ['state:read', 'state:write', 'schedule:run', 'external:participate'],
+        'Host-rendered intake form capturing new matters with practice-area, jurisdiction and statute-of-limitations fields, persisted per install.',
+      capabilities: {
         stateScope: 'install',
+        uiSurfaces: ['settings-form', 'control-tower-panel'],
+        schedules: [],
+        eventSubscriptions: [],
+        externalParticipants: [],
+        telemetry: false,
+      },
+      quotas: {
+        maxStateBytes: 1_048_576,
+        maxScheduleInvocationsPerDay: 0,
+        maxExternalCallsPerDay: 0,
+      },
+      requestedPermissions: ['state:read', 'state:write', 'ui:render'],
+    },
+    {
+      definitionKey: 'docket-deadline-watcher',
+      displayName: 'Docket deadline watcher',
+      description:
+        'Scheduled watcher that reviews upcoming court dates and statute-of-limitations deadlines each morning and emits telemetry when a critical deadline approaches.',
+      capabilities: {
+        stateScope: 'none',
         uiSurfaces: [],
-        schedules: [{ name: 'nightly-inventory-writeback', cron: '30 2 * * *' }],
+        schedules: [{ name: 'morning-docket-review', cron: '0 6 * * *' }],
+        eventSubscriptions: ['matter.opened', 'matter.deadline.changed'],
+        externalParticipants: [],
+        telemetry: true,
+      },
+      quotas: {
+        maxStateBytes: 0,
+        maxScheduleInvocationsPerDay: 24,
+        maxExternalCallsPerDay: 0,
+      },
+      requestedPermissions: ['schedule:run', 'events:subscribe', 'telemetry:emit'],
+    },
+    {
+      definitionKey: 'engagement-letter-assistant',
+      displayName: 'Engagement letter assistant',
+      description:
+        'Drafts engagement-letter structures from matter metadata and participates with the document system of record over its scoped https origin.',
+      capabilities: {
+        stateScope: 'tenant',
+        uiSurfaces: ['chat-panel'],
+        schedules: [],
         eventSubscriptions: [],
         externalParticipants: [
-          { label: 'Shipment workflow system of record', origin: 'https://workflow-sor.example.test' },
+          { label: 'Document system of record', origin: 'https://docs.legal.example' },
         ],
         telemetry: false,
-        quotas: {
-          maxStateBytes: 2_097_152,
-          maxScheduleInvocationsPerDay: 2,
-          maxExternalCallsPerDay: 5_000,
-        },
       },
-    },
-  ],
-  deepActionRecipes: [
-    {
-      recipeKey: 'expedite-shipment-replan',
-      description:
-        'Replan one shipment expedition across the systems of record: update the shipment ' +
-        'record on the order system, then trigger the replanning workflow on the automation ' +
-        'system, each write verified against its expected downstream state. Latency-sensitive ' +
-        'by design: this recipe declares edge-execution expectations (PENDING W088).',
-      operations: [
-        {
-          key: 'flag-shipment-expedite',
-          connectionKey: 'shipment-order-sor',
-          capabilityKey: 'write.customer-records',
-          targetTemplate: 'shipments/:shipmentId',
-          payload: { priority: 'expedited', replanReason: 'at-risk-delivery' },
-          expectation: { shipmentPriority: 'expedited' },
-        },
-        {
-          key: 'trigger-replan-workflow',
-          connectionKey: 'shipment-workflow-sor',
-          capabilityKey: 'write.workflows-automation',
-          targetTemplate: 'workflows/shipment-replan/:shipmentId',
-          payload: { trigger: 'expedite', mode: 'full-replan' },
-          expectation: { workflowState: 'running' },
-        },
+      quotas: {
+        maxStateBytes: 4_194_304,
+        maxScheduleInvocationsPerDay: 0,
+        maxExternalCallsPerDay: 500,
+      },
+      requestedPermissions: [
+        'state:read',
+        'state:write',
+        'ui:render',
+        'external:participate',
       ],
     },
   ],
-  edgeExecution: {
-    recipeKeys: ['expedite-shipment-replan'],
-    note:
-      'The expedite-shipment-replan recipe is latency-sensitive and expects the Edge ' +
-      'Connector for in-flight execution. The Edge Connector is W088 (in flight on a ' +
-      'sibling branch at this base): the expectation is validated and rendered ' +
-      'pending-w088, and no edge execution is claimed or performed here.',
-  },
+  agentDefinitions: [
+    {
+      definitionKey: 'case-matter-specialist',
+      displayName: 'Case matter specialist',
+      role: 'legal case-management specialist',
+      description:
+        'Answers matter-status questions, summarizes matter history and flags missing engagement prerequisites for the responsible attorney.',
+      provider: 'langgraph',
+      instructions:
+        'You support legal operations. Given a matter reference, summarize its status, upcoming deadlines and missing engagement prerequisites in plain language for the responsible attorney. Never give legal advice; propose, never decide. Always cite the matter fields you relied on.',
+      permissions: ['observe', 'analyze', 'recommend', 'ask'],
+    },
+    {
+      definitionKey: 'docket-reviewer',
+      displayName: 'Docket reviewer',
+      role: 'docket and deadline reviewer',
+      description:
+        'Reviews the docket calendar each day, surfaces hearings and statute-of-limitations deadlines at risk, and recommends rescheduling actions.',
+      provider: 'openai-assistants',
+      instructions:
+        'You review court dockets and statutory deadlines. For each upcoming item, assess risk of missing it and recommend the next concrete step. Never file anything; recommendations only, with the docket fields you used.',
+      permissions: ['observe', 'analyze', 'recommend'],
+    },
+  ],
+  dataSchemaHints: [
+    {
+      entity: 'matter',
+      label: 'Case matter',
+      note: 'The central system-of-record entity of the legal vertical.',
+      fields: [
+        { name: 'matterNumber', type: 'string', required: true, note: 'Firm-assigned reference' },
+        { name: 'clientRef', type: 'string', required: true, note: 'Client identity reference' },
+        { name: 'practiceArea', type: 'string', required: true, note: 'e.g. litigation, corporate' },
+        { name: 'jurisdiction', type: 'string', required: true },
+        { name: 'openedOn', type: 'date', required: true },
+        { name: 'statuteOfLimitationsDate', type: 'date', required: false },
+        { name: 'responsibleAttorney', type: 'string', required: true },
+        { name: 'status', type: 'string', required: true, note: 'open, pending-close, closed' },
+      ],
+    },
+    {
+      entity: 'docket-entry',
+      label: 'Docket entry',
+      fields: [
+        { name: 'docketId', type: 'string', required: true },
+        { name: 'matterNumber', type: 'string', required: true },
+        { name: 'court', type: 'string', required: true },
+        { name: 'eventDate', type: 'date', required: true },
+        { name: 'eventType', type: 'string', required: true, note: 'hearing, filing, deadline' },
+        { name: 'notes', type: 'string', required: false },
+      ],
+    },
+    {
+      entity: 'engagement-letter',
+      label: 'Engagement letter',
+      fields: [
+        { name: 'letterId', type: 'string', required: true },
+        { name: 'matterNumber', type: 'string', required: true },
+        { name: 'clientRef', type: 'string', required: true },
+        { name: 'scopeText', type: 'string', required: true },
+        { name: 'executedOn', type: 'date', required: false },
+        { name: 'version', type: 'string', required: true },
+      ],
+    },
+    {
+      entity: 'time-entry',
+      label: 'Billable time entry',
+      fields: [
+        { name: 'entryId', type: 'string', required: true },
+        { name: 'matterNumber', type: 'string', required: true },
+        { name: 'timekeeperRef', type: 'string', required: true },
+        { name: 'workedOn', type: 'date', required: true },
+        { name: 'hours', type: 'decimal', required: true },
+        { name: 'narrative', type: 'string', required: false },
+        { name: 'billed', type: 'boolean', required: true },
+      ],
+    },
+  ],
+  edgeIntegrations: [
+    {
+      integrationKey: 'case-management-sor',
+      systemLabel: 'Legal case management system of record',
+      description:
+        'Reaches the matter registry of record: reads matters and engagement records, and opens/updates/closes matters. Deep-integration path DEFERRED-ON-W088 (the Edge Connector).',
+      readCapabilityKey: 'read.case-matters',
+      writeCapabilityKey: 'write.case-matters',
+      schemaHintEntities: ['matter', 'engagement-letter'],
+    },
+    {
+      integrationKey: 'court-docket-sor',
+      systemLabel: 'Court docket calendar system of record',
+      description:
+        'Reaches the docket calendar of record: reads hearings and statutory deadlines, records docket-entry changes. Deep-integration path DEFERRED-ON-W088 (the Edge Connector).',
+      readCapabilityKey: 'read.docket-calendar',
+      writeCapabilityKey: 'write.docket-entries',
+      schemaHintEntities: ['docket-entry', 'matter'],
+    },
+  ],
 };
 
 // ---------------------------------------------------------------------------
-// The registry
+// (b) Accounting / ledger ERP
 // ---------------------------------------------------------------------------
 
-/**
- * The registered starter kits, in registry order. Pure DATA: versioned
- * bundles the generic module code validates (see validation.ts — the
- * unit tests prove every registered record passes) and serves. Adding
- * a kit or a version means adding a record here — never branching the
- * module's logic.
- */
-export const KIT_REGISTRY: readonly VerticalKitDefinition[] = [
-  PROFESSIONAL_SERVICES,
-  PROFESSIONAL_SERVICES_V1_1_0,
-  LOGISTICS_OPERATIONS,
+export const ACCOUNTING_LEDGER_ERP_KIT: VerticalKitManifest = {
+  kitSchemaVersion: 1,
+  kitKey: 'accounting-ledger-erp',
+  version: '1.0.0',
+  verticalKey: 'accounting',
+  displayName: 'Accounting & Ledger ERP Starter Kit',
+  description:
+    'Specialist starter kit for accounting operations: chart-of-accounts and ledger visibility, journal-entry review and posting support, receivables/payables aging, and period-close checklists for finance teams.',
+  requiredCapabilities: [
+    {
+      key: 'read.ledger-accounts',
+      label: 'Read the chart of accounts and account balances',
+      dataCategories: ['chart-of-accounts', 'balances'],
+      mode: 'read',
+    },
+    {
+      key: 'read.journal-entries',
+      label: 'Read journal entries and their lines',
+      dataCategories: ['journal-entries'],
+      mode: 'read',
+    },
+    {
+      key: 'write.journal-entries',
+      label: 'Post and adjust journal entries',
+      dataCategories: ['journal-entries'],
+      mode: 'write',
+    },
+    {
+      key: 'read.receivables-ledger',
+      label: 'Read customer invoices and receivables aging',
+      dataCategories: ['receivables', 'customer-records'],
+      mode: 'read',
+    },
+    {
+      key: 'read.payables-ledger',
+      label: 'Read vendor bills and payables aging',
+      dataCategories: ['payables', 'vendor-records'],
+      mode: 'read',
+    },
+  ],
+  extensionDefinitions: [
+    {
+      definitionKey: 'period-close-checklist',
+      displayName: 'Period close checklist',
+      description:
+        'Scheduled period-close checklist that tracks close tasks on the control tower panel and records completion state per period.',
+      capabilities: {
+        stateScope: 'tenant',
+        uiSurfaces: ['control-tower-panel'],
+        schedules: [{ name: 'close-morning-rollup', cron: '30 7 * * 1-5' }],
+        eventSubscriptions: ['journal-entry.posted', 'period.opened'],
+        externalParticipants: [],
+        telemetry: true,
+      },
+      quotas: {
+        maxStateBytes: 4_194_304,
+        maxScheduleInvocationsPerDay: 10,
+        maxExternalCallsPerDay: 0,
+      },
+      requestedPermissions: ['state:read', 'state:write', 'ui:render', 'schedule:run', 'events:subscribe', 'telemetry:emit'],
+    },
+    {
+      definitionKey: 'journal-entry-review-form',
+      displayName: 'Journal entry review form',
+      description:
+        'Host-rendered review form for drafted journal entries with imbalance warnings, persisted per install until the entry is posted.',
+      capabilities: {
+        stateScope: 'install',
+        uiSurfaces: ['settings-form', 'chat-panel'],
+        schedules: [],
+        eventSubscriptions: [],
+        externalParticipants: [],
+        telemetry: false,
+      },
+      quotas: {
+        maxStateBytes: 1_048_576,
+        maxScheduleInvocationsPerDay: 0,
+        maxExternalCallsPerDay: 0,
+      },
+      requestedPermissions: ['state:read', 'state:write', 'ui:render'],
+    },
+    {
+      definitionKey: 'ar-aging-dashboard',
+      displayName: 'Receivables aging dashboard',
+      description:
+        'Control-tower panel summarizing receivables aging buckets and the largest overdue balances, refreshed on schedule.',
+      capabilities: {
+        stateScope: 'none',
+        uiSurfaces: ['control-tower-panel', 'briefing-card'],
+        schedules: [{ name: 'aging-daily-refresh', cron: '15 8 * * 1-5' }],
+        eventSubscriptions: ['invoice.issued', 'payment.received'],
+        externalParticipants: [],
+        telemetry: false,
+      },
+      quotas: {
+        maxStateBytes: 0,
+        maxScheduleInvocationsPerDay: 5,
+        maxExternalCallsPerDay: 0,
+      },
+      requestedPermissions: ['ui:render', 'schedule:run', 'events:subscribe'],
+    },
+  ],
+  agentDefinitions: [
+    {
+      definitionKey: 'period-close-specialist',
+      displayName: 'Period close specialist',
+      role: 'accounting period-close specialist',
+      description:
+        'Tracks the period-close checklist, summarizes what is open, and recommends the next close actions with owners.',
+      provider: 'crewai',
+      instructions:
+        'You support period close. Given the current period, summarize open checklist tasks, flag journal entries still unposted, and recommend the next actions with owners. Never post entries yourself; recommendations only.',
+      permissions: ['observe', 'analyze', 'recommend', 'ask'],
+    },
+    {
+      definitionKey: 'reconciliation-reviewer',
+      displayName: 'Reconciliation reviewer',
+      role: 'ledger reconciliation reviewer',
+      description:
+        'Compares ledger balances against receivables/payables subledgers, surfaces mismatches with evidence, and recommends reconciling entries.',
+      provider: 'semantic-kernel',
+      instructions:
+        'You review ledger reconciliations. For each mismatch you find, state the accounts, the amounts, and a recommended reconciling journal entry. Never execute postings; propose them with the figures you used.',
+      permissions: ['observe', 'analyze', 'recommend'],
+    },
+  ],
+  dataSchemaHints: [
+    {
+      entity: 'ledger-account',
+      label: 'Chart-of-accounts account',
+      note: 'The backbone entity of the ledger vertical.',
+      fields: [
+        { name: 'accountCode', type: 'string', required: true },
+        { name: 'name', type: 'string', required: true },
+        { name: 'accountType', type: 'string', required: true, note: 'asset, liability, equity, revenue, expense' },
+        { name: 'parentAccountCode', type: 'string', required: false },
+        { name: 'active', type: 'boolean', required: true },
+      ],
+    },
+    {
+      entity: 'journal-entry',
+      label: 'Journal entry',
+      note: 'A balanced set of journal lines; the unit of ledger writes.',
+      fields: [
+        { name: 'entryId', type: 'string', required: true },
+        { name: 'entryDate', type: 'date', required: true },
+        { name: 'periodName', type: 'string', required: true, note: 'e.g. 2026-09' },
+        { name: 'memo', type: 'string', required: false },
+        { name: 'status', type: 'string', required: true, note: 'draft, posted, reversed' },
+        { name: 'lines', type: 'journal-line[]', required: true, note: 'debit/credit lines; must sum to zero' },
+      ],
+    },
+    {
+      entity: 'ar-invoice',
+      label: 'Receivables invoice',
+      fields: [
+        { name: 'invoiceId', type: 'string', required: true },
+        { name: 'customerRef', type: 'string', required: true },
+        { name: 'issuedOn', type: 'date', required: true },
+        { name: 'dueOn', type: 'date', required: true },
+        { name: 'amount', type: 'decimal', required: true },
+        { name: 'currency', type: 'string', required: true },
+        { name: 'remaining', type: 'decimal', required: true },
+      ],
+    },
+    {
+      entity: 'ap-bill',
+      label: 'Payables bill',
+      fields: [
+        { name: 'billId', type: 'string', required: true },
+        { name: 'vendorRef', type: 'string', required: true },
+        { name: 'issuedOn', type: 'date', required: true },
+        { name: 'dueOn', type: 'date', required: true },
+        { name: 'amount', type: 'decimal', required: true },
+        { name: 'currency', type: 'string', required: true },
+        { name: 'remaining', type: 'decimal', required: true },
+      ],
+    },
+    {
+      entity: 'period-close-task',
+      label: 'Period close task',
+      fields: [
+        { name: 'taskId', type: 'string', required: true },
+        { name: 'periodName', type: 'string', required: true },
+        { name: 'title', type: 'string', required: true },
+        { name: 'ownerRef', type: 'string', required: false },
+        { name: 'dueOn', type: 'date', required: true },
+        { name: 'status', type: 'string', required: true, note: 'open, done, blocked' },
+      ],
+    },
+  ],
+  edgeIntegrations: [
+    {
+      integrationKey: 'ledger-erp-sor',
+      systemLabel: 'Ledger ERP system of record',
+      description:
+        'Reaches the ledger ERP of record: reads the chart of accounts and journal entries, posts and adjusts journal entries. Deep-integration path DEFERRED-ON-W088 (the Edge Connector).',
+      readCapabilityKey: 'read.journal-entries',
+      writeCapabilityKey: 'write.journal-entries',
+      schemaHintEntities: ['ledger-account', 'journal-entry'],
+    },
+    {
+      integrationKey: 'ar-aging-sor',
+      systemLabel: 'Receivables aging system of record',
+      description:
+        'Reads customer invoices and receivables aging from the receivables subledger of record. Read-only deep integration — no write path, and the write side stays DEFERRED-ON-W088 (the Edge Connector).',
+      readCapabilityKey: 'read.receivables-ledger',
+      writeCapabilityKey: null,
+      schemaHintEntities: ['ar-invoice'],
+    },
+  ],
+};
+
+/** The module's shipped first-class starter kits, in stable order. */
+export const STARTER_KITS: readonly VerticalKitManifest[] = [
+  LEGAL_CASE_MANAGEMENT_KIT,
+  ACCOUNTING_LEDGER_ERP_KIT,
 ];

@@ -323,6 +323,7 @@ describe('capability coverage', () => {
       'release-certification',
       'simulator',
       'unified-identity',
+      'vertical-kits',
       'workflow',
     ]);
   });

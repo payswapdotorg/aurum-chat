@@ -310,27 +310,6 @@ export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
         icon: 'marketplace',
         note: null,
       },
-      {
-        // W092 — the Vertical Kits surface (an additive hub entry beside
-        // the marketplace trio; the management-mode family's fifteen
-        // tower surfaces above stay untouched).
-        id: 'vertical-kits',
-        label: 'Set up an industry starter kit',
-        summary:
-          'Install a ready-made bundle for a system-of-record-heavy industry — scoped permissions, deep-action recipe templates and connection classes, removable at any time.',
-        href: '/vertical-kits',
-        keywords: [
-          'vertical',
-          'kits',
-          'industry',
-          'starter',
-          'bundle',
-          'system of record',
-          'setup',
-        ],
-        icon: 'marketplace',
-        note: null,
-      },
     ],
   },
   {

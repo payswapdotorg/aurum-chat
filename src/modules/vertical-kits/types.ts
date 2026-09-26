@@ -1,405 +1,637 @@
 // Public domain types of the vertical-kits module (W092 — Vertical
 // Extension Starter Kits).
 //
-// W092 owns the KIT layer of the extension story:
+// W092 owns the KIT layer of the specialist-capability story:
+// "Create reusable specialist extension/agent starter kits and first deep
+//  integrations for system-of-record-heavy industries without moving
+//  vertical semantics into Aurum core."
 //
-//   "Create reusable specialist extension/agent starter kits and first
-//    deep integrations for system-of-record-heavy industries without
-//    moving vertical semantics into Aurum core."
-//   Acceptance: "each pack is installable, permission-scoped, versioned,
-//   auditable and removable; core modules remain industry-independent."
+// WHAT A KIT IS. A vertical kit is a versioned, signed-manifest package
+// of specialist extension definitions and agent definitions for ONE
+// vertical (a system-of-record-heavy industry), carrying its own
+// capability declarations and vertical data-schema hints. EVERYTHING
+// vertical lives inside the kit manifest — core modules stay
+// industry-independent (the work item's hard boundary). A kit is:
 //
-// A KIT IS DATA, NOT CODE. One kit is one versioned BUNDLE (release
-// semver, the extensions module's discipline) of five DATA parts:
+//   * VERSIONED   — release semvers, strictly increasing per kit key (the
+//     extensions module's manifest discipline: a changed declaration is a
+//     NEW version, never an edit);
+//   * SIGNED      — every stored version carries the sha-256 digest of
+//     the canonical JSON serialization of its frozen manifest, computed
+//     at registration; the digest is the manifest's integrity signature,
+//     and verification re-derives it over the STORED bytes (a row edited
+//     outside the service fails the manifest-integrity check — drift is
+//     visible as a new failed run, never as a rewrite);
+//   * INSTALLABLE — through the tenant install lifecycle (below);
+//   * PERMISSION-SCOPED — the kit declares required capabilities; install
+//     routes the tenant's grant review through the actions module's
+//     authority gate (W009, kind 'vertical-kit-deployment' × EXECUTE —
+//     the capability-grants pattern, kit-scoped: approval mints exactly
+//     the declared scope, rejection mints nothing);
+//   * AUDITABLE  — every install/review/activate/suspend/resume/remove
+//     and every minted/revoked grant is an append-only event, and every
+//     capability invocation verdict (allowed or denied) is an
+//     append-only ledger row;
+//   * REMOVABLE  — removal revokes every grant the kit holds (no
+//     orphaned authority) while the audit trail is retained.
 //
-//   1. extension manifests — one per system-of-record integration, each
-//      an ordinary `RegisterExtensionManifestInput` of the extensions
-//      contract (W025) COMPOSED, never forked: the kit adds only the
-//      connection it rides and a plain-language system-of-record label;
-//   2. the permission-scope declaration — the kit's capability
-//      footprint, EXACTLY the union of the manifests' requested
-//      permission sets (fail-closed at validation: the declared
-//      footprint must equal the union, neither more nor less);
-//   3. deep-action recipe templates — canonical operation plans shaped
-//      after the deep-actions gateway's contract (W084) as DATA: each
-//      operation names a kit connection requirement and a W081 write
-//      capability key, carries a canonical payload and the expected
-//      downstream state reconciliation will verify against. NO
-//      execution logic lives here — a recipe instantiates into a
-//      `CreateDeepActionInput` at use time (see validation.ts);
-//   4. connection-class requirements — the broker connection templates
-//      the kit needs: one W082 `BrokerProvider` plus the W081
-//      capability classes that connection must offer;
-//   5. honest kit metadata — the industry label, intended outcomes and,
-//      explicitly, what is NOT included.
+// THE INSTALL LIFECYCLE (the extensions-registry + marketplace
+// publication patterns, deliberately not a forked second lifecycle
+// model — see lifecycle.ts for the named transitions):
 //
-// VERTICAL SEMANTICS NEVER ENTER CORE MODULES, AND THEY DO NOT ENTER
-// THIS MODULE'S LOGIC EITHER: the module code (validation, service,
-// reads) is industry-blind — the two starter kits ship as REGISTERED
-// DATA records (kits.ts) that this module validates and serves
-// generically. The core-independence test under tests/ proves both
-// directions at grep level: no kit-content term appears in any other
-// module, and no kit-content term appears in this module outside the
-// data file.
+//   registry side:  registerKitVersion (immutable, strictly increasing)
+//                   → runKitVerification (append-only deterministic
+//                     static checks; install requires VERIFIED)
+//   install side:   installKit (W009 gate routed) →
+//                     'pending-review' ─ awaiting the human grant review
+//                     'rejected'       — the review (or tenant policy)
+//                                        refused the kit; terminal
+//                     'granted'        — the review approved; the kit's
+//                                        capability grants are minted
+//                     'active'         — activated, usable
+//                     'suspended' ⇄ back to 'active'
+//                     'removed'        — terminal; grants revoked
 //
-// THE HONEST PENDING-EDGE DECLARATION (the W092/W088 boundary): the
-// `edgeExecution` field declares WHICH recipes expect the Edge
-// Connector (W088, in flight on a sibling branch at this base). It is
-// VALIDATED here (unknown recipe keys are refused) and rendered as the
-// literal status 'pending-w088' everywhere it surfaces — this module
-// never claims edge execution and contains no edge code path.
-//
-// Tenancy (ADR-0001): kit definitions are platform-supplied data with
-// no tenant state; installation, grants, lifecycle events and recipe
-// references are tenant-scoped rows (migrations/001) — another tenant's
-// kit lifecycle is indistinguishable from missing.
-
-import type {
-  BrokerProvider,
-} from '@/modules/connection-broker/contract';
-import type {
-  ExtensionCapabilities,
-  ExtensionPermission,
-  ExtensionQuotas,
-  RegisterExtensionManifestInput,
-  SemverParts,
-} from '@/modules/extensions/contract';
+// THE EDGE SEAM (DEFERRED-ON-W088). A kit declares the
+// system-of-record integrations it wants to reach (edgeIntegrations).
+// The kit runtime's deep-integration execution path is expressed
+// against the `VerticalKitEdge` port — a clean, provider-neutral adapter
+// seam the kit runtime calls. NO implementation is wired by default: the
+// Edge Connector (W088, in flight) is the future implementor, and once
+// it lands an adapter will route kit integrations through the W082/W083
+// connection + grant machinery and compose them onto the W084 deep-action
+// pipeline (discover→inspect→propose→authorize→execute→verify→reconcile).
+// Until then, executing or inspecting a kit integration without a wired
+// edge fails explicitly with `edge_unavailable` — the module never fakes
+// success, never stubs Edge internals and never guesses W088's API.
 
 // ---------------------------------------------------------------------------
-// Vocabularies
-// ---------------------------------------------------------------------------
-
-/**
- * The kit lifecycle event vocabulary — the append-only audit trail a
- * kit's installation history lands on (install / upgrade / remove:
- * who, when, from which version to which, with exactly what grants and
- * package bindings).
- */
-export const VERTICAL_KIT_EVENT_TYPES = ['install', 'upgrade', 'remove'] as const;
-
-export type VerticalKitEventType = (typeof VERTICAL_KIT_EVENT_TYPES)[number];
-
-/**
- * The edge-execution compatibility status. There is exactly ONE value
-// at this base on purpose: the W088 Edge Connector is in flight on a
-// sibling branch, so every edge-expecting kit operation renders the
-// SAME honest status. When W088 lands, its work item widens this
- * vocabulary — never a silent rewrite here.
- */
-export const EDGE_EXECUTION_STATUS = 'pending-w088' as const;
-
-export type EdgeExecutionStatus = typeof EDGE_EXECUTION_STATUS;
-
-// ---------------------------------------------------------------------------
-// Kit definitions (the versioned DATA bundles)
+// Capability declarations (the kit's requested authority — the W081/W083
+// plain-language capability vocabulary, kit-scoped)
 // ---------------------------------------------------------------------------
 
 /**
- * One connection-class requirement: the broker connection template a
- * kit needs — one W082 `BrokerProvider` (validated against the closed
-// `BROKER_PROVIDERS` vocabulary) plus the W081 capability classes
- * (validated against the closed `CAPABILITY_CLASS_KEYS` vocabulary)
- * that connection must offer. The kit's recipe operations ride these.
+ * One capability a kit requires to serve its vertical. The key follows
+ * the W081 read./write. convention; label and dataCategories are the
+ * plain-language descriptors the tenant's reviewers see at the install
+ * grant review (the approver-facing payload of the W009 request).
  */
-export interface KitConnectionRequirement {
-  /** Stable slug naming the requirement within the kit. */
+export interface KitCapabilityDeclaration {
+  /** Canonical capability key (e.g. 'write.case-matters'). */
   key: string;
-  /** Plain-language label of the system-of-record family. */
+  /** Plain-language label of what the capability lets the kit do. */
   label: string;
-  /** The W082 broker provider the connection template rides. */
-  brokerProvider: BrokerProvider;
-  /** The W081 capability classes the connection must offer. */
-  capabilityClasses: string[];
-}
-
-/**
- * One system-of-record integration of a kit: an ordinary extensions
- * contract manifest input (composed, never forked) plus the kit-side
- * declaration of WHICH connection requirement it rides. The manifest's
- * own `requestedPermissions` is the ceiling the install-time grant is
- * bounded by (W025's least-privilege rule, unchanged).
- */
-export interface KitExtensionManifestSpec {
-  /** Which kit connection requirement this integration rides. */
-  connectionKey: string;
-  /** Plain-language system-of-record label (display metadata only). */
-  systemOfRecord: string;
-  /** The extensions-contract manifest input, composed as-is. */
-  manifest: RegisterExtensionManifestInput;
-}
-
-/**
- * One operation of a deep-action recipe template: a canonical write
- * plan shaped after `DeepActionOperationInput` (W084) with the
- * provider-neutral placeholders a template carries — the connection is
- * named by kit requirement (an install resolves it to a concrete W082
- * connection id), the target is a template string. DATA ONLY: no
- * execution logic exists anywhere in this module.
- */
-export interface KitRecipeOperationTemplate {
-  /** Unique key within the recipe (the W084 operation-key discipline). */
-  key: string;
-  /** Which kit connection requirement this operation rides. */
-  connectionKey: string;
-  /** The W081 WRITE capability key this operation exercises. */
-  capabilityKey: string;
-  /** Opaque external-target template (the record being written). */
-  targetTemplate: string;
-  /** The canonical write payload (plain JSON object). */
-  payload: Record<string, unknown>;
-  /**
-   * The canonical EXPECTED downstream state — the W084 expectation
-   * reconciliation verifies against (subset semantics, reconcile.ts).
-   */
-  expectation: Record<string, unknown>;
-}
-
-/**
- * One deep-action recipe template: a multi-system plan a tenant
- * instantiates through the deep-actions gateway's own createDeepAction
- * at use time. 1..16 operations (the W084 bound); every operation
- * rides a kit connection requirement and a W081 write capability.
- */
-export interface DeepActionRecipeTemplate {
-  /** Stable slug naming the recipe within the kit. */
-  recipeKey: string;
-  /** What the recipe accomplishes, in plain organizational language. */
-  description: string;
-  /** The planned operations, in execution order. */
-  operations: KitRecipeOperationTemplate[];
-}
-
-/**
- * The edge-execution compatibility declaration: which of the kit's
- * recipes expect the Edge Connector (W088). Validated (every entry
- * must be a known recipe key) and rendered 'pending-w088' — see
- * EDGE_EXECUTION_STATUS.
- */
-export interface EdgeExecutionDeclaration {
-  /** Recipe keys whose operations expect the W088 edge. */
-  recipeKeys: string[];
-  /** Why the edge is expected, in plain language. */
-  note: string;
-}
-
-/** Honest kit metadata: what the kit is FOR and what it is NOT. */
-export interface KitMetadata {
-  /** The industry label (display metadata only — never logic). */
-  industry: string;
-  /** What the kit targets, in plain language. */
-  description: string;
-  /** The intended outcomes (plain language, display only). */
-  outcomes: string[];
-  /** What is explicitly NOT included — the honest boundary. */
-  notIncluded: string[];
-}
-
-/** One immutable versioned starter-kit bundle. */
-export interface VerticalKitDefinition {
-  /** Stable slug identity of the kit across versions. */
-  kitKey: string;
-  /** Release semver ('1.0.0') — the extensions module's discipline. */
-  version: string;
-  /** Parsed parts of `version` (numeric ordering — never strings). */
-  versionParts: SemverParts;
-  /** Honest metadata (industry, outcomes, not-included). */
-  metadata: KitMetadata;
-  /**
-   * The kit's capability footprint: EXACTLY the union of the manifests'
-   * requested permission sets, in canonical order. Installing the kit
-   * grants exactly this — nothing more (fail-closed at validation).
-   */
-  permissionFootprint: ExtensionPermission[];
-  /** The system-of-record integrations (≥ 2 per kit, at validation). */
-  extensionManifests: KitExtensionManifestSpec[];
-  /** The deep-action recipe templates (≥ 1 per kit, at validation). */
-  deepActionRecipes: DeepActionRecipeTemplate[];
-  /** The broker connection templates the kit needs (≥ 1, at validation). */
-  connectionRequirements: KitConnectionRequirement[];
-  /** The honest pending-W088 edge declaration. */
-  edgeExecution: EdgeExecutionDeclaration;
+  /** Data categories exercising this capability puts in play. */
+  dataCategories: string[];
+  /** 'read' or 'write' (derived from the key; mirrored for reviewers). */
+  mode: 'read' | 'write';
 }
 
 // ---------------------------------------------------------------------------
-// Served read models (what the contract hands the surfaces)
+// Starter component definitions (frozen INSIDE the kit manifest)
 // ---------------------------------------------------------------------------
 
 /**
- * The normalized manifest subject of a kit integration — exactly the
- * shape an ExtensionPackage freezes (W028) and the install path
- * compares against, so a package binding is honest only when the
- * frozen subject equals the kit's normalized declaration.
+ * One starter EXTENSION definition inside a kit — the W025 manifest shape
+ * in kit form. These are definitions, not deployed software:
+ * materializing a definition into the tenant's extension registry (the
+ * extensions module's own registration/deployment lifecycle) is a
+ * downstream step this module deliberately does not perform. The
+ * declarations are validated with the extensions module's OWN pure
+ * consistency rules (permission ↔ capability, quotas, vocabulary) so a
+ * kit's extension definitions are shaped exactly like real ones.
  */
-export interface KitManifestSubject {
-  manifestSchemaVersion: number;
+export interface KitExtensionDefinition {
+  /** Stable slug naming the definition within the kit. */
+  definitionKey: string;
+  displayName: string;
+  description: string;
+  /** The normalized capability declaration (W025 shape). */
+  capabilities: {
+    stateScope: 'none' | 'tenant' | 'install';
+    uiSurfaces: string[];
+    schedules: { name: string; cron: string }[];
+    eventSubscriptions: string[];
+    externalParticipants: { label: string; origin: string }[];
+    telemetry: boolean;
+  };
+  /** The declared resource ceilings (W025 shape). */
+  quotas: {
+    maxStateBytes: number;
+    maxScheduleInvocationsPerDay: number;
+    maxExternalCallsPerDay: number;
+  };
+  /** The requested permission ceiling — EXACTLY what the declared
+   * capabilities require (the extensions module's least-privilege rule,
+   * re-checked by kit verification). */
   requestedPermissions: string[];
-  capabilities: ExtensionCapabilities;
-  quotas: ExtensionQuotas;
-  hostCompatibility: { minVersion: string; maxVersion: string | null };
 }
 
 /**
- * The edge-execution posture of a kit as surfaces render it: the
- * expecting recipes plus the single honest status. NEVER an execution
- * claim — 'pending-w088' is the whole vocabulary at this base.
+ * One starter AGENT definition inside a kit — the agents module's
+ * definition shape in kit form (role, operating instructions, runtime
+ * provider, permission scopes), validated against the agents module's
+ * own closed vocabularies. Same as extension definitions, these are
+ * definitions, not recruited agents; recruitment follows the agents
+ * module's own governed lifecycle downstream.
  */
-export interface KitEdgeExecutionInfo {
-  recipes: string[];
-  status: EdgeExecutionStatus;
-  note: string;
-}
-
-/** A kit as the catalog serves it (validated, edge posture rendered). */
-export interface VerticalKitSummary extends VerticalKitDefinition {
-  edgeExecutionInfo: KitEdgeExecutionInfo;
+export interface KitAgentDefinition {
+  /** Stable slug naming the definition within the kit. */
+  definitionKey: string;
+  displayName: string;
+  /** The specialist role (e.g. 'legal case-management specialist'). */
+  role: string;
+  description: string;
+  /** Canonical runtime provider key (agents module vocabulary). */
+  provider: string;
+  /** The agent's operating contract — what it is instructed to do. */
+  instructions: string;
+  /** Permission scopes (the §20 authority words the agent may act at). */
+  permissions: string[];
 }
 
 // ---------------------------------------------------------------------------
-// Installation lifecycle (tenant-scoped rows)
+// Vertical data-schema hints (kit-carried, never core)
 // ---------------------------------------------------------------------------
 
-/** One granted permission bundle of an installed kit (per manifest). */
-export interface VerticalKitGrant {
-  id: string;
-  tenantId: string;
-  /** The install this grant belongs to. */
-  installId: string;
-  kitKey: string;
-  /** The extension this grant deployed (the extensions registry key). */
-  extensionKey: string;
-  /** The deployed manifest version (denormalized from the manifest). */
-  extensionVersion: string;
-  /** The marketplace ExtensionPackage the binding rode (W028). */
-  packageId: string;
-  /** The marketplace catalog key of that package. */
-  packageKey: string;
-  /** Exactly what installing granted, in canonical order. */
-  grantedPermissions: ExtensionPermission[];
-  deployedAt: string;
+/** One field of a vertical data-schema hint. */
+export interface KitSchemaHintField {
+  name: string;
+  /** Plain-language type hint ('string', 'date', 'decimal', ...). */
+  type: string;
+  required: boolean;
+  note?: string | null;
 }
 
-/** One tenant's current installation of one kit. */
-export interface VerticalKitInstall {
-  id: string;
-  tenantId: string;
-  kitKey: string;
-  /** The installed kit version (a record of what was granted). */
-  kitVersion: string;
-  installedBy: string;
-  installedAt: string;
-  updatedAt: string;
-  /** The per-manifest grants + package bindings (removed on uninstall). */
-  grants: VerticalKitGrant[];
-  /** The rendered edge posture of the installed version. */
-  edgeExecutionInfo: KitEdgeExecutionInfo;
+/**
+ * One vertical data-schema hint: the shape of a system-of-record entity
+ * the kit works with, expressed as plain-language field hints. Hints
+ * live INSIDE the kit manifest — no vertical table, column or string
+ * ever reaches a core module. They guide the future Edge mapping work
+ * (W088/W094) and the tenant's own configuration.
+ */
+export interface KitDataSchemaHint {
+  /** The vertical entity ('matter', 'journal-entry', ...). */
+  entity: string;
+  label: string;
+  fields: KitSchemaHintField[];
+  note?: string | null;
 }
 
-/** One append-only lifecycle event of a tenant's kit history. */
-export interface VerticalKitEvent {
+// ---------------------------------------------------------------------------
+// Edge integration declarations (the DEFERRED-ON-W088 deep-integration
+// surface)
+// ---------------------------------------------------------------------------
+
+/**
+ * One declared system-of-record integration of a kit: the external
+ * system family the kit's deep integration reaches THROUGH the Edge
+ * Connector once W088 lands. The declaration is provider-neutral by
+ * construction — a plain-language system label plus the kit capabilities
+ * the integration exercises (its read and its write path). Executing or
+ * inspecting an integration rides the `VerticalKitEdge` port; with no
+ * edge wired, the path fails explicitly (`edge_unavailable`).
+ */
+export interface KitEdgeIntegrationDeclaration {
+  /** Stable slug naming the integration within the kit. */
+  integrationKey: string;
+  /** Plain-language system-of-record label. */
+  systemLabel: string;
+  description: string;
+  /** The kit capability the read/inspect path exercises. */
+  readCapabilityKey: string;
+  /** The kit capability the write/execute path exercises — null for a
+   * read-only integration (no execute path; least privilege). */
+  writeCapabilityKey: string | null;
+  /** Which schema-hint entities this integration touches (references
+   * into the same manifest's dataSchemaHints). */
+  schemaHintEntities: string[];
+}
+
+// ---------------------------------------------------------------------------
+// The kit manifest
+// ---------------------------------------------------------------------------
+
+/**
+ * A vertical kit manifest — the frozen, versioned, digest-signed content
+ * package. Everything vertical lives here: the capability declarations,
+ * the starter extension/agent definitions, the vertical data-schema
+ * hints and the edge integration declarations. The first-class content
+ * shipped by this module (kits.ts) registers into a tenant's registry
+ * through `registerKitVersion` and installs through `installKit`.
+ */
+export interface VerticalKitManifest {
+  /** The versioned manifest FORMAT this manifest obeys (currently 1). */
+  kitSchemaVersion: number;
+  /** Stable kit identity across versions (e.g. 'legal-case-management'). */
+  kitKey: string;
+  /** Release semver ('1.0.0') — strictly increasing per kit key. */
+  version: string;
+  /** The vertical family the kit serves (grouping metadata only —
+   * core never interprets it). */
+  verticalKey: string;
+  displayName: string;
+  description: string;
+  /** The kit's requested authority — reviewed at install. */
+  requiredCapabilities: KitCapabilityDeclaration[];
+  /** Starter extension definitions (stay inside the kit). */
+  extensionDefinitions: KitExtensionDefinition[];
+  /** Starter agent definitions (stay inside the kit). */
+  agentDefinitions: KitAgentDefinition[];
+  /** Vertical data-schema hints (stay inside the kit). */
+  dataSchemaHints: KitDataSchemaHint[];
+  /** Declared system-of-record integrations (DEFERRED-ON-W088 paths). */
+  edgeIntegrations: KitEdgeIntegrationDeclaration[];
+}
+
+// ---------------------------------------------------------------------------
+// Registry rows (kit versions + verifications)
+// ---------------------------------------------------------------------------
+
+/** One immutable registered kit version (the registry row). */
+export interface VerticalKitVersion {
   id: string;
   tenantId: string;
   kitKey: string;
-  eventType: VerticalKitEventType;
-  /** The version before the event (null for install). */
-  fromVersion: string | null;
-  /** The version after the event (null for remove). */
-  toVersion: string | null;
-  /** The TenantContext principal whose call was applied. */
-  actor: string;
-  occurredAt: string;
-  /**
-   * The WHAT of the event, frozen at append time: the exact granted
-   * permissions and package bindings the event installed, upgraded or
-   * removed. Append-only evidence (storage triggers forbid mutation).
-   */
-  detail: {
-    grants: {
-      extensionKey: string;
-      extensionVersion: string;
-      packageId: string;
-      packageKey: string;
-      grantedPermissions: string[];
-    }[];
+  version: string;
+  kitSchemaVersion: number;
+  verticalKey: string;
+  displayName: string;
+  description: string;
+  /** The frozen manifest content. */
+  manifest: VerticalKitManifest;
+  /** The sha-256 digest of the canonical JSON of `manifest`. */
+  manifestDigest: string;
+  registeredBy: string;
+  registeredAt: string;
+}
+
+/** A kit version with its DERIVED verification state (latest run decides). */
+export interface VerticalKitVersionWithVerification extends VerticalKitVersion {
+  verification: {
+    state: 'unverified' | 'verified' | 'failed';
+    latestRun: VerticalKitVerification | null;
   };
 }
 
+/** A kit version summary (list reads). */
+export interface VerticalKitVersionSummary extends VerticalKitVersion {
+  verificationState: 'unverified' | 'verified' | 'failed';
+}
+
+/** The outcome of one deterministic verification check. */
+export interface KitVerificationCheckResult {
+  check: string;
+  passed: boolean;
+  detail: string | null;
+}
+
 /**
- * A recorded use of a kit recipe template — the honest reference trail:
- * references record WHICH kit version a deep-action plan was
- * instantiated from and stay readable after the kit is removed (no
- * silent data loss; the versioned definition renders beside a removed
- * flag instead of disappearing).
+ * One append-only verification run of one kit version. The run records
+ * the outcome of every check in the closed vocabulary plus a
+ * human-readable summary; runs are never updated or deleted, so the
+ * verification history is reconstructable (§24) and drift (a rule added
+ * later failing an older manifest, or a row edited outside the service)
+ * is visible as a new run, never a rewrite.
  */
-export interface VerticalKitRecipeReference {
+export interface VerticalKitVerification {
+  id: string;
+  tenantId: string;
+  kitVersionId: string;
+  outcome: 'verified' | 'failed';
+  /** Per-check outcomes, in canonical check order. */
+  checks: KitVerificationCheckResult[];
+  summary: string;
+  verifier: string;
+  ranAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Installations (the tenant lifecycle rows)
+// ---------------------------------------------------------------------------
+
+/** The installation lifecycle states (see lifecycle.ts for transitions). */
+export type KitInstallationStatus =
+  | 'pending-review'
+  | 'rejected'
+  | 'granted'
+  | 'active'
+  | 'suspended'
+  | 'removed';
+
+/** One kit capability grant minted by an approved install review. */
+export interface KitCapabilityGrant {
+  id: string;
+  tenantId: string;
+  installationId: string;
+  capabilityKey: string;
+  label: string;
+  dataCategories: string[];
+  status: 'active' | 'revoked';
+  grantedBy: string;
+  grantedAt: string;
+  revokedAt: string | null;
+  revokedBy: string | null;
+  revocationReason: string | null;
+}
+
+/** The concrete task a kit capability invocation serves (W083 shape). */
+export interface KitTaskContext {
+  /** What the task is, in plain organizational language. */
+  description: string;
+  /** Optional plain-language link to what the task is for. */
+  requestedFor?: string | null;
+}
+
+/** Why the invocation gate decided what it decided. */
+export type KitInvocationBasis = 'kit-grant' | 'grant-missing' | 'installation-inactive';
+
+/** One capability invocation verdict — append-only evidence. */
+export interface KitCapabilityInvocation {
+  id: string;
+  tenantId: string;
+  installationId: string;
+  capabilityKey: string;
+  outcome: 'allowed' | 'denied';
+  basis: KitInvocationBasis;
+  /** The deterministic plain-language denial (denied only). */
+  denialReason: string | null;
+  taskContext: KitTaskContext;
+  invokedBy: string;
+  invokedAt: string;
+}
+
+/** One executed system-of-record action through a wired edge. */
+export interface KitEdgeAction {
+  id: string;
+  tenantId: string;
+  installationId: string;
+  integrationKey: string;
+  /** The write capability the action exercised (the gate link below). */
+  capabilityKey: string;
+  /** The allowed invocation that authorized the write. */
+  invocationId: string;
+  receiptStatus: 'accepted' | 'rejected' | 'failed';
+  /** The edge's own opaque action receipt id (never interpreted). */
+  receiptId: string | null;
+  receiptDetail: string | null;
+  /** The opaque wiring identity of the edge that executed. */
+  edgeId: string;
+  executedBy: string;
+  executedAt: string;
+}
+
+/** One append-only installation lifecycle event. */
+export interface KitInstallationEvent {
+  id: string;
+  tenantId: string;
+  installationId: string;
+  position: number;
+  event: string;
+  detail: string | null;
+  recordedBy: string;
+  recordedAt: string;
+}
+
+/** One installation with its grants (the full read model). */
+export interface KitInstallationDetail {
+  installation: KitInstallation;
+  /** The frozen required-capability snapshot of the install. */
+  requiredCapabilities: KitCapabilityDeclaration[];
+  grants: KitCapabilityGrant[];
+}
+
+/** The installation row (see KitInstallationDetail for the full read). */
+export interface KitInstallation {
   id: string;
   tenantId: string;
   kitKey: string;
-  /** The kit version the template was instantiated from. */
   kitVersion: string;
-  recipeKey: string;
-  /** Opaque caller reference (e.g. the deep-action task id). */
-  reference: string;
-  recordedBy: string;
-  recordedAt: string;
-  /** True when the kit is no longer installed for this tenant. */
-  kitRemoved: boolean;
+  kitVersionId: string;
+  status: KitInstallationStatus;
+  /** The actions module's ActionRequest id — the W009 gate record the
+   * install review routed through (always set: install routes the gate
+   * in the same transaction that creates the row). */
+  actionRequestId: string;
+  installedBy: string;
+  installedAt: string;
+  reviewedAt: string | null;
+  activatedAt: string | null;
+  suspendedAt: string | null;
+  removedAt: string | null;
+  removalReason: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// The honest status report
+// ---------------------------------------------------------------------------
+
+/** The readiness of one declared integration. */
+export interface KitIntegrationReadiness {
+  integrationKey: string;
+  systemLabel: string;
+  /** 'deferred-on-w088' until an edge is wired; 'ready' once one is. */
+  readiness: 'deferred-on-w088' | 'ready';
+  /** The wired edge's opaque identity (ready only). */
+  edgeId: string | null;
+}
+
+/** One kit component's honest state. */
+export interface KitComponentStatus {
+  definitionKey: string;
+  displayName: string;
+  /** 'defined' — starter definitions inside the kit, NOT deployed
+   * software; materialization into the extension/agent registries is a
+   * downstream governed step this module does not perform. */
+  state: 'defined';
+}
+
+/**
+ * The honest health/status report of one installation: what is
+ * installed, which capabilities hold authority, which components are
+ * defined (never claimed as running), which integrations are deferred on
+ * the Edge Connector, and the latest audit events. The report never
+ * claims execution the module is not performing.
+ */
+export interface KitStatusReport {
+  installationId: string;
+  kitKey: string;
+  kitVersion: string;
+  status: KitInstallationStatus;
+  grants: { active: number; revoked: number };
+  extensions: KitComponentStatus[];
+  agents: KitComponentStatus[];
+  integrations: KitIntegrationReadiness[];
+  /** The opaque edge wiring identity, or null when no edge is wired. */
+  edgeWired: string | null;
+  invocations: { allowed: number; denied: number };
+  recentEvents: KitInstallationEvent[];
+}
+
+// ---------------------------------------------------------------------------
+// The edge port (the DEFERRED-ON-W088 adapter seam)
+// ---------------------------------------------------------------------------
+
+/** A kit runtime edge inspection request (the read path). */
+export interface VerticalKitEdgeInspectRequest {
+  installationId: string;
+  integrationKey: string;
+  capabilityKey: string;
+  /** Opaque external entity reference (the provider-side record id). */
+  target: string;
+}
+
+/** A kit runtime edge execution request (the write path). */
+export interface VerticalKitEdgeExecuteRequest {
+  installationId: string;
+  integrationKey: string;
+  capabilityKey: string;
+  /** Opaque external entity reference. */
+  target: string;
+  /** The canonical write payload (plain JSON object; the edge adapter
+   * composes the provider-native request — lock 16). */
+  payload: Record<string, unknown>;
+}
+
+/** The canonical state an edge inspection returned (plain JSON only). */
+export interface VerticalKitEdgeState {
+  found: boolean;
+  state: unknown;
+}
+
+/** The canonical action receipt an edge execution returned. */
+export interface VerticalKitEdgeReceipt {
+  status: 'accepted' | 'rejected' | 'failed';
+  /** The provider's own opaque receipt id, or null when it gave none. */
+  receiptId: string | null;
+  detail: string | null;
+}
+
+/**
+ * The kit runtime's system-of-record edge port — the clean seam every
+ * deep-integration path calls. The Edge Connector (W088, in flight in a
+ * parallel work stream) is the intended future implementor: once it
+ * lands, an adapter will implement this port over the brokered
+ * connections and progressive grants (W082/W083), composing kit writes
+ * onto the W084 deep-action pipeline so every execution carries its
+ * full evidence chain. Until then the port stays unwired and the
+ * execution paths fail explicitly (`edge_unavailable`) — never stubbed,
+ * never faked.
+ */
+export interface VerticalKitEdge {
+  /** Opaque wiring identity recorded on executed actions. */
+  readonly edgeId: string;
+  inspect(request: VerticalKitEdgeInspectRequest): Promise<VerticalKitEdgeState>;
+  execute(request: VerticalKitEdgeExecuteRequest): Promise<VerticalKitEdgeReceipt>;
 }
 
 // ---------------------------------------------------------------------------
 // Inputs and queries
 // ---------------------------------------------------------------------------
 
-/** Input shape of `installVerticalKit` / `upgradeVerticalKit`. */
-export interface InstallVerticalKitInput {
-  kitKey: string;
-  /** The kit version to install; defaults to the registry's latest. */
-  version?: string | null;
-  /** Caller-supplied dedupe key; a recorded key replays the install. */
-  idempotencyKey?: string | null;
+/** Input of `registerKitVersion` — a full kit manifest. */
+export interface RegisterKitVersionInput {
+  manifest: VerticalKitManifest;
 }
 
-/** Input shape of `removeVerticalKit`. */
-export interface RemoveVerticalKitInput {
-  kitKey: string;
-  idempotencyKey?: string | null;
+/** What `registerKitVersion` returns: the stored version. */
+export interface RegisterKitVersionResult {
+  version: VerticalKitVersion;
 }
 
-/** Input shape of `recordVerticalKitRecipeUse`. */
-export interface RecordRecipeUseInput {
+/** Input of `installKit`. */
+export interface InstallKitInput {
   kitKey: string;
-  /** Defaults to the tenant's installed version; explicit allowed. */
-  version?: string | null;
-  recipeKey: string;
-  /** Opaque reference (e.g. the deep-action task id). */
-  reference: string;
+  version: string;
+  /** The approver-facing justification carried on the W009 request. */
+  justification?: string | null;
 }
 
-/** Query shape of `getVerticalKitInstall`. */
-export interface GetVerticalKitInstallQuery {
-  kitKey: string;
+/** Input of `decideKitReview` (the human grant-review decision). */
+export interface DecideKitReviewInput {
+  installationId: string;
+  decision: 'approve' | 'reject';
+  note?: string | null;
 }
 
-/** Query shape of `listVerticalKitEvents`. */
-export interface ListVerticalKitEventsQuery {
+/** Input of `activateKit` / `resumeKit`. */
+export interface InstallationTargetInput {
+  installationId: string;
+}
+
+/** Input of `suspendKit` / `removeKit`. */
+export interface SuspendedRemovalInput {
+  installationId: string;
+  reason?: string | null;
+}
+
+/** Input of `invokeKitCapability` — the pre-execution authority gate. */
+export interface InvokeKitCapabilityInput {
+  installationId: string;
+  capabilityKey: string;
+  taskContext: KitTaskContext;
+}
+
+/** Input of `inspectKitIntegration` (the edge read path). */
+export interface InspectKitIntegrationInput {
+  installationId: string;
+  integrationKey: string;
+  /** Opaque external entity reference to inspect. */
+  target: string;
+  taskContext: KitTaskContext;
+}
+
+/** Input of `executeKitIntegration` (the edge write path). */
+export interface ExecuteKitIntegrationInput {
+  installationId: string;
+  integrationKey: string;
+  /** Opaque external entity reference to write. */
+  target: string;
+  /** The canonical write payload (plain JSON object). */
+  payload: Record<string, unknown>;
+  taskContext: KitTaskContext;
+}
+
+/** Result of `inspectKitIntegration`: the gate verdict plus the state. */
+export interface InspectKitIntegrationResult {
+  /** The recorded read-capability invocation (allowed or the denial that
+   * stopped the inspection). */
+  invocation: KitCapabilityInvocation;
+  /** The canonical state (null when the invocation was denied). */
+  state: VerticalKitEdgeState | null;
+}
+
+/** Result of `executeKitIntegration`: the gate verdict plus the receipt. */
+export interface ExecuteKitIntegrationResult {
+  /** The recorded write-capability invocation (allowed or the denial that
+   * stopped the write). */
+  invocation: KitCapabilityInvocation;
+  /** The executed action row (null when the invocation was denied). */
+  receipt: KitEdgeAction | null;
+}
+
+/** Query of `getKitVersion`. */
+export interface GetKitVersionQuery {
+  kitVersionId: string;
+}
+
+/** Query of `listKitVersions`. */
+export interface ListKitVersionsQuery {
   kitKey?: string | null;
-  limit?: number | null;
 }
 
-/** Query shape of `listVerticalKitRecipeReferences`. */
-export interface ListRecipeReferencesQuery {
-  kitKey?: string | null;
-  limit?: number | null;
+/** Query of `getKitInstallation` / `getKitStatus` / lifecycle operations. */
+export interface GetInstallationQuery {
+  installationId: string;
 }
 
-/** What `installVerticalKit` / `upgradeVerticalKit` return. */
-export interface InstallVerticalKitResult {
-  install: VerticalKitInstall;
-  /** false when an idempotency replay returned the recorded install. */
-  created: boolean;
+/** Query of `listKitInstallations`. */
+export interface ListKitInstallationsQuery {
+  status?: KitInstallationStatus | null;
 }
 
-/** What `removeVerticalKit` returns. */
-export interface RemoveVerticalKitResult {
-  /** The recipe references that survive the removal (the honest trail). */
-  survivingReferences: VerticalKitRecipeReference[];
+/** Query of `listKitInvocations` / `listKitEdgeActions` / `listKitEvents`. */
+export interface ListInstallationRecordsQuery {
+  installationId: string;
+  limit?: number;
 }

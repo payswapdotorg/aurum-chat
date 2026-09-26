@@ -337,20 +337,6 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'the recruitment journey lives in the interventions surface',
   },
   {
-    // W092 — Vertical Extension Starter Kits: the tower's Vertical Kits
-    // surface (an additive sixteenth tower page beside the W033
-    // fifteen, linked from the tower navigation). The module itself is
-    // the tenant-side consumer of the marketplace's INSTALLABLE
-    // hand-off point; its edge path is declared pending W088.
-    module: 'vertical-kits',
-    label: 'Vertical extension starter kits (W092)',
-    layer: 'L4',
-    routes: ['/vertical-kits'],
-    surfaces: ['command-search', 'hub-link', 'drill-down'],
-    instrument: false,
-    note: 'the admin-managed catalog of vertical starter kits — versioned bundles of extension manifests, permission-scoped deep-action recipe templates and broker connection classes, installed through the governed marketplace catalog with append-only lifecycle audit; discovered from the command search (the marketplace area\u2019s keyboard destinations), the capability hub (the More page\u2019s extend family) and the tower navigation on every management page (the People & Systems group)',
-  },
-  {
     module: 'agent-evaluation',
     label: 'Agent evaluation',
     layer: 'L4',
@@ -614,6 +600,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     surfaces: [],
     instrument: true,
     note: 'domain infrastructure, not a product capability: the cross-modality identity-proof layer (W095 — one person stays one organizational identity across messaging, meetings, SMS, voice, realtime and Edge Connector paths) composed over the identity/people/meetings/realtime contracts: the modality-scoped identity registry for the paths beyond the identity module’s channel-provider vocabulary, the ambiguity ledger that keeps ambiguous matches external/unverified instead of auto-merging them, the unified resolution/profile surface, and the meetings/realtime participant unification passes; it owns no user-facing route yet — the identity-mapping UX it strengthens lives in the connection hub — and is exercised by its own vitest suite',
+  },
+  {
+    module: 'vertical-kits',
+    label: 'Vertical extension starter kits (W092)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the vertical starter-kit layer (W092 — reusable specialist extension/agent starter kits and first deep integrations for system-of-record-heavy industries) composed over the actions/extensions/agents contracts: the versioned signed-manifest kit registry, the install/uninstall lifecycle whose grant review rides the W009 authority gate, the kit-scoped capability grants and invocation ledger, the two shipped starter kits (legal case management, accounting ledger ERP) that carry every vertical semantic inside their manifests — core stays industry-independent — and the DEFERRED-ON-W088 VerticalKitEdge seam the Edge Connector will implement for the deep-integration execution path; it owns no user-facing route yet — the kit surfacing arrives with the vertical journeys — and is exercised by its own vitest suite',
   },
 ];
 

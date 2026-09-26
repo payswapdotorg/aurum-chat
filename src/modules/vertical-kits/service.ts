@@ -2,1065 +2,1673 @@
 // contract.ts). W092 — Vertical Extension Starter Kits.
 //
 // Conventions (IMPLEMENTATION-STACK §3/§8): all SQL goes through the db
-// port with `$n` placeholders; ids are uuids minted by PostgreSQL;
-// timestamps come from the injectable clock and are never
-// caller-supplied; every table this module owns is tenant-scoped
-// (migrations/001) and every statement pins tenant_id.
+// port with `$n` placeholders; ids are uuids minted by `newId()` where
+// the id is needed before the insert; timestamps come from the
+// injectable clock and are never caller-supplied; every statement is
+// scoped by the explicit TenantContext (ADR-0001) — cross-tenant access
+// is indistinguishable from a missing record (`installation_not_found` /
+// `kit_version_not_found`), no existence leak.
 //
-// THE INSTALL PATH IS MARKETPLACE-PACKAGE-DRIVEN AND COMPOSES THE REAL
-// CONTRACTS — nothing is simulated:
+// W092 acceptance — "each pack is installable, permission-scoped,
+// versioned, auditable and removable; core modules remain
+// industry-independent" — is carried by these deliberate properties,
+// all tested:
 //
-//   1. RESOLVE the kit (a validated versioned data record — kits.ts);
-//   2. for every kit manifest, resolve the platform catalog (the W028
-//      marketplace contract, read under the INSTALLER's own tenant
-//      context) to the INSTALLABLE ExtensionPackage whose frozen
-//      subject EQUALS the kit's normalized declaration — a missing
-//      package is `kit_not_available`, a package whose content differs
-//      is `package_mismatch` (fail-closed: a tampered or drifted
-//      artifact never binds);
-//   3. ensure the manifest exists in the TENANT's own extensions
-//      registry (the W025 contract — registering when absent, refusing
-//      `kit_conflict` when a foreign declaration already occupies the
-//      key/version), and re-run the registry's own deterministic
-//      verification (VERIFIED required — no unverified software
-//      capability is enabled);
-//   4. activate the extension and deploy the version with the granted
-//      permissions EXACTLY the kit's per-manifest footprint — the
-//      extensions runtime's own install-time grant discipline (W026):
-//      the grant is bounded by the manifest's requested ceiling and
-//      routed through the W009 authority gate (kind
-//      'extension-deployment', level EXECUTE). A gate that WAITS
-//      surfaces honestly as `approval_required`; re-invoking after the
-//      human decision replays idempotently (the same deploy
-//      idempotency keys — no duplicate deployments);
-//   5. RECORD the install, the per-manifest grants (with their package
-//      bindings) and one append-only lifecycle event freezing the full
-//      WHAT (who, when, exactly what was granted through which
-//      packages).
+//   1. INSTALLABLE THROUGH A GOVERNED LIFECYCLE: installKit freezes the
+//      verified version's required-capability snapshot and routes the
+//      tenant's grant review through the actions module's authority gate
+//      (W009, kind 'vertical-kit-deployment' × EXECUTE). The built-in
+//      default matrix waits for a human decision; tenant policy may
+//      auto-allow or forbid. The human decision (decideKitReview)
+//      delegates to decideApproval — the approve claim, separation of
+//      duties and first-decision-wins are enforced THERE.
 //
-// UPGRADE is a NEW VERSION INSTALL, never a mutation: the install row
-// moves, the grant set is replaced, and BOTH states live on in the
-// append-only event trail (from-version → to-version, with both grant
-// snapshots recorded at their own events).
+//   2. PERMISSION-SCOPED, NOT FORKED: the kit grant model follows the
+//      capability-grants pattern (W083), kit-scoped — approval mints
+//      EXACTLY the declared capabilities as active grants; rejection
+//      mints nothing (denial stops the kit); every invocation consults
+//      the gate and every verdict (allowed or denied) lands in the
+//      append-only invocation ledger with its deterministic,
+//      task-grounded denial reason; removal revokes every grant (no
+//      orphaned authority).
 //
-// REMOVAL removes the kit's grants and package bindings (DELETE — that
-// is what removal means) while the append-only events and the immutable
-// recipe references survive: a deep-action plan instantiated from a kit
-// recipe keeps rendering "this template came from kit vX" AFTER the
-// kit is gone — no silent data loss.
+//   3. VERSIONED AND SIGNED: kit versions are immutable, strictly
+//      increasing release semvers per kit key (numeric order), each
+//      carrying the sha-256 digest of the canonical JSON of its frozen
+//      manifest; verification re-derives the digest over the STORED
+//      bytes, so a row edited outside the service fails loudly.
 //
-// THE EDGE PATH IS DECLARED, NEVER CLAIMED: kit definitions carry an
-// edgeExecution declaration (validated); every read renders it as the
-// single honest status 'pending-w088'. This service contains no edge
-// execution code, and no code path may render otherwise.
+//   4. AUDITABLE: every install/review/activation/suspension/resume/
+//      removal and every minted/revoked grant is an append-only event;
+//      the events, invocations and verification runs are append-only at
+//      the storage level (triggers refuse UPDATE/DELETE/TRUNCATE).
 //
-// Dependency posture: this module imports ONLY src/infra ports and
-// module contracts — extensions (registry + runtime grant), marketplace
-// (the governed catalog through INSTALLABLE). Vertical semantics live
-// in the kit DATA (kits.ts) and nowhere else; the code below is
-// industry-blind by construction.
+//   5. THE EDGE SEAM IS HONEST: the deep-integration execution path
+//      calls the VerticalKitEdge port and NOTHING is wired by default —
+//      inspect/execute fail explicitly with `edge_unavailable`
+//      (DEFERRED-ON-W088: the Edge Connector work item is the future
+//      implementor; it will compose onto the W084 deep-action pipeline
+//      through brokered connections and progressive grants). The module
+//      never fakes success, never stubs Edge internals and never guesses
+//      W088's API. A wired edge's results are canonicalized and
+//      validated — a provider object cannot cross the kit runtime
+//      (lock 16); the only provider-minted values persisted are OPAQUE
+//      strings (receipt ids, the edge's own wiring identity).
+//
+//   6. CORE STAYS INDUSTRY-INDEPENDENT: every vertical word lives in
+//      kit manifests (data), never in this module's code or schema —
+//      the two shipped starter kits are the only place vertical
+//      vocabulary exists, and they are content, not schema.
 
 import { now } from '@/infra/clock';
-import { getDb, type DbRow } from '@/infra/db';
+import { getDb, type DbRow, type Queryable } from '@/infra/db';
+import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import {
-  ExtensionsError,
-  compareSemver,
-  deployExtensionVersion,
-  getExtension,
-  isSemver,
-  listManifests,
-  parseSemver,
-  registerExtensionManifest,
-  runManifestVerification,
-  transitionExtension,
-  type ExtensionManifestSummary,
-  type ExtensionPermission,
-} from '@/modules/extensions/contract';
-import { listCatalogPackages } from '@/modules/marketplace/contract';
-import { KIT_REGISTRY } from './kits';
+  ActionsError,
+  authorizeAction,
+  decideApproval,
+  getActionRequest,
+  type ActionRequest,
+} from '@/modules/actions/contract';
+import { compareSemver, parseSemver, type SemverParts } from '@/modules/extensions/contract';
 import { VerticalKitsError } from './errors';
 import {
-  EDGE_EXECUTION_STATUS,
-  VERTICAL_KIT_EVENT_TYPES,
-  type InstallVerticalKitInput,
-  type InstallVerticalKitResult,
-  type KitEdgeExecutionInfo,
-  type ListRecipeReferencesQuery,
-  type ListVerticalKitEventsQuery,
-  type RecordRecipeUseInput,
-  type RemoveVerticalKitInput,
-  type RemoveVerticalKitResult,
-  type VerticalKitDefinition,
-  type VerticalKitEvent,
-  type VerticalKitEventType,
-  type VerticalKitInstall,
-  type VerticalKitRecipeReference,
-  type VerticalKitSummary,
+  canTransitionInstallation,
+  targetInstallationState,
+  type KitInstallationLifecycleState,
+} from './lifecycle';
+import {
+  buildInactiveInstallationReason,
+  buildMissingGrantReason,
+  clampDetail,
+} from './reason';
+import { verifyKitManifest } from './verification';
+import {
+  assertVerticalKitsTenantContext,
+  validateDecideKitReviewInput,
+  validateExecuteKitIntegrationInput,
+  validateGetInstallationQuery,
+  validateGetKitVersionQuery,
+  validateInstallKitInput,
+  validateInspectKitIntegrationInput,
+  validateInstallationTargetInput,
+  validateInvokeKitCapabilityInput,
+  validateListInstallationRecordsQuery,
+  validateListKitInstallationsQuery,
+  validateListKitVersionsQuery,
+  validateRegisterKitVersionInput,
+  validateSuspendedRemovalInput,
+} from './validation';
+import type {
+  DecideKitReviewInput,
+  ExecuteKitIntegrationInput,
+  ExecuteKitIntegrationResult,
+  GetInstallationQuery,
+  GetKitVersionQuery,
+  InstallKitInput,
+  InspectKitIntegrationInput,
+  InspectKitIntegrationResult,
+  InvokeKitCapabilityInput,
+  KitCapabilityDeclaration,
+  KitCapabilityGrant,
+  KitCapabilityInvocation,
+  KitComponentStatus,
+  KitEdgeAction,
+  KitEdgeIntegrationDeclaration,
+  KitInstallation,
+  KitInstallationDetail,
+  KitInstallationEvent,
+  KitIntegrationReadiness,
+  KitInvocationBasis,
+  KitStatusReport,
+  KitTaskContext,
+  ListInstallationRecordsQuery,
+  ListKitInstallationsQuery,
+  ListKitVersionsQuery,
+  RegisterKitVersionInput,
+  RegisterKitVersionResult,
+  SuspendedRemovalInput,
+  VerticalKitEdge,
+  VerticalKitEdgeState,
+  VerticalKitManifest,
+  VerticalKitVerification,
+  VerticalKitVersion,
+  VerticalKitVersionSummary,
+  VerticalKitVersionWithVerification,
 } from './types';
 import {
-  isVerticalKitKey,
-  kitManifestSubject,
-  normalizeKitManifest,
-  validateKitDefinition,
+  MAX_RECEIPT_DETAIL_LENGTH,
+  MAX_RECEIPT_ID_LENGTH,
+  MAX_VALUE_BYTES,
 } from './validation';
 
-// re-exported through the contract for consumers/tests
-export { KIT_REGISTRY } from './kits';
-
 // ---------------------------------------------------------------------------
-// Authority claim
+// Module-owned constants
 // ---------------------------------------------------------------------------
 
-/** The claim that manages a tenant's vertical-kit lifecycle. */
+/** The authority claim this module's administrative surface checks. */
 export const VERTICAL_KITS_AUTHORITY_ADMINISTER = 'vertical-kits:administer';
 
-function canAdminister(authorityClaims: readonly string[]): boolean {
-  return authorityClaims.includes(VERTICAL_KITS_AUTHORITY_ADMINISTER);
+/** The canonical W009 action kind of a kit install grant review. */
+export const VERTICAL_KIT_ACTION_KIND = 'vertical-kit-deployment';
+
+/** The human-readable prefix of the DEFERRED-ON-W088 refusal. */
+const EDGE_UNAVAILABLE_MESSAGE =
+  'no system-of-record edge is wired — the kit runtime refuses to fake success; ' +
+  'the deep-integration execution path is DEFERRED-ON-W088 (the Edge Connector work item will implement the VerticalKitEdge port)';
+
+// ---------------------------------------------------------------------------
+// The edge port wiring (infrastructure, not domain state)
+// ---------------------------------------------------------------------------
+
+let wiredEdge: VerticalKitEdge | null = null;
+
+/** Wires (or clears) the system-of-record edge — the DEFERRED-ON-W088 seam. */
+export function setVerticalKitEdge(edge: VerticalKitEdge | null): void {
+  wiredEdge = edge;
 }
 
-function administerForbidden(operation: string): never {
-  throw new VerticalKitsError(
-    'forbidden',
-    `${operation} requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`,
-  );
+/** The currently wired edge (null = none; every deep path refuses then). */
+export function getVerticalKitEdge(): VerticalKitEdge | null {
+  return wiredEdge;
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** The house context guard (the marketplace's discipline). */
-export function assertVerticalKitsTenantContext(ctx: TenantContext): void {
-  if (
-    typeof ctx !== 'object' ||
-    ctx === null ||
-    typeof ctx.tenantId !== 'string' ||
-    !UUID_PATTERN.test(ctx.tenantId) ||
-    typeof ctx.principalId !== 'string' ||
-    !UUID_PATTERN.test(ctx.principalId) ||
-    !Array.isArray(ctx.authority)
-  ) {
-    throw new VerticalKitsError('invalid_context', 'a valid TenantContext is required');
+function requireEdge(): VerticalKitEdge {
+  if (wiredEdge === null) {
+    throw new VerticalKitsError('edge_unavailable', EDGE_UNAVAILABLE_MESSAGE);
   }
+  return wiredEdge;
 }
 
 // ---------------------------------------------------------------------------
-// Kit resolution (the validated data records, served generically)
+// Row shapes
 // ---------------------------------------------------------------------------
 
-/** The registry's versions of one kit, newest first (semver order). */
-function kitVersionsOf(kitKey: string): VerticalKitDefinition[] {
-  return KIT_REGISTRY.filter((kit) => kit.kitKey === kitKey).sort(
-    (a, b) =>
-      -compareSemver(a.versionParts, b.versionParts) ||
-      (a.version < b.version ? 1 : a.version > b.version ? -1 : 0),
-  );
+interface VersionRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  kit_key: string;
+  version: string;
+  version_major: number;
+  version_minor: number;
+  version_patch: number;
+  kit_schema_version: number;
+  vertical_key: string;
+  display_name: string;
+  description: string;
+  manifest: VerticalKitManifest;
+  manifest_digest: string;
+  capability_count: number;
+  extension_count: number;
+  agent_count: number;
+  integration_count: number;
+  created_by: string;
+  created_at: Date;
 }
 
-/**
- * Resolve one kit definition: the newest registered version, or an
- * exact one. Every resolve RE-VALIDATES the record (fail-closed — a
- * registry entry that stops satisfying the contracts is refused at
- * read time, exactly as it would be at registration).
- */
-export function getKitDefinition(
-  kitKey: string,
-  version?: string | null,
-): VerticalKitDefinition {
-  if (!isVerticalKitKey(kitKey)) {
-    throw new VerticalKitsError('invalid_input', `kitKey '${String(kitKey)}' is not a kit slug`);
-  }
-  const versions = kitVersionsOf(kitKey);
-  if (versions.length === 0) {
-    throw new VerticalKitsError('kit_not_found', `no kit '${kitKey}' is registered`);
-  }
-  let kit: VerticalKitDefinition | undefined;
-  if (version === undefined || version === null) {
-    kit = versions[0]!;
-  } else {
-    if (!isSemver(version)) {
-      throw new VerticalKitsError(
-        'invalid_input',
-        `version must be a release semver MAJOR.MINOR.PATCH (got '${version}')`,
-      );
-    }
-    kit = versions.find((candidate) => candidate.version === version);
-  }
-  if (kit === undefined) {
-    throw new VerticalKitsError(
-      'kit_not_found',
-      `no kit '${kitKey}' version '${String(version)}' is registered`,
-    );
-  }
-  validateKitDefinition(kit);
-  return kit;
+interface VerificationRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  kit_version_id: string;
+  position: number;
+  outcome: 'verified' | 'failed';
+  checks: { check: string; passed: boolean; detail: string | null }[];
+  summary: string;
+  verifier: string;
+  ran_at: Date;
 }
 
-/** The honest edge-execution posture of a kit (never an execution claim). */
-export function edgeExecutionInfoOf(kit: VerticalKitDefinition): KitEdgeExecutionInfo {
-  return {
-    recipes: [...kit.edgeExecution.recipeKeys],
-    status: EDGE_EXECUTION_STATUS,
-    note: kit.edgeExecution.note,
-  };
-}
-
-/** The kit catalog: every registered kit, validated, edge posture rendered. */
-export function listKitCatalog(): VerticalKitSummary[] {
-  const kitsByLatest = new Map<string, VerticalKitDefinition>();
-  for (const kit of KIT_REGISTRY) {
-    validateKitDefinition(kit);
-    const existing = kitsByLatest.get(kit.kitKey);
-    if (
-      existing === undefined ||
-      compareSemver(kit.versionParts, existing.versionParts) > 0
-    ) {
-      kitsByLatest.set(kit.kitKey, kit);
-    }
-  }
-  return [...kitsByLatest.values()].map((kit) => ({
-    ...kit,
-    edgeExecutionInfo: edgeExecutionInfoOf(kit),
-  }));
-}
-
-// ---------------------------------------------------------------------------
-// Rows + mapping
-// ---------------------------------------------------------------------------
-
-interface InstallRow extends DbRow {
+interface InstallationRow extends DbRow {
   id: string;
   tenant_id: string;
   kit_key: string;
   kit_version: string;
-  version_major: number;
-  version_minor: number;
-  version_patch: number;
+  kit_version_id: string;
+  status: string;
+  required_capabilities: KitCapabilityDeclaration[];
+  action_request_id: string;
   installed_by: string;
-  installed_at: Date | string;
-  updated_at: Date | string;
+  installed_at: Date;
+  reviewed_at: Date | null;
+  activated_at: Date | null;
+  suspended_at: Date | null;
+  removed_at: Date | null;
+  removal_reason: string | null;
 }
 
 interface GrantRow extends DbRow {
   id: string;
   tenant_id: string;
-  install_id: string;
-  kit_key: string;
-  extension_key: string;
-  extension_version: string;
-  package_id: string;
-  package_key: string;
-  granted_permissions: unknown;
-  deployed_at: Date | string;
+  installation_id: string;
+  capability_key: string;
+  label: string;
+  data_categories: string[];
+  status: 'active' | 'revoked';
+  granted_by: string;
+  granted_at: Date;
+  revoked_at: Date | null;
+  revoked_by: string | null;
+  revocation_reason: string | null;
+}
+
+interface InvocationRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  installation_id: string;
+  capability_key: string;
+  outcome: 'allowed' | 'denied';
+  basis: KitInvocationBasis;
+  denial_reason: string | null;
+  task_context: KitTaskContext;
+  invoked_by: string;
+  invoked_at: Date;
+}
+
+interface EdgeActionRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  installation_id: string;
+  integration_key: string;
+  capability_key: string;
+  invocation_id: string;
+  receipt_status: 'accepted' | 'rejected' | 'failed';
+  receipt_id: string | null;
+  receipt_detail: string | null;
+  edge_id: string;
+  executed_by: string;
+  executed_at: Date;
 }
 
 interface EventRow extends DbRow {
   id: string;
   tenant_id: string;
-  kit_key: string;
-  event_type: string;
-  from_version: string | null;
-  to_version: string | null;
-  actor: string;
-  occurred_at: Date | string;
-  detail: unknown;
-}
-
-interface RecipeReferenceRow extends DbRow {
-  id: string;
-  tenant_id: string;
-  kit_key: string;
-  kit_version: string;
-  recipe_key: string;
-  reference: string;
+  installation_id: string;
+  position: number;
+  event: string;
+  detail: string | null;
   recorded_by: string;
-  recorded_at: Date | string;
+  recorded_at: Date;
 }
 
-function iso(value: Date | string): string {
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+// ---------------------------------------------------------------------------
+// Row mappers (snake_case storage → the public surface)
+// ---------------------------------------------------------------------------
+
+function iso(value: Date | null): string | null {
+  return value === null ? null : value.toISOString();
 }
 
-function permissionsOf(value: unknown): ExtensionPermission[] {
-  if (!Array.isArray(value)) return [];
-  return value.filter((entry): entry is ExtensionPermission => typeof entry === 'string');
+function mapVersion(row: VersionRow): VerticalKitVersion {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    kitKey: row.kit_key,
+    version: row.version,
+    kitSchemaVersion: row.kit_schema_version,
+    verticalKey: row.vertical_key,
+    displayName: row.display_name,
+    description: row.description,
+    manifest: row.manifest,
+    manifestDigest: row.manifest_digest,
+    registeredBy: row.created_by,
+    registeredAt: row.created_at.toISOString(),
+  };
 }
 
-function detailGrantsOf(value: unknown): VerticalKitEvent['detail']['grants'] {
-  if (typeof value !== 'object' || value === null) return { grants: [] }['grants'];
-  const grants = (value as { grants?: unknown }).grants;
-  if (!Array.isArray(grants)) return [];
-  const out: VerticalKitEvent['detail']['grants'] = [];
-  for (const entry of grants) {
-    if (typeof entry !== 'object' || entry === null) continue;
-    const grant = entry as Record<string, unknown>;
-    out.push({
-      extensionKey: String(grant['extensionKey'] ?? ''),
-      extensionVersion: String(grant['extensionVersion'] ?? ''),
-      packageId: String(grant['packageId'] ?? ''),
-      packageKey: String(grant['packageKey'] ?? ''),
-      grantedPermissions: permissionsOf(grant['grantedPermissions']),
-    });
-  }
-  return out;
+function mapVerification(row: VerificationRow): VerticalKitVerification {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    kitVersionId: row.kit_version_id,
+    outcome: row.outcome,
+    checks: row.checks,
+    summary: row.summary,
+    verifier: row.verifier,
+    ranAt: row.ran_at.toISOString(),
+  };
 }
 
-async function findInstallRow(
-  ctx: TenantContext,
-  kitKey: string,
-): Promise<InstallRow | null> {
-  const rows = await getDb().query<InstallRow>(
-    `SELECT * FROM vertical_kit_installs
-       WHERE tenant_id = $1 AND kit_key = $2`,
-    [ctx.tenantId, kitKey],
-  );
-  return rows.rows[0] ?? null;
-}
-
-async function grantRowsOf(ctx: TenantContext, installId: string): Promise<GrantRow[]> {
-  const rows = await getDb().query<GrantRow>(
-    `SELECT * FROM vertical_kit_grants
-       WHERE tenant_id = $1 AND install_id = $2
-       ORDER BY extension_key ASC`,
-    [ctx.tenantId, installId],
-  );
-  return rows.rows;
-}
-
-function installOf(
-  row: InstallRow,
-  grants: GrantRow[],
-  kit: VerticalKitDefinition,
-): VerticalKitInstall {
+function mapInstallation(row: InstallationRow): KitInstallation {
   return {
     id: row.id,
     tenantId: row.tenant_id,
     kitKey: row.kit_key,
     kitVersion: row.kit_version,
+    kitVersionId: row.kit_version_id,
+    status: row.status as KitInstallation['status'],
+    actionRequestId: row.action_request_id,
     installedBy: row.installed_by,
-    installedAt: iso(row.installed_at),
-    updatedAt: iso(row.updated_at),
-    grants: grants.map((grant) => ({
-      id: grant.id,
-      tenantId: grant.tenant_id,
-      installId: grant.install_id,
-      kitKey: grant.kit_key,
-      extensionKey: grant.extension_key,
-      extensionVersion: grant.extension_version,
-      packageId: grant.package_id,
-      packageKey: grant.package_key,
-      grantedPermissions: permissionsOf(grant.granted_permissions),
-      deployedAt: iso(grant.deployed_at),
-    })),
-    edgeExecutionInfo: edgeExecutionInfoOf(kit),
+    installedAt: row.installed_at.toISOString(),
+    reviewedAt: iso(row.reviewed_at),
+    activatedAt: iso(row.activated_at),
+    suspendedAt: iso(row.suspended_at),
+    removedAt: iso(row.removed_at),
+    removalReason: row.removal_reason,
+  };
+}
+
+function mapGrant(row: GrantRow): KitCapabilityGrant {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    installationId: row.installation_id,
+    capabilityKey: row.capability_key,
+    label: row.label,
+    dataCategories: row.data_categories,
+    status: row.status,
+    grantedBy: row.granted_by,
+    grantedAt: row.granted_at.toISOString(),
+    revokedAt: iso(row.revoked_at),
+    revokedBy: row.revoked_by,
+    revocationReason: row.revocation_reason,
+  };
+}
+
+function mapInvocation(row: InvocationRow): KitCapabilityInvocation {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    installationId: row.installation_id,
+    capabilityKey: row.capability_key,
+    outcome: row.outcome,
+    basis: row.basis,
+    denialReason: row.denial_reason,
+    taskContext: row.task_context,
+    invokedBy: row.invoked_by,
+    invokedAt: row.invoked_at.toISOString(),
+  };
+}
+
+function mapEdgeAction(row: EdgeActionRow): KitEdgeAction {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    installationId: row.installation_id,
+    integrationKey: row.integration_key,
+    capabilityKey: row.capability_key,
+    invocationId: row.invocation_id,
+    receiptStatus: row.receipt_status,
+    receiptId: row.receipt_id,
+    receiptDetail: row.receipt_detail,
+    edgeId: row.edge_id,
+    executedBy: row.executed_by,
+    executedAt: row.executed_at.toISOString(),
+  };
+}
+
+function mapEvent(row: EventRow): KitInstallationEvent {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    installationId: row.installation_id,
+    position: row.position,
+    event: row.event,
+    detail: row.detail,
+    recordedBy: row.recorded_by,
+    recordedAt: row.recorded_at.toISOString(),
+  };
+}
+
+function versionPartsOf(row: VersionRow): SemverParts {
+  return {
+    major: row.version_major,
+    minor: row.version_minor,
+    patch: row.version_patch,
   };
 }
 
 // ---------------------------------------------------------------------------
-// Input validation (the service-side guards)
+// Authority claim gate
 // ---------------------------------------------------------------------------
 
-interface ValidatedInstallInput {
-  kitKey: string;
-  version: string | null;
-}
-
-function validateInstallInput(input: InstallVerticalKitInput): ValidatedInstallInput {
-  if (typeof input !== 'object' || input === null) {
-    throw new VerticalKitsError('invalid_input', 'the install input must be an object');
-  }
-  const kitKey = (input as { kitKey?: unknown }).kitKey;
-  if (!isVerticalKitKey(kitKey)) {
-    throw new VerticalKitsError('invalid_input', `kitKey '${String(kitKey)}' is not a kit slug`);
-  }
-  const version = (input as { version?: unknown }).version ?? null;
-  if (version !== null && (typeof version !== 'string' || !isSemver(version))) {
+function requireAdminister(ctx: TenantContext, operation: string): void {
+  if (!ctx.authority.includes(VERTICAL_KITS_AUTHORITY_ADMINISTER)) {
     throw new VerticalKitsError(
-      'invalid_input',
-      `version must be null or a release semver (got '${String(version)}')`,
+      'forbidden',
+      `${operation} requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`,
     );
   }
-  return { kitKey, version };
-}
-
-function validateLimit(limit: unknown, fallback: number, max: number): number {
-  if (limit === undefined || limit === null) return fallback;
-  if (typeof limit !== 'number' || !Number.isInteger(limit) || limit < 1 || limit > max) {
-    throw new VerticalKitsError(
-      'invalid_input',
-      `limit must be an integer between 1 and ${max} (got '${String(limit)}')`,
-    );
-  }
-  return limit;
 }
 
 // ---------------------------------------------------------------------------
-// The marketplace-package-driven install composition
+// Shared finds (tenant-scoped; cross-tenant = not found)
 // ---------------------------------------------------------------------------
 
-/** Deep-equal comparison of a kit's manifest subject vs a frozen package subject. */
-function subjectMatches(
-  kitSubject: Record<string, unknown>,
-  frozen: Record<string, unknown>,
-): boolean {
-  return JSON.stringify(sortDeep(kitSubject)) === JSON.stringify(sortDeep(frozen));
-}
-
-/** Deterministic canonical JSON (key order normalized, recursively). */
-function sortDeep(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sortDeep);
-  if (typeof value === 'object' && value !== null) {
-    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-      a < b ? -1 : a > b ? 1 : 0,
-    );
-    const out: Record<string, unknown> = {};
-    for (const [key, entry] of entries) out[key] = sortDeep(entry);
-    return out;
-  }
-  return value;
-}
-
-interface ResolvedPackageBinding {
-  extensionKey: string;
-  extensionVersion: string;
-  packageId: string;
-  packageKey: string;
-  grantedPermissions: ExtensionPermission[];
-}
-
-/**
- * Resolve every kit manifest to its INSTALLABLE marketplace package,
- * fail-closed on content drift (the W028 discipline consumed through
- * the marketplace contract only).
- */
-async function resolvePackageBindings(
+async function findVersionRow(
+  db: Queryable,
   ctx: TenantContext,
-  kit: VerticalKitDefinition,
-): Promise<Map<string, ResolvedPackageBinding>> {
-  const catalog = await listCatalogPackages(ctx, { kind: 'extension' });
-  const installable = catalog.filter((pkg) => pkg.state === 'INSTALLABLE');
-  const bindings = new Map<string, ResolvedPackageBinding>();
-  for (const spec of kit.extensionManifests) {
-    const normalized = normalizeKitManifest(spec.manifest);
-    const subject = kitManifestSubject(spec.manifest);
-    const candidates = installable.filter(
-      (pkg) =>
-        pkg.kind === 'extension' &&
-        (pkg.payload as { extensionKey?: string }).extensionKey === normalized.extensionKey &&
-        pkg.version === normalized.version,
-    );
-    const matched = candidates.find((pkg) => {
-      const payload = pkg.payload as { subject?: Record<string, unknown> };
-      return (
-        typeof payload.subject === 'object' &&
-        payload.subject !== null &&
-        subjectMatches(subject as unknown as Record<string, unknown>, payload.subject)
-      );
-    });
-    if (matched === undefined) {
-      if (candidates.length > 0) {
-        throw new VerticalKitsError(
-          'package_mismatch',
-          `the catalog's package for '${normalized.extensionKey}' ${normalized.version} does not match the kit's frozen declaration — refusing to bind a drifted artifact`,
-        );
-      }
-      throw new VerticalKitsError(
-        'kit_not_available',
-        `no INSTALLABLE marketplace package exists for '${normalized.extensionKey}' ${normalized.version} — the kit cannot be installed until its manifests are platform-approved and installable`,
-      );
-    }
-    bindings.set(normalized.extensionKey, {
-      extensionKey: normalized.extensionKey,
-      extensionVersion: normalized.version,
-      packageId: matched.id,
-      packageKey: matched.packageKey,
-      grantedPermissions: [...normalized.requestedPermissions],
-    });
-  }
-  return bindings;
-}
-
-/** Does the tenant registry already hold this exact manifest declaration? */
-function registryManifestMatches(
-  existing: ExtensionManifestSummary,
-  spec: VerticalKitDefinition['extensionManifests'][number],
-): boolean {
-  const normalized = normalizeKitManifest(spec.manifest);
-  return (
-    existing.manifestSchemaVersion === spec.manifest.manifestSchemaVersion &&
-    JSON.stringify(sortDeep(existing.requestedPermissions)) ===
-      JSON.stringify(sortDeep(normalized.requestedPermissions)) &&
-    JSON.stringify(sortDeep(existing.capabilities as unknown)) ===
-      JSON.stringify(sortDeep(normalized.capabilities as unknown)) &&
-    JSON.stringify(sortDeep(existing.quotas as unknown)) ===
-      JSON.stringify(sortDeep(normalized.quotas as unknown)) &&
-    JSON.stringify(sortDeep(existing.hostCompatibility as unknown)) ===
-      JSON.stringify(sortDeep(normalized.hostCompatibility as unknown))
+  kitVersionId: string,
+): Promise<VersionRow | null> {
+  const result = await db.query<VersionRow>(
+    `SELECT * FROM vertical_kit_versions WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, kitVersionId],
   );
+  return result.rows[0] ?? null;
 }
 
-/**
- * Ensure every kit manifest is registered, VERIFIED, ACTIVE and
- * DEPLOYED in the tenant's own extensions registry with the kit's
- * exact per-manifest grant — all through the extensions contract.
- */
-async function ensureDeployedThroughExtensions(
-  ctx: TenantContext,
-  kit: VerticalKitDefinition,
-): Promise<Map<string, ResolvedPackageBinding>> {
-  const bindings = await resolvePackageBindings(ctx, kit);
-
-  for (const spec of kit.extensionManifests) {
-    const normalized = normalizeKitManifest(spec.manifest);
-    let manifestId: string;
-
-    // (a) the manifest exists in the tenant registry — or is registered now.
-    const existing = await listManifests(ctx, { extensionKey: normalized.extensionKey, limit: 500 });
-    const already = existing.find((manifest) => manifest.version === normalized.version);
-    if (already !== undefined) {
-      if (!registryManifestMatches(already, spec)) {
-        throw new VerticalKitsError(
-          'kit_conflict',
-          `the tenant registry already holds a different declaration for '${normalized.extensionKey}' ${normalized.version} — manifests are immutable; refusing to install over it`,
-        );
-      }
-      manifestId = already.id;
-    } else {
-      try {
-        const registered = await registerExtensionManifest(ctx, spec.manifest);
-        manifestId = registered.manifest.id;
-      } catch (error) {
-        if (error instanceof ExtensionsError) {
-          if (error.code === 'forbidden') {
-            throw new VerticalKitsError(
-              'forbidden',
-              `installing a kit composes the tenant's extensions registry — the caller must also hold the 'extensions:administer' claim`,
-            );
-          }
-          if (error.code === 'version_conflict') {
-            throw new VerticalKitsError(
-              'kit_conflict',
-              `the tenant registry conflicted on '${normalized.extensionKey}' ${normalized.version}: ${error.message}`,
-            );
-          }
-          throw new VerticalKitsError('invalid_kit', error.message);
-        }
-        throw error;
-      }
-    }
-
-    // (b) the registry's own deterministic verification must be VERIFIED.
-    const verification = await runManifestVerification(ctx, { manifestId });
-    if (verification.state !== 'VERIFIED') {
-      throw new VerticalKitsError(
-        'kit_not_available',
-        `the extensions registry's verification refused '${normalized.extensionKey}' ${normalized.version} (${verification.state}) — no unverified software capability is enabled`,
-      );
-    }
-
-    // (c) the extension must be ACTIVE (activate/resume idempotently).
-    const extension = await getExtension(ctx, { extensionKey: normalized.extensionKey });
-    if (extension.lifecycleState === 'DEPRECATED') {
-      throw new VerticalKitsError(
-        'kit_conflict',
-        `extension '${normalized.extensionKey}' is DEPRECATED in this tenant — retirement is terminal; the kit cannot install over it`,
-      );
-    }
-    if (extension.lifecycleState !== 'ACTIVE') {
-      const transition = extension.lifecycleState === 'SUSPENDED' ? 'resume' : 'activate';
-      const moved = await transitionExtension(ctx, {
-        extensionId: extension.id,
-        transition,
-        idempotencyKey: `vertical-kit:${kit.kitKey}:${kit.version}:${transition}:${normalized.extensionKey}`,
-      });
-      if (!moved.applied) {
-        throw new VerticalKitsError(
-          'approval_required',
-          `the authority gate holds the ${transition} of '${normalized.extensionKey}' pending a human decision — re-invoke the kit install after the decision to complete it`,
-        );
-      }
-    }
-
-    // (d) deploy the version with EXACTLY the kit's grant (the manifest's
-    // requested set — the runtime bounds it by the same ceiling).
-    const deployed = await deployExtensionVersion(ctx, {
-      extensionKey: normalized.extensionKey,
-      version: normalized.version,
-      installKey: 'default',
-      grantedPermissions: [...normalized.requestedPermissions],
-      idempotencyKey: `vertical-kit:${kit.kitKey}:${kit.version}:deploy:${normalized.extensionKey}`,
-    });
-    if (!deployed.applied || deployed.deployment === null) {
-      if (deployed.gate.status === 'pending') {
-        throw new VerticalKitsError(
-          'approval_required',
-          `the authority gate holds the deployment of '${normalized.extensionKey}' ${normalized.version} pending a human decision — re-invoke the kit install after the decision to complete it (already-applied deployments replay idempotently)`,
-        );
-      }
-      throw new VerticalKitsError(
-        'forbidden',
-        `tenant policy refused the deployment of '${normalized.extensionKey}' ${normalized.version} (${deployed.gate.status})`,
-      );
-    }
-  }
-
-  return bindings;
-}
-
-// ---------------------------------------------------------------------------
-// Install / upgrade / remove (the five acceptance clauses)
-// ---------------------------------------------------------------------------
-
-async function appendEvent(
+async function findVersionRowByKey(
+  db: Queryable,
   ctx: TenantContext,
   kitKey: string,
-  eventType: VerticalKitEventType,
-  fromVersion: string | null,
-  toVersion: string | null,
-  detail: VerticalKitEvent['detail'],
-): Promise<void> {
-  if (!(VERTICAL_KIT_EVENT_TYPES as readonly string[]).includes(eventType)) {
-    throw new VerticalKitsError('invalid_input', `unknown kit event type '${String(eventType)}'`);
+  version: string,
+): Promise<VersionRow | null> {
+  const result = await db.query<VersionRow>(
+    `SELECT * FROM vertical_kit_versions WHERE tenant_id = $1 AND kit_key = $2 AND version = $3`,
+    [ctx.tenantId, kitKey, version],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function findLatestVersionRow(
+  db: Queryable,
+  ctx: TenantContext,
+  kitKey: string,
+): Promise<VersionRow | null> {
+  const result = await db.query<VersionRow>(
+    `SELECT * FROM vertical_kit_versions
+       WHERE tenant_id = $1 AND kit_key = $2
+       ORDER BY version_major DESC, version_minor DESC, version_patch DESC, created_at DESC
+       LIMIT 1`,
+    [ctx.tenantId, kitKey],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function findInstallationRow(
+  db: Queryable,
+  ctx: TenantContext,
+  installationId: string,
+): Promise<InstallationRow | null> {
+  const result = await db.query<InstallationRow>(
+    `SELECT * FROM vertical_kit_installations WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, installationId],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function requireInstallationRow(
+  db: Queryable,
+  ctx: TenantContext,
+  installationId: string,
+): Promise<InstallationRow> {
+  const row = await findInstallationRow(db, ctx, installationId);
+  if (row === null) {
+    throw new VerticalKitsError(
+      'installation_not_found',
+      `no kit installation '${installationId}' exists in this tenant`,
+    );
   }
-  await getDb().query(
+  return row;
+}
+
+async function findLatestVerificationRow(
+  db: Queryable,
+  ctx: TenantContext,
+  kitVersionId: string,
+): Promise<VerificationRow | null> {
+  const result = await db.query<VerificationRow>(
+    `SELECT * FROM vertical_kit_verifications
+       WHERE tenant_id = $1 AND kit_version_id = $2
+       ORDER BY position DESC
+       LIMIT 1`,
+    [ctx.tenantId, kitVersionId],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function verificationStateOf(
+  db: Queryable,
+  ctx: TenantContext,
+  kitVersionId: string,
+): Promise<'unverified' | 'verified' | 'failed'> {
+  const latest = await findLatestVerificationRow(db, ctx, kitVersionId);
+  if (latest === null) return 'unverified';
+  return latest.outcome;
+}
+
+async function appendEvent(
+  db: Queryable,
+  ctx: TenantContext,
+  installationId: string,
+  event: string,
+  detail: string | null,
+): Promise<void> {
+  const positionResult = await db.query<{ next: number }>(
+    `SELECT COALESCE(MAX(position), 0) + 1 AS next
+       FROM vertical_kit_events
+       WHERE tenant_id = $1 AND installation_id = $2`,
+    [ctx.tenantId, installationId],
+  );
+  await db.query(
     `INSERT INTO vertical_kit_events
-        (id, tenant_id, kit_key, event_type, from_version, to_version, actor, occurred_at, detail)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
+       (id, tenant_id, installation_id, position, event, detail, recorded_by, recorded_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [
+      newId(),
       ctx.tenantId,
-      kitKey,
-      eventType,
-      fromVersion,
-      toVersion,
+      installationId,
+      positionResult.rows[0]?.next ?? 1,
+      event,
+      detail === null ? null : clampDetail(detail, 500),
       ctx.principalId,
       now(),
-      JSON.stringify(detail),
     ],
   );
 }
 
-function eventDetailOf(bindings: Map<string, ResolvedPackageBinding>): VerticalKitEvent['detail'] {
-  return {
-    grants: [...bindings.values()]
-      .sort((a, b) => (a.extensionKey < b.extensionKey ? -1 : 1))
-      .map((binding) => ({
-        extensionKey: binding.extensionKey,
-        extensionVersion: binding.extensionVersion,
-        packageId: binding.packageId,
-        packageKey: binding.packageKey,
-        grantedPermissions: [...binding.grantedPermissions],
-      })),
-  };
-}
+// ---------------------------------------------------------------------------
+// Registry — registerKitVersion / runKitVerification / reads
+// ---------------------------------------------------------------------------
 
-/**
- * Install one kit version into the tenant — the marketplace-package-
- * driven composition above, recorded idempotently (a replay of the same
- * version returns the recorded install, `created: false`, and appends
- * nothing).
- */
-export async function installVerticalKit(
+export async function registerKitVersion(
   ctx: TenantContext,
-  input: InstallVerticalKitInput,
-): Promise<InstallVerticalKitResult> {
+  input: RegisterKitVersionInput,
+): Promise<RegisterKitVersionResult> {
   assertVerticalKitsTenantContext(ctx);
-  if (!canAdminister(ctx.authority)) administerForbidden('installVerticalKit');
-  const valid = validateInstallInput(input);
+  requireAdminister(ctx, 'registering a kit version');
+  const valid = validateRegisterKitVersionInput(input);
+  const parts = parseSemver(valid.manifest.version)!;
+  const manifest = valid.manifest;
+  const at = now();
 
-  const kit = getKitDefinition(valid.kitKey, valid.version);
+  const db = getDb();
+  const id = newId();
 
-  // Idempotent replay: the same version already installed returns the
-  // recorded install without re-composing anything.
-  const existingRow = await findInstallRow(ctx, valid.kitKey);
-  if (existingRow !== null) {
-    if (existingRow.kit_version === kit.version) {
-      const grants = await grantRowsOf(ctx, existingRow.id);
-      return { install: installOf(existingRow, grants, kit), created: false };
+  await db.transaction(async (tx) => {
+    // Strictly increasing versions per kit key (numeric semver order —
+    // the parsed columns, never text order; the extensions module's
+    // manifest discipline).
+    const latest = await findLatestVersionRow(tx, ctx, manifest.kitKey);
+    if (latest !== null && compareSemver(parts, versionPartsOf(latest)) <= 0) {
+      throw new VerticalKitsError(
+        'version_not_monotonic',
+        `version ${manifest.version} does not come after the latest registered version ` +
+          `${latest.version} of kit '${manifest.kitKey}' — versions must strictly increase`,
+      );
     }
-    throw new VerticalKitsError(
-      'kit_conflict',
-      `kit '${valid.kitKey}' is installed at ${existingRow.kit_version} — installing ${kit.version} is an UPGRADE (upgradeVerticalKit); installs never silently mutate a recorded version`,
-    );
-  }
-
-  const bindings = await ensureDeployedThroughExtensions(ctx, kit);
-
-  const timestamp = now();
-  const installId = await getDb().transaction(async (tx) => {
-    const inserted = await tx.query<InstallRow>(
-      `INSERT INTO vertical_kit_installs
-          (id, tenant_id, kit_key, kit_version, version_major, version_minor, version_patch,
-           installed_by, installed_at, updated_at)
-         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $8)
-         RETURNING *`,
+    await tx.query(
+      `INSERT INTO vertical_kit_versions (
+         id, tenant_id, kit_key, version,
+         version_major, version_minor, version_patch,
+         kit_schema_version, vertical_key, display_name, description,
+         manifest, manifest_digest,
+         capability_count, extension_count, agent_count, integration_count,
+         created_by, created_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
       [
+        id,
         ctx.tenantId,
-        kit.kitKey,
-        kit.version,
-        kit.versionParts.major,
-        kit.versionParts.minor,
-        kit.versionParts.patch,
+        manifest.kitKey,
+        manifest.version,
+        parts.major,
+        parts.minor,
+        parts.patch,
+        manifest.kitSchemaVersion,
+        manifest.verticalKey,
+        manifest.displayName,
+        manifest.description,
+        JSON.stringify(manifest),
+        valid.digest,
+        manifest.requiredCapabilities.length,
+        manifest.extensionDefinitions.length,
+        manifest.agentDefinitions.length,
+        manifest.edgeIntegrations.length,
         ctx.principalId,
-        timestamp,
+        at,
       ],
     );
-    const row = inserted.rows[0]!;
-    for (const binding of bindings.values()) {
-      await tx.query(
-        `INSERT INTO vertical_kit_grants
-            (id, tenant_id, install_id, kit_key, extension_key, extension_version,
-             package_id, package_key, granted_permissions, deployed_at)
-           VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)`,
-        [
-          ctx.tenantId,
-          row.id,
-          kit.kitKey,
-          binding.extensionKey,
-          binding.extensionVersion,
-          binding.packageId,
-          binding.packageKey,
-          JSON.stringify(binding.grantedPermissions),
-          timestamp,
-        ],
-      );
-    }
-    return row.id;
   });
 
-  await appendEvent(ctx, kit.kitKey, 'install', null, kit.version, eventDetailOf(bindings));
-
-  const grants = await grantRowsOf(ctx, installId);
-  const row = (await findInstallRow(ctx, kit.kitKey))!;
-  return { install: installOf(row, grants, kit), created: true };
+  const stored = await findVersionRow(db, ctx, id);
+  return { version: mapVersion(stored!) };
 }
 
-/**
- * Upgrade an installed kit to a STRICTLY GREATER version — a new
- * version install, never a mutation: the grant set is replaced (the
- * old grants are removed, the new grants recorded) and BOTH states
- * live on in the append-only event trail.
- */
-export async function upgradeVerticalKit(
+export async function runKitVerification(
   ctx: TenantContext,
-  input: InstallVerticalKitInput,
-): Promise<InstallVerticalKitResult> {
+  query: GetKitVersionQuery,
+): Promise<VerticalKitVerification> {
   assertVerticalKitsTenantContext(ctx);
-  if (!canAdminister(ctx.authority)) administerForbidden('upgradeVerticalKit');
-  const valid = validateInstallInput(input);
-  if (valid.version === null) {
+  requireAdminister(ctx, 'running kit verification');
+  const valid = validateGetKitVersionQuery(query);
+  const db = getDb();
+
+  const version = await findVersionRow(db, ctx, valid.kitVersionId);
+  if (version === null) {
     throw new VerticalKitsError(
-      'invalid_input',
-      'upgradeVerticalKit requires an explicit target version',
+      'kit_version_not_found',
+      `no kit version '${valid.kitVersionId}' exists in this tenant`,
     );
   }
 
-  const kit = getKitDefinition(valid.kitKey, valid.version);
+  // The deterministic checks re-examine the STORED manifest, including
+  // the signed-manifest integrity check (recomputed digest vs the
+  // recorded one — a row edited outside the service fails loudly; drift
+  // is a new failed run, never a rewrite).
+  const outcome = verifyKitManifest(version.manifest, version.manifest_digest);
 
-  const existingRow = await findInstallRow(ctx, valid.kitKey);
-  if (existingRow === null) {
-    throw new VerticalKitsError(
-      'kit_not_installed',
-      `kit '${valid.kitKey}' is not installed — install it before upgrading`,
+  const id = newId();
+  await db.transaction(async (tx) => {
+    const positionResult = await tx.query<{ next: number }>(
+      `SELECT COALESCE(MAX(position), 0) + 1 AS next
+         FROM vertical_kit_verifications
+         WHERE tenant_id = $1 AND kit_version_id = $2`,
+      [ctx.tenantId, valid.kitVersionId],
     );
-  }
-  const existingParts = parseSemver(existingRow.kit_version)!;
-  const order = compareSemver(kit.versionParts, existingParts);
-  if (order === 0) {
-    throw new VerticalKitsError(
-      'kit_conflict',
-      `kit '${valid.kitKey}' is already installed at ${kit.version} — a same-version re-install is the idempotent install path, not an upgrade`,
-    );
-  }
-  if (order < 0) {
-    throw new VerticalKitsError(
-      'kit_conflict',
-      `kit '${valid.kitKey}' is installed at ${existingRow.kit_version} — downgrades are refused (installed at a newer version than ${kit.version})`,
-    );
-  }
-
-  const bindings = await ensureDeployedThroughExtensions(ctx, kit);
-
-  const timestamp = now();
-  await getDb().transaction(async (tx) => {
     await tx.query(
-      `UPDATE vertical_kit_installs
-          SET kit_version = $3, version_major = $4, version_minor = $5, version_patch = $6,
-              updated_at = $7
-        WHERE tenant_id = $1 AND id = $2`,
+      `INSERT INTO vertical_kit_verifications
+         (id, tenant_id, kit_version_id, position, outcome, checks, summary, verifier, ran_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
+        id,
         ctx.tenantId,
-        existingRow.id,
-        kit.version,
-        kit.versionParts.major,
-        kit.versionParts.minor,
-        kit.versionParts.patch,
-        timestamp,
+        valid.kitVersionId,
+        positionResult.rows[0]?.next ?? 1,
+        outcome.outcome,
+        JSON.stringify(outcome.checks),
+        clampDetail(outcome.summary, 2000),
+        ctx.principalId,
+        now(),
       ],
     );
-    await tx.query(
-      `DELETE FROM vertical_kit_grants WHERE tenant_id = $1 AND install_id = $2`,
-      [ctx.tenantId, existingRow.id],
+  });
+
+  const stored = await db.query<VerificationRow>(
+    `SELECT * FROM vertical_kit_verifications WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, id],
+  );
+  return mapVerification(stored.rows[0]!);
+}
+
+export async function getKitVersion(
+  ctx: TenantContext,
+  query: GetKitVersionQuery,
+): Promise<VerticalKitVersionWithVerification> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateGetKitVersionQuery(query);
+  const db = getDb();
+  const version = await findVersionRow(db, ctx, valid.kitVersionId);
+  if (version === null) {
+    throw new VerticalKitsError(
+      'kit_version_not_found',
+      `no kit version '${valid.kitVersionId}' exists in this tenant`,
     );
-    for (const binding of bindings.values()) {
-      await tx.query(
-        `INSERT INTO vertical_kit_grants
-            (id, tenant_id, install_id, kit_key, extension_key, extension_version,
-             package_id, package_key, granted_permissions, deployed_at)
-           VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)`,
-        [
-          ctx.tenantId,
-          existingRow.id,
-          kit.kitKey,
-          binding.extensionKey,
-          binding.extensionVersion,
-          binding.packageId,
-          binding.packageKey,
-          JSON.stringify(binding.grantedPermissions),
-          timestamp,
-        ],
+  }
+  const latest = await findLatestVerificationRow(db, ctx, valid.kitVersionId);
+  return {
+    ...mapVersion(version),
+    verification: {
+      state: latest === null ? 'unverified' : latest.outcome,
+      latestRun: latest === null ? null : mapVerification(latest),
+    },
+  };
+}
+
+export async function listKitVersions(
+  ctx: TenantContext,
+  query: ListKitVersionsQuery,
+): Promise<VerticalKitVersionSummary[]> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateListKitVersionsQuery(query);
+  const db = getDb();
+  const rows =
+    valid.kitKey === null
+      ? await db.query<VersionRow>(
+          `SELECT * FROM vertical_kit_versions
+             WHERE tenant_id = $1
+             ORDER BY kit_key ASC, version_major DESC, version_minor DESC, version_patch DESC`,
+          [ctx.tenantId],
+        )
+      : await db.query<VersionRow>(
+          `SELECT * FROM vertical_kit_versions
+             WHERE tenant_id = $1 AND kit_key = $2
+             ORDER BY version_major DESC, version_minor DESC, version_patch DESC`,
+          [ctx.tenantId, valid.kitKey],
+        );
+  const summaries: VerticalKitVersionSummary[] = [];
+  for (const row of rows.rows) {
+    const latest = await findLatestVerificationRow(db, ctx, row.id);
+    summaries.push({
+      ...mapVersion(row),
+      verificationState: latest === null ? 'unverified' : latest.outcome,
+    });
+  }
+  return summaries;
+}
+
+// ---------------------------------------------------------------------------
+// Install lifecycle — installKit / decideKitReview / activate / suspend /
+// resume / remove / reads
+// ---------------------------------------------------------------------------
+
+export async function installKit(
+  ctx: TenantContext,
+  input: InstallKitInput,
+): Promise<KitInstallationDetail> {
+  assertVerticalKitsTenantContext(ctx);
+  requireAdminister(ctx, 'installing a kit');
+  const valid = validateInstallKitInput(input);
+  const db = getDb();
+
+  const version = await findVersionRowByKey(db, ctx, valid.kitKey, valid.version);
+  if (version === null) {
+    throw new VerticalKitsError(
+      'kit_version_not_found',
+      `no kit '${valid.kitKey}' version '${valid.version}' is registered in this tenant`,
+    );
+  }
+  // Install requires a VERIFIED version (the marketplace's
+  // AUTOMATED_VERIFICATION discipline: nothing unverified installs).
+  const state = await verificationStateOf(db, ctx, version.id);
+  if (state !== 'verified') {
+    throw new VerticalKitsError(
+      'kit_not_verified',
+      `kit '${valid.kitKey}' version '${valid.version}' is '${state}' — only a verified version can be installed`,
+    );
+  }
+  // One live lifecycle per kit per tenant (the partial unique index is
+  // the storage-level backstop of this check).
+  const live = await db.query<{ id: string }>(
+    `SELECT id FROM vertical_kit_installations
+       WHERE tenant_id = $1 AND kit_key = $2 AND status <> 'removed'
+       LIMIT 1`,
+    [ctx.tenantId, valid.kitKey],
+  );
+  if (live.rows.length > 0) {
+    throw new VerticalKitsError(
+      'kit_already_installed',
+      `kit '${valid.kitKey}' already has a live installation ('${live.rows[0]!.id}') — remove it before installing again`,
+    );
+  }
+
+  // The tenant's grant review: the kit's EXACT declared capabilities ride
+  // the W009 gate (kind 'vertical-kit-deployment' × EXECUTE). Under the
+  // built-in default matrix the request waits for a human decision;
+  // tenant policy may auto-allow (grants minted at once) or forbid (the
+  // install is refused — the gate's own verdict, recorded not swallowed).
+  const actionRequest = await authorizeAction(ctx, {
+    actionKind: VERTICAL_KIT_ACTION_KIND,
+    authorityLevel: 'EXECUTE',
+    payload: {
+      operation: 'install-vertical-kit',
+      kitKey: version.kit_key,
+      kitVersion: version.version,
+      verticalKey: version.vertical_key,
+      displayName: version.display_name,
+      requiredCapabilities: version.manifest.requiredCapabilities,
+      componentCounts: {
+        extensions: version.extension_count,
+        agents: version.agent_count,
+        edgeIntegrations: version.integration_count,
+      },
+    },
+    justification:
+      valid.justification === null
+        ? `install vertical kit '${version.kit_key}' ${version.version} and grant its declared capabilities`
+        : valid.justification,
+  });
+
+  const installationId = newId();
+  const at = now();
+  const grantReviewStatus =
+    actionRequest.status === 'pending'
+      ? 'pending-review'
+      : actionRequest.status === 'approved'
+        ? 'granted'
+        : 'rejected';
+
+  await db.transaction(async (tx) => {
+    await tx.query(
+      `INSERT INTO vertical_kit_installations (
+         id, tenant_id, kit_key, kit_version, kit_version_id, status,
+         required_capabilities, action_request_id,
+         installed_by, installed_at, reviewed_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [
+        installationId,
+        ctx.tenantId,
+        version.kit_key,
+        version.version,
+        version.id,
+        grantReviewStatus,
+        JSON.stringify(version.manifest.requiredCapabilities),
+        actionRequest.id,
+        ctx.principalId,
+        at,
+        actionRequest.status === 'pending' ? null : at,
+      ],
+    );
+    await appendEvent(
+      tx,
+      ctx,
+      installationId,
+      'installed',
+      `kit '${version.kit_key}' ${version.version} — gate ${actionRequest.status}`,
+    );
+    if (grantReviewStatus === 'granted') {
+      await appendEvent(tx, ctx, installationId, 'review-approved', 'policy auto-allow');
+      await mintGrants(tx, ctx, installationId, version.manifest.requiredCapabilities, at);
+    } else if (grantReviewStatus === 'rejected') {
+      await appendEvent(
+        tx,
+        ctx,
+        installationId,
+        'review-rejected',
+        'policy forbids vertical-kit-deployment',
       );
     }
   });
 
-  await appendEvent(
-    ctx,
-    kit.kitKey,
-    'upgrade',
-    existingRow.kit_version,
-    kit.version,
-    eventDetailOf(bindings),
-  );
-
-  const row = (await findInstallRow(ctx, kit.kitKey))!;
-  const grants = await grantRowsOf(ctx, row.id);
-  return { install: installOf(row, grants, kit), created: true };
+  return readInstallationDetail(ctx, { installationId });
 }
 
-/**
- * Remove an installed kit: the grants and package bindings are DELETED
- * (that is what removal means), one append-only remove event freezes
- * what was removed, and the recipe references survive — the returned
- * list is the honest "these plans came from kit vX" trail.
- */
-export async function removeVerticalKit(
+/** Mint exactly the declared capabilities as active kit grants. */
+async function mintGrants(
+  tx: Queryable,
   ctx: TenantContext,
-  input: RemoveVerticalKitInput,
-): Promise<RemoveVerticalKitResult> {
-  assertVerticalKitsTenantContext(ctx);
-  if (!canAdminister(ctx.authority)) administerForbidden('removeVerticalKit');
-  if (typeof input !== 'object' || input === null || !isVerticalKitKey(input.kitKey)) {
-    throw new VerticalKitsError('invalid_input', 'kitKey must be a kit slug');
-  }
-  const kitKey = input.kitKey;
-
-  const existingRow = await findInstallRow(ctx, kitKey);
-  if (existingRow === null) {
-    throw new VerticalKitsError('kit_not_installed', `kit '${kitKey}' is not installed`);
-  }
-
-  const grants = await grantRowsOf(ctx, existingRow.id);
-  const removedDetail: VerticalKitEvent['detail'] = {
-    grants: grants.map((grant) => ({
-      extensionKey: grant.extension_key,
-      extensionVersion: grant.extension_version,
-      packageId: grant.package_id,
-      packageKey: grant.package_key,
-      grantedPermissions: permissionsOf(grant.granted_permissions),
-    })),
-  };
-
-  await getDb().transaction(async (tx) => {
+  installationId: string,
+  capabilities: readonly KitCapabilityDeclaration[],
+  at: Date,
+): Promise<void> {
+  for (const capability of capabilities) {
     await tx.query(
-      `DELETE FROM vertical_kit_grants WHERE tenant_id = $1 AND install_id = $2`,
-      [ctx.tenantId, existingRow.id],
+      `INSERT INTO vertical_kit_grants (
+         id, tenant_id, installation_id, capability_key, label, data_categories,
+         status, granted_by, granted_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, 'active', $7, $8)`,
+      [
+        newId(),
+        ctx.tenantId,
+        installationId,
+        capability.key,
+        capability.label,
+        JSON.stringify(capability.dataCategories),
+        ctx.principalId,
+        at,
+      ],
     );
-    await tx.query(
-      `DELETE FROM vertical_kit_installs WHERE tenant_id = $1 AND id = $2`,
-      [ctx.tenantId, existingRow.id],
+    await appendEvent(
+      tx,
+      ctx,
+      installationId,
+      'grant-minted',
+      `capability '${capability.key}' (${capability.mode})`,
+    );
+  }
+}
+
+export async function decideKitReview(
+  ctx: TenantContext,
+  input: DecideKitReviewInput,
+): Promise<KitInstallationDetail> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateDecideKitReviewInput(input);
+  const db = getDb();
+
+  const installation = await requireInstallationRow(db, ctx, valid.installationId);
+  if (installation.status !== 'pending-review') {
+    throw new VerticalKitsError(
+      'installation_not_pending_review',
+      `kit installation '${valid.installationId}' is '${installation.status}' — only a pending review can be decided`,
+    );
+  }
+
+  let actionRequest: ActionRequest;
+  try {
+    // The human decision itself flows through the actions contract: the
+    // approve claim, the separation of duties (the requester never
+    // decides its own request) and first-decision-wins are enforced
+    // THERE (W009).
+    actionRequest = await decideApproval(ctx, {
+      requestId: installation.action_request_id,
+      decision: valid.decision,
+      note: valid.note,
+    });
+  } catch (error) {
+    if (error instanceof ActionsError && error.code === 'not_pending') {
+      // Crash-recovery sync: the request was already decided (a prior
+      // decide succeeded but our state update was interrupted, or another
+      // approver won the race). Re-read the authoritative request state
+      // and sync onto it — first decision wins, always.
+      actionRequest = await getActionRequest(ctx, { requestId: installation.action_request_id });
+      if (actionRequest.status === 'pending') throw error;
+    } else {
+      throw error;
+    }
+  }
+
+  const decidedStatus =
+    actionRequest.status === 'approved' ? 'granted' : actionRequest.status === 'rejected' ? 'rejected' : null;
+  if (decidedStatus === null) {
+    // The gate is somehow still pending (a replayed not_pending error);
+    // leave the installation pending — the decision can be re-delivered.
+    return readInstallationDetail(ctx, { installationId: valid.installationId });
+  }
+
+  const at = now();
+  await db.transaction(async (tx) => {
+    const updated = await tx.query<InstallationRow>(
+      `UPDATE vertical_kit_installations
+         SET status = $3, reviewed_at = $4
+         WHERE tenant_id = $1 AND id = $2 AND status = 'pending-review'
+         RETURNING *`,
+      [ctx.tenantId, valid.installationId, decidedStatus, actionRequest.decidedAt ?? at],
+    );
+    if (updated.rows[0] === undefined) {
+      // Someone else synced first — first decision wins, nothing to do.
+      return;
+    }
+    if (decidedStatus === 'granted') {
+      await appendEvent(
+        tx,
+        ctx,
+        valid.installationId,
+        'review-approved',
+        `gate request ${actionRequest.id} approved`,
+      );
+      // Approval mints the grant: exactly the frozen required-capability
+      // snapshot, linked to the gate record's chain.
+      await mintGrants(tx, ctx, valid.installationId, updated.rows[0].required_capabilities, at);
+    } else {
+      // Rejection mints NOTHING — the kit holds no authority (denial
+      // stops the kit).
+      await appendEvent(
+        tx,
+        ctx,
+        valid.installationId,
+        'review-rejected',
+        `gate request ${actionRequest.id} rejected`,
+      );
+    }
+  });
+
+  return readInstallationDetail(ctx, { installationId: valid.installationId });
+}
+
+export async function activateKit(
+  ctx: TenantContext,
+  query: GetInstallationQuery,
+): Promise<KitInstallationDetail> {
+  return applyLifecycleTransition(ctx, query, 'activate');
+}
+
+export async function suspendKit(
+  ctx: TenantContext,
+  input: SuspendedRemovalInput,
+): Promise<KitInstallationDetail> {
+  // Suspend carries an optional reason — validate the wider shape here,
+  // then run the shared transition path.
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateSuspendedRemovalInput(input);
+  return applyLifecycleTransition(
+    ctx,
+    { installationId: valid.installationId },
+    'suspend',
+    valid.reason,
+  );
+}
+
+export async function resumeKit(
+  ctx: TenantContext,
+  query: GetInstallationQuery,
+): Promise<KitInstallationDetail> {
+  return applyLifecycleTransition(ctx, query, 'resume');
+}
+
+export async function removeKit(
+  ctx: TenantContext,
+  input: SuspendedRemovalInput,
+): Promise<KitInstallationDetail> {
+  assertVerticalKitsTenantContext(ctx);
+  requireAdminister(ctx, 'removing a kit installation');
+  const valid = validateSuspendedRemovalInput(input);
+  const db = getDb();
+  const installation = await requireInstallationRow(db, ctx, valid.installationId);
+
+  const transition = 'remove' as const;
+  if (!canTransitionInstallation(installation.status as KitInstallationLifecycleState, transition)) {
+    throw new VerticalKitsError(
+      'installation_not_lifecycle_state',
+      `kit installation '${valid.installationId}' is '${installation.status}' — ${transition} is not a legal transition`,
+    );
+  }
+
+  const at = now();
+  const reason = valid.reason ?? null;
+  await db.transaction(async (tx) => {
+    const updated = await tx.query<InstallationRow>(
+      `UPDATE vertical_kit_installations
+         SET status = 'removed', removed_at = $3, removal_reason = $4
+         WHERE tenant_id = $1 AND id = $2 AND status <> 'removed'
+         RETURNING *`,
+      [ctx.tenantId, valid.installationId, at, reason],
+    );
+    if (updated.rows[0] === undefined) {
+      return;
+    }
+    // EVERY active grant is revoked with the kit — no orphaned authority.
+    // (Revocation of already-revoked rows is a no-op: the trail stays.)
+    const revoked = await tx.query<GrantRow>(
+      `UPDATE vertical_kit_grants
+         SET status = 'revoked', revoked_at = $3, revoked_by = $4, revocation_reason = $5
+         WHERE tenant_id = $1 AND installation_id = $2 AND status = 'active'
+         RETURNING *`,
+      [ctx.tenantId, valid.installationId, at, ctx.principalId, reason ?? 'kit removed'],
+    );
+    for (const grant of revoked.rows) {
+      await appendEvent(
+        tx,
+        ctx,
+        valid.installationId,
+        'grant-revoked',
+        `capability '${grant.capability_key}'`,
+      );
+    }
+    await appendEvent(
+      tx,
+      ctx,
+      valid.installationId,
+      'removed',
+      reason === null ? `kit '${installation.kit_key}' removed` : clampDetail(reason, 500),
     );
   });
 
-  await appendEvent(ctx, kitKey, 'remove', existingRow.kit_version, null, removedDetail);
-
-  const survivingReferences = await listVerticalKitRecipeReferences(ctx, { kitKey });
-  return { survivingReferences };
+  return readInstallationDetail(ctx, { installationId: valid.installationId });
 }
 
-// ---------------------------------------------------------------------------
-// Reads
-// ---------------------------------------------------------------------------
-
-/** One tenant's current install of one kit (with grants + edge posture). */
-export async function getVerticalKitInstall(
+/** The shared administrative transition path (activate/suspend/resume). */
+async function applyLifecycleTransition(
   ctx: TenantContext,
-  query: { kitKey: string },
-): Promise<VerticalKitInstall> {
+  query: GetInstallationQuery,
+  transition: 'activate' | 'suspend' | 'resume',
+  reason: string | null = null,
+): Promise<KitInstallationDetail> {
   assertVerticalKitsTenantContext(ctx);
-  if (!isVerticalKitKey(query?.kitKey)) {
-    throw new VerticalKitsError('invalid_input', 'kitKey must be a kit slug');
-  }
-  const row = await findInstallRow(ctx, query.kitKey);
-  if (row === null) {
+  requireAdminister(ctx, `${transition}ing a kit installation`);
+  const valid = validateInstallationTargetInput(query);
+  const db = getDb();
+  const installation = await requireInstallationRow(db, ctx, valid.installationId);
+
+  if (!canTransitionInstallation(installation.status as KitInstallationLifecycleState, transition)) {
     throw new VerticalKitsError(
-      'kit_not_installed',
-      `kit '${query.kitKey}' is not installed in this tenant`,
+      'installation_not_lifecycle_state',
+      `kit installation '${valid.installationId}' is '${installation.status}' — ${transition} is not a legal transition`,
     );
   }
-  const kit = getKitDefinition(query.kitKey, row.kit_version);
-  const grants = await grantRowsOf(ctx, row.id);
-  return installOf(row, grants, kit);
+  const target = targetInstallationState(transition);
+  const at = now();
+  await db.transaction(async (tx) => {
+    const assignments: string[] = ['status = $3', 'reviewed_at = reviewed_at'];
+    const params: unknown[] = [ctx.tenantId, valid.installationId, target];
+    if (transition === 'activate') {
+      assignments.push(`activated_at = $${params.length + 1}`);
+      params.push(at);
+    } else if (transition === 'suspend') {
+      assignments.push(`suspended_at = $${params.length + 1}`);
+      params.push(at);
+    } else {
+      assignments.push('suspended_at = NULL');
+    }
+    const updated = await tx.query(
+      `UPDATE vertical_kit_installations SET ${assignments.join(', ')}
+         WHERE tenant_id = $1 AND id = $2
+         RETURNING id`,
+      params,
+    );
+    if (updated.rows[0] === undefined) return;
+    await appendEvent(
+      tx,
+      ctx,
+      valid.installationId,
+      transition === 'activate' ? 'activated' : transition === 'suspend' ? 'suspended' : 'resumed',
+      reason === null ? null : clampDetail(reason, 500),
+    );
+  });
+  return readInstallationDetail(ctx, { installationId: valid.installationId });
 }
 
-/** Every kit this tenant currently has installed. */
-export async function listVerticalKitInstalls(ctx: TenantContext): Promise<VerticalKitInstall[]> {
-  assertVerticalKitsTenantContext(ctx);
-  const rows = await getDb().query<InstallRow>(
-    `SELECT * FROM vertical_kit_installs WHERE tenant_id = $1 ORDER BY kit_key ASC`,
-    [ctx.tenantId],
-  );
-  const out: VerticalKitInstall[] = [];
-  for (const row of rows.rows) {
-    const kit = getKitDefinition(row.kit_key, row.kit_version);
-    const grants = await grantRowsOf(ctx, row.id);
-    out.push(installOf(row, grants, kit));
-  }
-  return out;
-}
-
-/** The append-only lifecycle audit (install/upgrade/remove). */
-export async function listVerticalKitEvents(
+export async function getKitInstallation(
   ctx: TenantContext,
-  query: ListVerticalKitEventsQuery,
-): Promise<VerticalKitEvent[]> {
+  query: GetInstallationQuery,
+): Promise<KitInstallationDetail> {
   assertVerticalKitsTenantContext(ctx);
-  const kitKey = query?.kitKey ?? null;
-  if (kitKey !== null && !isVerticalKitKey(kitKey)) {
-    throw new VerticalKitsError('invalid_input', 'kitKey must be a kit slug or null');
+  const valid = validateGetInstallationQuery(query);
+  return readInstallationDetail(ctx, valid);
+}
+
+async function readInstallationDetail(
+  ctx: TenantContext,
+  query: GetInstallationQuery,
+): Promise<KitInstallationDetail> {
+  const db = getDb();
+  const installation = await requireInstallationRow(db, ctx, query.installationId);
+  const grants = await db.query<GrantRow>(
+    `SELECT * FROM vertical_kit_grants
+       WHERE tenant_id = $1 AND installation_id = $2
+       ORDER BY granted_at ASC, capability_key ASC`,
+    [ctx.tenantId, query.installationId],
+  );
+  return {
+    installation: mapInstallation(installation),
+    requiredCapabilities: installation.required_capabilities,
+    grants: grants.rows.map(mapGrant),
+  };
+}
+
+export async function listKitInstallations(
+  ctx: TenantContext,
+  query: ListKitInstallationsQuery,
+): Promise<KitInstallation[]> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateListKitInstallationsQuery(query);
+  const db = getDb();
+  const rows =
+    valid.status === null
+      ? await db.query<InstallationRow>(
+          `SELECT * FROM vertical_kit_installations
+             WHERE tenant_id = $1
+             ORDER BY installed_at DESC, id DESC`,
+          [ctx.tenantId],
+        )
+      : await db.query<InstallationRow>(
+          `SELECT * FROM vertical_kit_installations
+             WHERE tenant_id = $1 AND status = $2
+             ORDER BY installed_at DESC, id DESC`,
+          [ctx.tenantId, valid.status],
+        );
+  return rows.rows.map(mapInstallation);
+}
+
+// ---------------------------------------------------------------------------
+// The kit runtime — the capability gate + the edge paths
+// ---------------------------------------------------------------------------
+
+export async function invokeKitCapability(
+  ctx: TenantContext,
+  input: InvokeKitCapabilityInput,
+): Promise<KitCapabilityInvocation> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateInvokeKitCapabilityInput(input);
+  return gateKitCapability(ctx, valid.installationId, valid.capabilityKey, valid.taskContext);
+}
+
+/**
+ * The pre-execution authority gate (the capability-grants pattern,
+ * kit-scoped): consults the installation state and the kit's active
+ * grants; records EVERY verdict (allowed or denied) in the append-only
+ * ledger with the deterministic, task-grounded denial reason. Performs
+ * no side effects beyond the ledger row.
+ */
+async function gateKitCapability(
+  ctx: TenantContext,
+  installationId: string,
+  capabilityKey: string,
+  taskContext: KitTaskContext,
+): Promise<KitCapabilityInvocation> {
+  const db = getDb();
+  const installation = await requireInstallationRow(db, ctx, installationId);
+
+  let outcome: 'allowed' | 'denied';
+  let basis: KitInvocationBasis;
+  let denialReason: string | null = null;
+
+  if (installation.status !== 'active') {
+    outcome = 'denied';
+    basis = 'installation-inactive';
+    denialReason = buildInactiveInstallationReason(installation.status, taskContext);
+  } else {
+    const grant = await db.query<GrantRow>(
+      `SELECT * FROM vertical_kit_grants
+         WHERE tenant_id = $1 AND installation_id = $2 AND capability_key = $3 AND status = 'active'
+         LIMIT 1`,
+      [ctx.tenantId, installationId, capabilityKey],
+    );
+    if (grant.rows[0] === undefined) {
+      const active = await db.query<{ capability_key: string }>(
+        `SELECT capability_key FROM vertical_kit_grants
+           WHERE tenant_id = $1 AND installation_id = $2 AND status = 'active'
+           ORDER BY capability_key ASC`,
+        [ctx.tenantId, installationId],
+      );
+      outcome = 'denied';
+      basis = 'grant-missing';
+      denialReason = buildMissingGrantReason(
+        capabilityKey,
+        active.rows.map((row) => row.capability_key),
+        installation.status,
+        taskContext,
+      );
+    } else {
+      outcome = 'allowed';
+      basis = 'kit-grant';
+    }
   }
-  const limit = validateLimit(query?.limit, 50, 500);
+
+  const id = newId();
+  await db.query(
+    `INSERT INTO vertical_kit_invocations
+       (id, tenant_id, installation_id, capability_key, outcome, basis, denial_reason, task_context, invoked_by, invoked_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [
+      id,
+      ctx.tenantId,
+      installationId,
+      capabilityKey,
+      outcome,
+      basis,
+      denialReason === null ? null : clampDetail(denialReason, 2000),
+      JSON.stringify(taskContext),
+      ctx.principalId,
+      now(),
+    ],
+  );
+  const stored = await db.query<InvocationRow>(
+    `SELECT * FROM vertical_kit_invocations WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, id],
+  );
+  return mapInvocation(stored.rows[0]!);
+}
+
+// ---------------------------------------------------------------------------
+// Edge-result canonicalization (provider objects never cross)
+// ---------------------------------------------------------------------------
+
+function isPlainJsonValue(value: unknown): boolean {
+  if (value === null) return true;
+  const type = typeof value;
+  if (type === 'string' || type === 'number' || type === 'boolean') return true;
+  if (type !== 'object') return false;
+  if (Array.isArray(value)) return value.every(isPlainJsonValue);
+  // A provider object (class instance, symbol-carrying, cycle) never
+  // crosses the kit runtime — the prototype must be the plain JSON one.
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) return false;
+  return Object.values(value as Record<string, unknown>).every(isPlainJsonValue);
+}
+
+function jsonByteLength(value: unknown): number {
+  return Buffer.byteLength(JSON.stringify(value) ?? 'null', 'utf8');
+}
+
+function canonicalizeEdgeState(value: unknown): VerticalKitEdgeState {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    Array.isArray(value) ||
+    !isPlainJsonValue(value)
+  ) {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      'the edge inspect result must be a plain JSON object — provider objects never cross the kit runtime',
+    );
+  }
+  const record = value as { found?: unknown; state?: unknown };
+  if (typeof record.found !== 'boolean') {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      'the edge inspect result must carry a boolean found',
+    );
+  }
+  if (!isPlainJsonValue(record.state)) {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      'the edge inspect state must be plain JSON — a provider object cannot cross the kit runtime',
+    );
+  }
+  if (jsonByteLength(record.state) > MAX_VALUE_BYTES) {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      `the edge inspect state exceeds ${MAX_VALUE_BYTES} bytes`,
+    );
+  }
+  return { found: record.found, state: record.state };
+}
+
+function canonicalizeEdgeReceipt(value: unknown): {
+  status: 'accepted' | 'rejected' | 'failed';
+  receiptId: string | null;
+  detail: string | null;
+} {
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    Array.isArray(value) ||
+    !isPlainJsonValue(value)
+  ) {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      'the edge execute receipt must be a plain JSON object — provider objects never cross the kit runtime',
+    );
+  }
+  const record = value as { status?: unknown; receiptId?: unknown; detail?: unknown };
+  if (
+    record.status !== 'accepted' &&
+    record.status !== 'rejected' &&
+    record.status !== 'failed'
+  ) {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      "the edge execute receipt status must be 'accepted', 'rejected' or 'failed'",
+    );
+  }
+  if (
+    record.receiptId !== undefined &&
+    record.receiptId !== null &&
+    (typeof record.receiptId !== 'string' || record.receiptId.length < 1 || record.receiptId.length > MAX_RECEIPT_ID_LENGTH)
+  ) {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      `the edge receipt id must be a string of 1..${MAX_RECEIPT_ID_LENGTH} chars or null`,
+    );
+  }
+  if (
+    record.detail !== undefined &&
+    record.detail !== null &&
+    (typeof record.detail !== 'string' || record.detail.length < 1 || record.detail.length > MAX_RECEIPT_DETAIL_LENGTH)
+  ) {
+    throw new VerticalKitsError(
+      'invalid_edge_result',
+      `the edge receipt detail must be a string of 1..${MAX_RECEIPT_DETAIL_LENGTH} chars or null`,
+    );
+  }
+  return {
+    status: record.status,
+    receiptId: record.receiptId ?? null,
+    detail: record.detail ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Integration resolution + the edge paths
+// ---------------------------------------------------------------------------
+
+interface ResolvedIntegration {
+  installation: InstallationRow;
+  version: VersionRow;
+  integration: KitEdgeIntegrationDeclaration;
+}
+
+async function resolveIntegration(
+  ctx: TenantContext,
+  installationId: string,
+  integrationKey: string,
+): Promise<ResolvedIntegration> {
+  const db = getDb();
+  const installation = await requireInstallationRow(db, ctx, installationId);
+  if (installation.status !== 'active') {
+    throw new VerticalKitsError(
+      'installation_not_active',
+      `kit installation '${installationId}' is '${installation.status}' — the kit runtime requires an active installation`,
+    );
+  }
+  const version = await findVersionRow(db, ctx, installation.kit_version_id);
+  if (version === null) {
+    throw new VerticalKitsError(
+      'kit_version_not_found',
+      `the installed kit version '${installation.kit_version_id}' no longer exists in this tenant`,
+    );
+  }
+  const integration = version.manifest.edgeIntegrations.find(
+    (entry) => entry.integrationKey === integrationKey,
+  );
+  if (integration === undefined) {
+    throw new VerticalKitsError(
+      'integration_not_found',
+      `kit '${installation.kit_key}' declares no edge integration '${integrationKey}'`,
+    );
+  }
+  return { installation, version, integration };
+}
+
+export async function inspectKitIntegration(
+  ctx: TenantContext,
+  input: InspectKitIntegrationInput,
+): Promise<InspectKitIntegrationResult> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateInspectKitIntegrationInput(input);
+  const { integration } = await resolveIntegration(
+    ctx,
+    valid.installationId,
+    valid.integrationKey,
+  );
+
+  // The read path consults the kit capability gate first — a denial
+  // stops the inspection and is returned as data (recorded in the
+  // invocation ledger).
+  const invocation = await gateKitCapability(
+    ctx,
+    valid.installationId,
+    integration.readCapabilityKey,
+    valid.taskContext,
+  );
+  if (invocation.outcome === 'denied') {
+    return { invocation, state: null };
+  }
+
+  // DEFERRED-ON-W088: the edge port is the only exit seam and nothing is
+  // wired by default — the module refuses to fake success.
+  const edge = requireEdge();
+  const raw = await edge.inspect({
+    installationId: valid.installationId,
+    integrationKey: valid.integrationKey,
+    capabilityKey: integration.readCapabilityKey,
+    target: valid.target,
+  });
+  const state = canonicalizeEdgeState(raw);
+  return { invocation, state };
+}
+
+export async function executeKitIntegration(
+  ctx: TenantContext,
+  input: ExecuteKitIntegrationInput,
+): Promise<ExecuteKitIntegrationResult> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateExecuteKitIntegrationInput(input);
+  const { integration } = await resolveIntegration(
+    ctx,
+    valid.installationId,
+    valid.integrationKey,
+  );
+  if (integration.writeCapabilityKey === null) {
+    throw new VerticalKitsError(
+      'integration_read_only',
+      `edge integration '${valid.integrationKey}' is read-only — it declares no write capability`,
+    );
+  }
+
+  // DENIAL STOPS THE WRITE: the write path consults the kit capability
+  // gate first; a denied invocation is returned as data (recorded in the
+  // invocation ledger) and the edge is never called.
+  const invocation = await gateKitCapability(
+    ctx,
+    valid.installationId,
+    integration.writeCapabilityKey,
+    valid.taskContext,
+  );
+  if (invocation.outcome === 'denied') {
+    return { invocation, receipt: null };
+  }
+
+  // DEFERRED-ON-W088: the edge port is the only exit seam and nothing is
+  // wired by default — the module refuses to fake success.
+  const edge = requireEdge();
+  const raw = await edge.execute({
+    installationId: valid.installationId,
+    integrationKey: valid.integrationKey,
+    capabilityKey: integration.writeCapabilityKey,
+    target: valid.target,
+    payload: valid.payload,
+  });
+  const receipt = canonicalizeEdgeReceipt(raw);
+
+  const db = getDb();
+  const id = newId();
+  await db.query(
+    `INSERT INTO vertical_kit_edge_actions
+       (id, tenant_id, installation_id, integration_key, capability_key, invocation_id,
+        receipt_status, receipt_id, receipt_detail, edge_id, executed_by, executed_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+    [
+      id,
+      ctx.tenantId,
+      valid.installationId,
+      valid.integrationKey,
+      integration.writeCapabilityKey,
+      invocation.id,
+      receipt.status,
+      receipt.receiptId,
+      receipt.detail,
+      edge.edgeId,
+      ctx.principalId,
+      now(),
+    ],
+  );
+  const stored = await db.query<EdgeActionRow>(
+    `SELECT * FROM vertical_kit_edge_actions WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, id],
+  );
+  return { invocation, receipt: mapEdgeAction(stored.rows[0]!) };
+}
+
+// ---------------------------------------------------------------------------
+// Ledger + status reads
+// ---------------------------------------------------------------------------
+
+export async function listKitInvocations(
+  ctx: TenantContext,
+  query: ListInstallationRecordsQuery,
+): Promise<KitCapabilityInvocation[]> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateListInstallationRecordsQuery(query);
+  await requireInstallationRow(getDb(), ctx, valid.installationId);
+  const rows = await getDb().query<InvocationRow>(
+    `SELECT * FROM vertical_kit_invocations
+       WHERE tenant_id = $1 AND installation_id = $2
+       ORDER BY invoked_at DESC, id DESC
+       LIMIT $3`,
+    [ctx.tenantId, valid.installationId, valid.limit],
+  );
+  return rows.rows.map(mapInvocation);
+}
+
+export async function listKitEdgeActions(
+  ctx: TenantContext,
+  query: ListInstallationRecordsQuery,
+): Promise<KitEdgeAction[]> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateListInstallationRecordsQuery(query);
+  await requireInstallationRow(getDb(), ctx, valid.installationId);
+  const rows = await getDb().query<EdgeActionRow>(
+    `SELECT * FROM vertical_kit_edge_actions
+       WHERE tenant_id = $1 AND installation_id = $2
+       ORDER BY executed_at DESC, id DESC
+       LIMIT $3`,
+    [ctx.tenantId, valid.installationId, valid.limit],
+  );
+  return rows.rows.map(mapEdgeAction);
+}
+
+export async function listKitEvents(
+  ctx: TenantContext,
+  query: ListInstallationRecordsQuery,
+): Promise<KitInstallationEvent[]> {
+  assertVerticalKitsTenantContext(ctx);
+  const valid = validateListInstallationRecordsQuery(query);
+  await requireInstallationRow(getDb(), ctx, valid.installationId);
   const rows = await getDb().query<EventRow>(
     `SELECT * FROM vertical_kit_events
-       WHERE tenant_id = $1 AND ($2::text IS NULL OR kit_key = $2::text)
-       ORDER BY occurred_at DESC, id DESC
+       WHERE tenant_id = $1 AND installation_id = $2
+       ORDER BY recorded_at DESC, position DESC
        LIMIT $3`,
-    [ctx.tenantId, kitKey, limit],
+    [ctx.tenantId, valid.installationId, valid.limit],
   );
-  return rows.rows.map((row) => ({
-    id: row.id,
-    tenantId: row.tenant_id,
-    kitKey: row.kit_key,
-    eventType: row.event_type as VerticalKitEventType,
-    fromVersion: row.from_version,
-    toVersion: row.to_version,
-    actor: row.actor,
-    occurredAt: iso(row.occurred_at),
-    detail: { grants: detailGrantsOf(row.detail) },
-  }));
+  return rows.rows.map(mapEvent);
 }
 
-// ---------------------------------------------------------------------------
-// Recipe references (the honest removal trail)
-// ---------------------------------------------------------------------------
-
-/** Record that a kit recipe template was instantiated (immutable). */
-export async function recordVerticalKitRecipeUse(
+export async function getKitStatus(
   ctx: TenantContext,
-  input: RecordRecipeUseInput,
-): Promise<VerticalKitRecipeReference> {
+  query: GetInstallationQuery,
+): Promise<KitStatusReport> {
   assertVerticalKitsTenantContext(ctx);
-  if (!canAdminister(ctx.authority)) administerForbidden('recordVerticalKitRecipeUse');
-  if (typeof input !== 'object' || input === null || !isVerticalKitKey(input.kitKey)) {
-    throw new VerticalKitsError('invalid_input', 'kitKey must be a kit slug');
-  }
-  const reference = input.reference;
-  if (typeof reference !== 'string' || reference.trim().length === 0 || reference.length > 200) {
-    throw new VerticalKitsError(
-      'invalid_input',
-      'reference must be a non-empty string of at most 200 characters (the opaque external reference)',
-    );
-  }
-  const recipeKey = input.recipeKey;
-  if (typeof recipeKey !== 'string' || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(recipeKey)) {
-    throw new VerticalKitsError('invalid_input', `recipeKey '${String(recipeKey)}' is not a slug`);
-  }
-
-  const version = input.version ?? null;
-  let kit: VerticalKitDefinition;
+  const valid = validateGetInstallationQuery(query);
+  const db = getDb();
+  const installation = await requireInstallationRow(db, ctx, valid.installationId);
+  const version = await findVersionRow(db, ctx, installation.kit_version_id);
   if (version === null) {
-    const row = await findInstallRow(ctx, input.kitKey);
-    if (row === null) {
-      throw new VerticalKitsError(
-        'kit_not_installed',
-        `kit '${input.kitKey}' is not installed — record the recipe use with an explicit version, or install the kit first`,
-      );
-    }
-    kit = getKitDefinition(input.kitKey, row.kit_version);
-  } else {
-    kit = getKitDefinition(input.kitKey, version);
-  }
-  if (!kit.deepActionRecipes.some((recipe) => recipe.recipeKey === recipeKey)) {
     throw new VerticalKitsError(
-      'invalid_input',
-      `recipe '${recipeKey}' is not a recipe of kit '${kit.kitKey}'`,
+      'kit_version_not_found',
+      `the installed kit version '${installation.kit_version_id}' no longer exists in this tenant`,
     );
   }
 
-  await getDb().query(
-    `INSERT INTO vertical_kit_recipe_references
-        (id, tenant_id, kit_key, kit_version, recipe_key, reference, recorded_by, recorded_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT (tenant_id, kit_key, recipe_key, reference) DO NOTHING`,
-    [ctx.tenantId, kit.kitKey, kit.version, recipeKey, reference, ctx.principalId, now()],
+  const grants = await db.query<{ status: string; capability_key: string }>(
+    `SELECT status, capability_key FROM vertical_kit_grants
+       WHERE tenant_id = $1 AND installation_id = $2`,
+    [ctx.tenantId, valid.installationId],
+  );
+  const invocationCounts = await db.query<{ outcome: string; count: string }>(
+    `SELECT outcome, COUNT(*)::text AS count FROM vertical_kit_invocations
+       WHERE tenant_id = $1 AND installation_id = $2
+       GROUP BY outcome`,
+    [ctx.tenantId, valid.installationId],
+  );
+  const events = await db.query<EventRow>(
+    `SELECT * FROM vertical_kit_events
+       WHERE tenant_id = $1 AND installation_id = $2
+       ORDER BY recorded_at DESC, position DESC
+       LIMIT 10`,
+    [ctx.tenantId, valid.installationId],
   );
 
-  const recorded = await listVerticalKitRecipeReferences(ctx, {
-    kitKey: kit.kitKey,
-    limit: 500,
-  });
-  const found = recorded.find(
-    (entry) => entry.recipeKey === recipeKey && entry.reference === reference,
+  // Honest component states: starter definitions inside the kit, NOT
+  // deployed software — materialization into the extension/agent
+  // registries follows those modules' own governed lifecycles downstream.
+  const extensions: KitComponentStatus[] = version.manifest.extensionDefinitions.map(
+    (definition) => ({
+      definitionKey: definition.definitionKey,
+      displayName: definition.displayName,
+      state: 'defined' as const,
+    }),
   );
-  return found!;
-}
+  const agents: KitComponentStatus[] = version.manifest.agentDefinitions.map(
+    (definition) => ({
+      definitionKey: definition.definitionKey,
+      displayName: definition.displayName,
+      state: 'defined' as const,
+    }),
+  );
 
-/**
- * The recorded recipe uses — readable forever, including AFTER kit
- * removal (`kitRemoved: true` renders the honest "this template came
- * from kit vX, which is no longer installed").
- */
-export async function listVerticalKitRecipeReferences(
-  ctx: TenantContext,
-  query: ListRecipeReferencesQuery,
-): Promise<VerticalKitRecipeReference[]> {
-  assertVerticalKitsTenantContext(ctx);
-  const kitKey = query?.kitKey ?? null;
-  if (kitKey !== null && !isVerticalKitKey(kitKey)) {
-    throw new VerticalKitsError('invalid_input', 'kitKey must be a kit slug or null');
-  }
-  const limit = validateLimit(query?.limit, 50, 500);
-  const rows = await getDb().query<RecipeReferenceRow>(
-    `SELECT * FROM vertical_kit_recipe_references
-       WHERE tenant_id = $1 AND ($2::text IS NULL OR kit_key = $2::text)
-       ORDER BY recorded_at DESC, id DESC
-       LIMIT $3`,
-    [ctx.tenantId, kitKey, limit],
+  // Honest integration readiness: the deep-integration paths wait on the
+  // Edge Connector (W088) behind the VerticalKitEdge seam. Only a wired
+  // edge reports 'ready' — with its opaque identity, never a claim of
+  // execution that is not happening.
+  const wired = getVerticalKitEdge();
+  const integrations: KitIntegrationReadiness[] = version.manifest.edgeIntegrations.map(
+    (integration) => ({
+      integrationKey: integration.integrationKey,
+      systemLabel: integration.systemLabel,
+      readiness: wired === null ? ('deferred-on-w088' as const) : ('ready' as const),
+      edgeId: wired === null ? null : wired.edgeId,
+    }),
   );
-  const installedKeys = new Set(
-    (
-      await getDb().query<{ kit_key: string }>(
-        `SELECT kit_key FROM vertical_kit_installs WHERE tenant_id = $1`,
-        [ctx.tenantId],
-      )
-    ).rows.map((row) => row.kit_key),
-  );
-  return rows.rows.map((row) => ({
-    id: row.id,
-    tenantId: row.tenant_id,
-    kitKey: row.kit_key,
-    kitVersion: row.kit_version,
-    recipeKey: row.recipe_key,
-    reference: row.reference,
-    recordedBy: row.recorded_by,
-    recordedAt: iso(row.recorded_at),
-    kitRemoved: !installedKeys.has(row.kit_key),
-  }));
+
+  const allowed = Number(invocationCounts.rows.find((row) => row.outcome === 'allowed')?.count ?? 0);
+  const denied = Number(invocationCounts.rows.find((row) => row.outcome === 'denied')?.count ?? 0);
+
+  return {
+    installationId: installation.id,
+    kitKey: installation.kit_key,
+    kitVersion: installation.kit_version,
+    status: installation.status as KitInstallation['status'],
+    grants: {
+      active: grants.rows.filter((row) => row.status === 'active').length,
+      revoked: grants.rows.filter((row) => row.status === 'revoked').length,
+    },
+    extensions,
+    agents,
+    integrations,
+    edgeWired: wired === null ? null : wired.edgeId,
+    invocations: { allowed, denied },
+    recentEvents: events.rows.map(mapEvent),
+  };
 }

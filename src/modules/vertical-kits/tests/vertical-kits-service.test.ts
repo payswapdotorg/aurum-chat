@@ -1,42 +1,50 @@
 // Integration tests for the vertical-kits module against the embedded
 // PostgreSQL (PGlite, `:memory:`) through the db port. Covers the W092
-// acceptance — "each pack is installable, permission-scoped, versioned,
-// auditable and removable; core modules remain industry-independent" —
-// with the five acceptance-clause probes, driven END TO END through the
-// REAL contracts only:
+// acceptance end-to-end, for BOTH shipped starter kits:
 //
-//   * INSTALL (marketplace-package-driven, idempotent, tenant-scoped):
-//     a kit install resolves every manifest to an INSTALLABLE
-//     marketplace ExtensionPackage (a vendor walked the full W028 chain
-//     DRAFT→…→INSTALLABLE first), registers + verifies + activates +
-//     deploys each manifest in the tenant's OWN extensions registry
-//     through the W025/W026 contracts, and records the install with its
-//     grants and package bindings. Before the platform publishes:
-//     kit_not_available. A tampered catalog artifact: package_mismatch.
-//     A W009 gate that waits: approval_required, completed on replay
-//     after the human decision.
-//   * PERMISSION-SCOPED (fail-closed): installing grants EXACTLY the
-//     kit's declared footprint — the per-manifest deployments carry the
-//     manifests' requested permission sets and nothing else; claim-less
-//     callers are forbidden; the composed extensions-administer claim
-//     is required and stated.
-//   * VERSIONED: the install records its version; an upgrade to a
-//     strictly greater version REPLACES the grant set (the 1.1.0
-//     footprint grows by telemetry:emit — visible in the grants, NOT
-//     silently mutated), same-version and downgrade installs are
-//     refused, and BOTH states live on in the audit trail.
-//   * AUDITABLE: the lifecycle events are append-only (install →
-//     upgrade → remove, who/when/what with the frozen grant snapshots);
-//     the storage triggers forbid UPDATE/DELETE even for bypassing
-//     writes.
-//   * REMOVABLE: uninstall removes the grants and package bindings,
-//     appends the remove event, and the recipe references SURVIVE —
-//     rendering "this template came from kit vX" with an honest
-//     removed flag (no silent data loss).
+// "each pack is installable, permission-scoped, versioned, auditable and
+//  removable; core modules remain industry-independent."
 //
-// The hostile-manifest/footprint probes at the pure level are in
-// vertical-kits-unit.test.ts; the repository-scan core-independence
-// probe is core-independence.test.ts.
+//   * THE ACCEPTANCE PATH (both kits) — register → verify → install →
+//     THE GRANT REVIEW (the W009 gate: kind 'vertical-kit-deployment' ×
+//     EXECUTE; the human approve mints exactly the declared capabilities
+//     as kit grants) → activate → USE through fixture doubles (the
+//     capability gate, the edge read path and the edge write path) →
+//     remove → CLEAN STATE (every grant revoked, invocations denied,
+//     audit retained) → the kit is reinstallable;
+//
+//   * DENIAL STOPS THE KIT — a rejected review mints no grant and the
+//     suspended/removed states deny every invocation with the
+//     deterministic, task-grounded reason;
+//
+//   * THE POLICY MATRIX OUTCOMES — a tenant policy that auto-allows the
+//     kind mints the grants at install; a policy that forbids it refuses
+//     the install (the gate's own verdict, recorded not swallowed);
+//
+//   * SEPARATION OF DUTIES — the requesting principal never decides its
+//     own install review (enforced by the actions module, propagated);
+//
+//   * VERSIONED AND SIGNED — strictly increasing versions, immutable
+//     manifests, and the signed-manifest digest: a row edited outside
+//     the service fails re-verification's integrity check loudly;
+//
+//   * INSTALL REQUIRES VERIFICATION — an unverified version never
+//     installs; a malformed manifest never registers;
+//
+//   * DEFERRED-ON-W088 — with no edge wired, inspect/execute fail
+//     explicitly (edge_unavailable); with the fixture double wired, the
+//     read/write paths execute and record their receipts; a provider
+//     object cannot cross the kit runtime (invalid_edge_result);
+//
+//   * HONEST STATUS — components report 'defined' (never claimed as
+//     deployed software), integrations report 'deferred-on-w088' until
+//     an edge is wired;
+//
+//   * TENANT ISOLATION — two tenants, zero leakage;
+//
+//   * STORAGE DISCIPLINE — the events, invocations and verifications
+//     ledgers are append-only (UPDATE/DELETE/TRUNCATE refused at the
+//     storage level).
 
 process.env.AURUM_DB = 'embedded';
 process.env.AURUM_DB_MEMORY = '1';
@@ -48,628 +56,981 @@ import { closeDb, getDb } from '@/infra/db';
 import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import { runMigrations } from '../../../../scripts/migrate';
-import {
-  decideApproval,
-  listActionRequests,
-  setAuthorityPolicy,
-} from '@/modules/actions/contract';
-import {
-  getCurrentDeployment,
-  listExtensionDeployments,
-  registerExtensionManifest,
-  runManifestVerification,
-} from '@/modules/extensions/contract';
-import {
-  createPackage,
-  makePackageInstallable,
-  publishPackage,
-  reviewPackage,
-  runAutomatedVerification,
-  submitPackage,
-} from '@/modules/marketplace/contract';
-import {
-  EDGE_EXECUTION_STATUS,
-  VERTICAL_KITS_AUTHORITY_ADMINISTER,
-  getKitDefinition,
-  getVerticalKitInstall,
-  installVerticalKit,
-  listKitCatalog,
-  listVerticalKitEvents,
-  listVerticalKitInstalls,
-  listVerticalKitRecipeReferences,
-  recordVerticalKitRecipeUse,
-  removeVerticalKit,
-  upgradeVerticalKit,
-} from '../contract';
+import * as actionsContract from '@/modules/actions/contract';
 import { VerticalKitsError } from '../errors';
+import * as verticalKits from '../contract';
+import {
+  ACCOUNTING_LEDGER_ERP_KIT,
+  LEGAL_CASE_MANAGEMENT_KIT,
+} from '../kits';
+import type { VerticalKitEdge } from '../contract';
 
-const db = getDb();
+// ---------------------------------------------------------------------------
+// Contexts and helpers
+// ---------------------------------------------------------------------------
 
-// Dedicated tenants keep each concern's data isolated (the marketplace
-// suite's discipline): the vendor that offers the kits, the platform
-// reviewer that approves them, the installer that walks the happy
-// paths, a tenant that keeps the DEFAULT authority matrix (the honest
-// approval_required probe), and an isolation tenant.
-const tenantVendor = newId();
-const tenantPlatform = newId();
-const tenantInstaller = newId();
-const tenantGate = newId();
-const tenantOther = newId();
-
-function ctx(tenantId: string, authority: string[], principalId = newId()): TenantContext {
-  return { tenantId, principalId, authority };
+function memberOf(tenantId: string, authority: string[] = []): TenantContext {
+  return { tenantId, principalId: newId(), authority };
 }
 
-/** The vendor side: registers manifests and offers them as packages. */
-function vendor(): TenantContext {
-  return ctx(tenantVendor, ['extensions:administer', 'marketplace:submit']);
-}
-
-/** The platform side: reviews, publishes, makes installable. */
-function platform(): TenantContext {
-  return ctx(tenantPlatform, ['marketplace:administer']);
-}
-
-/** The tenant-side kit administrator (both required claims). */
-function kitAdmin(tenantId: string): TenantContext {
-  return ctx(tenantId, [VERTICAL_KITS_AUTHORITY_ADMINISTER, 'extensions:administer']);
-}
-
-/** A claim-less member of the installer tenant. */
-function member(tenantId: string): TenantContext {
-  return ctx(tenantId, []);
-}
-
-/** Async-aware error-code assertion. */
-async function expectCode(code: string, fn: () => unknown): Promise<void> {
+async function expectCode(
+  code: VerticalKitsError['code'],
+  fn: () => Promise<unknown>,
+): Promise<void> {
   try {
     await fn();
-    expect.unreachable();
+    throw new Error(`expected VerticalKitsError('${code}') but the call succeeded`);
   } catch (error) {
-    expect(error).toBeInstanceOf(VerticalKitsError);
-    expect((error as VerticalKitsError).code).toBe(code);
+    if (!(error instanceof VerticalKitsError)) throw error;
+    expect(error.code).toBe(code);
   }
 }
 
+/** Register + verify a kit in a tenant: the installable posture. */
+async function registerVerifiedKit(
+  ctx: TenantContext,
+  manifest: typeof LEGAL_CASE_MANAGEMENT_KIT,
+): Promise<verticalKits.VerticalKitVersion> {
+  const registered = await verticalKits.registerKitVersion(ctx, { manifest });
+  const run = await verticalKits.runKitVerification(ctx, {
+    kitVersionId: registered.version.id,
+  });
+  expect(run.outcome).toBe('verified');
+  return registered.version;
+}
+
+/**
+ * The fixture double of the system-of-record edge — an in-test
+ * implementation of the module's OWN VerticalKitEdge port (the seam that
+ * awaits the W088 Edge Connector). No live network: a scripted map.
+ */
+class ScriptedEdge implements VerticalKitEdge {
+  readonly edgeId = 'fixture-edge-1';
+  readonly executeCalls: verticalKits.VerticalKitEdgeExecuteRequest[] = [];
+  private readonly states = new Map<string, Record<string, unknown>>();
+
+  async inspect(
+    request: verticalKits.VerticalKitEdgeInspectRequest,
+  ): Promise<verticalKits.VerticalKitEdgeState> {
+    const state = this.states.get(`${request.integrationKey}:${request.target}`);
+    return { found: state !== undefined, state: state ?? null };
+  }
+
+  async execute(
+    request: verticalKits.VerticalKitEdgeExecuteRequest,
+  ): Promise<verticalKits.VerticalKitEdgeReceipt> {
+    this.executeCalls.push(request);
+    this.states.set(`${request.integrationKey}:${request.target}`, request.payload);
+    return {
+      status: 'accepted',
+      receiptId: `fixture-receipt-${this.executeCalls.length}`,
+      detail: null,
+    };
+  }
+}
+
+/** The full governed walk for one kit, shared by both verticals. */
+interface Walked {
+  installation: verticalKits.KitInstallationDetail;
+  edge: ScriptedEdge;
+}
+
+async function walkFullLifecycle(
+  tenantId: string,
+  kit: typeof LEGAL_CASE_MANAGEMENT_KIT,
+): Promise<Walked> {
+  const admin = memberOf(tenantId, ['vertical-kits:administer']);
+  const approver = memberOf(tenantId, ['actions:approve']);
+
+  await registerVerifiedKit(admin, kit);
+  const installed = await verticalKits.installKit(admin, {
+    kitKey: kit.kitKey,
+    version: kit.version,
+    justification: `W092 acceptance walk for ${kit.kitKey}`,
+  });
+  expect(installed.installation.status).toBe('pending-review');
+  const decided = await verticalKits.decideKitReview(approver, {
+    installationId: installed.installation.id,
+    decision: 'approve',
+    note: 'W092 acceptance: approved for the walk',
+  });
+  expect(decided.installation.status).toBe('granted');
+  const activated = await verticalKits.activateKit(admin, {
+    installationId: decided.installation.id,
+  });
+  expect(activated.installation.status).toBe('active');
+
+  const edge = new ScriptedEdge();
+  verticalKits.setVerticalKitEdge(edge);
+  return { installation: activated, edge };
+}
+
+let migrationsRan = false;
+
 beforeAll(async () => {
-  await runMigrations(db);
-  // The installer tenant pins "extension-deployment EXECUTE is allowed"
-  // so the happy-path installs apply immediately; tenantGate deliberately
-  // keeps the built-in default matrix (the pending → human → replay
-  // flow — the honest approval_required probe).
-  for (const tenantId of [tenantInstaller, tenantOther]) {
-    await setAuthorityPolicy(ctx(tenantId, ['actions:administer']), {
-      actionKind: 'extension-deployment',
-      approvalLevels: [],
-    });
+  if (!migrationsRan) {
+    await runMigrations(getDb());
+    migrationsRan = true;
   }
 });
 
 afterAll(async () => {
+  verticalKits.setVerticalKitEdge(null);
   await closeDb();
 });
 
-/** Walk one kit manifest through the FULL marketplace chain to INSTALLABLE. */
-async function publishManifest(marketplaceVendor: TenantContext, manifestInput: Parameters<typeof registerExtensionManifest>[1]): Promise<void> {
-  const registered = await registerExtensionManifest(marketplaceVendor, manifestInput);
-  await runManifestVerification(marketplaceVendor, { manifestId: registered.manifest.id });
-  const pkg = await createPackage(marketplaceVendor, {
-    kind: 'extension',
-    manifestId: registered.manifest.id,
-  });
-  await submitPackage(marketplaceVendor, { packageId: pkg.id });
-  await runAutomatedVerification(platform(), { packageId: pkg.id });
-  await reviewPackage(platform(), { packageId: pkg.id, decision: 'approve' });
-  await publishPackage(platform(), { packageId: pkg.id });
-  await makePackageInstallable(platform(), { packageId: pkg.id });
-}
-
-/** Publish every manifest of a kit version. */
-async function publishKit(kitKey: string, version: string): Promise<void> {
-  const kit = getKitDefinition(kitKey, version);
-  for (const spec of kit.extensionManifests) {
-    await publishManifest(vendor(), spec.manifest);
-  }
-}
-
 // ---------------------------------------------------------------------------
-// PROBE 1 — INSTALL: marketplace-package-driven, idempotent, tenant-scoped
+// The acceptance walk — both kits
 // ---------------------------------------------------------------------------
 
-describe('install (marketplace-package-driven, idempotent, tenant-scoped)', () => {
-  it('refuses kit_not_available before the platform has made the manifests INSTALLABLE', async () => {
-    await expectCode('kit_not_available', () =>
-      installVerticalKit(kitAdmin(tenantInstaller), {
-        kitKey: 'professional-services',
-        version: '1.0.0',
+describe('W092 acceptance — the legal / case-management kit', () => {
+  const tenant = newId();
+
+  it('install → grant review → activate → use (fixture double) → remove → clean state', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const approver = memberOf(tenant, ['actions:approve']);
+    const member = memberOf(tenant);
+
+    // -- install: the W009 gate routes the grant review (pending).
+    await registerVerifiedKit(admin, LEGAL_CASE_MANAGEMENT_KIT);
+    const installed = await verticalKits.installKit(admin, {
+      kitKey: 'legal-case-management',
+      version: '1.0.0',
+      justification: 'Legal operations onboarding',
+    });
+    expect(installed.installation.status).toBe('pending-review');
+    // The gate record exists and the approver-facing payload carries the
+    // EXACT capability scope being asked for.
+    const request = await actionsContract.getActionRequest(member, {
+      requestId: installed.installation.actionRequestId,
+    });
+    expect(request.actionKind).toBe('vertical-kit-deployment');
+    expect(request.authorityLevel).toBe('EXECUTE');
+    expect(request.status).toBe('pending');
+    const payload = request.payload as { requiredCapabilities: { key: string }[] };
+    expect([...payload.requiredCapabilities.map((c) => c.key)].sort()).toEqual(
+      [...LEGAL_CASE_MANAGEMENT_KIT.requiredCapabilities.map((c) => c.key)].sort(),
+    );
+
+    // Before the review: no grant, no usable authority — the kit cannot
+    // even be activated yet, and no capability is allowed.
+    expect(installed.grants).toEqual([]);
+    await expectCode('installation_not_active', () =>
+      verticalKits.inspectKitIntegration(member, {
+        installationId: installed.installation.id,
+        integrationKey: 'case-management-sor',
+        target: 'matter-001',
+        taskContext: { description: 'Inspect the matter' },
       }),
     );
-  });
 
-  it('refuses unknown kits and malformed inputs', async () => {
-    await expectCode('kit_not_found', () =>
-      installVerticalKit(kitAdmin(tenantInstaller), { kitKey: 'no-such-kit' }),
+    // -- the grant review: a DIFFERENT principal approves; exactly the
+    // declared capabilities are minted.
+    const decided = await verticalKits.decideKitReview(approver, {
+      installationId: installed.installation.id,
+      decision: 'approve',
+      note: 'Legal reviewed the capability scope',
+    });
+    expect(decided.installation.status).toBe('granted');
+    expect(decided.grants.map((g) => g.capabilityKey)).toEqual(
+      [...LEGAL_CASE_MANAGEMENT_KIT.requiredCapabilities.map((c) => c.key)].sort(),
     );
-    await expectCode('invalid_input', () =>
-      installVerticalKit(kitAdmin(tenantInstaller), {
-        kitKey: 'professional-services',
-        version: 'not-semver',
-      } as never),
-    );
-  });
+    for (const grant of decided.grants) {
+      expect(grant.status).toBe('active');
+      expect(grant.grantedBy).toBe(approver.principalId);
+    }
 
-  it('requires the vertical-kits administer claim (fail-closed)', async () => {
-    await expectCode('forbidden', () =>
-      installVerticalKit(member(tenantInstaller), {
-        kitKey: 'professional-services',
-        version: '1.0.0',
+    // -- activate.
+    const activated = await verticalKits.activateKit(admin, {
+      installationId: decided.installation.id,
+    });
+    expect(activated.installation.status).toBe('active');
+
+    // -- use: the capability gate allows exactly the granted scope.
+    const allowedRead = await verticalKits.invokeKitCapability(member, {
+      installationId: activated.installation.id,
+      capabilityKey: 'read.case-matters',
+      taskContext: { description: 'Summarize matter status for the weekly review' },
+    });
+    expect(allowedRead.outcome).toBe('allowed');
+    expect(allowedRead.basis).toBe('kit-grant');
+    // An undeclared capability is denied with the EXACT scope language.
+    const deniedUnknown = await verticalKits.invokeKitCapability(member, {
+      installationId: activated.installation.id,
+      capabilityKey: 'write.billing-records', // hmm — declared read-only below
+      taskContext: { description: 'Post a time entry' },
+    });
+    // write.billing-records is not declared at all (only read.billing-records is).
+    expect(deniedUnknown.outcome).toBe('denied');
+    expect(deniedUnknown.basis).toBe('grant-missing');
+    expect(deniedUnknown.denialReason).toContain("capability 'write.billing-records'");
+
+    // -- use: the edge paths. DEFERRED-ON-W088 first: nothing wired.
+    await expectCode('edge_unavailable', () =>
+      verticalKits.inspectKitIntegration(member, {
+        installationId: activated.installation.id,
+        integrationKey: 'case-management-sor',
+        target: 'matter-001',
+        taskContext: { description: 'Inspect the matter' },
       }),
     );
-  });
-
-  it('requires the composed extensions-administer claim and says so', async () => {
-    await publishKit('professional-services', '1.0.0');
-    await expectCode('forbidden', () =>
-      installVerticalKit(ctx(tenantInstaller, [VERTICAL_KITS_AUTHORITY_ADMINISTER]), {
-        kitKey: 'professional-services',
-        version: '1.0.0',
+    await expectCode('edge_unavailable', () =>
+      verticalKits.executeKitIntegration(member, {
+        installationId: activated.installation.id,
+        integrationKey: 'case-management-sor',
+        target: 'matter-001',
+        payload: { status: 'pending-close' },
+        taskContext: { description: 'Move the matter to pending-close' },
       }),
     );
+
+    // Then the fixture double wires the port and the paths execute.
+    const edge = new ScriptedEdge();
+    verticalKits.setVerticalKitEdge(edge);
+    const inspected = await verticalKits.inspectKitIntegration(member, {
+      installationId: activated.installation.id,
+      integrationKey: 'case-management-sor',
+      target: 'matter-001',
+      taskContext: { description: 'Inspect the matter' },
+    });
+    expect(inspected.invocation.outcome).toBe('allowed');
+    expect(inspected.invocation.capabilityKey).toBe('read.case-matters');
+    expect(inspected.state).toEqual({ found: false, state: null });
+
+    const executed = await verticalKits.executeKitIntegration(member, {
+      installationId: activated.installation.id,
+      integrationKey: 'case-management-sor',
+      target: 'matter-001',
+      payload: { status: 'pending-close' },
+      taskContext: { description: 'Move the matter to pending-close', requestedFor: 'the closing checklist' },
+    });
+    expect(executed.invocation.outcome).toBe('allowed');
+    expect(executed.invocation.capabilityKey).toBe('write.case-matters');
+    expect(executed.receipt).not.toBeNull();
+    expect(executed.receipt!.receiptStatus).toBe('accepted');
+    expect(executed.receipt!.receiptId).toBe('fixture-receipt-1');
+    expect(executed.receipt!.edgeId).toBe('fixture-edge-1');
+    expect(edge.executeCalls).toHaveLength(1);
+    expect(edge.executeCalls[0]!.target).toBe('matter-001');
+    expect(edge.executeCalls[0]!.payload).toEqual({ status: 'pending-close' });
+
+    // The read path now sees the written state.
+    const after = await verticalKits.inspectKitIntegration(member, {
+      installationId: activated.installation.id,
+      integrationKey: 'case-management-sor',
+      target: 'matter-001',
+      taskContext: { description: 'Confirm the write' },
+    });
+    expect(after.state).toEqual({ found: true, state: { status: 'pending-close' } });
+
+    // -- the honest status report: defined components, ready integrations.
+    const status = await verticalKits.getKitStatus(member, {
+      installationId: activated.installation.id,
+    });
+    expect(status.status).toBe('active');
+    expect(status.grants).toEqual({ active: 5, revoked: 0 });
+    expect(status.extensions.every((c) => c.state === 'defined')).toBe(true);
+    expect(status.agents.every((c) => c.state === 'defined')).toBe(true);
+    expect(status.integrations.map((i) => i.readiness)).toEqual(['ready', 'ready']);
+    expect(status.edgeWired).toBe('fixture-edge-1');
+    expect(status.invocations.allowed).toBeGreaterThanOrEqual(3);
+
+    // -- suspend: the gate denies with the state named verbatim.
+    const suspended = await verticalKits.suspendKit(admin, {
+      installationId: activated.installation.id,
+      reason: 'case load review',
+    });
+    expect(suspended.installation.status).toBe('suspended');
+    const suspendedInvocation = await verticalKits.invokeKitCapability(member, {
+      installationId: activated.installation.id,
+      capabilityKey: 'read.case-matters',
+      taskContext: { description: 'Read while suspended' },
+    });
+    expect(suspendedInvocation.outcome).toBe('denied');
+    expect(suspendedInvocation.basis).toBe('installation-inactive');
+    expect(suspendedInvocation.denialReason).toContain("'suspended'");
+    // A suspended kit's edge paths refuse too.
+    await expectCode('installation_not_active', () =>
+      verticalKits.executeKitIntegration(member, {
+        installationId: activated.installation.id,
+        integrationKey: 'case-management-sor',
+        target: 'matter-001',
+        payload: { status: 'closed' },
+        taskContext: { description: 'Write while suspended' },
+      }),
+    );
+
+    // -- resume.
+    const resumed = await verticalKits.resumeKit(admin, {
+      installationId: activated.installation.id,
+    });
+    expect(resumed.installation.status).toBe('active');
+    const resumedInvocation = await verticalKits.invokeKitCapability(member, {
+      installationId: activated.installation.id,
+      capabilityKey: 'read.case-matters',
+      taskContext: { description: 'Read after resume' },
+    });
+    expect(resumedInvocation.outcome).toBe('allowed');
+
+    // -- remove: every grant revoked, no orphaned authority, audit retained.
+    const removed = await verticalKits.removeKit(admin, {
+      installationId: activated.installation.id,
+      reason: 'the firm retired the starter kit',
+    });
+    expect(removed.installation.status).toBe('removed');
+    expect(removed.installation.removalReason).toBe('the firm retired the starter kit');
+    for (const grant of removed.grants) {
+      expect(grant.status).toBe('revoked');
+      expect(grant.revokedBy).toBe(admin.principalId);
+      expect(grant.revocationReason).toBe('the firm retired the starter kit');
+    }
+    // The invocation gate denies everything now.
+    const postRemoval = await verticalKits.invokeKitCapability(member, {
+      installationId: activated.installation.id,
+      capabilityKey: 'read.case-matters',
+      taskContext: { description: 'Read after removal' },
+    });
+    expect(postRemoval.outcome).toBe('denied');
+    expect(postRemoval.basis).toBe('installation-inactive');
+    // The edge paths refuse.
+    await expectCode('installation_not_active', () =>
+      verticalKits.executeKitIntegration(member, {
+        installationId: activated.installation.id,
+        integrationKey: 'case-management-sor',
+        target: 'matter-001',
+        payload: { status: 'closed' },
+        taskContext: { description: 'Write after removal' },
+      }),
+    );
+    // The AUDIT IS RETAINED: the whole history is still readable.
+    const events = await verticalKits.listKitEvents(member, {
+      installationId: activated.installation.id,
+    });
+    const eventNames = events.map((e) => e.event);
+    expect(eventNames).toContain('installed');
+    expect(eventNames).toContain('review-approved');
+    expect(eventNames.filter((n) => n === 'grant-minted')).toHaveLength(5);
+    expect(eventNames).toContain('activated');
+    expect(eventNames).toContain('suspended');
+    expect(eventNames).toContain('resumed');
+    expect(eventNames.filter((n) => n === 'grant-revoked')).toHaveLength(5);
+    expect(eventNames).toContain('removed');
+    // The invocation ledger and the executed edge actions are retained too.
+    const invocations = await verticalKits.listKitInvocations(member, {
+      installationId: activated.installation.id,
+    });
+    expect(invocations.length).toBeGreaterThanOrEqual(5);
+    const edgeActions = await verticalKits.listKitEdgeActions(member, {
+      installationId: activated.installation.id,
+    });
+    expect(edgeActions).toHaveLength(1);
+    // The honest status reports the removed state and revoked grants.
+    const statusAfter = await verticalKits.getKitStatus(member, {
+      installationId: activated.installation.id,
+    });
+    expect(statusAfter.status).toBe('removed');
+    expect(statusAfter.grants).toEqual({ active: 0, revoked: 5 });
+
+    // -- the kit is reinstallable: a fresh lifecycle on the same key.
+    const reinstalled = await verticalKits.installKit(admin, {
+      kitKey: 'legal-case-management',
+      version: '1.0.0',
+      justification: 'Second lifecycle after retirement',
+    });
+    expect(reinstalled.installation.status).toBe('pending-review');
+    expect(reinstalled.installation.id).not.toBe(activated.installation.id);
+    // Clean up this fixture's live lifecycle (the walk below expects a
+    // free tenant state only where it re-walks; here we just leave it).
   });
 
-  it('installs through the real contracts: packages bound, manifests deployed at the exact footprint', async () => {
-    const installer = kitAdmin(tenantInstaller);
-    const result = await installVerticalKit(installer, {
-      kitKey: 'professional-services',
+  it('a REJECTED review mints nothing — denial stops the kit', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const approver = memberOf(tenant, ['actions:approve']);
+    const member = memberOf(tenant);
+
+    // Remove the pending lifecycle from the prior test, then install a
+    // fresh one to reject.
+    const live = await verticalKits.listKitInstallations(admin, { status: 'pending-review' });
+    for (const installation of live) {
+      await verticalKits.removeKit(admin, { installationId: installation.id });
+    }
+    const installed = await verticalKits.installKit(admin, {
+      kitKey: 'legal-case-management',
       version: '1.0.0',
     });
-    expect(result.created).toBe(true);
-    expect(result.install.kitVersion).toBe('1.0.0');
-    expect(result.install.installedBy).toBe(installer.principalId);
-    expect(result.install.grants).toHaveLength(2);
-
-    // The grants carry the REAL marketplace package bindings.
-    const engagement = result.install.grants.find(
-      (grant) => grant.extensionKey === 'ps-engagement-sync',
-    )!;
-    const bridge = result.install.grants.find(
-      (grant) => grant.extensionKey === 'ps-time-expense-bridge',
-    )!;
-    expect(engagement.packageKey).toBe('ps-engagement-sync');
-    expect(bridge.packageKey).toBe('ps-time-expense-bridge');
-    expect(engagement.packageId).not.toBe(bridge.packageId);
-
-    // PROBE 2 (permission-scoped): the grants are EXACTLY the manifests'
-    // requested permission sets — nothing more, nothing less.
-    expect(engagement.grantedPermissions).toEqual([
-      'state:read',
-      'state:write',
-      'ui:render',
-      'events:subscribe',
-      'external:participate',
-    ]);
-    expect(bridge.grantedPermissions).toEqual([
-      'state:read',
-      'state:write',
-      'schedule:run',
-      'external:participate',
-    ]);
-
-    // The extensions registry really holds the deployed versions, with
-    // the install-time grant the runtime recorded (W026 discipline).
-    const currentEngagement = await getCurrentDeployment(
-      member(tenantInstaller),
-      { extensionKey: 'ps-engagement-sync' },
+    const rejected = await verticalKits.decideKitReview(approver, {
+      installationId: installed.installation.id,
+      decision: 'reject',
+      note: 'the capability scope is too broad for now',
+    });
+    expect(rejected.installation.status).toBe('rejected');
+    expect(rejected.grants).toEqual([]);
+    // No authority exists to invoke.
+    const invocation = await verticalKits.invokeKitCapability(member, {
+      installationId: rejected.installation.id,
+      capabilityKey: 'read.case-matters',
+      taskContext: { description: 'Try to read after rejection' },
+    });
+    expect(invocation.outcome).toBe('denied');
+    expect(invocation.basis).toBe('installation-inactive');
+    // A rejected review is terminal: no activation, no re-decide.
+    await expectCode('installation_not_lifecycle_state', () =>
+      verticalKits.activateKit(admin, { installationId: rejected.installation.id }),
     );
-    expect(currentEngagement?.version).toBe('1.0.0');
-    expect(currentEngagement?.grantedPermissions).toEqual(engagement.grantedPermissions);
-    const deployments = await listExtensionDeployments(member(tenantInstaller), {
-      extensionKey: 'ps-time-expense-bridge',
-    });
-    expect(deployments).toHaveLength(1);
-    expect(deployments[0]!.grantedPermissions).toEqual(bridge.grantedPermissions);
-
-    // The install event froze the full WHAT (who, when, which grants
-    // through which packages).
-    const events = await listVerticalKitEvents(installer, { kitKey: 'professional-services' });
-    expect(events).toHaveLength(1);
-    expect(events[0]!.eventType).toBe('install');
-    expect(events[0]!.fromVersion).toBeNull();
-    expect(events[0]!.toVersion).toBe('1.0.0');
-    expect(events[0]!.actor).toBe(installer.principalId);
-    expect(events[0]!.detail.grants.map((grant) => grant.extensionKey).sort()).toEqual([
-      'ps-engagement-sync',
-      'ps-time-expense-bridge',
-    ]);
-
-    // The honest edge posture renders on the install (never a claim).
-    expect(result.install.edgeExecutionInfo.status).toBe(EDGE_EXECUTION_STATUS);
-  });
-
-  it('is idempotent: a same-version re-install replays the recorded install and appends nothing', async () => {
-    const installer = kitAdmin(tenantInstaller);
-    const first = await getVerticalKitInstall(installer, { kitKey: 'professional-services' });
-    const replay = await installVerticalKit(installer, {
-      kitKey: 'professional-services',
-      version: '1.0.0',
-    });
-    expect(replay.created).toBe(false);
-    expect(replay.install.id).toBe(first.id);
-    expect(replay.install.kitVersion).toBe('1.0.0');
-    expect(await listVerticalKitEvents(installer, { kitKey: 'professional-services' })).toHaveLength(1);
-    // No duplicate deployments either (the extensions replay discipline).
-    expect(
-      await listExtensionDeployments(member(tenantInstaller), { extensionKey: 'ps-engagement-sync' }),
-    ).toHaveLength(1);
-  });
-
-  it('refuses to install a DIFFERENT version over a recorded one (that is an upgrade)', async () => {
-    await expectCode('kit_conflict', () =>
-      installVerticalKit(kitAdmin(tenantInstaller), {
-        kitKey: 'professional-services',
-        version: '1.1.0',
+    await expectCode('installation_not_pending_review', () =>
+      verticalKits.decideKitReview(approver, {
+        installationId: rejected.installation.id,
+        decision: 'approve',
       }),
     );
+    // The audit recorded the refusal.
+    const events = await verticalKits.listKitEvents(member, {
+      installationId: rejected.installation.id,
+    });
+    expect(events.map((e) => e.event)).toContain('review-rejected');
   });
 
-  it('refuses a tampered catalog artifact (package_mismatch — fail-closed binding)', async () => {
-    // The vendor offers a 'logistics-shipment-tracker' 1.0.0 package whose
-    // frozen content DIFFERS from the kit's declaration (no telemetry).
-    // A kit install must refuse to bind it.
-    await publishManifest(vendor(), {
-      extensionKey: 'logistics-shipment-tracker',
+  it('the requester never decides their own install review (separation of duties)', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer', 'actions:approve']);
+    const live = await verticalKits.listKitInstallations(admin, { status: 'rejected' });
+    for (const installation of live) {
+      await verticalKits.removeKit(admin, { installationId: installation.id });
+    }
+    const installed = await verticalKits.installKit(admin, {
+      kitKey: 'legal-case-management',
       version: '1.0.0',
-      manifestSchemaVersion: 1,
-      displayName: 'Shipment Tracker',
-      description: 'A drifted artifact occupying the identity the kit expects.',
-      hostRuntime: { minVersion: '1.0.0', maxVersion: null },
-      requestedPermissions: ['state:read', 'state:write', 'events:subscribe', 'external:participate'],
-      stateScope: 'tenant',
-      uiSurfaces: [],
-      schedules: [],
-      eventSubscriptions: ['goal.updated', 'observation.recorded'],
-      externalParticipants: [
-        { label: 'Order and shipment system of record', origin: 'https://shipment-sor.example.test' },
-      ],
-      telemetry: false,
-      quotas: {
-        maxStateBytes: 4_194_304,
-        maxScheduleInvocationsPerDay: 0,
-        maxExternalCallsPerDay: 20_000,
+    });
+    // Same principal holds actions:approve — the actions module still
+    // refuses (the requester never decides its own request).
+    let refusal: unknown;
+    try {
+      await verticalKits.decideKitReview(admin, {
+        installationId: installed.installation.id,
+        decision: 'approve',
+      });
+      refusal = null;
+    } catch (error) {
+      refusal = error;
+    }
+    expect(refusal).not.toBeNull();
+    expect((refusal as { name?: string }).name).toBe('ActionsError');
+    // The installation is still pending its review.
+    const still = await verticalKits.getKitInstallation(admin, {
+      installationId: installed.installation.id,
+    });
+    expect(still.installation.status).toBe('pending-review');
+    // A plain member cannot decide either (no approve claim).
+    const member = memberOf(tenant);
+    let memberRefusal: unknown;
+    try {
+      await verticalKits.decideKitReview(member, {
+        installationId: installed.installation.id,
+        decision: 'approve',
+      });
+      memberRefusal = null;
+    } catch (error) {
+      memberRefusal = error;
+    }
+    expect(memberRefusal).not.toBeNull();
+    // Cleanup.
+    await verticalKits.removeKit(admin, { installationId: installed.installation.id });
+  });
+});
+
+describe('W092 acceptance — the accounting / ledger-ERP kit', () => {
+  const tenant = newId();
+
+  it('install → grant review → activate → use (fixture double) → remove → clean state', async () => {
+    const walked = await walkFullLifecycle(tenant, ACCOUNTING_LEDGER_ERP_KIT);
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const member = memberOf(tenant);
+    const installationId = walked.installation.installation.id;
+
+    // The grants cover exactly the declared accounting scope (the read
+    // model orders them by capability key).
+    expect(walked.installation.grants.map((g) => g.capabilityKey)).toEqual([
+      'read.journal-entries',
+      'read.ledger-accounts',
+      'read.payables-ledger',
+      'read.receivables-ledger',
+      'write.journal-entries',
+    ]);
+
+    // -- use: post a journal entry through the ledger ERP integration.
+    const executed = await verticalKits.executeKitIntegration(member, {
+      installationId,
+      integrationKey: 'ledger-erp-sor',
+      target: 'journal-2026-09-001',
+      payload: {
+        entryDate: '2026-09-26',
+        periodName: '2026-09',
+        memo: 'W092 acceptance walk',
+        status: 'posted',
+        lines: [
+          { accountCode: '1100', debit: 1000, credit: 0 },
+          { accountCode: '4000', debit: 0, credit: 1000 },
+        ],
+      },
+      taskContext: { description: 'Post the opening acceptance journal entry' },
+    });
+    expect(executed.invocation.capabilityKey).toBe('write.journal-entries');
+    expect(executed.receipt!.receiptStatus).toBe('accepted');
+    expect(walked.edge.executeCalls).toHaveLength(1);
+
+    // The read-only integration: reads work, writes are refused by the
+    // DECLARATION (least privilege), before any gate call is needed.
+    const aging = await verticalKits.inspectKitIntegration(member, {
+      installationId,
+      integrationKey: 'ar-aging-sor',
+      target: 'inv-1001',
+      taskContext: { description: 'Review the aging bucket for invoice 1001' },
+    });
+    expect(aging.invocation.capabilityKey).toBe('read.receivables-ledger');
+    expect(aging.invocation.outcome).toBe('allowed');
+    await expectCode('integration_read_only', () =>
+      verticalKits.executeKitIntegration(member, {
+        installationId,
+        integrationKey: 'ar-aging-sor',
+        target: 'inv-1001',
+        payload: { remaining: 0 },
+        taskContext: { description: 'Try to write through a read-only integration' },
+      }),
+    );
+
+    // -- remove and verify clean state.
+    const removed = await verticalKits.removeKit(admin, {
+      installationId,
+      reason: 'the finance team retired the starter kit',
+    });
+    expect(removed.installation.status).toBe('removed');
+    expect(removed.grants.every((g) => g.status === 'revoked')).toBe(true);
+    const postRemoval = await verticalKits.invokeKitCapability(member, {
+      installationId,
+      capabilityKey: 'read.ledger-accounts',
+      taskContext: { description: 'Read the chart of accounts after removal' },
+    });
+    expect(postRemoval.outcome).toBe('denied');
+    expect(postRemoval.basis).toBe('installation-inactive');
+    // The audit and the executed action are retained.
+    const events = await verticalKits.listKitEvents(member, { installationId });
+    expect(events.filter((e) => e.event === 'grant-revoked')).toHaveLength(5);
+    expect(events.map((e) => e.event)).toContain('removed');
+    expect(await verticalKits.listKitEdgeActions(member, { installationId })).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The policy matrix outcomes (per-tenant fresh state)
+// ---------------------------------------------------------------------------
+
+describe('the tenant policy decides the gate outcome at install', () => {
+  const tenant = newId();
+
+  it('a policy that AUTO-ALLOWS the kind mints the grants at install; one that FORBIDS refuses', async () => {
+    const admin = memberOf(tenant, [
+      'vertical-kits:administer',
+      'actions:administer',
+      'actions:approve',
+    ]);
+    const member = memberOf(tenant);
+
+    await registerVerifiedKit(admin, LEGAL_CASE_MANAGEMENT_KIT);
+
+    // Auto-allow: the request lands approved (a POLICY decision) and the
+    // installation is granted immediately.
+    await actionsContract.setAuthorityPolicy(admin, {
+      actionKind: 'vertical-kit-deployment',
+      approvalLevels: [],
+      forbiddenLevels: [],
+      note: 'auto-allow kits for this test tenant',
+    });
+    const autoAllowed = await verticalKits.installKit(admin, {
+      kitKey: 'legal-case-management',
+      version: '1.0.0',
+      justification: 'auto-allowed install',
+    });
+    expect(autoAllowed.installation.status).toBe('granted');
+    expect(autoAllowed.installation.reviewedAt).not.toBeNull();
+    expect(autoAllowed.grants.map((g) => g.capabilityKey)).toEqual(
+      [...LEGAL_CASE_MANAGEMENT_KIT.requiredCapabilities.map((c) => c.key)].sort(),
+    );
+    const activated = await verticalKits.activateKit(admin, {
+      installationId: autoAllowed.installation.id,
+    });
+    expect(activated.installation.status).toBe('active');
+    const allowed = await verticalKits.invokeKitCapability(member, {
+      installationId: autoAllowed.installation.id,
+      capabilityKey: 'read.case-matters',
+      taskContext: { description: 'Read under an auto-allowed policy' },
+    });
+    expect(allowed.outcome).toBe('allowed');
+    await verticalKits.removeKit(admin, { installationId: autoAllowed.installation.id });
+
+    // Forbid: the gate itself refuses the install — the verdict is
+    // recorded on the installation, not swallowed.
+    await actionsContract.setAuthorityPolicy(admin, {
+      actionKind: 'vertical-kit-deployment',
+      approvalLevels: [],
+      forbiddenLevels: ['EXECUTE'],
+      note: 'forbid kits for this test tenant',
+    });
+    const forbidden = await verticalKits.installKit(admin, {
+      kitKey: 'legal-case-management',
+      version: '1.0.0',
+      justification: 'forbidden install',
+    });
+    expect(forbidden.installation.status).toBe('rejected');
+    expect(forbidden.installation.reviewedAt).not.toBeNull();
+    expect(forbidden.grants).toEqual([]);
+    const refused = await verticalKits.invokeKitCapability(member, {
+      installationId: forbidden.installation.id,
+      capabilityKey: 'read.case-matters',
+      taskContext: { description: 'Read under a forbidden policy' },
+    });
+    expect(refused.outcome).toBe('denied');
+    expect(refused.basis).toBe('installation-inactive');
+    // Cleanup: drop the rejected installation (the tenant itself is
+    // throwaway — a fresh tenant per describe block).
+    await verticalKits.removeKit(admin, { installationId: forbidden.installation.id });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Versioning and the signed manifest
+// ---------------------------------------------------------------------------
+
+describe('versioned and signed: the registry discipline', () => {
+  const tenant = newId();
+
+  it('versions strictly increase per kit key; a changed manifest is a NEW version', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const first = await registerVerifiedKit(admin, LEGAL_CASE_MANAGEMENT_KIT);
+
+    // Same version again → refused (also covers a changed manifest at
+    // the same version: it can never overwrite the frozen row).
+    await expectCode('version_not_monotonic', () =>
+      verticalKits.registerKitVersion(admin, {
+        manifest: { ...LEGAL_CASE_MANAGEMENT_KIT, displayName: 'Changed' },
+      }),
+    );
+    // An older version → refused.
+    await expectCode('version_not_monotonic', () =>
+      verticalKits.registerKitVersion(admin, {
+        manifest: { ...LEGAL_CASE_MANAGEMENT_KIT, version: '0.9.0' },
+      }),
+    );
+    // A NEWER version registers (numeric order: 1.2.10 > 1.2.9).
+    const newer = await verticalKits.registerKitVersion(admin, {
+      manifest: {
+        ...LEGAL_CASE_MANAGEMENT_KIT,
+        version: '1.2.10',
+        requiredCapabilities: [
+          ...LEGAL_CASE_MANAGEMENT_KIT.requiredCapabilities,
+          {
+            key: 'read.trust-accounting',
+            label: 'Read trust accounting records',
+            dataCategories: ['trust-records'],
+            mode: 'read',
+          },
+        ],
       },
     });
-    await expectCode('package_mismatch', () =>
-      installVerticalKit(kitAdmin(tenantInstaller), { kitKey: 'logistics-operations' }),
-    );
+    expect(newer.version.version).toBe('1.2.10');
+    expect(newer.version.manifest.requiredCapabilities).toHaveLength(6);
+    expect(newer.version.manifestDigest).not.toBe(first.manifestDigest);
+
+    // The version history is readable and ordered newest-first; the
+    // derived verification state follows the latest run per version.
+    const versions = await verticalKits.listKitVersions(admin, {
+      kitKey: 'legal-case-management',
+    });
+    expect(versions.map((v) => v.version)).toEqual(['1.2.10', '1.0.0']);
+    expect(versions[1]!.verificationState).toBe('verified');
+    expect(versions[0]!.verificationState).toBe('unverified');
+
+    // The newest version is installable on its own merits.
+    const verified = await verticalKits.runKitVerification(admin, {
+      kitVersionId: newer.version.id,
+    });
+    expect(verified.outcome).toBe('verified');
+    const installed = await verticalKits.installKit(admin, {
+      kitKey: 'legal-case-management',
+      version: '1.2.10',
+    });
+    expect(installed.installation.kitVersion).toBe('1.2.10');
+    expect(installed.requiredCapabilities).toHaveLength(6);
+    await verticalKits.removeKit(admin, { installationId: installed.installation.id });
   });
-});
 
-// ---------------------------------------------------------------------------
-// PROBE 3 — VERSIONED: upgrade = a new version install, grants replaced,
-// both states on the audit trail (no silent in-place mutation)
-// ---------------------------------------------------------------------------
+  it('a row edited outside the service fails re-verification (the signed manifest)', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const registered = await registerVerifiedKit(admin, ACCOUNTING_LEDGER_ERP_KIT);
 
-describe('versioned upgrades (record of installed version, no silent grant mutation)', () => {
-  it('refuses upgrade discipline violations before any work', async () => {
-    const installer = kitAdmin(tenantInstaller);
-    await expectCode('invalid_input', () =>
-      upgradeVerticalKit(installer, { kitKey: 'professional-services' }),
+    // Tamper with the STORED MANIFEST directly (bypassing the service —
+    // the versions table is workflow state, not an append-only ledger):
+    // the recorded digest no longer matches the stored content.
+    const db = getDb();
+    await db.query(
+      `UPDATE vertical_kit_versions
+         SET manifest = manifest || '{"displayName": "Tampered Ledger Kit"}'::jsonb
+         WHERE tenant_id = $1 AND id = $2`,
+      [tenant, registered.id],
     );
-    await expectCode('kit_not_installed', () =>
-      upgradeVerticalKit(kitAdmin(tenantOther), {
-        kitKey: 'professional-services',
-        version: '1.1.0',
-      }),
-    );
-    await expectCode('kit_conflict', () =>
-      upgradeVerticalKit(installer, {
-        kitKey: 'professional-services',
+
+    const run = await verticalKits.runKitVerification(admin, {
+      kitVersionId: registered.id,
+    });
+    expect(run.outcome).toBe('failed');
+    const integrity = run.checks.find((c) => c.check === 'manifest-integrity')!;
+    expect(integrity.passed).toBe(false);
+    expect(integrity.detail).toContain('modified outside the service');
+
+    // The derived state follows: unverified installs are refused (the
+    // tampered version cannot be installed while FAILED).
+    await expectCode('kit_not_verified', () =>
+      verticalKits.installKit(admin, {
+        kitKey: 'accounting-ledger-erp',
         version: '1.0.0',
       }),
     );
+    // Restore the row (test hygiene) and verify it is healthy again.
+    await db.query(
+      `UPDATE vertical_kit_versions
+         SET manifest = $3
+         WHERE tenant_id = $1 AND id = $2`,
+      [tenant, registered.id, JSON.stringify(ACCOUNTING_LEDGER_ERP_KIT)],
+    );
+    const restored = await verticalKits.runKitVerification(admin, {
+      kitVersionId: registered.id,
+    });
+    expect(restored.outcome).toBe('verified');
   });
 
-  it('upgrades to the strictly greater version: the grant set is REPLACED and both snapshots stay on the trail', async () => {
-    await publishKit('professional-services', '1.1.0');
-    const installer = kitAdmin(tenantInstaller);
-    const upgraded = await upgradeVerticalKit(installer, {
-      kitKey: 'professional-services',
-      version: '1.1.0',
-    });
-    expect(upgraded.created).toBe(true);
-    expect(upgraded.install.kitVersion).toBe('1.1.0');
-
-    // The 1.1.0 footprint grew by telemetry:emit (the bridge's new
-    // capability) — the REPLACED grant set shows it; the 1.0.0 grant
-    // set is gone from the live state.
-    const bridge = upgraded.install.grants.find(
-      (grant) => grant.extensionKey === 'ps-time-expense-bridge',
-    )!;
-    expect(bridge.grantedPermissions).toEqual([
-      'state:read',
-      'state:write',
-      'schedule:run',
-      'external:participate',
-      'telemetry:emit',
-    ]);
-    const current = await getCurrentDeployment(member(tenantInstaller), {
-      extensionKey: 'ps-time-expense-bridge',
-    });
-    expect(current?.version).toBe('1.1.0');
-    expect(current?.grantedPermissions).toEqual(bridge.grantedPermissions);
-
-    // The extensions registry holds BOTH deployments (append-only history
-    // there too — an upgrade is a redeploy, never a mutation).
-    expect(
-      await listExtensionDeployments(member(tenantInstaller), {
-        extensionKey: 'ps-time-expense-bridge',
+  it('a malformed manifest never registers (verification folded into registration)', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    await expectCode('kit_verification_failed', () =>
+      verticalKits.registerKitVersion(admin, {
+        manifest: {
+          ...LEGAL_CASE_MANAGEMENT_KIT,
+          kitKey: 'malformed-kit',
+          requiredCapabilities: [
+            { key: 'fly.matter', label: 'not a read/write key', dataCategories: [], mode: 'read' },
+          ],
+        },
       }),
-    ).toHaveLength(2);
+    );
+    const versions = await verticalKits.listKitVersions(admin, { kitKey: 'malformed-kit' });
+    expect(versions).toEqual([]);
+  });
 
-    // PROBE 4 (auditable, first half): install(1.0.0) → upgrade(1.1.0),
-    // each event freezing its own grant snapshot — the 1.0.0 install
-    // event shows the OLD footprint, the upgrade event the NEW one.
-    const events = await listVerticalKitEvents(installer, { kitKey: 'professional-services' });
-    expect(events.map((event) => event.eventType)).toEqual(['upgrade', 'install']);
-    const installEvent = events.find((event) => event.eventType === 'install')!;
-    const upgradeEvent = events.find((event) => event.eventType === 'upgrade')!;
-    expect(installEvent.toVersion).toBe('1.0.0');
-    expect(upgradeEvent.fromVersion).toBe('1.0.0');
-    expect(upgradeEvent.toVersion).toBe('1.1.0');
-    const installBridge = installEvent.detail.grants.find(
-      (grant) => grant.extensionKey === 'ps-time-expense-bridge',
-    )!;
-    const upgradeBridge = upgradeEvent.detail.grants.find(
-      (grant) => grant.extensionKey === 'ps-time-expense-bridge',
-    )!;
-    expect(installBridge.grantedPermissions).not.toContain('telemetry:emit');
-    expect(upgradeBridge.grantedPermissions).toContain('telemetry:emit');
-
-    // Downgrades are refused too: upgrading back to 1.0.0 after the
-    // 1.1.0 upgrade is a version-order violation, not an install.
-    await expectCode('kit_conflict', () =>
-      upgradeVerticalKit(installer, {
-        kitKey: 'professional-services',
-        version: '1.0.0',
-      }),
+  it('an unverified version never installs; administration is claim-gated', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const member = memberOf(tenant);
+    await verticalKits.registerKitVersion(admin, {
+      manifest: { ...LEGAL_CASE_MANAGEMENT_KIT, version: '2.0.0' },
+    });
+    await expectCode('kit_not_verified', () =>
+      verticalKits.installKit(admin, { kitKey: 'legal-case-management', version: '2.0.0' }),
+    );
+    // A plain member holds no administration claim.
+    await expectCode('forbidden', () =>
+      verticalKits.registerKitVersion(member, { manifest: LEGAL_CASE_MANAGEMENT_KIT }),
+    );
+    await expectCode('forbidden', () =>
+      verticalKits.installKit(member, { kitKey: 'legal-case-management', version: '2.0.0' }),
     );
   });
 });
 
 // ---------------------------------------------------------------------------
-// PROBE 4 — AUDITABLE: append-only lifecycle events (storage-enforced)
+// The edge seam (DEFERRED-ON-W088)
 // ---------------------------------------------------------------------------
 
-describe('auditable lifecycle (append-only events, storage-enforced)', () => {
-  it('the event tables refuse UPDATE and DELETE even for bypassing writes', async () => {
-    const events = await db.query<{ id: string }>(
-      `SELECT id FROM vertical_kit_events WHERE tenant_id = $1 LIMIT 1`,
-      [tenantInstaller],
-    );
-    const eventId = events.rows[0]!.id;
-    await expect(
-      db.query(`UPDATE vertical_kit_events SET actor = 'attacker' WHERE id = $1`, [eventId]),
-    ).rejects.toThrowError(/append-only/);
-    await expect(
-      db.query(`DELETE FROM vertical_kit_events WHERE id = $1`, [eventId]),
-    ).rejects.toThrowError(/append-only/);
-  });
+describe('the DEFERRED-ON-W088 edge seam', () => {
+  const tenant = newId();
 
-  it('recorded grants are immutable rows (replacement is delete-and-reinsert through the service)', async () => {
-    const grants = await db.query<{ id: string }>(
-      `SELECT id FROM vertical_kit_grants WHERE tenant_id = $1 LIMIT 1`,
-      [tenantInstaller],
-    );
-    const grantId = grants.rows[0]!.id;
-    await expect(
-      db.query(
-        `UPDATE vertical_kit_grants SET granted_permissions = '["state:read"]'::jsonb WHERE id = $1`,
-        [grantId],
-      ),
-    ).rejects.toThrowError(/immutable once recorded/);
-  });
-});
+  it('provider objects never cross the kit runtime', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const member = memberOf(tenant);
+    const walked = await walkFullLifecycle(tenant, LEGAL_CASE_MANAGEMENT_KIT);
+    const installationId = walked.installation.installation.id;
 
-// ---------------------------------------------------------------------------
-// PROBE 5 — REMOVABLE: grants + bindings removed, references survive
-// honestly (no silent data loss)
-// ---------------------------------------------------------------------------
-
-describe('removable kits (honest references survive removal)', () => {
-  it('records a recipe use against the installed version', async () => {
-    const installer = kitAdmin(tenantInstaller);
-    const reference = await recordVerticalKitRecipeUse(installer, {
-      kitKey: 'professional-services',
-      recipeKey: 'close-engagement-month',
-      reference: 'deep-action-task-42',
-    });
-    expect(reference.kitVersion).toBe('1.1.0');
-    expect(reference.kitRemoved).toBe(false);
-    // recording the same use twice replays (no duplicates)
-    const replay = await recordVerticalKitRecipeUse(installer, {
-      kitKey: 'professional-services',
-      recipeKey: 'close-engagement-month',
-      reference: 'deep-action-task-42',
-    });
-    expect(replay.id).toBe(reference.id);
-  });
-
-  it('refuses unknown recipes and unversioned uses without an install', async () => {
-    const installer = kitAdmin(tenantInstaller);
-    await expectCode('invalid_input', () =>
-      recordVerticalKitRecipeUse(installer, {
-        kitKey: 'professional-services',
-        recipeKey: 'no-such-recipe',
-        reference: 'ref-1',
-      }),
-    );
-    await expectCode('kit_not_installed', () =>
-      recordVerticalKitRecipeUse(kitAdmin(tenantOther), {
-        kitKey: 'professional-services',
-        recipeKey: 'close-engagement-month',
-        reference: 'ref-2',
-      }),
-    );
-  });
-
-  it('removes the grants and package bindings, keeps the events and references honest', async () => {
-    const installer = kitAdmin(tenantInstaller);
-    const removal = await removeVerticalKit(installer, { kitKey: 'professional-services' });
-
-    // The grants and bindings are GONE (that is what removal means).
-    await expectCode('kit_not_installed', () =>
-      getVerticalKitInstall(installer, { kitKey: 'professional-services' }),
-    );
-    expect(await listVerticalKitInstalls(installer)).toEqual([]);
-    const leftoverGrants = await db.query(
-      `SELECT * FROM vertical_kit_grants WHERE tenant_id = $1 AND kit_key = 'professional-services'`,
-      [tenantInstaller],
-    );
-    expect(leftoverGrants.rows).toEqual([]);
-
-    // The remove event froze what was removed (from 1.1.0, with the
-    // removed grant snapshot).
-    const events = await listVerticalKitEvents(installer, { kitKey: 'professional-services' });
-    expect(events.map((event) => event.eventType)).toEqual(['remove', 'upgrade', 'install']);
-    const removeEvent = events[0]!;
-    expect(removeEvent.fromVersion).toBe('1.1.0');
-    expect(removeEvent.toVersion).toBeNull();
-    expect(removeEvent.detail.grants).toHaveLength(2);
-
-    // PROBE 5's honest tail: the recipe references SURVIVE the removal,
-    // still naming the kit version the template came from.
-    expect(removal.survivingReferences).toHaveLength(1);
-    const surviving = removal.survivingReferences[0]!;
-    expect(surviving.kitVersion).toBe('1.1.0');
-    expect(surviving.recipeKey).toBe('close-engagement-month');
-    expect(surviving.reference).toBe('deep-action-task-42');
-    expect(surviving.kitRemoved).toBe(true);
-
-    const references = await listVerticalKitRecipeReferences(installer, {
-      kitKey: 'professional-services',
-    });
-    expect(references).toHaveLength(1);
-    expect(references[0]!.kitRemoved).toBe(true);
-    expect(references[0]!.kitVersion).toBe('1.1.0');
-
-    // Recipe references are immutable history (no silent rewrite).
-    await expect(
-      db.query(`UPDATE vertical_kit_recipe_references SET kit_version = '0.0.1' WHERE tenant_id = $1`, [
-        tenantInstaller,
-      ]),
-    ).rejects.toThrowError(/append-only/);
-  });
-
-  it('re-installs cleanly after a removal (the registry replays, a fresh install event lands)', async () => {
-    const installer = kitAdmin(tenantInstaller);
-    const reinstalled = await installVerticalKit(installer, {
-      kitKey: 'professional-services',
-    });
-    expect(reinstalled.created).toBe(true);
-    expect(reinstalled.install.kitVersion).toBe('1.1.0');
-    const events = await listVerticalKitEvents(installer, { kitKey: 'professional-services' });
-    expect(events.map((event) => event.eventType)).toEqual([
-      'install',
-      'remove',
-      'upgrade',
-      'install',
-    ]);
-    // The old reference still renders honestly beside the new install.
-    const references = await listVerticalKitRecipeReferences(installer, {
-      kitKey: 'professional-services',
-    });
-    expect(references[0]!.kitRemoved).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// The honest W009 gate probe (approval_required → human → replay)
-// ---------------------------------------------------------------------------
-
-describe('the authority gate surfaces honestly (approval_required, completed on replay)', () => {
-  it('holds the install at the gate, then completes after the human decisions', async () => {
-    // tenantGate keeps the built-in default matrix: EXECUTE waits.
-    const gateAdmin = kitAdmin(tenantGate);
-    const approver = ctx(tenantGate, ['actions:approve']);
-
-    await expectCode('approval_required', () =>
-      installVerticalKit(gateAdmin, {
-        kitKey: 'professional-services',
-        version: '1.0.0',
-      }),
-    );
-
-    // Approve every pending extension-deployment request, then re-invoke
-    // the install — the activations and deployments replay idempotently
-    // until the whole composition applies (each manifest's activation
-    // and deployment is one gated call, held one at a time).
-    for (let round = 0; round < 8; round += 1) {
-      const pending = await listActionRequests(gateAdmin, {
-        actionKind: 'extension-deployment',
-        status: 'pending',
-      });
-      for (const request of pending) {
-        await decideApproval(approver, { requestId: request.id, decision: 'approve' });
-      }
-      try {
-        const attempt = await installVerticalKit(gateAdmin, {
-          kitKey: 'professional-services',
-          version: '1.0.0',
-        });
-        expect(attempt.created).toBe(true);
-        expect(attempt.install.kitVersion).toBe('1.0.0');
-        expect(attempt.install.grants).toHaveLength(2);
-        expect(
-          await listVerticalKitEvents(gateAdmin, { kitKey: 'professional-services' }),
-        ).toHaveLength(1);
-        return;
-      } catch (error) {
-        if (!(error instanceof VerticalKitsError) || error.code !== 'approval_required') {
-          throw error;
-        }
-      }
+    // A wired edge that returns a PROVIDER object is rejected loudly.
+    class ProviderReceipt {
+      status = 'accepted';
+      receiptId = 'provider-1';
     }
-    expect.unreachable('the gated install never completed after the human decisions');
+    verticalKits.setVerticalKitEdge({
+      edgeId: 'provider-leaky-edge',
+      inspect: async () => ({ found: true, state: new ProviderReceipt() }),
+      execute: async () => new ProviderReceipt() as unknown as verticalKits.VerticalKitEdgeReceipt,
+    });
+    await expectCode('invalid_edge_result', () =>
+      verticalKits.inspectKitIntegration(member, {
+        installationId,
+        integrationKey: 'case-management-sor',
+        target: 'matter-001',
+        taskContext: { description: 'Inspect through a leaky edge' },
+      }),
+    );
+    await expectCode('invalid_edge_result', () =>
+      verticalKits.executeKitIntegration(member, {
+        installationId,
+        integrationKey: 'case-management-sor',
+        target: 'matter-001',
+        payload: { status: 'closed' },
+        taskContext: { description: 'Write through a leaky edge' },
+      }),
+    );
+    // Nothing was recorded from the refused results.
+    expect(await verticalKits.listKitEdgeActions(member, { installationId })).toHaveLength(0);
+
+    // An unknown integration is a caller mistake, not a gate matter.
+    await expectCode('integration_not_found', () =>
+      verticalKits.inspectKitIntegration(member, {
+        installationId,
+        integrationKey: 'no-such-sor',
+        target: 'x',
+        taskContext: { description: 'Unknown integration' },
+      }),
+    );
+
+    await verticalKits.removeKit(admin, { installationId });
   });
 });
 
 // ---------------------------------------------------------------------------
-// Tenant isolation (ADR-0001 at this module's boundary)
+// Tenant isolation (the deep two-tenant proof lives in the W044 sweep;
+// this is the module suite's own quick check)
 // ---------------------------------------------------------------------------
 
-describe('tenant isolation', () => {
-  it('another tenant sees none of the installer tenant\'s kit lifecycle', async () => {
-    const other = kitAdmin(tenantOther);
-    await expectCode('kit_not_installed', () =>
-      getVerticalKitInstall(other, { kitKey: 'professional-services' }),
-    );
-    await expectCode('kit_not_installed', () =>
-      removeVerticalKit(other, { kitKey: 'professional-services' }),
-    );
-    expect(await listVerticalKitInstalls(other)).toEqual([]);
-    expect(await listVerticalKitEvents(other, {})).toEqual([]);
-    expect(await listVerticalKitRecipeReferences(other, {})).toEqual([]);
-  });
+describe('tenant isolation (module suite)', () => {
+  const tenantA = newId();
+  const tenantB = newId();
 
-  it('another tenant records its own references and never sees the installer\'s', async () => {
-    const other = kitAdmin(tenantOther);
-    const own = await recordVerticalKitRecipeUse(other, {
-      kitKey: 'logistics-operations',
-      version: '1.0.0',
-      recipeKey: 'expedite-shipment-replan',
-      reference: 'other-tenant-ref-1',
+  it("one tenant's kits, installations and ledgers are invisible to the other", async () => {
+    const adminA = memberOf(tenantA, ['vertical-kits:administer']);
+    const adminB = memberOf(tenantB, ['vertical-kits:administer']);
+    const walked = await walkFullLifecycle(tenantA, LEGAL_CASE_MANAGEMENT_KIT);
+    const installationId = walked.installation.installation.id;
+
+    // Tenant B registered nothing: its registry is empty.
+    expect(await verticalKits.listKitVersions(adminB, {})).toEqual([]);
+    expect(await verticalKits.listKitInstallations(adminB, {})).toEqual([]);
+
+    // B's cross-tenant reads are uniformly not-found — no existence leak.
+    await expectCode('installation_not_found', () =>
+      verticalKits.getKitInstallation(adminB, { installationId }),
+    );
+    await expectCode('installation_not_found', () =>
+      verticalKits.decideKitReview(adminB, { installationId, decision: 'approve' }),
+    );
+    await expectCode('installation_not_found', () =>
+      verticalKits.activateKit(adminB, { installationId }),
+    );
+    await expectCode('installation_not_found', () =>
+      verticalKits.removeKit(adminB, { installationId }),
+    );
+    await expectCode('installation_not_found', () =>
+      verticalKits.invokeKitCapability(adminB, {
+        installationId,
+        capabilityKey: 'read.case-matters',
+        taskContext: { description: 'Cross-tenant invocation' },
+      }),
+    );
+    await expectCode('installation_not_found', () =>
+      verticalKits.listKitEvents(adminB, { installationId }),
+    );
+
+    // B can register the SAME kit key independently (its own registry).
+    const bVersion = await registerVerifiedKit(adminB, LEGAL_CASE_MANAGEMENT_KIT);
+    expect(bVersion.id).not.toBe(walked.installation.installation.kitVersionId);
+    await verticalKits.removeKit(adminA, { installationId });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Storage discipline (append-only ledgers)
+// ---------------------------------------------------------------------------
+
+describe('storage discipline — the ledgers are append-only', () => {
+  const tenant = newId();
+
+  it('UPDATE, DELETE and TRUNCATE are refused on the audit ledgers', async () => {
+    const admin = memberOf(tenant, ['vertical-kits:administer']);
+    const member = memberOf(tenant);
+    const walked = await walkFullLifecycle(tenant, ACCOUNTING_LEDGER_ERP_KIT);
+    const installationId = walked.installation.installation.id;
+
+    // Produce one invocation and one edge action so every ledger has a
+    // row to protect.
+    const invocation = await verticalKits.invokeKitCapability(member, {
+      installationId,
+      capabilityKey: 'read.ledger-accounts',
+      taskContext: { description: 'Read the chart of accounts for the audit' },
     });
-    expect(own.kitVersion).toBe('1.0.0');
-    const mine = await listVerticalKitRecipeReferences(other, {});
-    expect(mine).toHaveLength(1);
-    expect(mine[0]!.reference).toBe('other-tenant-ref-1');
-  });
+    expect(invocation.outcome).toBe('allowed');
+    const executed = await verticalKits.executeKitIntegration(member, {
+      installationId,
+      integrationKey: 'ledger-erp-sor',
+      target: 'journal-audit-001',
+      payload: { memo: 'audit probe' },
+      taskContext: { description: 'Post the audit probe entry' },
+    });
+    expect(executed.receipt!.receiptStatus).toBe('accepted');
 
-  it('the catalog itself is served generically (pure data, no tenant state)', () => {
-    const catalog = listKitCatalog();
-    expect(catalog.map((kit) => kit.kitKey).sort()).toEqual([
-      'logistics-operations',
-      'professional-services',
-    ]);
+    const db = getDb();
+
+    const event = (
+      await db.query<{ id: string }>(
+        `SELECT id FROM vertical_kit_events WHERE tenant_id = $1 LIMIT 1`,
+        [tenant],
+      )
+    ).rows[0]!;
+    await expect(
+      db.query(`UPDATE vertical_kit_events SET detail = 'rewritten' WHERE id = $1`, [event.id]),
+    ).rejects.toThrow(/append-only/);
+    await expect(db.query(`DELETE FROM vertical_kit_events WHERE id = $1`, [event.id])).rejects.toThrow(
+      /append-only/,
+    );
+
+    const invocationRow = (
+      await db.query<{ id: string }>(
+        `SELECT id FROM vertical_kit_invocations WHERE tenant_id = $1 LIMIT 1`,
+        [tenant],
+      )
+    ).rows[0]!;
+    await expect(
+      db.query(`UPDATE vertical_kit_invocations SET outcome = 'allowed' WHERE id = $1`, [invocationRow.id]),
+    ).rejects.toThrow(/append-only/);
+    await expect(
+      db.query(`DELETE FROM vertical_kit_invocations WHERE id = $1`, [invocationRow.id]),
+    ).rejects.toThrow(/append-only/);
+
+    const version = (
+      await db.query<{ id: string }>(
+        `SELECT id FROM vertical_kit_versions WHERE tenant_id = $1 LIMIT 1`,
+        [tenant],
+      )
+    ).rows[0]!;
+    const verificationId = (
+      await db.query<{ id: string }>(
+        `SELECT id FROM vertical_kit_verifications WHERE tenant_id = $1 AND kit_version_id = $2 LIMIT 1`,
+        [tenant, version.id],
+      )
+    ).rows[0]!.id;
+    await expect(
+      db.query(`UPDATE vertical_kit_verifications SET outcome = 'verified' WHERE id = $1`, [
+        verificationId,
+      ]),
+    ).rejects.toThrow(/append-only/);
+    await expect(
+      db.query(`DELETE FROM vertical_kit_verifications WHERE id = $1`, [verificationId]),
+    ).rejects.toThrow(/append-only/);
+    await expect(
+      db.query(`TRUNCATE vertical_kit_events`),
+    ).rejects.toThrow(/append-only/);
+
+    await verticalKits.removeKit(admin, { installationId });
   });
 });

@@ -68,15 +68,6 @@ export const MARKETPLACE_DESTINATIONS: readonly {
     href: '/marketplace/developer',
     keywords: ['marketplace', 'developer', 'builder', 'publish', 'review', 'submit', 'build', 'package'],
   },
-  {
-    // W092 — the Vertical Kits surface (an additive keyboard destination
-    // of the marketplace area beside its three working surfaces).
-    id: 'vertical-kits',
-    title: 'Set up an industry starter kit',
-    subtitle: 'Vertical starter kits: scoped bundles, removable and auditable',
-    href: '/vertical-kits',
-    keywords: ['vertical', 'kits', 'industry', 'starter', 'bundle', 'system of record', 'setup'],
-  },
 ];
 
 /**

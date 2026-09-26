@@ -1,248 +1,324 @@
--- W092 · vertical-kits module — the tenant-scoped installation
--- lifecycle of vertical extension starter kits.
+-- W092 · vertical-kits module — Vertical Extension Starter Kits:
+-- versioned, signed-manifest packages of specialist extension/agent
+-- definitions for ONE system-of-record-heavy vertical, installable,
+-- permission-scoped, auditable and removable per tenant, with EVERYTHING
+-- vertical carried inside the kit manifests (core modules stay
+-- industry-independent).
 --
--- WORK-ITEM-CATALOG W092: "Create reusable specialist extension/agent
--- starter kits and first deep integrations for system-of-record-heavy
--- industries without moving vertical semantics into Aurum core."
--- Acceptance: "each pack is installable, permission-scoped, versioned,
--- auditable and removable; core modules remain industry-independent."
+-- Every table carries tenant_id (ADR-0001; scripts/check-architecture.ts
+-- rule d) — no exceptions are requested. Nothing provider-named appears
+-- anywhere: the deep-integration execution path is expressed against the
+-- module's own VerticalKitEdge port and is DEFERRED-ON-W088 (the Edge
+-- Connector work item); the only provider-minted values that reach these
+-- tables are OPAQUE strings (edge action receipt ids, the wired edge's
+-- opaque identity).
 --
--- WHAT LIVES HERE — and what deliberately does NOT:
---
---   * Kit DEFINITIONS are versioned platform-supplied DATA held in code
---     (kits.ts), validated pure against the contracts they compose
---     (extensions/marketplace/deep-actions/connection-broker/
---     integration-intelligence). There is deliberately NO kit catalog
---     table: definitions carry no tenant state, and this module's
---     tables below are ALL tenant-scoped (the architecture gate's rule
---     (d) — no arch-allowlist entry is needed or wanted).
---
---   * INSTALLATION state is a tenant's own: one row per (tenant, kit)
---     recording the installed version; one grant row per kit manifest
---     recording EXACTLY what installing granted and WHICH marketplace
---     ExtensionPackage the binding rode (the W028 discipline — the
---     platform catalog stops at INSTALLABLE; this module is the
---     tenant-side consumer of that hand-off point).
---
---   * The AUDIT TRAIL (vertical_kit_events) is append-only, with the
---     full WHAT frozen at append time: who installed/upgraded/removed,
---     when, from which version to which, with exactly which grants and
---     package bindings. Storage triggers forbid UPDATE/DELETE/TRUNCATE
---     — not even a future module bypassing the service can rewrite
---     kit history.
---
---   * RECIPE REFERENCES (vertical_kit_recipe_references) record which
---     kit version a deep-action plan was instantiated from, and are
---     immutable by design: after a kit is REMOVED the references stay
---     readable with their version and an honest removed flag — no
---     silent data loss (the W092 removal clause).
---
--- Removal semantics: `removeVerticalKit` DELETES the install row and
--- its grants (the kit's grants and package bindings are gone — that is
--- what removal means) while events and recipe references survive as
--- history. Upgrade semantics: the install row moves to the new version
--- and the grant set is REPLACED (the old grants are deleted, the new
--- grants recorded, and BOTH states live on in the append-only event
--- trail — no silent in-place mutation of granted permissions).
+-- State model (lifecycle.ts mirrors these shapes):
+--   * vertical_kit_versions       — the tenant registry of IMMUTABLE kit
+--                                   versions (strictly increasing semver
+--                                   per kit key; the frozen manifest plus
+--                                   its sha-256 integrity digest).
+--   * vertical_kit_verifications  — append-only deterministic
+--                                   verification runs (install requires
+--                                   the derived state VERIFIED).
+--   * vertical_kit_installations  — the install lifecycle:
+--                                   pending-review → rejected | granted →
+--                                   active ⇄ suspended → removed, with
+--                                   the W009 gate record of the grant
+--                                   review.
+--   * vertical_kit_grants         — the kit-scoped capability grants
+--                                   minted by an approved review and
+--                                   revoked with the kit (no orphaned
+--                                   authority).
+--   * vertical_kit_invocations   — append-only ledger of EVERY gate
+--                                   verdict (allowed or denied).
+--   * vertical_kit_edge_actions  — executed system-of-record actions
+--                                   through a WIRED edge (the only real
+--                                   executions; unwired paths never fake
+--                                   success).
+--   * vertical_kit_events        — append-only install/configure/remove
+--                                   audit (every grant minted/revoked).
 
 -- ---------------------------------------------------------------------------
--- Installs (one row per tenant × kit)
+-- Kit versions — the immutable, digest-signed registry rows
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE vertical_kit_installs (
+CREATE TABLE vertical_kit_versions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
-  kit_key text NOT NULL CHECK (
-    kit_key ~ '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
-  ),
-  kit_version text NOT NULL CHECK (
-    kit_version ~ '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
-  ),
+  kit_key text NOT NULL CHECK (char_length(kit_key) BETWEEN 3 AND 128),
+  version text NOT NULL CHECK (char_length(version) BETWEEN 5 AND 32),
+  -- Parsed semver parts (numeric ordering — never text order).
   version_major integer NOT NULL CHECK (version_major >= 0),
   version_minor integer NOT NULL CHECK (version_minor >= 0),
   version_patch integer NOT NULL CHECK (version_patch >= 0),
-  installed_by text NOT NULL CHECK (installed_by <> ''),
-  installed_at timestamptz NOT NULL,
-  updated_at timestamptz NOT NULL,
-  -- One current install per (tenant, kit): the floor under the
-  -- service's own idempotency and upgrade discipline.
-  CONSTRAINT vertical_kit_installs_tenant_kit_unique
-    UNIQUE (tenant_id, kit_key)
+  -- The versioned manifest FORMAT this manifest obeys.
+  kit_schema_version integer NOT NULL CHECK (kit_schema_version = 1),
+  vertical_key text NOT NULL CHECK (char_length(vertical_key) BETWEEN 2 AND 64),
+  display_name text NOT NULL CHECK (char_length(display_name) BETWEEN 1 AND 200),
+  description text NOT NULL CHECK (char_length(description) BETWEEN 1 AND 2000),
+  -- The frozen manifest content (everything vertical lives here).
+  manifest jsonb NOT NULL CHECK (jsonb_typeof(manifest) = 'object'),
+  -- The sha-256 hex digest of the canonical JSON of the manifest — the
+  -- signed-manifest integrity signature.
+  manifest_digest text NOT NULL CHECK (manifest_digest ~ '^[0-9a-f]{64}$'),
+  capability_count integer NOT NULL CHECK (capability_count BETWEEN 1 AND 32),
+  extension_count integer NOT NULL CHECK (extension_count BETWEEN 0 AND 16),
+  agent_count integer NOT NULL CHECK (agent_count BETWEEN 0 AND 16),
+  integration_count integer NOT NULL CHECK (integration_count BETWEEN 0 AND 16),
+  created_by text NOT NULL,
+  created_at timestamptz NOT NULL,
+  CONSTRAINT vertical_kit_versions_version_unique UNIQUE (tenant_id, kit_key, version),
+  CONSTRAINT vertical_kit_versions_id_tenant_unique UNIQUE (id, tenant_id)
 );
 
-CREATE INDEX vertical_kit_installs_tenant_idx
-  ON vertical_kit_installs (tenant_id, updated_at DESC);
+CREATE INDEX vertical_kit_versions_tenant_key_idx
+  ON vertical_kit_versions (tenant_id, kit_key, version_major DESC, version_minor DESC, version_patch DESC);
 
 -- ---------------------------------------------------------------------------
--- Grants (what installing granted, per manifest, with the package
--- binding the install rode)
+-- Kit verifications — append-only deterministic runs
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE vertical_kit_verifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid NOT NULL,
+  kit_version_id uuid NOT NULL,
+  -- Monotonic per-version position (deterministic latest-run derivation
+  -- even under a fixed test clock).
+  position integer NOT NULL CHECK (position >= 1),
+  outcome text NOT NULL CHECK (outcome IN ('verified', 'failed')),
+  checks jsonb NOT NULL CHECK (jsonb_typeof(checks) = 'array'),
+  summary text NOT NULL CHECK (char_length(summary) BETWEEN 1 AND 2000),
+  verifier text NOT NULL,
+  ran_at timestamptz NOT NULL,
+  CONSTRAINT vertical_kit_verifications_position_unique UNIQUE (tenant_id, kit_version_id, position),
+  CONSTRAINT vertical_kit_verifications_id_tenant_unique UNIQUE (id, tenant_id)
+);
+
+CREATE INDEX vertical_kit_verifications_version_idx
+  ON vertical_kit_verifications (tenant_id, kit_version_id, ran_at DESC);
+
+-- ---------------------------------------------------------------------------
+-- Installations — the install lifecycle and its W009 gate record
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE vertical_kit_installations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid NOT NULL,
+  kit_key text NOT NULL CHECK (char_length(kit_key) BETWEEN 3 AND 128),
+  kit_version text NOT NULL CHECK (char_length(kit_version) BETWEEN 5 AND 32),
+  -- The registered version this install froze (soft reference).
+  kit_version_id uuid NOT NULL,
+  status text NOT NULL CHECK (status IN (
+    'pending-review', 'rejected', 'granted', 'active', 'suspended', 'removed'
+  )),
+  -- The frozen required-capability snapshot at install time (the exact
+  -- scope the tenant's grant review approved).
+  required_capabilities jsonb NOT NULL CHECK (jsonb_typeof(required_capabilities) = 'array'),
+  -- The actions module's ActionRequest id — the W009 gate record the
+  -- install review routed through (always set: install routes the gate
+  -- in the same transaction).
+  action_request_id uuid NOT NULL,
+  installed_by text NOT NULL,
+  installed_at timestamptz NOT NULL,
+  reviewed_at timestamptz,
+  activated_at timestamptz,
+  suspended_at timestamptz,
+  removed_at timestamptz,
+  removal_reason text CHECK (
+    removal_reason IS NULL OR char_length(removal_reason) BETWEEN 1 AND 2000
+  ),
+  CONSTRAINT vertical_kit_installations_id_tenant_unique UNIQUE (id, tenant_id),
+  -- State-shape invariants (the lifecycle, one row at a time):
+  -- every state past the review (rejected/granted/active/suspended)
+  -- knows its review time; removal knows its removal time; only removal
+  -- carries a reason. 'removed' may ALSO carry reviewed_at (removed after
+  -- a review) but need not (a pending-review lifecycle withdrawn before
+  -- any decision) — removal is not a review.
+  CONSTRAINT vertical_kit_installations_reviewed_shape CHECK (
+    status IN ('pending-review', 'removed') OR reviewed_at IS NOT NULL
+  ),
+  CONSTRAINT vertical_kit_installations_removed_shape CHECK (
+    status <> 'removed' OR removed_at IS NOT NULL
+  ),
+  CONSTRAINT vertical_kit_installations_no_removal_while_live CHECK (
+    status = 'removed' OR removed_at IS NULL
+  ),
+  CONSTRAINT vertical_kit_installations_activated_shape CHECK (
+    status NOT IN ('active', 'suspended') OR activated_at IS NOT NULL
+  ),
+  CONSTRAINT vertical_kit_installations_suspended_shape CHECK (
+    status <> 'suspended' OR suspended_at IS NOT NULL
+  )
+);
+
+-- At most ONE live (non-removed) installation per kit per tenant: a
+-- fresh lifecycle may only start once the previous one was removed.
+CREATE UNIQUE INDEX vertical_kit_installations_one_live_per_kit
+  ON vertical_kit_installations (tenant_id, kit_key) WHERE status <> 'removed';
+
+CREATE INDEX vertical_kit_installations_tenant_status_idx
+  ON vertical_kit_installations (tenant_id, status, installed_at DESC);
+CREATE INDEX vertical_kit_installations_tenant_gate_idx
+  ON vertical_kit_installations (tenant_id, action_request_id);
+
+-- ---------------------------------------------------------------------------
+-- Grants — the kit-scoped capability authority (minted by an approved
+-- review; revoked with the kit)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE vertical_kit_grants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
-  install_id uuid NOT NULL,
-  kit_key text NOT NULL CHECK (
-    kit_key ~ '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
+  installation_id uuid NOT NULL,
+  capability_key text NOT NULL CHECK (char_length(capability_key) BETWEEN 3 AND 128),
+  label text NOT NULL CHECK (char_length(label) BETWEEN 1 AND 200),
+  data_categories jsonb NOT NULL CHECK (jsonb_typeof(data_categories) = 'array'),
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked')),
+  granted_by text NOT NULL,
+  granted_at timestamptz NOT NULL,
+  revoked_at timestamptz,
+  revoked_by text,
+  revocation_reason text CHECK (
+    revocation_reason IS NULL OR char_length(revocation_reason) BETWEEN 1 AND 2000
   ),
-  extension_key text NOT NULL CHECK (
-    extension_key ~ '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
+  CONSTRAINT vertical_kit_grants_capability_unique UNIQUE (tenant_id, installation_id, capability_key),
+  CONSTRAINT vertical_kit_grants_id_tenant_unique UNIQUE (id, tenant_id),
+  -- A revoked grant carries its full trail; an active one carries none.
+  CONSTRAINT vertical_kit_grants_revoked_shape CHECK (
+    status <> 'revoked' OR (revoked_at IS NOT NULL AND revoked_by IS NOT NULL)
   ),
-  extension_version text NOT NULL CHECK (
-    extension_version ~ '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
-  ),
-  -- The marketplace ExtensionPackage the binding rode (opaque forward
-  -- reference — no cross-module FK, the marketplace's own discipline).
-  package_id uuid NOT NULL,
-  package_key text NOT NULL CHECK (
-    package_key ~ '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
-  ),
-  -- EXACTLY what installing granted: the closed extension permission
-  -- vocabulary, canonical order, frozen at grant time (the shape floor
-  -- is structure only; the service enforces the vocabulary).
-  granted_permissions jsonb NOT NULL CHECK (
-    jsonb_typeof(granted_permissions) = 'array'
-  ),
-  deployed_at timestamptz NOT NULL,
-  CONSTRAINT vertical_kit_grants_install_fk
-    FOREIGN KEY (install_id) REFERENCES vertical_kit_installs (id),
-  -- One grant per (install, extension): a kit installs each of its
-  -- manifests exactly once per version.
-  CONSTRAINT vertical_kit_grants_install_extension_unique
-    UNIQUE (tenant_id, install_id, extension_key)
+  CONSTRAINT vertical_kit_grants_active_shape CHECK (
+    status <> 'active' OR (revoked_at IS NULL AND revoked_by IS NULL AND revocation_reason IS NULL)
+  )
 );
 
-CREATE INDEX vertical_kit_grants_install_idx
-  ON vertical_kit_grants (install_id);
-CREATE INDEX vertical_kit_grants_tenant_idx
-  ON vertical_kit_grants (tenant_id, kit_key);
+CREATE INDEX vertical_kit_grants_installation_idx
+  ON vertical_kit_grants (tenant_id, installation_id, capability_key);
 
 -- ---------------------------------------------------------------------------
--- Lifecycle events (append-only audit — install/upgrade/remove)
+-- Invocations — append-only ledger of EVERY gate verdict
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE vertical_kit_invocations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid NOT NULL,
+  installation_id uuid NOT NULL,
+  capability_key text NOT NULL CHECK (char_length(capability_key) BETWEEN 3 AND 128),
+  outcome text NOT NULL CHECK (outcome IN ('allowed', 'denied')),
+  basis text NOT NULL CHECK (basis IN ('kit-grant', 'grant-missing', 'installation-inactive')),
+  denial_reason text CHECK (
+    denial_reason IS NULL OR char_length(denial_reason) BETWEEN 1 AND 2000
+  ),
+  task_context jsonb NOT NULL CHECK (jsonb_typeof(task_context) = 'object'),
+  invoked_by text NOT NULL,
+  invoked_at timestamptz NOT NULL,
+  CONSTRAINT vertical_kit_invocations_id_tenant_unique UNIQUE (id, tenant_id),
+  -- An allowed invocation never carries a denial reason; a denied one
+  -- always does (the deterministic plain-language reason).
+  CONSTRAINT vertical_kit_invocations_allowed_shape CHECK (
+    outcome <> 'allowed' OR denial_reason IS NULL
+  ),
+  CONSTRAINT vertical_kit_invocations_denied_shape CHECK (
+    outcome <> 'denied' OR (denial_reason IS NOT NULL AND basis <> 'kit-grant')
+  )
+);
+
+CREATE INDEX vertical_kit_invocations_installation_idx
+  ON vertical_kit_invocations (tenant_id, installation_id, invoked_at DESC);
+
+-- ---------------------------------------------------------------------------
+-- Edge actions — real executions through a wired edge only
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE vertical_kit_edge_actions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid NOT NULL,
+  installation_id uuid NOT NULL,
+  integration_key text NOT NULL CHECK (char_length(integration_key) BETWEEN 1 AND 64),
+  capability_key text NOT NULL CHECK (char_length(capability_key) BETWEEN 3 AND 128),
+  -- The ALLOWED gate invocation that authorized this write.
+  invocation_id uuid NOT NULL,
+  receipt_status text NOT NULL CHECK (receipt_status IN ('accepted', 'rejected', 'failed')),
+  receipt_id text CHECK (receipt_id IS NULL OR char_length(receipt_id) BETWEEN 1 AND 200),
+  receipt_detail text CHECK (
+    receipt_detail IS NULL OR char_length(receipt_detail) BETWEEN 1 AND 500
+  ),
+  -- The opaque wiring identity of the edge that executed.
+  edge_id text NOT NULL CHECK (char_length(edge_id) BETWEEN 1 AND 200),
+  executed_by text NOT NULL,
+  executed_at timestamptz NOT NULL,
+  CONSTRAINT vertical_kit_edge_actions_id_tenant_unique UNIQUE (id, tenant_id)
+);
+
+CREATE INDEX vertical_kit_edge_actions_installation_idx
+  ON vertical_kit_edge_actions (tenant_id, installation_id, executed_at DESC);
+
+-- ---------------------------------------------------------------------------
+-- Events — append-only install/configure/remove audit
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE vertical_kit_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
-  kit_key text NOT NULL CHECK (
-    kit_key ~ '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
-  ),
-  event_type text NOT NULL CHECK (event_type IN ('install', 'upgrade', 'remove')),
-  from_version text
-    CHECK (from_version IS NULL OR from_version ~ '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'),
-  to_version text
-    CHECK (to_version IS NULL OR to_version ~ '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'),
-  actor text NOT NULL CHECK (actor <> ''),
-  occurred_at timestamptz NOT NULL,
-  -- The WHAT, frozen at append time: the exact grants + package
-  -- bindings this event installed/upgraded/removed.
-  detail jsonb NOT NULL CHECK (jsonb_typeof(detail) = 'object'),
-  -- Direction shape: an install has no from-version, a remove has no
-  -- to-version, an upgrade has both and must strictly increase.
-  CONSTRAINT vertical_kit_events_direction_shape CHECK (
-    (event_type = 'install' AND from_version IS NULL AND to_version IS NOT NULL)
-    OR (event_type = 'remove' AND from_version IS NOT NULL AND to_version IS NULL)
-    OR (event_type = 'upgrade' AND from_version IS NOT NULL AND to_version IS NOT NULL)
-  )
-);
-
-CREATE INDEX vertical_kit_events_tenant_idx
-  ON vertical_kit_events (tenant_id, occurred_at DESC, id DESC);
-CREATE INDEX vertical_kit_events_kit_idx
-  ON vertical_kit_events (tenant_id, kit_key, occurred_at DESC, id DESC);
-
--- ---------------------------------------------------------------------------
--- Recipe references (immutable — the honest removal trail)
--- ---------------------------------------------------------------------------
-
-CREATE TABLE vertical_kit_recipe_references (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id uuid NOT NULL,
-  kit_key text NOT NULL CHECK (
-    kit_key ~ '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
-  ),
-  kit_version text NOT NULL CHECK (
-    kit_version ~ '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
-  ),
-  recipe_key text NOT NULL CHECK (
-    recipe_key ~ '^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$'
-  ),
-  -- Opaque caller reference (e.g. the deep-action task id).
-  reference text NOT NULL CHECK (reference <> '' AND char_length(reference) <= 200),
-  recorded_by text NOT NULL CHECK (recorded_by <> ''),
+  installation_id uuid NOT NULL,
+  -- Monotonic per-installation position: the service clock can hold
+  -- still within one transition (test-controllable time), so the audit
+  -- feed orders by (recorded_at DESC, position DESC) deterministically.
+  position integer NOT NULL CHECK (position >= 1),
+  event text NOT NULL CHECK (event IN (
+    'installed',
+    'review-approved',
+    'review-rejected',
+    'grant-minted',
+    'activated',
+    'suspended',
+    'resumed',
+    'grant-revoked',
+    'removed'
+  )),
+  detail text CHECK (detail IS NULL OR char_length(detail) BETWEEN 1 AND 500),
+  recorded_by text NOT NULL,
   recorded_at timestamptz NOT NULL,
-  -- One reference per (tenant, kit, recipe, reference): recording the
-  -- same use twice replays, it never duplicates.
-  CONSTRAINT vertical_kit_recipe_references_dedupe_unique
-    UNIQUE (tenant_id, kit_key, recipe_key, reference)
+  CONSTRAINT vertical_kit_events_id_tenant_unique UNIQUE (id, tenant_id)
 );
 
-CREATE INDEX vertical_kit_recipe_references_tenant_idx
-  ON vertical_kit_recipe_references (tenant_id, recorded_at DESC, id DESC);
+CREATE INDEX vertical_kit_events_installation_idx
+  ON vertical_kit_events (tenant_id, installation_id, recorded_at DESC, position DESC);
 
 -- ---------------------------------------------------------------------------
--- Storage-level guarantees (the W084/W095 house discipline: triggers
--- enforce what the service promises, even for bypassing writes)
+-- Storage-level guarantees
 -- ---------------------------------------------------------------------------
 
--- Kit history is append-only: no UPDATE, no DELETE, no TRUNCATE of a
--- lifecycle event — audit evidence is history the moment it lands.
-CREATE OR REPLACE FUNCTION vertical_kits_reject_mutation() RETURNS trigger AS $$
+-- The append-only ledgers: no UPDATE, DELETE or TRUNCATE, ever. (The
+-- version/verification/installation/grant tables legitimately move
+-- forward through their lifecycles — they are workflow state, not
+-- evidence; the evidence ledgers below never rewrite.)
+
+CREATE OR REPLACE FUNCTION vertical_kits_append_only_reject_mutation() RETURNS trigger AS $$
 BEGIN
-  RAISE EXCEPTION 'vertical kit lifecycle evidence is append-only (W092 vertical starter kits): % is forbidden on table %',
-    TG_OP, TG_TABLE_NAME;
+  RAISE EXCEPTION '% is append-only (W092 vertical-kits audit): % is forbidden on table %',
+    TG_TABLE_NAME, TG_OP, TG_TABLE_NAME;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER vertical_kit_events_immutable
   BEFORE UPDATE OR DELETE ON vertical_kit_events
-  FOR EACH ROW EXECUTE FUNCTION vertical_kits_reject_mutation();
-
+  FOR EACH ROW EXECUTE FUNCTION vertical_kits_append_only_reject_mutation();
 CREATE TRIGGER vertical_kit_events_immutable_truncate
   BEFORE TRUNCATE ON vertical_kit_events
-  FOR EACH STATEMENT EXECUTE FUNCTION vertical_kits_reject_mutation();
+  FOR EACH STATEMENT EXECUTE FUNCTION vertical_kits_append_only_reject_mutation();
 
--- Recipe references are immutable once recorded: after a kit is
--- removed, the references (the honest "this plan came from kit vX"
--- trail) must stay exactly as recorded — removal may never silently
--- rewrite or drop them.
-CREATE TRIGGER vertical_kit_recipe_references_immutable
-  BEFORE UPDATE OR DELETE ON vertical_kit_recipe_references
-  FOR EACH ROW EXECUTE FUNCTION vertical_kits_reject_mutation();
+CREATE TRIGGER vertical_kit_invocations_immutable
+  BEFORE UPDATE OR DELETE ON vertical_kit_invocations
+  FOR EACH ROW EXECUTE FUNCTION vertical_kits_append_only_reject_mutation();
+CREATE TRIGGER vertical_kit_invocations_immutable_truncate
+  BEFORE TRUNCATE ON vertical_kit_invocations
+  FOR EACH STATEMENT EXECUTE FUNCTION vertical_kits_append_only_reject_mutation();
 
-CREATE TRIGGER vertical_kit_recipe_references_immutable_truncate
-  BEFORE TRUNCATE ON vertical_kit_recipe_references
-  FOR EACH STATEMENT EXECUTE FUNCTION vertical_kits_reject_mutation();
-
--- An install row's identity and installed version are the service's
--- discipline (idempotent install, explicit upgrade): a grant row may
--- never drift away from the install it belongs to.
-CREATE OR REPLACE FUNCTION vertical_kit_grants_guard() RETURNS trigger AS $$
-BEGIN
-  IF TG_OP = 'DELETE' THEN
-    -- Grants are removed by upgrade (replacement) and by removal —
-    -- both service operations; allowed at the storage floor.
-    RETURN OLD;
-  END IF;
-  IF TG_OP = 'UPDATE' AND (
-    NEW.id <> OLD.id
-    OR NEW.tenant_id <> OLD.tenant_id
-    OR NEW.install_id <> OLD.install_id
-    OR NEW.kit_key <> OLD.kit_key
-    OR NEW.extension_key <> OLD.extension_key
-    OR NEW.extension_version <> OLD.extension_version
-    OR NEW.package_id <> OLD.package_id
-    OR NEW.package_key <> OLD.package_key
-    OR NEW.granted_permissions <> OLD.granted_permissions
-    OR NEW.deployed_at <> OLD.deployed_at
-  ) THEN
-    RAISE EXCEPTION 'vertical kit grants are immutable once recorded (W092 vertical starter kits): replacement is delete-and-reinsert through the service on table %',
-      TG_TABLE_NAME;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER vertical_kit_grants_immutable
-  BEFORE UPDATE ON vertical_kit_grants
-  FOR EACH ROW EXECUTE FUNCTION vertical_kit_grants_guard();
+CREATE TRIGGER vertical_kit_verifications_immutable
+  BEFORE UPDATE OR DELETE ON vertical_kit_verifications
+  FOR EACH ROW EXECUTE FUNCTION vertical_kits_append_only_reject_mutation();
+CREATE TRIGGER vertical_kit_verifications_immutable_truncate
+  BEFORE TRUNCATE ON vertical_kit_verifications
+  FOR EACH STATEMENT EXECUTE FUNCTION vertical_kits_append_only_reject_mutation();
