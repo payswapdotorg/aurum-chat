@@ -1,7 +1,7 @@
 # Final Tech Lead Takeover Handoff — Aurum Post-W083
 
 **Repository:** `payswapdotorg/aurum-chat`  
-**Current main:** `9f4f15b32a8d6bdbe222c926025d775640de9a14` (see §3a and the Wave A/B/D sections — W094 verified 2026-09-26)  
+**Current main:** `73d00ecbabc9402dde8374671d18108a2958d2e0` (see §3a and the Wave A/B/D sections — W094 + W100 verified 2026-09-26)  
 **Architecture:** v2.1 — FROZEN  
 **Program scope:** W080–W101 only  
 **Maximum concurrent workers:** 3
@@ -178,17 +178,28 @@ Final main `e37f1d4` verified at the exact merged tip: typecheck PASS, lint PASS
 - Delivered by the parallel-lead session's worker; the replay-session dispatch of the same item was queue-dropped server-side (assistant placeholder len=0, the page's "Thinking…" a stale render) and was voided as a duplicate.
 - Integration-station verification at the exact merged tip `9f4f15b` (independent re-run): typecheck PASS, lint PASS, arch PASS (module files 667 / app-mcp 288 / tables 248), full suite **258 tracked test files — 5353 tests passed / 0 failed** (4 environment-gated file-level skips: real-Redis/real-Postgres URL seams unset in the sandbox). W094's own 43 tests green (11 service + 31 unit + 1 sweep).
 
-**Station-hygiene note (2026-09-26, binding for every future verification on this sandbox):** the 4GB box now OOM-kills a single-process `bun run test` (kernel `oom_kill`, 54-byte log). Run the suite CHUNKED: `git ls-files '*.test.ts' | rg -v '^tests/browser/'` (~258 files) split into ~33-file chunks, one `bunx vitest run --maxWorkers=2 <chunk>` per chunk. Do NOT pass `--reporter=basic` (removed in vitest 5 — instant startup error). Under concurrent chunks the embedded-PostgreSQL `beforeAll` boots exceed the 10s default `hookTimeout` on ~31 files — those are boot timeouts, NOT regressions: all 31 pass serialized (`--maxWorkers=1`, 624/624). Differential evidence: the same files passed in the `e37f1d4` morning battery, W094's own tests were green in the chunked run, and the failing set contained zero migration-module files. Also: long-running background jobs must be launched orphan-to-init — `( setsid nohup bash script >log 2>&1 < /dev/null & )` so the runner's PPID is 1 — or the between-tool-calls teardown tree-walk reaps them (console boot lesson 147 applies to the product repo too; setsid alone is not enough).
+### Wave E — W100 ✅ (PR #118, 2026-09-26)
+
+**W100 — Longitudinal S003 Conversion Benchmark ✅ (squash `73d00ec`, PR #118)**
+- Branch `work/w100-s003-conversion-benchmark` @ `002fa8a`, base `9f4f15b`. Pure additions (19 files, 3663 insertions, all inside `tests/longitudinal/**` — the simulator module itself untouched).
+- The S003 harness (`tests/longitudinal/s003-conversion.benchmark.test.ts`, 2606 lines) + the S002 latent-score methodology re-implemented as committed design constants (`s003-model.ts`, 902 lines) + raw results committed with schema headers (`tests/longitudinal/results/s003/**`: summary, per-firm, per-industry, quality payloads, README design record).
+- Cohort: 12 firms = 3 industries x 4 sizes (solo/small/mid/large) — legal + accounting ride the two W092 starter kits, logistics is the KIT-LESS CONTROL industry; the mid firm of each industry runs the full W056 attribution trio (experienced/control/cold-start) with raw W055 quality payloads committed.
+- The six catalog measurements as pure functions of module-recorded adoption: aurumPrimaryFraction + aurumOnlyFraction (routing bases cite real contracts — kit grants, connection floors/grants, meeting/cellular channel liveness, agent supervision), context switching (adjacent-tool switches per scenario), integration setup effort (MODELED baseline protocol, labeled as such, vs the MEASURED S003 chain of actually-executed W096/W084/W094 contract ops priced by published weights), trust (the frozen 6-action automation portfolio with one DESIGNED honest write-scope denial per firm), realized value (W055 families).
+- Determinism: one reproducible seed per firm; dedicated determinism describe; byte-stable artifacts (sorted keys, no uuids/timestamps); `revealGroundTruth` stays evaluation-side with a dedicated no-leakage describe (hidden markers/answers never appear in any tenant's records or traces).
+- Headline (baseline → mature, 120 scenario evaluations): Aurum-only 0 → 49.6%, Aurum-primary 14.2% → 90.8%, context switches 2.93 → 0.96/scenario, integration effort 6750 → 906 action-minutes (−86.6%), trust 0/6 → 5/6. Honest findings: baseline not a strawman (~0.14 aurum-primary from the core loop alone), physical/offline steps never convert, solo-firm size effects preserved, kit-less logistics converts entries but fewer full workflows (the honest measure of what vertical kits add), every provider seam on deterministic in-suite doubles. Synthetic-simulation-not-a-forecast framing carried in the README and summary.
+- Delivered by the parallel-lead session's worker. The replay-station dispatch cycle: first dispatch (chat e0eee06a) died at an active capacity event (~12:10 UTC — chat destroyed by the site, same class as the morning peak crisis); a duplicate re-dispatch after the wall was voided pre-generation when the external delivery was discovered on the branch.
+- Integration-station verification at `002fa8a` (independent re-run): typecheck PASS, lint PASS, arch PASS (667/288/248 — module counts unchanged, work lives in tests), full suite **259 tracked test files — 5396 tests passed / 0 failed** (3 env-gated file skips: real-Redis/Postgres URL seams; the S003 benchmark itself green in the chunked run; 38 postgres-boot hookTimeout flakes + 2 OOM-SIGKILL'd workers all pass serialized — the station-hygiene note below applies).
+
+**Station-hygiene note (2026-09-26, binding for every future verification on this sandbox):** the 4GB box now OOM-kills a single-process `bun run test` (kernel `oom_kill`, 54-byte log). Run the suite CHUNKED: `git ls-files '*.test.ts' | rg -v '^tests/browser/'` (~259 files) split into ~33-file chunks, one `bunx vitest run --maxWorkers=2 <chunk>` per chunk. Do NOT pass `--reporter=basic` (removed in vitest 5 — instant startup error). Under concurrent chunks the embedded-PostgreSQL `beforeAll` boots exceed the 10s default `hookTimeout` on ~30-40 files — those are boot timeouts, NOT regressions: all pass serialized (`--maxWorkers=1`; verified twice — 31 files/624 tests for W094, 38 files/735 tests for W100). Also watch for OOM-SIGKILL'd workers ("Worker exited unexpectedly with signal SIGKILL") — retry those files serialized too (2 such files for W100, both green on retry). Long-running background jobs must be launched orphan-to-init — `( setsid nohup bash script >log 2>&1 < /dev/null & )` so the runner's PPID is 1 — or the between-tool-calls teardown tree-walk reaps them (console boot lesson 147 applies to the product repo too; setsid alone is not enough).
 
 ## 4. Remaining implementation frontier
 
-The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`9f4f15b`, post-W094):
+The following work is **not yet evidenced by a W-numbered implementation commit in repository history as of current main** (`73d00ec`, post-W100):
 
 - W099 — Matrix Interoperability Adapter (optional)
-- W100 — Longitudinal S003 Conversion Benchmark
 - W101 — Final Post-S002 Production Certification
 
-W084, W095, Wave A (W088/W091/W092), Wave B (W093/W096/W097) and W094 were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A / Wave B / Wave D sections above).
+W084, W095, Wave A (W088/W091/W092), Wave B (W093/W096/W097), W094 and W100 were removed from this list by the 2026-09-25/26 replay-session reconciliations (§3a and the Wave A / Wave B / Wave D / Wave E sections above).
 
 Do not mark any of these complete because their contracts, UI stubs or research documents exist. Require real repository implementation and evidence.
 
@@ -198,11 +209,11 @@ Do not mark any of these complete because their contracts, UI stubs or research 
 
 ### Wave B (W093/W096/W097) — ✅ delivered 2026-09-26 (PRs #114/#115/#113)
 
-### Now: W100 — dispatch next
-- W100 (Longitudinal S003 Conversion Benchmark) is the only frontier item whose dependencies are all green now that W094 is verified at `9f4f15b`; dispatch it as soon as worker capacity allows.
+### Now: W101 — final certification
+- W101 (Final Post-S002 Production Certification) is the only remaining core frontier item; all its work-item dependencies (W096/W097/W098/W100) are green at `73d00ec`. It needs production infrastructure and two consecutive same-revision green runs.
 
-### Then: W099 (optional) / W101 (final)
-W099 (Matrix) remains optional and must not block the core program — implement only with a customer/use-case reason documented in the work item evidence. W101 is the production certification gate, not a feature item: it must certify the final exact production revision.
+### Optional: W099
+W099 (Matrix adapter) remains optional — only with a documented customer/use-case justification; it must not block W101.
 
 ## 6. Recommended three-worker scheduling from current head
 
@@ -212,20 +223,18 @@ W099 (Matrix) remains optional and must not block the core program — implement
 
 ### Wave D — W094 ✅ delivered 2026-09-26 (PR #117)
 
+### Wave E — W100 ✅ delivered 2026-09-26 (PR #118)
+
 **Worker A: W094 — Migration + Dual Run** — ✅ delivered and integration-verified at `9f4f15b`.
 
-**Worker B: W100 — Longitudinal S003 Conversion Benchmark** — unblocked (W092/W096/W097/W098/W094 all green); dispatch next against base `9f4f15b`.
+**Worker B: W100 — Longitudinal S003 Conversion Benchmark** — ✅ delivered and integration-verified; merged at `73d00ec`.
 
 **Worker C: remaining integration hardening / observability.**
 
-### Wave E
+### Remaining waves
 
-**Worker A: W099 — Matrix adapter only if justified**
-**Worker B/C: support W101 final certification preparation.
-
-### Final wave
-
-All three support W101 production certification against one exact deployment revision, with two consecutive green runs.
+**W099 — Matrix adapter only if justified** (optional; must not block W101).
+**W101 — final certification**: all workers support production certification against one exact deployment revision, with two consecutive green runs.
 
 ## 7. W083/W087 reality checks before declaring “cellular is finished”
 
