@@ -12,6 +12,19 @@
 // Runs against the standard db port (embedded by default; DATABASE_URL for
 // staging/production — see src/infra/db.ts). Handles an absent or empty
 // src/modules/ gracefully.
+//
+// W102 — SCHEMA-DRIFT GUARD: after applying (or skipping) the migration
+// set, the runner VERIFIES the schema it just vouched for: every table
+// name any discovered migration declares with CREATE TABLE must exist as
+// a public BASE TABLE in information_schema. The `_migrations` ledger is
+// name-keyed with no content checksum, so a diverged database (the W102
+// incident: preview deployments of superseded parallel-lineage branches
+// ran different DDL under the same migration FILE names against the
+// shared production database, and the merged generation's files were
+// then skipped forever) can carry a complete ledger while serving HTTP
+// 500s. The verification pass makes that state FAIL LOUDLY at build time
+// (non-zero exit with the exact missing table list) instead of serving
+// 500s at runtime.
 
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
@@ -23,6 +36,10 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const DEFAULT_MODULES_DIR = path.join(REPO_ROOT, 'src', 'modules');
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']);
 const MIGRATION_FILE_PATTERN = /^\d+-.*\.sql$/;
+// CREATE TABLE name matcher — the same shape scripts/check-architecture.ts
+// rule (d) uses to map tables to their creating migration.
+const CREATE_TABLE_PATTERN =
+  /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?"?([A-Za-z_][A-Za-z0-9_]*)"?\s*\(/gi;
 
 export interface MigrationFile {
   module: string;
@@ -113,6 +130,89 @@ export function splitSqlStatements(sql: string): string[] {
   const tail = current.trim();
   if (tail !== '') statements.push(tail);
   return statements;
+}
+
+/**
+ * Blank out SQL NON-CODE — comments (line and block), single-quoted
+ * string literals and dollar-quoted bodies — with spaces, preserving
+ * everything else (including quoted identifiers). The scanner mirrors
+ * splitSqlStatements' handling of the same constructs. Neither comment
+ * prose, string contents nor function bodies may feed the CREATE TABLE
+ * matcher: migrations legitimately mention (or dynamically build) table
+ * names in all three.
+ */
+function stripSqlNonCode(sql: string): string {
+  let out = '';
+  let i = 0;
+  const len = sql.length;
+  while (i < len) {
+    if (sql.startsWith('--', i)) {
+      const end = sql.indexOf('\n', i);
+      const stop = end === -1 ? len : end;
+      out += ' ';
+      i = stop;
+      continue;
+    }
+    if (sql.startsWith('/*', i)) {
+      const end = sql.indexOf('*/', i + 2);
+      const stop = end === -1 ? len : end + 2;
+      out += ' ';
+      i = stop;
+      continue;
+    }
+    const ch = sql.charAt(i);
+    if (ch === "'") {
+      let j = i + 1;
+      while (j < len) {
+        if (sql.charAt(j) === "'") {
+          if (sql.charAt(j + 1) === "'") {
+            j += 2;
+            continue;
+          }
+          break;
+        }
+        j += 1;
+      }
+      out += ' ';
+      i = j + 1;
+      continue;
+    }
+    if (ch === '"') {
+      const end = sql.indexOf('"', i + 1);
+      const stop = end === -1 ? len : end + 1;
+      out += sql.slice(i, stop);
+      i = stop;
+      continue;
+    }
+    if (ch === '$') {
+      const tagMatch = /^\$[A-Za-z_0-9]*\$/.exec(sql.slice(i));
+      if (tagMatch !== null) {
+        const tag = tagMatch[0];
+        const end = sql.indexOf(tag, i + tag.length);
+        const stop = end === -1 ? len : end + tag.length;
+        out += ' ';
+        i = stop;
+        continue;
+      }
+    }
+    out += ch;
+    i += 1;
+  }
+  return out;
+}
+
+/**
+ * The distinct table names a migration document CREATEs (lowercased,
+ * `IF NOT EXISTS`- and `public.`-aware, with comments, string literals
+ * and dollar-quoted bodies blanked so prose can never masquerade as
+ * DDL).
+ */
+export function extractCreatedTableNames(sql: string): string[] {
+  const names = new Set<string>();
+  for (const match of stripSqlNonCode(sql).matchAll(CREATE_TABLE_PATTERN)) {
+    names.add(match[1]!.toLowerCase());
+  }
+  return [...names];
 }
 
 async function listFilesRecursively(dir: string): Promise<string[]> {
@@ -266,15 +366,75 @@ export async function runMigrations(
   return report;
 }
 
+/** Result of the post-migration schema verification pass. */
+export interface SchemaVerification {
+  /** Distinct tables the discovered migrations CREATE, sorted. */
+  expectedTables: string[];
+  /** Expected tables ABSENT from public BASE TABLEs — empty when healthy. */
+  missingTables: string[];
+  /** The number of public BASE TABLEs in the database (the census). */
+  tableCensus: number;
+}
+
+/**
+ * W102 schema-drift guard: verify that every table any discovered
+ * migration declares with CREATE TABLE exists as a public BASE TABLE.
+ * After runMigrations the ledger vouches for all of them — if one is
+ * still absent the database is DIVERGED (the migration was recorded
+ * under the same name by different content — see the W102 incident),
+ * and this throws so a deploy breaks at build time with the exact
+ * missing table list instead of serving 500s at runtime.
+ */
+export async function verifyMigratedSchema(
+  db: DbPort,
+  modulesDir: string = DEFAULT_MODULES_DIR,
+): Promise<SchemaVerification> {
+  const expected = new Map<string, string>(); // table -> first migration expecting it
+  for (const migration of await discoverMigrations(modulesDir)) {
+    const sql = await readFile(migration.path, 'utf8');
+    for (const table of extractCreatedTableNames(sql)) {
+      if (!expected.has(table)) expected.set(table, migration.name);
+    }
+  }
+  const present = new Set(
+    (
+      await db.query<{ table_name: string }>(
+        `SELECT table_name FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
+      )
+    ).rows.map((row) => row.table_name.toLowerCase()),
+  );
+  const missingTables = [...expected.keys()].filter((table) => !present.has(table)).sort();
+  if (missingTables.length > 0) {
+    const lines = missingTables.map((table) => `  - ${table} (expected by ${expected.get(table)})`);
+    throw new Error(
+      'schema verification FAILED — the _migrations ledger says every migration was applied, ' +
+        `but ${missingTables.length} expected table(s) are missing from the public schema ` +
+        '(schema drift — the ledger records migration names, not content; refusing to deploy):\n' +
+        lines.join('\n'),
+    );
+  }
+  return {
+    expectedTables: [...expected.keys()].sort(),
+    missingTables,
+    tableCensus: present.size,
+  };
+}
+
 const invokedDirectly =
   process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 async function main(): Promise<void> {
   const db = getDb();
   const report = await runMigrations(db);
+  const verification = await verifyMigratedSchema(db);
   const order = report.order.length > 0 ? report.order.join(' -> ') : '(no modules found)';
   console.log(`module order: ${order}`);
   console.log(`applied ${report.applied.length} migration(s), skipped ${report.skipped.length}`);
+  console.log(
+    `schema verification passed — ${verification.expectedTables.length} expected table(s) all present ` +
+      `(public table census: ${verification.tableCensus})`,
+  );
   for (const name of report.applied) console.log(`  + ${name}`);
 }
 
