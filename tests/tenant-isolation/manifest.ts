@@ -28,6 +28,12 @@
 // browser fallback's durable tasks, frozen step plans, disposable
 // per-(tenant,task)-profile sessions and lifecycle events the
 // computer-use module owns.
+//
+// v6 (W094): 'migration' joins with its own sweep file — the staged
+// import rounds, evidence-shaped imported records, the external↔Aurum
+// identifier map, the identity-collision conflicts, the dual-run
+// comparison rounds and the retirement-checkpoint migrations the
+// migration module owns.
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -70,6 +76,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   llm: 'experience-sweep.test.ts',
   marketplace: 'platform-sweep.test.ts',
   meetings: 'meetings-sweep.test.ts',
+  migration: 'migration-sweep.test.ts',
   memory: 'evidence-sweep.test.ts',
   missions: 'cognition-sweep.test.ts',
   notifications: 'experience-sweep.test.ts',
