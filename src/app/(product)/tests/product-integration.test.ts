@@ -317,22 +317,37 @@ describe('handleShellStateGet', () => {
     }
   });
 
-  it('rejects anonymous requests with 401 (stray scope parameters do not help)', async () => {
+  it('answers anonymous requests with the anonymous view (200, zero tenant data)', async () => {
+    // W101: the chrome fetch can race a session END (sign-out navigation,
+    // a fast sign-out click landing before hydration completes, session
+    // expiry mid-view). Those fetches used to 401 — a console error for
+    // real users. The honest answer is the anonymous view the layout
+    // already renders for anonymous visitors: 200, no tenant data.
     const missing = await handleShellStateGet(
       new Request('https://aurum.test/api/product/shell'),
     );
-    expect(missing.status).toBe(401);
-    if (missing.status !== 200) {
-      expect(missing.body.error).toBe('unauthenticated');
+    expect(missing.status).toBe(200);
+    if (missing.status === 200) {
+      expect(missing.body.shell).toBe('state');
+      expect(missing.body.tenantId).toBe('');
+      expect(missing.body.view.tenantId).toBe('');
+      expect(missing.body.view.principalId).toBe('');
+      expect(missing.body.view.principal).toBeNull();
+      expect(missing.body.view.companies).toEqual([]);
+      expect(missing.body.view.role).toBeNull();
+      expect(missing.body.view.company).toEqual({ ok: false, reason: 'unavailable' });
+      expect(missing.body.view.notifications.ok).toBe(false);
     }
     // A stray ?tenant= parameter is IGNORED — the session is the only
-    // scope source (no query-string tenant scoping, plan §8 gate 1).
+    // scope source (no query-string tenant scoping, plan §8 gate 1): the
+    // anonymous view comes back regardless.
     const stray = await handleShellStateGet(
       new Request('https://aurum.test/api/product/shell?tenant=globex'),
     );
-    expect(stray.status).toBe(401);
-    if (stray.status !== 200) {
-      expect(stray.body.error).toBe('unauthenticated');
+    expect(stray.status).toBe(200);
+    if (stray.status === 200) {
+      expect(stray.body.view.tenantId).toBe('');
+      expect(stray.body.view.principal).toBeNull();
     }
   });
 

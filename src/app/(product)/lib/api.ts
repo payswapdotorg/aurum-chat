@@ -8,10 +8,16 @@
 // (module contracts only — lock 31/32), map errors to HTTP-ish outcomes.
 // No handler logic lives in the route.ts itself, so the whole surface is
 // testable without booting Next.js.
+//
+// W101: an anonymous session (no cookie) is NOT an error — the racing
+// chrome fetch of a session that just ended (sign-out navigation, fast
+// sign-out click during hydration, session expiry mid-view) gets the
+// anonymous view with 200, mirroring what the layout renders server-side
+// for anonymous visitors. No tenant data is ever present in it.
 
 import { resolveSessionRequest } from '@/app/lib/session';
 import type { UserCompany } from '@/modules/auth/contract';
-import { buildShellState } from './shell-state';
+import { buildAnonymousShellView, buildShellState } from './shell-state';
 import type { ShellStateView } from './shell-state';
 
 export interface ApiOk {
@@ -48,7 +54,20 @@ function apiError(
 export async function handleShellStateGet(request: Request): Promise<ApiResult> {
   const resolution = await resolveSessionRequest(request);
   if (resolution.status === 'anonymous') {
-    return apiError(401, 'unauthenticated', 'no session for this request');
+    // W101: the honest anonymous chrome — a racing post-sign-out or
+    // expired-session fetch degrades to this view instead of a 401
+    // console error (zero tenant data, same shape the layout renders
+    // for anonymous visitors).
+    const view = buildAnonymousShellView();
+    return {
+      status: 200,
+      body: {
+        shell: 'state',
+        tenantId: '',
+        generatedAt: view.generatedAt,
+        view,
+      },
+    };
   }
   if (resolution.status === 'no-company') {
     return apiError(
