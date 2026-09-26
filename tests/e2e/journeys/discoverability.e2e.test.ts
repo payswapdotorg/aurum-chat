@@ -319,6 +319,7 @@ describe('capability coverage', () => {
       'edge-connector',
       'journey-proof',
       'meetings',
+      'migration-continuity',
       'provider-billing',
       'quality',
       'realtime',

@@ -637,6 +637,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the governed last-resort browser executor (W093 — used only where APIs/MCP/native adapters are insufficient) composed over the deep-actions contract (the W084 reconciliation re-used verbatim for observed-state verification, evidence and attention — no second evidence model) with the W082 opaque-credentialRef discipline sharpened per task (browser profiles and credential stores are per tenant AND per task, materialized only inside the isolated session), a frozen step allowlist (URL/domain globs + permitted verbs, checked at creation, at dispatch and driver-side) and a step budget, disposable resumable sessions checkpointed on verified steps, and per-step screenshot/action-trace evidence; it owns no user-facing route yet — the fallback surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite plus the tenant-isolation sweep',
   },
+  {
+    module: 'migration-continuity',
+    label: 'Migration and dual-run continuity (W094)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the migration lifecycle layer (W094 — import history, preserve identifiers, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement) composed over the integration-intelligence/connection-broker/capability-grants/deep-actions/vertical-kits/unified-identity/conversations/people/observations contracts: the incumbent enters through the real W081 discovery>recommendation>approval>connection chain on a W082 broker connection, every incumbent read and back-write rides the W084 DeepActionTransport port behind the W083 gate, imported history lands through the owning modules\' public contract writes (kit-declared kinds onto installed W092 kits, unmapped kinds as raw evidence), the durable incumbent<->Aurum identity map re-uses the W095 verification semantics (ambiguous never auto-merged), the legacy-vs-Aurum comparison re-uses the W084 reconcileOperation verbatim, dual-run conflicts are surfaced with both versions and never auto-resolved, and rollback is reversible from any state with the evidence trail retained; it owns no user-facing route yet — the migration-management surface arrives with the migration journeys — and is exercised by its own vitest suite plus the tenant-isolation sweep',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(

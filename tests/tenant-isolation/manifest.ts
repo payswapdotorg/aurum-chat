@@ -28,6 +28,12 @@
 // browser fallback's durable tasks, frozen step plans, disposable
 // per-(tenant,task)-profile sessions and lifecycle events the
 // computer-use module owns.
+//
+// v6 (W094): 'migration-continuity' joins with its own sweep file — the
+// migration runs, transition ledgers, import manifests, cross-system
+// identity mappings, dual-run sync runs, surfaced conflicts,
+// reconcile-based comparison reports, retirement windows and lifecycle
+// events the migration-continuity module owns.
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -71,6 +77,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   marketplace: 'platform-sweep.test.ts',
   meetings: 'meetings-sweep.test.ts',
   memory: 'evidence-sweep.test.ts',
+  'migration-continuity': 'migration-continuity-sweep.test.ts',
   missions: 'cognition-sweep.test.ts',
   notifications: 'experience-sweep.test.ts',
   observations: 'evidence-sweep.test.ts',
