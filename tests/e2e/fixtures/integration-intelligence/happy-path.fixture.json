@@ -1,0 +1,615 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "integration-intelligence-happy-path",
+  "title": "W096 happy path — the full integration onboarding chain on the demo company tenant",
+  "description": "discover > recommend > approve > connect > verify > map > observe > request action scope > execute > reconcile > outcome, executed against the real W081-W084 module services with deterministic in-memory provider doubles (scripted directory source, scripted embedded broker, scripted verification probes, scripted deep-action transport). Runs on the deterministic demo company tenant so the admin-facing surfaces the chain rides (/approvals, /connections) render its durable records for the manager persona. Every expectation keys on durable records — table rows and append-only event ledgers in the embedded PostgreSQL — plus contract reads and provider-side state, never on return values alone.",
+  "chain": [
+    "discover",
+    "recommend",
+    "approve",
+    "connect",
+    "verify",
+    "map",
+    "observe",
+    "request-scope",
+    "execute",
+    "reconcile",
+    "outcome"
+  ],
+  "variant": {
+    "providerFailure": false,
+    "deniedScope": false,
+    "tenantIsolation": false
+  },
+  "tenants": [
+    {
+      "key": "company",
+      "source": "demo-world",
+      "label": "the deterministic demo company (Meridian Roasters)",
+      "directorySource": {
+        "provider": "notion",
+        "displayName": "Meridian Tooling Directory",
+        "providerAccountId": "ws-w096-dir-01",
+        "authKind": "oauth"
+      },
+      "orgContext": {
+        "goal": {
+          "title": "Reduce customer churn",
+          "objective": "Keep the customers we already have instead of constantly replacing them",
+          "desiredState": "At-risk customers are identified and helped before they leave",
+          "horizonEnd": "2027-03-31T00:00:00Z",
+          "priority": "high",
+          "successCriteria": "Quarterly churn below 3 percent",
+          "ownerLabel": "Sarah (Head of Success)"
+        },
+        "unknown": {
+          "question": "Which customers are at risk of leaving?",
+          "consequence": "Without this we learn about churn only when the cancellation arrives"
+        },
+        "capability": {
+          "name": "Customer success management",
+          "description": "Proactively tracking and helping at-risk accounts"
+        }
+      },
+      "directoryWindow": [
+        {
+          "externalId": "app-harbor-crm",
+          "displayName": "Harbor CRM",
+          "capabilityClasses": ["customer-records", "sales-pipeline"]
+        },
+        {
+          "externalId": "app-harbor-desk",
+          "displayName": "Harbor Desk",
+          "capabilityClasses": ["support-desk"]
+        }
+      ],
+      "systems": {
+        "crm": { "displayName": "Harbor CRM", "connectionKey": "harbor-crm" },
+        "desk": { "displayName": "Harbor Desk", "connectionKey": "harbor-desk" }
+      }
+    }
+  ],
+  "actors": [
+    {
+      "key": "integration-admin",
+      "tenant": "company",
+      "authority": ["integration-intelligence:administer"]
+    },
+    { "key": "aurum-member", "tenant": "company", "authority": [] },
+    { "key": "company-approver", "tenant": "company", "authority": ["actions:approve"] }
+  ],
+  "broker": { "adapter": "embedded", "provider": "salesforce" },
+  "verification": { "unreachableCapabilities": [] },
+  "deepAction": {
+    "taskContext": {
+      "description": "Close out the Q3 renewals after the signed contracts landed",
+      "requestedFor": "Q3 close"
+    },
+    "operations": [
+      {
+        "key": "file-crm",
+        "system": "crm",
+        "capabilityKey": "write.customer-records",
+        "target": "cust-1042",
+        "payload": { "stage": "onboarding-complete", "healthScore": 82 },
+        "expectation": { "stage": "onboarding-complete", "healthScore": 82 }
+      },
+      {
+        "key": "close-ticket",
+        "system": "desk",
+        "capabilityKey": "write.support-desk",
+        "target": "tick-9001",
+        "payload": { "status": "resolved", "priority": "low" },
+        "expectation": { "status": "resolved", "priority": "low" }
+      }
+    ],
+    "seededStates": [
+      {
+        "system": "crm",
+        "target": "cust-1042",
+        "state": { "stage": "onboarding", "healthScore": 55, "owner": "Dana" }
+      },
+      {
+        "system": "desk",
+        "target": "tick-9001",
+        "state": { "status": "open", "priority": "high" }
+      }
+    ],
+    "transientFailureTargets": [],
+    "permanentRefusalTargets": [],
+    "skipApplyTargets": []
+  },
+  "steps": [
+    {
+      "phase": "discover",
+      "title": "the admin authorizes the directory source and Aurum surveys the authorized tooling (the admin gate — no scanning, ever)",
+      "invokes": [
+        { "op": "create-org-context", "as": "integration-admin" },
+        { "op": "register-directory-source", "as": "integration-admin" },
+        { "op": "grant-discovery-source", "as": "integration-admin" },
+        { "op": "run-discovery", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_discovery_grants", "where": { "status": "active" }, "rows": 1 },
+          { "table": "integration_systems", "rows": 2 },
+          { "table": "integration_recommendations", "where": { "status": "proposed" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "directory.system.discovered" }, "rows": 2 },
+          { "table": "sources", "where": { "provider": "notion" }, "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "list-systems",
+            "as": "aurum-member",
+            "assert": { "length": 2 }
+          },
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "connectionStatus": "discovered",
+              "health": "unknown",
+              "systemKey": { "contains": "app-harbor-crm" },
+              "capabilityClasses": ["customer-records", "sales-pipeline"],
+              "capabilities.length": 4,
+              "whyItMatters.basis": "org-context",
+              "whyItMatters.summary": {
+                "containsAll": ["Which customers are at risk of leaving", "Customer success management"]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "recommend",
+      "title": "the ranked, safe-by-default, scope-explicit recommendation feed (reads offered, writes stay gated)",
+      "invokes": [{ "op": "list-recommendations", "as": "aurum-member" }],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendations", "rows": 2 }
+        ],
+        "contract": [
+          {
+            "read": "list-recommendations",
+            "as": "aurum-member",
+            "assert": {
+              "length": 2,
+              "0.status": "proposed",
+              "0.connectionMode": "read-only",
+              "0.systemId": { "systemRef": "crm" },
+              "0.scopeImpact.wouldRead.length": 2,
+              "0.scopeImpact.wouldRead.0.key": "read.customer-records",
+              "0.scopeImpact.staysWriteGated.length": 2,
+              "0.scopeImpact.staysWriteGated.1.key": "write.sales-pipeline",
+              "0.whyItMatters.summary": {
+                "containsAll": ["Which customers are at risk of leaving", "Customer success management"]
+              },
+              "1.connectionMode": "read-only"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "approve",
+      "title": "bulk approval through the actions authority gate (W009) — the approver surface shows the outcome-oriented explanation",
+      "invokes": [
+        {
+          "op": "submit-recommendation-batch",
+          "as": "aurum-member",
+          "browserEvidence": [
+            {
+              "surface": "/approvals",
+              "persona": "manager",
+              "assertions": [
+                { "kind": "contains", "value": "Integration Connection" },
+                { "kind": "contains", "value": "Connect 2 discovered system(s) read-only: Harbor CRM, Harbor Desk" },
+                { "kind": "contains", "value": "EXECUTE" }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "decide-recommendation-batch",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "read-only is fine for both"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendation_batches", "where": { "status": "approved" }, "rows": 1 },
+          { "table": "integration_recommendations", "where": { "status": "approved" }, "rows": 2 },
+          { "table": "action_requests", "where": { "action_kind": "integration-connection", "status": "approved" }, "rows": 1 },
+          { "kind": "action-kind-decisions", "actionKind": "integration-connection", "decision": "approve", "rows": 1 }
+        ]
+      }
+    },
+    {
+      "phase": "connect",
+      "title": "the approved recommendations become connected inventory systems with automatic verification, and the broker issues the live connections bound to the inventory",
+      "invokes": [
+        { "op": "connect-system", "system": "crm", "as": "aurum-member" },
+        { "op": "connect-system", "system": "desk", "as": "aurum-member" },
+        { "op": "initiate-broker-connection", "system": "crm", "as": "aurum-member" },
+        { "op": "complete-broker-connection", "system": "crm", "as": "aurum-member" },
+        { "op": "initiate-broker-connection", "system": "desk", "as": "aurum-member" },
+        { "op": "complete-broker-connection", "system": "desk", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendations", "where": { "status": "connected" }, "rows": 2 },
+          { "table": "integration_verification_runs", "where": { "status": "verified" }, "rows": 2 },
+          { "table": "broker_connections", "where": { "status": "connected" }, "rows": 2 },
+          { "table": "broker_connection_events", "where": { "event": "connect_initiated" }, "rows": 2 },
+          { "table": "broker_connection_events", "where": { "event": "connected" }, "rows": 2 }
+        ],
+        "contract": [
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": { "connectionStatus": "connected", "health": "healthy" }
+          },
+          {
+            "read": "list-verification-runs",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "length": 1,
+              "0.status": "verified",
+              "0.transportWired": true,
+              "0.promisedCount": 2,
+              "0.verifiedCount": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "verify",
+      "title": "explicit re-verification of every connected system through the wired probe transport — the promised-vs-verified ledger grows",
+      "invokes": [
+        { "op": "verify-system", "system": "crm", "as": "aurum-member" },
+        { "op": "verify-system", "system": "desk", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_verification_runs", "rows": 4 },
+          { "table": "integration_verification_runs", "where": { "status": "verified" }, "rows": 4 }
+        ],
+        "contract": [
+          {
+            "read": "list-verification-runs",
+            "system": "desk",
+            "as": "aurum-member",
+            "assert": {
+              "length": 2,
+              "0.status": "verified",
+              "0.promisedCount": 1,
+              "0.verifiedCount": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "map",
+      "title": "the progressive-access envelope maps the live capability surface — the read-only floor is conferred, every write stays gated",
+      "invokes": [
+        { "op": "establish-connection-access", "system": "crm", "as": "aurum-member" },
+        { "op": "establish-connection-access", "system": "desk", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "capability_access", "rows": 2 },
+          { "table": "capability_grant_events", "where": { "event": "access-established" }, "rows": 2 },
+          { "table": "capability_grants", "rows": 0 },
+          { "table": "capability_invocations", "rows": 0 }
+        ],
+        "contract": [
+          {
+            "read": "get-connection-access",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "connectionMode": "read-only",
+              "systemDisplayName": "Harbor CRM",
+              "readCapabilities.length": 2,
+              "readCapabilities.0.key": "read.customer-records",
+              "writeCapabilities.length": 2,
+              "writeCapabilities.0.key": "write.customer-records",
+              "activeGrants.length": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "observe",
+      "title": "the frozen two-system plan, its discovered execution surface and the immutable pre-state evidence",
+      "invokes": [
+        { "op": "create-deep-action", "as": "aurum-member" },
+        { "op": "discover-execution-surface", "as": "aurum-member" },
+        { "op": "inspect-targets", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "inspected" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "pending" }, "rows": 2 },
+          { "table": "deep_action_surface", "rows": 2 },
+          { "table": "deep_action_events", "where": { "event": "created" }, "rows": 1 },
+          { "table": "deep_action_events", "where": { "event": "surface-discovered" }, "rows": 1 },
+          { "table": "deep_action_events", "where": { "event": "targets-inspected" }, "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.pre-state" }, "rows": 2 },
+          { "table": "capability_invocations", "where": { "outcome": "allowed", "basis": "read-only-floor" }, "rows": 2 }
+        ],
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "inspected",
+              "task.operationCount": 2,
+              "operations.0.state": "pending",
+              "operations.0.preStateObservationId": { "notNull": true },
+              "operations.1.state": "pending",
+              "operations.1.preStateObservationId": { "notNull": true }
+            }
+          }
+        ],
+        "transport": [
+          { "probe": "inspect-call-count", "expect": 2 }
+        ]
+      }
+    },
+    {
+      "phase": "request-scope",
+      "title": "the ask-later write authority — exactly the missing write capabilities, the human-readable reason, the W009 gate, the scoped grants",
+      "invokes": [
+        {
+          "op": "request-capability-authority",
+          "system": "crm",
+          "as": "aurum-member",
+          "browserEvidence": [
+            {
+              "surface": "/approvals",
+              "persona": "manager",
+              "assertions": [
+                { "kind": "contains", "value": "Capability Grant" },
+                { "kind": "contains", "value": "Close out the Q3 renewals" },
+                { "kind": "contains", "value": "Edit customer records" }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "decide-grant-request",
+          "system": "crm",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "needed for the Q3 close"
+        },
+        { "op": "request-capability-authority", "system": "desk", "as": "aurum-member" },
+        {
+          "op": "decide-grant-request",
+          "system": "desk",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "needed for the Q3 close"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "capability_grant_requests", "where": { "status": "approved" }, "rows": 2 },
+          { "table": "capability_grants", "where": { "status": "active" }, "rows": 2 },
+          { "table": "action_requests", "where": { "action_kind": "capability-grant", "status": "approved" }, "rows": 2 },
+          { "table": "capability_grant_events", "where": { "event": "authority-requested" }, "rows": 2 },
+          { "table": "capability_grant_events", "where": { "event": "authority-granted" }, "rows": 2 }
+        ],
+        "contract": [
+          {
+            "read": "get-connection-access",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "connectionMode": "elevated",
+              "activeGrants.length": 1,
+              "activeGrants.0.key": "write.customer-records",
+              "activeGrants.0.grantId": { "notNull": true }
+            }
+          },
+          {
+            "read": "list-capability-grants",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "length": 1,
+              "0.capabilityKeys.0": "write.customer-records",
+              "0.grantedBy": { "actorRef": "company-approver" },
+              "0.status": "active"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "execute",
+      "title": "the proposal through the W009 gate (decided in the Management Control Tower), the per-operation authority invocations and the writes with opaque receipts",
+      "invokes": [
+        {
+          "op": "propose-deep-action",
+          "as": "aurum-member",
+          "browserEvidence": [
+            {
+              "surface": "/approvals",
+              "persona": "manager",
+              "assertions": [
+                { "kind": "contains", "value": "Deep Action" },
+                { "kind": "contains", "value": "Close out the Q3 renewals" },
+                { "kind": "contains", "value": "Harbor CRM" },
+                { "kind": "contains", "value": "Harbor Desk" }
+              ]
+            }
+          ]
+        },
+        {
+          "op": "decide-deep-action-gate",
+          "via": "tower-api",
+          "persona": "manager",
+          "decision": "approve",
+          "note": "decided in the Management Control Tower",
+          "as": "company-approver"
+        },
+        { "op": "authorize-deep-action", "as": "aurum-member" },
+        { "op": "execute-deep-action", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "action_requests", "where": { "action_kind": "deep-action", "status": "approved" }, "rows": 1 },
+          { "kind": "action-kind-decisions", "actionKind": "deep-action", "decision": "approve", "rows": 1 },
+          { "table": "deep_action_tasks", "where": { "status": "executed" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "executed" }, "rows": 2 },
+          { "table": "deep_action_operations", "where": { "receipt_status": "accepted" }, "rows": 2 },
+          { "table": "deep_action_idempotency", "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 0 },
+          { "table": "capability_invocations", "where": { "basis": "capability-grant", "outcome": "allowed" }, "rows": 2 }
+        ],
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "executed",
+              "operations.0.state": "executed",
+              "operations.0.receiptStatus": "accepted",
+              "operations.0.receiptId": { "pattern": "^rcpt-" },
+              "operations.1.state": "executed",
+              "operations.1.receiptStatus": "accepted",
+              "operations.1.receiptId": { "pattern": "^rcpt-" }
+            }
+          }
+        ],
+        "transport": [
+          { "probe": "execute-call-count", "expect": 2 },
+          {
+            "probe": "provider-state",
+            "system": "crm",
+            "target": "cust-1042",
+            "expect": { "stage": "onboarding-complete", "healthScore": 82, "owner": "Dana" }
+          },
+          {
+            "probe": "provider-state",
+            "system": "desk",
+            "target": "tick-9001",
+            "expect": { "status": "resolved", "priority": "low" }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "reconcile",
+      "title": "two-sided verification (receipt AND downstream state) and the clean reconciliation — every expectation held",
+      "invokes": [
+        { "op": "verify-deep-action", "as": "aurum-member" },
+        { "op": "reconcile-deep-action", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "reconciled" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "matched" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.reconciliation-mismatch" }, "rows": 0 }
+        ],
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "reconciled",
+              "task.mismatchCount": 0,
+              "operations.0.state": "matched",
+              "operations.1.state": "matched",
+              "operations.1.postStateObservationId": { "notNull": true },
+              "operations.1.reconciledAt": { "notNull": true }
+            }
+          }
+        ],
+        "transport": [
+          { "probe": "inspect-call-count", "expect": 4 }
+        ]
+      }
+    },
+    {
+      "phase": "outcome",
+      "title": "the durable outcome of record — the complete reconstructable chain across every module's append-only evidence, surfaced on the admin UX",
+      "invokes": [],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_events", "rows": 10 },
+          { "table": "capability_invocations", "where": { "outcome": "allowed" }, "rows": 6 },
+          { "table": "capability_invocations", "where": { "outcome": "denied" }, "rows": 0 },
+          { "table": "observations", "where": { "kind": "deep-action.pre-state" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.reconciliation-mismatch" }, "rows": 0 }
+        ],
+        "events": {
+          "read": "deep-action-events",
+          "as": "aurum-member",
+          "equalsReversed": [
+            "created",
+            "surface-discovered",
+            "targets-inspected",
+            "proposed",
+            "authorized",
+            "operation-executed",
+            "operation-executed",
+            "executed",
+            "verified",
+            "reconciled"
+          ]
+        },
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "reconciled",
+              "operations.0.invocationId": { "notNull": true },
+              "operations.0.receiptId": { "pattern": "^rcpt-" },
+              "operations.0.preStateObservationId": { "notNull": true },
+              "operations.0.postStateObservationId": { "notNull": true },
+              "operations.1.invocationId": { "notNull": true },
+              "operations.1.receiptId": { "pattern": "^rcpt-" },
+              "operations.1.preStateObservationId": { "notNull": true },
+              "operations.1.postStateObservationId": { "notNull": true }
+            }
+          }
+        ]
+      },
+      "browserEvidence": [
+        {
+          "surface": "/approvals",
+          "persona": "manager",
+          "assertions": [
+            { "kind": "contains", "value": "Integration Connection" },
+            { "kind": "contains", "value": "Capability Grant" },
+            { "kind": "contains", "value": "Deep Action" },
+            { "kind": "contains", "value": "approved" }
+          ]
+        },
+        {
+          "surface": "/connections",
+          "persona": "manager",
+          "assertions": [
+            { "kind": "contains", "value": "Notion" },
+            { "kind": "contains", "value": "ws-w096-dir-01" },
+            { "kind": "contains", "value": "Never polled" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,456 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "integration-intelligence-provider-failure",
+  "title": "W096 provider-failure variant — the provider errors mid-chain at execution: honest degradation, actionable evidence, no silent partial state",
+  "description": "The same full chain on a fresh tenant, but the deep-action transport (the deterministic provider double) fails TRANSIENTLY on the second operation's first execute: the first write stands, the task parks 'failed' carrying the failure evidence, nothing downstream is faked, and the durable records match the provider's actual state (the failed write did not land). The healing path re-executes exactly the open operation under the same per-operation idempotency key, and the chain still reaches a clean reconciled outcome. Environment note: this variant is fixture-covered by design — a live provider's failure behavior cannot be scheduled deterministically.",
+  "chain": [
+    "discover",
+    "recommend",
+    "approve",
+    "connect",
+    "verify",
+    "map",
+    "observe",
+    "request-scope",
+    "execute",
+    "reconcile",
+    "outcome"
+  ],
+  "variant": {
+    "providerFailure": true,
+    "deniedScope": false,
+    "tenantIsolation": false
+  },
+  "tenants": [
+    {
+      "key": "failure",
+      "source": "fresh",
+      "label": "a fresh tenant whose provider errors mid-chain",
+      "directorySource": {
+        "provider": "notion",
+        "displayName": "Atlas Tooling Directory",
+        "providerAccountId": "ws-w096-fail-01",
+        "authKind": "oauth"
+      },
+      "orgContext": {
+        "goal": {
+          "title": "Reduce customer churn",
+          "objective": "Keep the customers we already have instead of constantly replacing them",
+          "desiredState": "At-risk customers are identified and helped before they leave",
+          "horizonEnd": "2027-03-31T00:00:00Z",
+          "priority": "high",
+          "successCriteria": "Quarterly churn below 3 percent",
+          "ownerLabel": "Sarah (Head of Success)"
+        },
+        "unknown": {
+          "question": "Which customers are at risk of leaving?",
+          "consequence": "Without this we learn about churn only when the cancellation arrives"
+        },
+        "capability": {
+          "name": "Customer success management",
+          "description": "Proactively tracking and helping at-risk accounts"
+        }
+      },
+      "directoryWindow": [
+        {
+          "externalId": "app-atlas-crm",
+          "displayName": "Atlas CRM",
+          "capabilityClasses": ["customer-records", "sales-pipeline"]
+        },
+        {
+          "externalId": "app-atlas-desk",
+          "displayName": "Atlas Desk",
+          "capabilityClasses": ["support-desk"]
+        }
+      ],
+      "systems": {
+        "crm": { "displayName": "Atlas CRM", "connectionKey": "atlas-crm" },
+        "desk": { "displayName": "Atlas Desk", "connectionKey": "atlas-desk" }
+      }
+    }
+  ],
+  "actors": [
+    {
+      "key": "integration-admin",
+      "tenant": "failure",
+      "authority": ["integration-intelligence:administer"]
+    },
+    { "key": "aurum-member", "tenant": "failure", "authority": [] },
+    { "key": "company-approver", "tenant": "failure", "authority": ["actions:approve"] }
+  ],
+  "broker": { "adapter": "embedded", "provider": "salesforce" },
+  "verification": { "unreachableCapabilities": [] },
+  "deepAction": {
+    "taskContext": {
+      "description": "Close out the Q3 renewals after the signed contracts landed",
+      "requestedFor": "Q3 close"
+    },
+    "operations": [
+      {
+        "key": "file-crm",
+        "system": "crm",
+        "capabilityKey": "write.customer-records",
+        "target": "cust-2042",
+        "payload": { "stage": "onboarding-complete", "healthScore": 82 },
+        "expectation": { "stage": "onboarding-complete", "healthScore": 82 }
+      },
+      {
+        "key": "close-ticket",
+        "system": "desk",
+        "capabilityKey": "write.support-desk",
+        "target": "tick-2001",
+        "payload": { "status": "resolved", "priority": "low" },
+        "expectation": { "status": "resolved", "priority": "low" }
+      }
+    ],
+    "seededStates": [
+      {
+        "system": "crm",
+        "target": "cust-2042",
+        "state": { "stage": "onboarding", "healthScore": 55, "owner": "Priya" }
+      },
+      {
+        "system": "desk",
+        "target": "tick-2001",
+        "state": { "status": "open", "priority": "high" }
+      }
+    ],
+    "transientFailureTargets": ["tick-2001"],
+    "permanentRefusalTargets": [],
+    "skipApplyTargets": []
+  },
+  "steps": [
+    {
+      "phase": "discover",
+      "title": "the admin authorizes the directory source and Aurum surveys the authorized tooling",
+      "invokes": [
+        { "op": "create-org-context", "as": "integration-admin" },
+        { "op": "register-directory-source", "as": "integration-admin" },
+        { "op": "grant-discovery-source", "as": "integration-admin" },
+        { "op": "run-discovery", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_discovery_grants", "where": { "status": "active" }, "rows": 1 },
+          { "table": "integration_systems", "rows": 2 },
+          { "table": "integration_recommendations", "where": { "status": "proposed" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "directory.system.discovered" }, "rows": 2 },
+          { "table": "sources", "where": { "provider": "notion" }, "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "list-systems",
+            "as": "aurum-member",
+            "assert": { "length": 2 }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "recommend",
+      "title": "the ranked, safe-by-default recommendation feed",
+      "invokes": [{ "op": "list-recommendations", "as": "aurum-member" }],
+      "expect": {
+        "durable": [{ "table": "integration_recommendations", "rows": 2 }],
+        "contract": [
+          {
+            "read": "list-recommendations",
+            "as": "aurum-member",
+            "assert": {
+              "length": 2,
+              "0.connectionMode": "read-only",
+              "0.systemId": { "systemRef": "crm" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "approve",
+      "title": "bulk approval through the actions authority gate",
+      "invokes": [
+        { "op": "submit-recommendation-batch", "as": "aurum-member" },
+        {
+          "op": "decide-recommendation-batch",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "read-only is fine for both"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendation_batches", "where": { "status": "approved" }, "rows": 1 },
+          { "table": "integration_recommendations", "where": { "status": "approved" }, "rows": 2 },
+          { "table": "action_requests", "where": { "action_kind": "integration-connection", "status": "approved" }, "rows": 1 },
+          { "kind": "action-kind-decisions", "actionKind": "integration-connection", "decision": "approve", "rows": 1 }
+        ]
+      }
+    },
+    {
+      "phase": "connect",
+      "title": "approved recommendations become connected systems; the broker issues the live connections",
+      "invokes": [
+        { "op": "connect-system", "system": "crm", "as": "aurum-member" },
+        { "op": "connect-system", "system": "desk", "as": "aurum-member" },
+        { "op": "initiate-broker-connection", "system": "crm", "as": "aurum-member" },
+        { "op": "complete-broker-connection", "system": "crm", "as": "aurum-member" },
+        { "op": "initiate-broker-connection", "system": "desk", "as": "aurum-member" },
+        { "op": "complete-broker-connection", "system": "desk", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendations", "where": { "status": "connected" }, "rows": 2 },
+          { "table": "integration_verification_runs", "where": { "status": "verified" }, "rows": 2 },
+          { "table": "broker_connections", "where": { "status": "connected" }, "rows": 2 },
+          { "table": "broker_connection_events", "where": { "event": "connected" }, "rows": 2 }
+        ],
+        "contract": [
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": { "connectionStatus": "connected", "health": "healthy" }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "verify",
+      "title": "explicit re-verification of every connected system",
+      "invokes": [
+        { "op": "verify-system", "system": "crm", "as": "aurum-member" },
+        { "op": "verify-system", "system": "desk", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [{ "table": "integration_verification_runs", "rows": 4 }]
+      }
+    },
+    {
+      "phase": "map",
+      "title": "the progressive-access envelope maps the capability surface (read floor conferred, writes gated)",
+      "invokes": [
+        { "op": "establish-connection-access", "system": "crm", "as": "aurum-member" },
+        { "op": "establish-connection-access", "system": "desk", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "capability_access", "rows": 2 },
+          { "table": "capability_grants", "rows": 0 }
+        ],
+        "contract": [
+          {
+            "read": "get-connection-access",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": { "connectionMode": "read-only", "activeGrants.length": 0 }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "observe",
+      "title": "the frozen two-system plan, its execution surface and the immutable pre-state evidence",
+      "invokes": [
+        { "op": "create-deep-action", "as": "aurum-member" },
+        { "op": "discover-execution-surface", "as": "aurum-member" },
+        { "op": "inspect-targets", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "inspected" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "pending" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.pre-state" }, "rows": 2 },
+          { "table": "capability_invocations", "where": { "outcome": "allowed", "basis": "read-only-floor" }, "rows": 2 }
+        ],
+        "transport": [{ "probe": "inspect-call-count", "expect": 2 }]
+      }
+    },
+    {
+      "phase": "request-scope",
+      "title": "the ask-later write authority is requested and granted for both systems",
+      "invokes": [
+        { "op": "request-capability-authority", "system": "crm", "as": "aurum-member" },
+        {
+          "op": "decide-grant-request",
+          "system": "crm",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "needed for the Q3 close"
+        },
+        { "op": "request-capability-authority", "system": "desk", "as": "aurum-member" },
+        {
+          "op": "decide-grant-request",
+          "system": "desk",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "needed for the Q3 close"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "capability_grants", "where": { "status": "active" }, "rows": 2 },
+          { "table": "action_requests", "where": { "action_kind": "capability-grant", "status": "approved" }, "rows": 2 }
+        ]
+      }
+    },
+    {
+      "phase": "execute",
+      "title": "the provider errors mid-chain: the FIRST write stands, the SECOND parks 'failed' with honest evidence — nothing downstream is faked",
+      "invokes": [
+        { "op": "propose-deep-action", "as": "aurum-member" },
+        {
+          "op": "decide-deep-action-gate",
+          "via": "contract",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "approved for execution"
+        },
+        { "op": "authorize-deep-action", "as": "aurum-member" },
+        { "op": "execute-deep-action", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "action_requests", "where": { "action_kind": "deep-action", "status": "approved" }, "rows": 1 },
+          { "table": "deep_action_tasks", "where": { "status": "failed" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "executed" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "failed" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "receipt_status": "accepted" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "receipt_status": "failed" }, "rows": 1 },
+          { "table": "deep_action_events", "where": { "event": "execution-failed" }, "rows": 1 },
+          { "table": "deep_action_idempotency", "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 0 }
+        ],
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "failed",
+              "task.rejectionReason": { "contains": "operation 'close-ticket'" },
+              "operations.0.state": "executed",
+              "operations.0.receiptStatus": "accepted",
+              "operations.0.receiptId": { "pattern": "^rcpt-" },
+              "operations.1.state": "failed",
+              "operations.1.receiptStatus": "failed"
+            }
+          }
+        ],
+        "transport": [
+          { "probe": "execute-call-count", "expect": 2 },
+          {
+            "probe": "provider-state",
+            "system": "crm",
+            "target": "cust-2042",
+            "expect": { "stage": "onboarding-complete", "healthScore": 82, "owner": "Priya" }
+          },
+          {
+            "probe": "provider-state",
+            "system": "desk",
+            "target": "tick-2001",
+            "expect": { "status": "open", "priority": "high" }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "execute",
+      "title": "the healing path: re-execution resumes EXACTLY the open operation under the same per-operation idempotency key",
+      "invokes": [{ "op": "execute-deep-action", "as": "aurum-member" }],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "executed" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "executed" }, "rows": 2 },
+          { "table": "deep_action_operations", "where": { "receipt_status": "accepted" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 0 }
+        ],
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "executed",
+              "operations.1.receiptStatus": "accepted",
+              "operations.1.receiptId": { "pattern": "^rcpt-" }
+            }
+          }
+        ],
+        "transport": [
+          { "probe": "execute-call-count", "expect": 3 },
+          {
+            "probe": "execute-requests-for-target",
+            "target": "tick-2001",
+            "expect": { "count": 2, "sameIdempotencyKey": true }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "reconcile",
+      "title": "two-sided verification and the clean reconciliation after the recovery",
+      "invokes": [
+        { "op": "verify-deep-action", "as": "aurum-member" },
+        { "op": "reconcile-deep-action", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "reconciled" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "matched" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 2 },
+          { "table": "observations", "where": { "kind": "deep-action.reconciliation-mismatch" }, "rows": 0 }
+        ],
+        "transport": [{ "probe": "inspect-call-count", "expect": 4 }]
+      }
+    },
+    {
+      "phase": "outcome",
+      "title": "the durable outcome of record — the full chain INCLUDING the honest failure and the recovery, reconstructable from the append-only evidence",
+      "invokes": [],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_events", "rows": 11 },
+          { "table": "deep_action_events", "where": { "event": "execution-failed" }, "rows": 1 },
+          { "table": "capability_invocations", "where": { "outcome": "allowed" }, "rows": 6 },
+          { "table": "capability_invocations", "where": { "outcome": "denied" }, "rows": 0 },
+          { "table": "observations", "where": { "kind": "deep-action.reconciliation-mismatch" }, "rows": 0 }
+        ],
+        "events": {
+          "read": "deep-action-events",
+          "as": "aurum-member",
+          "equalsReversed": [
+            "created",
+            "surface-discovered",
+            "targets-inspected",
+            "proposed",
+            "authorized",
+            "operation-executed",
+            "execution-failed",
+            "operation-executed",
+            "executed",
+            "verified",
+            "reconciled"
+          ]
+        },
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "reconciled",
+              "task.mismatchCount": 0,
+              "operations.0.state": "matched",
+              "operations.1.state": "matched"
+            }
+          }
+        ],
+        "transport": [
+          {
+            "probe": "provider-state",
+            "system": "desk",
+            "target": "tick-2001",
+            "expect": { "status": "resolved", "priority": "low" }
+          }
+        ]
+      }
+    }
+  ]
+}

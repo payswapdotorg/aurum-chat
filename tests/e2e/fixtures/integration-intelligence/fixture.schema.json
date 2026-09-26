@@ -1,0 +1,466 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "aurum:w096-integration-intelligence-fixture:1",
+  "title": "W096 Integration Intelligence End-to-End Fixture (schemaVersion 1)",
+  "description": "The machine-readable, versioned shape of the W096 chain fixtures. A fixture names the canonical onboarding chain (discover > recommend > approve > connect > verify > map > observe > request-scope > execute > reconcile > outcome), the tenants/actors that walk it, the deterministic provider doubles it rides, the exact module-contract invokes per step, and the durable-record expectations (tables/events/contract reads/provider-side state) that must hold after every step. The journey suite (tests/e2e/journeys/integration-intelligence.e2e.test.ts) validates every fixture against THIS schema through the subset evaluator in executor.ts before executing it against the real module services — this schema file is the versioned contract of record.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "fixtureId",
+    "title",
+    "chain",
+    "variant",
+    "tenants",
+    "actors",
+    "broker",
+    "verification",
+    "deepAction",
+    "steps"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "fixtureId": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "chain": {
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "enum": [
+          "discover",
+          "recommend",
+          "approve",
+          "connect",
+          "verify",
+          "map",
+          "observe",
+          "request-scope",
+          "execute",
+          "reconcile",
+          "outcome"
+        ]
+      }
+    },
+    "variant": {
+      "type": "object",
+      "required": ["providerFailure", "deniedScope", "tenantIsolation"],
+      "additionalProperties": false,
+      "properties": {
+        "providerFailure": { "type": "boolean" },
+        "deniedScope": { "type": "boolean" },
+        "tenantIsolation": { "type": "boolean" }
+      }
+    },
+    "tenants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["key", "source", "directorySource", "directoryWindow", "systems"],
+        "additionalProperties": false,
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "source": { "enum": ["demo-world", "fresh"] },
+          "label": { "type": "string" },
+          "directorySource": {
+            "type": "object",
+            "required": ["provider", "displayName", "providerAccountId", "authKind"],
+            "additionalProperties": false,
+            "properties": {
+              "provider": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "displayName": { "type": "string", "minLength": 1 },
+              "providerAccountId": { "type": "string", "minLength": 1 },
+              "authKind": { "enum": ["oauth", "credentials"] }
+            }
+          },
+          "orgContext": {
+            "type": "object",
+            "required": ["goal", "unknown", "capability"],
+            "additionalProperties": false,
+            "properties": {
+              "goal": {
+                "type": "object",
+                "required": ["title", "objective", "desiredState", "horizonEnd", "priority", "successCriteria", "ownerLabel"],
+                "additionalProperties": false,
+                "properties": {
+                  "title": { "type": "string", "minLength": 1 },
+                  "objective": { "type": "string", "minLength": 1 },
+                  "desiredState": { "type": "string", "minLength": 1 },
+                  "horizonEnd": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T" },
+                  "priority": { "type": "string" },
+                  "successCriteria": { "type": "string", "minLength": 1 },
+                  "ownerLabel": { "type": "string", "minLength": 1 }
+                }
+              },
+              "unknown": {
+                "type": "object",
+                "required": ["question", "consequence"],
+                "additionalProperties": false,
+                "properties": {
+                  "question": { "type": "string", "minLength": 1 },
+                  "consequence": { "type": "string", "minLength": 1 }
+                }
+              },
+              "capability": {
+                "type": "object",
+                "required": ["name", "description"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "description": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          },
+          "directoryWindow": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["externalId", "displayName", "capabilityClasses"],
+              "additionalProperties": false,
+              "properties": {
+                "externalId": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+                "displayName": { "type": "string", "minLength": 1 },
+                "capabilityClasses": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "pattern": "^[a-z-]+$" }
+                }
+              }
+            }
+          },
+          "systems": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["displayName", "connectionKey"],
+              "additionalProperties": false,
+              "properties": {
+                "displayName": { "type": "string", "minLength": 1 },
+                "connectionKey": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "actors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["key", "tenant", "authority"],
+        "additionalProperties": false,
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "tenant": { "type": "string", "minLength": 1 },
+          "authority": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
+    "broker": {
+      "type": "object",
+      "required": ["adapter", "provider"],
+      "additionalProperties": false,
+      "properties": {
+        "adapter": { "const": "embedded" },
+        "provider": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["unreachableCapabilities"],
+      "additionalProperties": false,
+      "properties": {
+        "unreachableCapabilities": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^read\\.[a-z-]+$" }
+        }
+      }
+    },
+    "deepAction": {
+      "type": "object",
+      "required": [
+        "taskContext",
+        "operations",
+        "seededStates",
+        "transientFailureTargets",
+        "permanentRefusalTargets",
+        "skipApplyTargets"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "taskContext": {
+          "type": "object",
+          "required": ["description", "requestedFor"],
+          "additionalProperties": false,
+          "properties": {
+            "description": { "type": "string", "minLength": 1 },
+            "requestedFor": { "type": "string", "minLength": 1 }
+          }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["key", "system", "capabilityKey", "target", "payload", "expectation"],
+            "additionalProperties": false,
+            "properties": {
+              "key": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$" },
+              "system": { "type": "string", "minLength": 1 },
+              "capabilityKey": { "type": "string", "pattern": "^write\\.[a-z-]+$" },
+              "target": { "type": "string", "minLength": 1 },
+              "payload": { "type": "object" },
+              "expectation": { "type": "object" }
+            }
+          }
+        },
+        "seededStates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["system", "target", "state"],
+            "additionalProperties": false,
+            "properties": {
+              "system": { "type": "string", "minLength": 1 },
+              "target": { "type": "string", "minLength": 1 },
+              "state": { "type": "object" }
+            }
+          }
+        },
+        "transientFailureTargets": { "type": "array", "items": { "type": "string" } },
+        "permanentRefusalTargets": { "type": "array", "items": { "type": "string" } },
+        "skipApplyTargets": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "steps": { "$ref": "#/definitions/steps" },
+    "finalSteps": { "$ref": "#/definitions/steps" }
+  },
+  "definitions": {
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["phase", "title", "invokes"],
+        "additionalProperties": false,
+        "properties": {
+          "phase": {
+            "enum": [
+              "discover",
+              "recommend",
+              "approve",
+              "connect",
+              "verify",
+              "map",
+              "observe",
+              "request-scope",
+              "execute",
+              "reconcile",
+              "outcome",
+              "isolation-probe"
+            ]
+          },
+          "title": { "type": "string", "minLength": 1 },
+          "invokes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["op", "as"],
+              "additionalProperties": false,
+              "properties": {
+                "op": {
+                  "enum": [
+                    "create-org-context",
+                    "register-directory-source",
+                    "grant-discovery-source",
+                    "run-discovery",
+                    "run-discovery-through-source",
+                    "list-recommendations",
+                    "submit-recommendation-batch",
+                    "decide-recommendation-batch",
+                    "connect-system",
+                    "initiate-broker-connection",
+                    "complete-broker-connection",
+                    "verify-system",
+                    "establish-connection-access",
+                    "create-deep-action",
+                    "discover-execution-surface",
+                    "inspect-targets",
+                    "request-capability-authority",
+                    "decide-grant-request",
+                    "invoke-capability",
+                    "propose-deep-action",
+                    "decide-deep-action-gate",
+                    "authorize-deep-action",
+                    "execute-deep-action",
+                    "verify-deep-action",
+                    "reconcile-deep-action",
+                    "get-deep-action",
+                    "get-system",
+                    "get-broker-connection",
+                    "get-recommendation-batch",
+                    "get-connection-access"
+                  ]
+                },
+                "as": { "type": "string", "minLength": 1 },
+                "system": { "type": "string", "minLength": 1 },
+                "capabilityKey": { "type": "string", "minLength": 1 },
+                "decision": { "enum": ["approve", "reject"] },
+                "note": { "type": "string" },
+                "via": { "enum": ["tower-api", "contract"] },
+                "persona": { "type": "string", "minLength": 1 },
+                "ofTenant": { "type": "string", "minLength": 1 },
+                "systemOf": { "type": "string", "minLength": 1 },
+                "sourceOf": { "type": "string", "minLength": 1 },
+                "expectError": { "type": "string", "minLength": 1 },
+                "browserEvidence": { "$ref": "#/definitions/browserEvidence" }
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "durable": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["rows"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": { "const": "action-kind-decisions" },
+                    "actionKind": { "type": "string", "minLength": 1 },
+                    "decision": { "enum": ["approve", "reject"] },
+                    "rows": { "$ref": "#/definitions/rowsExpectation" },
+                    "table": { "type": "string", "pattern": "^[a-z_]+$" },
+                    "where": {
+                      "type": "object",
+                      "additionalProperties": { "type": ["string", "number", "boolean"] }
+                    },
+                    "tenant": { "type": "string", "minLength": 1 }
+                  }
+                }
+              },
+              "contract": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["read", "as", "assert"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "read": {
+                      "enum": [
+                        "list-systems",
+                        "get-system",
+                        "list-recommendations",
+                        "get-recommendation-batch",
+                        "list-verification-runs",
+                        "get-connection-access",
+                        "list-capability-grants",
+                        "list-capability-invocations",
+                        "get-deep-action",
+                        "list-deep-actions",
+                        "list-deep-action-events"
+                      ]
+                    },
+                    "as": { "type": "string", "minLength": 1 },
+                    "system": { "type": "string", "minLength": 1 },
+                    "outcome": { "enum": ["allowed", "denied"] },
+                    "ofTenant": { "type": "string", "minLength": 1 },
+                    "assert": {
+                      "type": "object",
+                      "additionalProperties": { "$ref": "#/definitions/assertValue" }
+                    }
+                  }
+                }
+              },
+              "events": {
+                "type": "object",
+                "required": ["read", "equalsReversed"],
+                "additionalProperties": false,
+                "properties": {
+                  "read": { "const": "deep-action-events" },
+                  "as": { "type": "string", "minLength": 1 },
+                  "ofTenant": { "type": "string", "minLength": 1 },
+                  "equalsReversed": { "type": "array", "items": { "type": "string" } }
+                }
+              },
+              "transport": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["probe", "expect"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "probe": {
+                      "enum": [
+                        "execute-call-count",
+                        "inspect-call-count",
+                        "provider-state",
+                        "execute-requests-for-target"
+                      ]
+                    },
+                    "system": { "type": "string" },
+                    "target": { "type": "string" },
+                    "expect": { "$ref": "#/definitions/assertValue" }
+                  }
+                }
+              }
+            }
+          },
+          "browserEvidence": { "$ref": "#/definitions/browserEvidence" }
+        }
+      }
+    },
+    "browserEvidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["surface", "persona", "assertions"],
+        "additionalProperties": false,
+        "properties": {
+          "surface": { "type": "string", "pattern": "^/[a-z-]*" },
+          "persona": { "type": "string", "minLength": 1 },
+          "assertions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["kind", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "enum": ["contains", "contains-not", "matches"] },
+                "value": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rowsExpectation": {
+      "type": ["integer", "object"],
+      "minimum": 0,
+      "properties": {
+        "atLeast": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "assertValue": {
+      "type": ["string", "number", "boolean", "null", "object", "array"],
+      "properties": {
+        "contains": { "type": "string" },
+        "containsAll": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "pattern": { "type": "string" },
+        "notNull": { "type": "boolean" },
+        "systemRef": { "type": "string" },
+        "actorRef": { "type": "string" },
+        "count": { "type": "integer", "minimum": 0 },
+        "sameIdempotencyKey": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -1,0 +1,427 @@
+{
+  "schemaVersion": 1,
+  "fixtureId": "integration-intelligence-denied-scope",
+  "title": "W096 denied-scope variant — the authority gate rejects the action-scope ask: denial stops the write, the denial is recorded with its reason",
+  "description": "The chain walks discover > recommend > approve > connect > verify > map > observe on a fresh tenant with a single system, then the request for write authority is REJECTED by the human authority gate. No grant is minted, the gate probe invocation is recorded as denied with its human-readable reason and exact requested scope, the deep-action proposal is approved at the W009 gate but authorization is stopped by the W083 gate: the task parks 'rejected', ZERO transport execute calls happen, no receipts exist, no post-state evidence exists, no reconciliation artifacts exist — nothing executes and the denial with its reason is durable.",
+  "chain": [
+    "discover",
+    "recommend",
+    "approve",
+    "connect",
+    "verify",
+    "map",
+    "observe",
+    "request-scope",
+    "execute",
+    "reconcile",
+    "outcome"
+  ],
+  "variant": {
+    "providerFailure": false,
+    "deniedScope": true,
+    "tenantIsolation": false
+  },
+  "tenants": [
+    {
+      "key": "denial",
+      "source": "fresh",
+      "label": "a fresh tenant whose action-scope ask is rejected by the authority gate",
+      "directorySource": {
+        "provider": "notion",
+        "displayName": "Quay Tooling Directory",
+        "providerAccountId": "ws-w096-deny-01",
+        "authKind": "oauth"
+      },
+      "orgContext": {
+        "goal": {
+          "title": "Reduce customer churn",
+          "objective": "Keep the customers we already have instead of constantly replacing them",
+          "desiredState": "At-risk customers are identified and helped before they leave",
+          "horizonEnd": "2027-03-31T00:00:00Z",
+          "priority": "high",
+          "successCriteria": "Quarterly churn below 3 percent",
+          "ownerLabel": "Sarah (Head of Success)"
+        },
+        "unknown": {
+          "question": "Which customers are at risk of leaving?",
+          "consequence": "Without this we learn about churn only when the cancellation arrives"
+        },
+        "capability": {
+          "name": "Customer success management",
+          "description": "Proactively tracking and helping at-risk accounts"
+        }
+      },
+      "directoryWindow": [
+        {
+          "externalId": "app-quay-crm",
+          "displayName": "Quay CRM",
+          "capabilityClasses": ["customer-records"]
+        }
+      ],
+      "systems": {
+        "crm": { "displayName": "Quay CRM", "connectionKey": "quay-crm" }
+      }
+    }
+  ],
+  "actors": [
+    {
+      "key": "integration-admin",
+      "tenant": "denial",
+      "authority": ["integration-intelligence:administer"]
+    },
+    { "key": "aurum-member", "tenant": "denial", "authority": [] },
+    { "key": "company-approver", "tenant": "denial", "authority": ["actions:approve"] }
+  ],
+  "broker": { "adapter": "embedded", "provider": "salesforce" },
+  "verification": { "unreachableCapabilities": [] },
+  "deepAction": {
+    "taskContext": {
+      "description": "File signed contracts into the CRM",
+      "requestedFor": "Q3 close"
+    },
+    "operations": [
+      {
+        "key": "file-crm",
+        "system": "crm",
+        "capabilityKey": "write.customer-records",
+        "target": "cust-3042",
+        "payload": { "stage": "onboarding-complete", "healthScore": 82 },
+        "expectation": { "stage": "onboarding-complete", "healthScore": 82 }
+      }
+    ],
+    "seededStates": [
+      {
+        "system": "crm",
+        "target": "cust-3042",
+        "state": { "stage": "onboarding", "healthScore": 55, "owner": "Marta" }
+      }
+    ],
+    "transientFailureTargets": [],
+    "permanentRefusalTargets": [],
+    "skipApplyTargets": []
+  },
+  "steps": [
+    {
+      "phase": "discover",
+      "title": "the admin authorizes the directory source and Aurum discovers the single system",
+      "invokes": [
+        { "op": "create-org-context", "as": "integration-admin" },
+        { "op": "register-directory-source", "as": "integration-admin" },
+        { "op": "grant-discovery-source", "as": "integration-admin" },
+        { "op": "run-discovery", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_discovery_grants", "where": { "status": "active" }, "rows": 1 },
+          { "table": "integration_systems", "rows": 1 },
+          { "table": "integration_recommendations", "where": { "status": "proposed" }, "rows": 1 },
+          { "table": "observations", "where": { "kind": "directory.system.discovered" }, "rows": 1 },
+          { "table": "sources", "where": { "provider": "notion" }, "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "connectionStatus": "discovered",
+              "whyItMatters.basis": "org-context"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "recommend",
+      "title": "the safe-by-default recommendation feed",
+      "invokes": [{ "op": "list-recommendations", "as": "aurum-member" }],
+      "expect": {
+        "durable": [{ "table": "integration_recommendations", "rows": 1 }],
+        "contract": [
+          {
+            "read": "list-recommendations",
+            "as": "aurum-member",
+            "assert": {
+              "length": 1,
+              "0.connectionMode": "read-only",
+              "0.systemId": { "systemRef": "crm" },
+              "0.scopeImpact.wouldRead.length": 1,
+              "0.scopeImpact.staysWriteGated.length": 1
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "approve",
+      "title": "the read-only connection is approved through the actions authority gate",
+      "invokes": [
+        { "op": "submit-recommendation-batch", "as": "aurum-member" },
+        {
+          "op": "decide-recommendation-batch",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "read-only is fine"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendation_batches", "where": { "status": "approved" }, "rows": 1 },
+          { "table": "integration_recommendations", "where": { "status": "approved" }, "rows": 1 },
+          { "table": "action_requests", "where": { "action_kind": "integration-connection", "status": "approved" }, "rows": 1 }
+        ]
+      }
+    },
+    {
+      "phase": "connect",
+      "title": "the approved recommendation becomes a connected system and the broker issues the live connection",
+      "invokes": [
+        { "op": "connect-system", "system": "crm", "as": "aurum-member" },
+        { "op": "initiate-broker-connection", "system": "crm", "as": "aurum-member" },
+        { "op": "complete-broker-connection", "system": "crm", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "integration_recommendations", "where": { "status": "connected" }, "rows": 1 },
+          { "table": "integration_verification_runs", "where": { "status": "verified" }, "rows": 1 },
+          { "table": "broker_connections", "where": { "status": "connected" }, "rows": 1 },
+          { "table": "broker_connection_events", "where": { "event": "connected" }, "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "get-system",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": { "connectionStatus": "connected", "health": "healthy" }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "verify",
+      "title": "explicit re-verification through the wired probe transport",
+      "invokes": [{ "op": "verify-system", "system": "crm", "as": "aurum-member" }],
+      "expect": {
+        "durable": [{ "table": "integration_verification_runs", "rows": 2 }]
+      }
+    },
+    {
+      "phase": "map",
+      "title": "the progressive-access envelope: the read floor is conferred, the write stays gated",
+      "invokes": [{ "op": "establish-connection-access", "system": "crm", "as": "aurum-member" }],
+      "expect": {
+        "durable": [
+          { "table": "capability_access", "rows": 1 },
+          { "table": "capability_grants", "rows": 0 }
+        ],
+        "contract": [
+          {
+            "read": "get-connection-access",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": {
+              "connectionMode": "read-only",
+              "readCapabilities.length": 1,
+              "writeCapabilities.length": 1,
+              "activeGrants.length": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "observe",
+      "title": "the frozen single-system plan, its execution surface and the immutable pre-state evidence",
+      "invokes": [
+        { "op": "create-deep-action", "as": "aurum-member" },
+        { "op": "discover-execution-surface", "as": "aurum-member" },
+        { "op": "inspect-targets", "as": "aurum-member" }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "inspected" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "pending" }, "rows": 1 },
+          { "table": "deep_action_surface", "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.pre-state" }, "rows": 1 },
+          { "table": "capability_invocations", "where": { "outcome": "allowed", "basis": "read-only-floor" }, "rows": 1 }
+        ],
+        "transport": [{ "probe": "inspect-call-count", "expect": 1 }]
+      }
+    },
+    {
+      "phase": "request-scope",
+      "title": "the ask is REJECTED by the authority gate — no grant is minted, the write stays denied, and the denial is recorded with its human-readable reason",
+      "invokes": [
+        { "op": "request-capability-authority", "system": "crm", "as": "aurum-member" },
+        {
+          "op": "decide-grant-request",
+          "system": "crm",
+          "as": "company-approver",
+          "decision": "reject",
+          "note": "not during the audit freeze"
+        },
+        {
+          "op": "invoke-capability",
+          "system": "crm",
+          "capabilityKey": "write.customer-records",
+          "as": "aurum-member"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "capability_grant_requests", "where": { "status": "rejected" }, "rows": 1 },
+          { "table": "capability_grants", "rows": 0 },
+          { "table": "action_requests", "where": { "action_kind": "capability-grant", "status": "rejected" }, "rows": 1 },
+          { "kind": "action-kind-decisions", "actionKind": "capability-grant", "decision": "reject", "rows": 1 },
+          { "table": "capability_grant_events", "where": { "event": "authority-requested" }, "rows": 1 },
+          { "table": "capability_grant_events", "where": { "event": "authority-rejected" }, "rows": 1 },
+          { "table": "capability_grant_events", "where": { "event": "authority-granted" }, "rows": 0 },
+          { "table": "capability_invocations", "where": { "outcome": "denied", "basis": "grant-missing" }, "rows": 1 }
+        ],
+        "contract": [
+          {
+            "read": "get-connection-access",
+            "system": "crm",
+            "as": "aurum-member",
+            "assert": { "connectionMode": "read-only", "activeGrants.length": 0 }
+          },
+          {
+            "read": "list-capability-invocations",
+            "system": "crm",
+            "outcome": "denied",
+            "as": "aurum-member",
+            "assert": {
+              "length": 1,
+              "0.outcome": "denied",
+              "0.basis": "grant-missing",
+              "0.capabilityMode": "write",
+              "0.grantId": null,
+              "0.denial.reason": {
+                "containsAll": [
+                  "File signed contracts into the CRM",
+                  "Edit customer records",
+                  "The connection is read-only",
+                  "The write is stopped"
+                ]
+              },
+              "0.denial.requestedScope.length": 1,
+              "0.denial.requestedScope.0.key": "write.customer-records",
+              "0.denial.requestedScope.0.label": "Edit customer records",
+              "0.denial.requestedScope.0.state": "rejected",
+              "0.denial.alreadyGranted.length": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "execute",
+      "title": "the W009 gate approves the proposal but the W083 gate stops the write at authorization — the task parks rejected with the gate's own reason and nothing executes",
+      "invokes": [
+        { "op": "propose-deep-action", "as": "aurum-member" },
+        {
+          "op": "decide-deep-action-gate",
+          "via": "contract",
+          "as": "company-approver",
+          "decision": "approve",
+          "note": "the plan itself is approved"
+        },
+        { "op": "authorize-deep-action", "as": "aurum-member" },
+        {
+          "op": "execute-deep-action",
+          "as": "aurum-member",
+          "expectError": "task_not_pending_phase"
+        }
+      ],
+      "expect": {
+        "durable": [
+          { "table": "action_requests", "where": { "action_kind": "deep-action", "status": "approved" }, "rows": 1 },
+          { "table": "deep_action_tasks", "where": { "status": "rejected" }, "rows": 1 },
+          { "table": "deep_action_operations", "where": { "state": "denied" }, "rows": 1 },
+          { "table": "deep_action_events", "where": { "event": "operation-denied" }, "rows": 1 },
+          { "table": "deep_action_idempotency", "rows": 1 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 0 },
+          { "table": "observations", "where": { "kind": "deep-action.reconciliation-mismatch" }, "rows": 0 },
+          { "table": "capability_invocations", "where": { "outcome": "denied", "basis": "grant-missing" }, "rows": 2 }
+        ],
+        "contract": [
+          {
+            "read": "get-deep-action",
+            "as": "aurum-member",
+            "assert": {
+              "task.status": "rejected",
+              "task.rejectionReason": {
+                "containsAll": ["Edit customer records", "The write is stopped"]
+              },
+              "operations.0.state": "denied",
+              "operations.0.denialInvocationId": { "notNull": true },
+              "operations.0.invocationId": null,
+              "operations.0.receiptStatus": null,
+              "operations.0.receiptId": null
+            }
+          }
+        ],
+        "transport": [
+          { "probe": "execute-call-count", "expect": 0 },
+          {
+            "probe": "provider-state",
+            "system": "crm",
+            "target": "cust-3042",
+            "expect": { "stage": "onboarding", "healthScore": 55, "owner": "Marta" }
+          }
+        ]
+      }
+    },
+    {
+      "phase": "reconcile",
+      "title": "nothing executed, so nothing reconciles — no post-state evidence, no mismatch records, no silent partial state",
+      "invokes": [],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_tasks", "where": { "status": "reconciled" }, "rows": 0 },
+          { "table": "deep_action_tasks", "where": { "status": "mismatched" }, "rows": 0 },
+          { "table": "deep_action_operations", "where": { "state": "executed" }, "rows": 0 },
+          { "table": "deep_action_operations", "where": { "state": "matched" }, "rows": 0 },
+          { "table": "observations", "where": { "kind": "deep-action.post-state" }, "rows": 0 },
+          { "table": "observations", "where": { "kind": "deep-action.reconciliation-mismatch" }, "rows": 0 }
+        ]
+      }
+    },
+    {
+      "phase": "outcome",
+      "title": "the durable outcome of record — the chain honestly cut short at the denial, reconstructable with its reason",
+      "invokes": [],
+      "expect": {
+        "durable": [
+          { "table": "deep_action_events", "rows": 5 },
+          { "table": "capability_invocations", "where": { "outcome": "denied" }, "rows": 2 },
+          { "table": "capability_invocations", "where": { "outcome": "allowed" }, "rows": 1 },
+          { "table": "capability_grants", "rows": 0 }
+        ],
+        "events": {
+          "read": "deep-action-events",
+          "as": "aurum-member",
+          "equalsReversed": [
+            "created",
+            "surface-discovered",
+            "targets-inspected",
+            "proposed",
+            "operation-denied"
+          ]
+        },
+        "contract": [
+          {
+            "read": "list-capability-invocations",
+            "system": "crm",
+            "outcome": "denied",
+            "as": "aurum-member",
+            "assert": {
+              "1.denial.reason": { "contains": "The write is stopped" }
+            }
+          }
+        ],
+        "transport": [{ "probe": "execute-call-count", "expect": 0 }]
+      }
+    }
+  ]
+}
