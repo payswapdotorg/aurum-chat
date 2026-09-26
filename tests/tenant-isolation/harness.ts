@@ -84,6 +84,8 @@ export const OMNIPOTENT_AUTHORITY: string[] = [
   'api:administer',
   'marketplace:submit',
   'marketplace:administer',
+  // W092 — the vertical starter-kit layer's administration claim.
+  'vertical-kits:administer',
 ];
 
 /** A principal of `tenantId` holding every claim in the repository. */

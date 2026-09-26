@@ -610,6 +610,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the customer-controlled edge runtime boundary (W088 — a tenant-scoped, outbound-only connector that executes signed tenant-scoped job envelopes against private/on-prem APIs, MCP/OpenAPI services, databases, file shares and approved browser adapters, with local secret handling, a twice-checked capability allowlist, heartbeat health/version reporting, and results normalized onto the W084 deep-action transport shapes) composed over the deep-actions contract (its transport port) with the W082 credentialRef discipline passing straight through; it owns no user-facing route yet — the edge-management surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite plus the tenant-isolation sweep',
   },
+  {
+    module: 'vertical-kits',
+    label: 'Vertical extension starter kits (W092)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the vertical starter-kit layer (W092 — reusable specialist extension/agent starter kits and first deep integrations for system-of-record-heavy industries) composed over the actions/extensions/agents contracts: the versioned signed-manifest kit registry, the install/uninstall lifecycle whose grant review rides the W009 authority gate, the kit-scoped capability grants and invocation ledger, the two shipped starter kits (legal case management, accounting ledger ERP) that carry every vertical semantic inside their manifests — core stays industry-independent — and the DEFERRED-ON-W088 VerticalKitEdge seam the Edge Connector will implement for the deep-integration execution path; it owns no user-facing route yet — the kit surfacing arrives with the vertical journeys — and is exercised by its own vitest suite',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
