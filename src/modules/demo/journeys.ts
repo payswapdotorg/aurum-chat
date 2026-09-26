@@ -200,6 +200,24 @@ export const DEMO_JOURNEYS: readonly DemoJourney[] = [
     alsoExercisedBy: [],
     anchorKeys: ['api-key', 'webhook-subscription'],
   },
+  {
+    id: 'meeting-cellular',
+    ref: 'M',
+    title: 'Meeting intelligence and cellular reachability (post-plan, W104)',
+    description:
+      'The post-S002 reachability journeys (W101 J17/J18): one Zoom capture connection whose webhook envelopes delivered a full meeting — metadata, a completed session with two participants, a transcript, a recording artifact — and one telecom sending account whose reach request records the honest environment limit: no transport is wired by default, so the SMS and voice legs fail explicitly with the retryable provider_unavailable state the module reports.',
+    primaryRole: 'manager',
+    alsoExercisedBy: [],
+    anchorKeys: [
+      'meeting-connection',
+      'meeting-weekly-review',
+      'meeting-session',
+      'meeting-transcript',
+      'meeting-artifact',
+      'cellular-connection',
+      'cellular-reach-fallback',
+    ],
+  },
 ];
 
 const JOURNEY_BY_ID: ReadonlyMap<DemoJourneyId, DemoJourney> = new Map(

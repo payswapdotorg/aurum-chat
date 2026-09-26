@@ -336,6 +336,122 @@ export const API_ROUTES: readonly ApiRouteSpec[] = [
     operation: 'webhooks.fanout',
     scope: 'webhooks:manage',
   },
+
+  // -- meetings (inspect captured meeting intelligence, W085/W104) --------
+  // Read-only: the capture registry (meetings, sessions, participants,
+  // transcripts, artifacts), the capture connections and the explicit
+  // access-failure history. Transcripts and artifacts attach to SESSIONS
+  // (one occurrence), not to the scheduled meeting — the route shape
+  // mirrors the contract exactly (the /agents/:id/executions vs
+  // /agents/executions/:id precedent for static-vs-capture neighbors).
+  { method: 'GET', segments: ['meetings'], operation: 'meetings.list', scope: 'meetings:read' },
+  {
+    method: 'GET',
+    segments: ['meetings', ':meetingId'],
+    operation: 'meetings.get',
+    scope: 'meetings:read',
+  },
+  {
+    method: 'GET',
+    segments: ['meetings', ':meetingId', 'sessions'],
+    operation: 'meetings.sessions',
+    scope: 'meetings:read',
+  },
+  {
+    method: 'GET',
+    segments: ['meetings', 'sessions', ':sessionId'],
+    operation: 'meetings.session',
+    scope: 'meetings:read',
+  },
+  {
+    method: 'GET',
+    segments: ['meetings', 'sessions', ':sessionId', 'transcripts'],
+    operation: 'meetings.transcripts',
+    scope: 'meetings:read',
+  },
+  {
+    method: 'GET',
+    segments: ['meetings', 'sessions', ':sessionId', 'artifacts'],
+    operation: 'meetings.artifacts',
+    scope: 'meetings:read',
+  },
+  {
+    method: 'GET',
+    segments: ['meetings', 'participants'],
+    operation: 'meetings.participants',
+    scope: 'meetings:read',
+  },
+  {
+    method: 'GET',
+    segments: ['meetings', 'connections'],
+    operation: 'meetings.connections',
+    scope: 'meetings:read',
+  },
+  {
+    method: 'GET',
+    segments: ['meetings', 'access-events'],
+    operation: 'meetings.accessEvents',
+    scope: 'meetings:read',
+  },
+
+  // -- cellular (connections + reachability state, W087/W104) --------------
+  // The connection-management surface (list/register, the work item's
+  // example rows) plus the delivery/reply state reads: the reach feed,
+  // one reach with its append-only attempt audit and inbound replies,
+  // and the routing/cost policy rows. The carrier webhook edge
+  // (receiveCellularEvent) and the worker pump are internal seams and
+  // are deliberately NOT exposed; no transport is wired by default, so
+  // deliveries surface the module's honest retryable
+  // provider_unavailable state through the reach rows themselves.
+  {
+    method: 'GET',
+    segments: ['cellular', 'connections'],
+    operation: 'cellular.connections.list',
+    scope: 'cellular:read',
+  },
+  {
+    method: 'POST',
+    segments: ['cellular', 'connections'],
+    operation: 'cellular.connections.register',
+    scope: 'cellular:write',
+    successStatus: CREATED,
+  },
+  {
+    method: 'GET',
+    segments: ['cellular', 'connections', ':connectionId'],
+    operation: 'cellular.connections.get',
+    scope: 'cellular:read',
+  },
+  {
+    method: 'GET',
+    segments: ['cellular', 'reach'],
+    operation: 'cellular.reach.list',
+    scope: 'cellular:read',
+  },
+  {
+    method: 'GET',
+    segments: ['cellular', 'reach', ':reachId'],
+    operation: 'cellular.reach.get',
+    scope: 'cellular:read',
+  },
+  {
+    method: 'GET',
+    segments: ['cellular', 'reach', ':reachId', 'attempts'],
+    operation: 'cellular.reach.attempts',
+    scope: 'cellular:read',
+  },
+  {
+    method: 'GET',
+    segments: ['cellular', 'reach', ':reachId', 'replies'],
+    operation: 'cellular.reach.replies',
+    scope: 'cellular:read',
+  },
+  {
+    method: 'GET',
+    segments: ['cellular', 'policies'],
+    operation: 'cellular.policies.list',
+    scope: 'cellular:read',
+  },
 ];
 
 export type RouteMatch =

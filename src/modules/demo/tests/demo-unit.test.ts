@@ -179,10 +179,13 @@ describe('the demo capability matrix', () => {
 // ---------------------------------------------------------------------------
 
 describe('the demo journey catalog', () => {
-  it('covers every plan §2 journey A–L exactly once, plus the substrate', () => {
-    expect(DEMO_JOURNEYS).toHaveLength(13);
+  it('covers every plan §2 journey A–L exactly once, plus the substrate and the post-plan W104 reachability journey', () => {
+    // W104 (deliberate update): 13 → 14 — journey M ('meeting-cellular')
+    // joins the catalog so the J17/J18 surfaces have seeded, real-record
+    // drill-downs in the demo world.
+    expect(DEMO_JOURNEYS).toHaveLength(14);
     const letters = DEMO_JOURNEYS.map((journey) => journey.ref).sort();
-    expect(letters).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', '·']);
+    expect(letters).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', '·']);
   });
 
   it('every journey names a valid primary role and seeds at least one anchor', () => {

@@ -308,17 +308,18 @@ describe('capability coverage', () => {
 
   it('the instrument modules are exactly the declared verification harnesses', () => {
     const instruments = CAPABILITY_ROUTES.filter((capability) => capability.instrument);
+    // W104 (deliberate update): 'meetings' and 'cellular' left this list —
+    // they now own user-facing routes (/meetings, /cellular + drill-downs)
+    // and are verified as discoverable capabilities above, not instruments.
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'agent-supervision',
       'capability-grants',
-      'cellular',
       'computer-use',
       'deep-actions',
       'demo',
       'deployment-smoke',
       'edge-connector',
       'journey-proof',
-      'meetings',
       'migration',
       'provider-billing',
       'quality',

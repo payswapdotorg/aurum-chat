@@ -20,8 +20,10 @@ import { ApiError } from './errors';
 
 /**
  * The closed capability-scope vocabulary of the v1 public API.
- * KEEP IN SYNC with the scopes CHECK constraint in
- * src/modules/api/migrations/001-api-keys.sql.
+ * KEEP IN SYNC with the scopes CHECK constraint that governs api_keys —
+ * created by src/modules/api/migrations/001-api-keys.sql and expanded by
+ * src/modules/api/migrations/003-api-scopes-w104.sql (the meetings +
+ * cellular families of W104; the migration file owns the live shape).
  */
 export const API_SCOPES = [
   'goals:read',
@@ -36,6 +38,9 @@ export const API_SCOPES = [
   'approvals:write',
   'webhooks:manage',
   'api:administer',
+  'meetings:read',
+  'cellular:read',
+  'cellular:write',
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];

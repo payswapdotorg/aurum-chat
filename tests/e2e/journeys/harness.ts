@@ -248,6 +248,17 @@ const PAGE_MODULES: Record<string, RouteModule> = {
     load: () => import('../../../src/app/(product)/interventions/teams/[teamId]/page'),
   },
   '/connections': { area: 'product', load: () => import('../../../src/app/(product)/connections/page') },
+  // W104 — the meetings + cellular reachability surfaces (journeys M).
+  '/meetings': { area: 'product', load: () => import('../../../src/app/(product)/meetings/page') },
+  '/meetings/:meetingId': {
+    area: 'product',
+    load: () => import('../../../src/app/(product)/meetings/[meetingId]/page'),
+  },
+  '/cellular': { area: 'product', load: () => import('../../../src/app/(product)/cellular/page') },
+  '/cellular/reach/:reachId': {
+    area: 'product',
+    load: () => import('../../../src/app/(product)/cellular/reach/[reachId]/page'),
+  },
   '/marketplace': { area: 'product', load: () => import('../../../src/app/(product)/marketplace/page') },
   '/marketplace/installed': {
     area: 'product',
@@ -489,6 +500,12 @@ export function concretePathFor(
       return '/marketplace/installed/roast-batch-tracker';
     case '/explain/:kind/:id':
       return `/explain/execution/${anchorId(report, 'consequential-approval', 'cognition-execution')}`;
+    // W104 — the meetings/cellular drill-downs: the seeded demo world
+    // owns one captured meeting and one reach request (journey M).
+    case '/meetings/:meetingId':
+      return `/meetings/${anchorId(report, 'meeting-cellular', 'meeting-weekly-review')}`;
+    case '/cellular/reach/:reachId':
+      return `/cellular/reach/${anchorId(report, 'meeting-cellular', 'cellular-reach-fallback')}`;
     case '/invite/:code':
       // The invitation code is single-use and shown once (only its hash is
       // stored) — the honest auditable state is the quiet dead-code page.

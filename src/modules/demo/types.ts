@@ -70,7 +70,7 @@ export interface DemoRole {
   capabilities: readonly DemoCapabilityId[];
 }
 
-/** The identifier of one major product journey (plan §2 A–L, plus the shared substrate). */
+/** The identifier of one major product journey (plan §2 A–L, plus the shared substrate and the post-plan W104 reachability journey). */
 export type DemoJourneyId =
   | 'demo-world'
   | 'manager-onboarding'
@@ -84,13 +84,14 @@ export type DemoJourneyId =
   | 'agent-recruitment'
   | 'marketplace'
   | 'explainability'
-  | 'developer-console';
+  | 'developer-console'
+  | 'meeting-cellular';
 
 /** One seeded journey: what it is, which role walks it, which anchors it seeds. */
 export interface DemoJourney {
   id: DemoJourneyId;
-  /** The plan §2 letter this journey implements ('·' for the shared substrate). */
-  ref: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | '·';
+  /** The plan §2 letter this journey implements ('·' substrate; 'M' the post-plan W104 journey). */
+  ref: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M' | '·';
   title: string;
   description: string;
   primaryRole: DemoRoleId;

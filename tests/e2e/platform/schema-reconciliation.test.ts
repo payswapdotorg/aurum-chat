@@ -468,8 +468,11 @@ describe('W102 — the repair deploy converges the diverged database', () => {
       expect(repair.applied).toContain(name);
     }
     // Everything else in the repo applied too (the other modules' real
-    // migrations): 130 files total — 133 discovered minus the 3 skips.
-    expect(repair.applied).toHaveLength(130);
+    // migrations): 131 files total — 134 discovered minus the 3 skips.
+    // W104 (deliberate update): 130 → 131, 133 → 134 — the api module's
+    // 003-api-scopes-w104.sql (the meetings/cellular scope expansion)
+    // joined the discovered set.
+    expect(repair.applied).toHaveLength(131);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -477,7 +480,7 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     for (const name of REPAIR_MIGRATIONS) {
       expect(names).toContain(name);
     }
-    expect(names).toHaveLength(133);
+    expect(names).toHaveLength(134);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -576,7 +579,8 @@ describe('W102 — the reconciliation is idempotent', () => {
   it('a second runner pass applies nothing and the schema still verifies', async () => {
     const report = await runMigrations(getDb());
     expect(report.applied).toEqual([]);
-    expect(report.skipped).toHaveLength(133);
+    // W104 (deliberate update): 133 → 134 (the api scopes expansion).
+    expect(report.skipped).toHaveLength(134);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });

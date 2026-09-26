@@ -399,6 +399,96 @@ export const DEVELOPER_DESTINATIONS: readonly {
   },
 ];
 
+/**
+ * W104 (J17/J18) — the meetings surface's keyboard destination: the
+ * meeting-intelligence read view. Task language first ("what happened in
+ * a meeting", "the transcript", "who was there"); provider names stay
+ * keywords. Keyboard-reachable exactly once, sharing the intent source
+ * with the More hub's card.
+ */
+export const MEETINGS_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'meetings',
+    title: 'Review what happened in a meeting',
+    subtitle:
+      'Meeting intelligence: sessions, participants, transcripts, recordings and artifacts Aurum captured',
+    href: '/meetings',
+    keywords: [
+      'meeting',
+      'meetings',
+      'session',
+      'sessions',
+      'transcript',
+      'transcripts',
+      'minutes',
+      'recording',
+      'recordings',
+      'artifact',
+      'artifacts',
+      'participants',
+      'attendees',
+      'who',
+      'was',
+      'there',
+      'zoom',
+      'teams',
+      'google',
+      'meet',
+      'said',
+      'review',
+    ],
+  },
+];
+
+/**
+ * W104 (J18) — the cellular reachability surface's keyboard destination:
+ * the SMS/voice fallback state. Task language first ("reach someone",
+ * "text them", "call them"); "cellular" is user language for the telecom
+ * path and rides the subtitle honestly.
+ */
+export const CELLULAR_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'cellular',
+    title: 'Reach someone by text or voice call',
+    subtitle:
+      'The cellular fallback: SMS with voice escalation for people who cannot get online — delivery, reply and retry state',
+    href: '/cellular',
+    keywords: [
+      'reach',
+      'sms',
+      'text',
+      'message',
+      'texts',
+      'messaging',
+      'voice',
+      'call',
+      'phone',
+      'cellular',
+      'telecom',
+      'twilio',
+      'telnyx',
+      'number',
+      'offline',
+      'fallback',
+      'carrier',
+      'retry',
+      'reply',
+    ],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -448,6 +538,8 @@ export function buildShellCommands(): ShellCommand[] {
     ...INTERVENTION_DESTINATIONS.map((destination) => destination.href),
     ...AI_DESTINATIONS.map((destination) => destination.href),
     ...DEVELOPER_DESTINATIONS.map((destination) => destination.href),
+    ...MEETINGS_DESTINATIONS.map((destination) => destination.href),
+    ...CELLULAR_DESTINATIONS.map((destination) => destination.href),
     ...towerSurfaceLinks().map((link) => link.href),
     capabilityEntry('company').href,
   ]);
@@ -567,6 +659,36 @@ export function buildShellCommands(): ShellCommand[] {
       subtitle: destination.subtitle,
       group: 'Navigate',
       icon: 'developer',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W104 (J17) — the meetings destination (the meeting-intelligence read
+  // surface; keyboard-reachable by task language: "meeting", "transcript",
+  // "who was there").
+  for (const destination of MEETINGS_DESTINATIONS) {
+    commands.push({
+      id: `meetings:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'intelligence',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
+    });
+  }
+
+  // W104 (J18) — the cellular destination (the SMS/voice reachability
+  // state; keyboard-reachable by task language: "reach", "text", "call",
+  // "sms").
+  for (const destination of CELLULAR_DESTINATIONS) {
+    commands.push({
+      id: `cellular:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'connections',
       keywords: destination.keywords,
       target: { kind: 'navigate', href: destination.href },
     });

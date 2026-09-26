@@ -165,6 +165,12 @@ function concretePath(pattern: string): string {
       return '/marketplace/installed/roast-batch-tracker';
     case '/explain/:kind/:id':
       return `/explain/execution/${anchorId(report, 'consequential-approval', 'cognition-execution')}`;
+    // W104 — the meetings/cellular drill-downs (the seeded demo world's
+    // journey M anchors).
+    case '/meetings/:meetingId':
+      return `/meetings/${anchorId(report, 'meeting-cellular', 'meeting-weekly-review')}`;
+    case '/cellular/reach/:reachId':
+      return `/cellular/reach/${anchorId(report, 'meeting-cellular', 'cellular-reach-fallback')}`;
     case '/invite/:code':
       // The invitation code is single-use and shown once (only its hash is
       // stored) — the honest auditable state is the quiet dead-code page.
