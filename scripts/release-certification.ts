@@ -1,12 +1,16 @@
-// W079 — the production journey certification operator CLI.
+// W079/W101 — the production journey certification operator CLI.
 //
 //   # one certification pass (Run A, then Run B — the SAME deployment revision)
 //   bun run cert:production -- --target https://aurum-chat-livid.vercel.app \
 //        --run a --deployment-id dpl_X --expect-commit <sha> --deployment-created <iso> \
 //        --worker-token-file <path> --vercel-token-file <path>
 //
+//   # the post-S002 program (W101 — the full J01–J22 matrix, the W101
+//   # evidence root docs/productization-evidence/W101, the rollback gate)
+//   bun run cert:production -- --program w101 --target … --run a …
+//
 //   # the finalizer (the two-run verdict + the canonical document)
-//   bun run cert:production -- --finalize
+//   bun run cert:production -- --finalize [--program w101]
 //
 // Each pass (contract §5-§9): the G1 read-only infrastructure probes, the
 // G2 repository gates, the G3 W078 hosted smoke rerun (embedded as the
@@ -39,16 +43,51 @@ import {
   finalVerdictToJson,
   runCertificationPass,
 } from '../src/modules/release-certification/contract';
-import type { CertificationRunResult } from '../src/modules/release-certification/contract';
+import type {
+  CertificationProgram,
+  CertificationRunResult,
+} from '../src/modules/release-certification/contract';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..');
-const EVIDENCE_ROOT = path.join('docs', 'productization-evidence', 'W079');
+
+/**
+ * The program model (W101): 'w079' is the frozen historical program
+ * (J01–J15, the W079 evidence root, the W079 document names); 'w101' is
+ * the post-S002 program (the full J01–J22 matrix, the W101 evidence
+ * root, the W101 repository identity and the rollback-evidence gate).
+ */
+const PROGRAMS: Record<
+  CertificationProgram,
+  {
+    evidenceRoot: string;
+    documentName: string;
+    repository: { branch: string; baseCommit: string };
+  }
+> = {
+  W079: {
+    evidenceRoot: path.join('docs', 'productization-evidence', 'W079'),
+    documentName: 'W079-PRODUCTION-JOURNEY-CERTIFICATION.md',
+    repository: {
+      branch: 'work/w079-production-certification',
+      baseCommit: 'c0ea5f78f8979d46029ac6124eff2bf0ebd6d988',
+    },
+  },
+  W101: {
+    evidenceRoot: path.join('docs', 'productization-evidence', 'W101'),
+    documentName: 'W101-PRODUCTION-JOURNEY-CERTIFICATION.md',
+    repository: {
+      branch: 'work/w101-final-certification',
+      baseCommit: 'a2db98a25b5ff9756fa849d3e196a80bafba1104',
+    },
+  },
+};
 
 interface CliArgs {
   target: string | null;
   run: 'a' | 'b' | null;
   finalize: boolean;
+  program: CertificationProgram;
   deploymentId: string | null;
   expectCommit: string | null;
   deploymentCreated: string | null;
@@ -63,6 +102,7 @@ function parseArgs(argv: readonly string[]): CliArgs {
     target: null,
     run: null,
     finalize: false,
+    program: 'W079',
     deploymentId: null,
     expectCommit: null,
     deploymentCreated: null,
@@ -90,6 +130,13 @@ function parseArgs(argv: readonly string[]): CliArgs {
         process.exit(1);
       }
       args.run = value;
+    } else if (arg === '--program') {
+      const value = next().toLowerCase();
+      if (value !== 'w079' && value !== 'w101') {
+        console.error(`--program must be w079|w101 (got '${value}')`);
+        process.exit(1);
+      }
+      args.program = value === 'w101' ? 'W101' : 'W079';
     } else if (arg === '--finalize') args.finalize = true;
     else if (arg === '--deployment-id') args.deploymentId = next();
     else if (arg === '--expect-commit') args.expectCommit = next();
@@ -102,10 +149,14 @@ function parseArgs(argv: readonly string[]): CliArgs {
       console.log(
         [
           'usage: bun run cert:production -- --target <url> --run a|b',
-          '         --deployment-id <dpl> --expect-commit <sha> --deployment-created <iso>',
+          '         [--program w079|w101] --deployment-id <dpl> --expect-commit <sha> --deployment-created <iso>',
           '         [--worker-token-file <path>] [--vercel-token-file <path>]',
           '         [--repo-gates-from <dir>] [--skip-repo-gates]',
-          '       bun run cert:production -- --finalize',
+          '       bun run cert:production -- --finalize [--program w079|w101]',
+          '',
+          'programs: w079 (default) — the frozen J01–J15 matrix, the W079 evidence root;',
+          '          w101       — the post-S002 J01–J22 matrix, the W101 evidence root,',
+          '                       the rollback-evidence gate and the W101 repository identity.',
         ].join('\n'),
       );
       process.exit(0);
@@ -118,8 +169,11 @@ function parseArgs(argv: readonly string[]): CliArgs {
 }
 
 /** Load one recorded run from the evidence tree (the finalizer's input). */
-async function loadRun(label: 'a' | 'b'): Promise<CertificationRunResult | null> {
-  const file = path.join(REPO_ROOT, EVIDENCE_ROOT, `production-run-${label}`, 'run-result.json');
+async function loadRun(
+  label: 'a' | 'b',
+  evidenceRoot: string,
+): Promise<CertificationRunResult | null> {
+  const file = path.join(REPO_ROOT, evidenceRoot, `production-run-${label}`, 'run-result.json');
   try {
     return JSON.parse(await readFile(file, 'utf8')) as CertificationRunResult;
   } catch {
@@ -129,11 +183,13 @@ async function loadRun(label: 'a' | 'b'): Promise<CertificationRunResult | null>
 
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
+  const program = args.program;
+  const { evidenceRoot, documentName, repository } = PROGRAMS[program];
 
   // ---- the finalizer: the two-run same-revision verdict -------------------
   if (args.finalize) {
-    const runA = await loadRun('a');
-    const runB = await loadRun('b');
+    const runA = await loadRun('a', evidenceRoot);
+    const runB = await loadRun('b', evidenceRoot);
     const outcome = finalVerdict(runA, runB);
     const final = {
       verdict: outcome.verdict,
@@ -143,20 +199,20 @@ async function main(): Promise<number> {
       checks: outcome.checks,
       generatedAt: new Date().toISOString(),
     };
-    const outDir = path.join(REPO_ROOT, EVIDENCE_ROOT);
+    const outDir = path.join(REPO_ROOT, evidenceRoot);
     await writeFile(
       path.join(outDir, 'final-verdict.json'),
       finalVerdictToJson(final),
       'utf8',
     );
     await writeFile(
-      path.join(outDir, 'W079-PRODUCTION-JOURNEY-CERTIFICATION.md'),
+      path.join(outDir, documentName),
       finalCertificationToMarkdown(final),
       'utf8',
     );
-    console.log(`\n=== W079 FINAL VERDICT: ${final.verdict} ===`);
+    console.log(`\n=== ${program} FINAL VERDICT: ${final.verdict} ===`);
     for (const reason of final.reasons) console.log(`  - ${reason}`);
-    console.log(`  evidence: ${EVIDENCE_ROOT}/final-verdict.json`);
+    console.log(`  evidence: ${evidenceRoot}/final-verdict.json`);
     if (final.verdict === 'CERTIFIED READY') return 0;
     return final.verdict === 'FAILED' ? 1 : 2;
   }
@@ -173,8 +229,9 @@ async function main(): Promise<number> {
     );
     return 1;
   }
-  const command = `bun run cert:production -- --target ${args.target} --run ${args.run} ` +
-    `--deployment-id ${args.deploymentId} --expect-commit ${args.expectCommit}` +
+  const command = `bun run cert:production -- --target ${args.target} --run ${args.run}` +
+    (program === 'W101' ? ' --program w101' : '') +
+    ` --deployment-id ${args.deploymentId} --expect-commit ${args.expectCommit}` +
     (args.deploymentCreated === null ? '' : ` --deployment-created ${args.deploymentCreated}`) +
     ' --worker-token-file <redacted> --vercel-token-file <redacted>';
 
@@ -200,6 +257,7 @@ async function main(): Promise<number> {
 
   const run = await runCertificationPass({
     target: args.target,
+    program,
     runLabel: args.run === 'a' ? 'A' : 'B',
     expectedDeployment: {
       deploymentId: args.deploymentId,
@@ -209,13 +267,14 @@ async function main(): Promise<number> {
     workerTokenFile: args.workerTokenFile,
     vercelTokenFile: args.vercelTokenFile,
     repoRoot: REPO_ROOT,
-    evidenceRoot: EVIDENCE_ROOT,
+    evidenceRoot,
     command,
+    repository,
     skipRepoGates: args.skipRepoGates,
     repoGateResults,
   });
 
-  console.log(`\n=== W079 RUN ${run.runLabel} VERDICT: ${run.verdict} ===`);
+  console.log(`\n=== ${program} RUN ${run.runLabel} VERDICT: ${run.verdict} ===`);
   console.log(
     `  ${run.summary.passed} passed · ${run.summary.failed} failed · ${run.summary.blocked} blocked · ` +
       `${run.summary.flaky} flaky · ${run.summary.unexpected} unexpected`,

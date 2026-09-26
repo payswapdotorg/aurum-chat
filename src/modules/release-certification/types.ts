@@ -8,7 +8,7 @@
 // same-revision rule and the verdict vocabulary — the contract's exact
 // discipline (spec/PRODUCTION-JOURNEY-CERTIFICATION-2026-09-23.md).
 
-/** The journey ids of the mandatory production matrix (contract §5). */
+/** The journey ids of the mandatory production matrix (contract §5 + W101 §5). */
 export type JourneyId =
   | 'J01'
   | 'J02'
@@ -24,7 +24,25 @@ export type JourneyId =
   | 'J12'
   | 'J13'
   | 'J14'
-  | 'J15';
+  | 'J15'
+  | 'J16'
+  | 'J17'
+  | 'J18'
+  | 'J19'
+  | 'J20'
+  | 'J21'
+  | 'J22';
+
+/**
+ * The certification program (W101): 'W079' is the frozen historical
+ * program — the J01–J15 matrix, the W079 evidence root and the W079
+ * document names; 'W101' is the post-S002 program — the full J01–J22
+ * matrix, the W101 evidence root, the W101 repository identity and the
+ * rollback-evidence gate. The catalog itself is ONE closed list; the
+ * program selects which journeys are MANDATORY for a run (J01–J15 stay
+ * mandatory in both).
+ */
+export type CertificationProgram = 'W079' | 'W101';
 
 /** One journey's matrix definition (contract §5, verbatim semantics). */
 export interface JourneySpec {
@@ -146,6 +164,8 @@ export interface RunSummary {
 /** One complete certification run (Run A or Run B). */
 export interface CertificationRunResult {
   runLabel: 'A' | 'B';
+  /** The certification program this run belongs to ('W079' historical, 'W101' post-S002). */
+  program: CertificationProgram;
   startedAt: string;
   finishedAt: string;
   target: string;
@@ -160,7 +180,7 @@ export interface CertificationRunResult {
     summary: { total: number; passed: number; failed: number; blocked: number; skipped: number };
     reportPath: string | null;
   } | null;
-  /** The J01–J15 results. */
+  /** The J01–J15 results (W079) or the full J01–J22 results (W101). */
   journeys: JourneyResult[];
   summary: RunSummary;
   verdict: CertificationVerdictKind;
@@ -200,6 +220,18 @@ export interface BrowserRunDigest {
     file: string;
     durationMs: number;
     error: string | null;
+    /**
+     * The honest BLOCKED channel (W101): a test that PASSED at the
+     * Playwright level may still record machine-checkable reasons why a
+     * mandatory surface of its journey does not exist in the deployed
+     * revision. The folding maps a journey whose tests carry non-empty
+     * blockedReasons to journey status 'blocked' — which can never be
+     * laundered to PASS (the run verdict and the final verdict both stay
+     * BLOCKED). Absent/empty for every W079 journey (J01–J15 untouched).
+     */
+    blockedReasons?: string[];
+    /** Machine-checkable probe results backing the blocked reasons. */
+    blockedEvidence?: Record<string, unknown>;
   }[];
   /** The zero-violation record across every journey (browser error captures). */
   violations: { testId: string; violations: number }[];

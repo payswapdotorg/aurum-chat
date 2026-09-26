@@ -1,0 +1,540 @@
+{
+  "total": 22,
+  "passed": 21,
+  "failed": 1,
+  "flaky": 0,
+  "skipped": 0,
+  "tests": [
+    {
+      "testId": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop",
+      "journeyId": "J01",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J01 — anonymous visitor reaches Chat through real sign-up, onboarding and company creation",
+      "file": "tests/browser/production/j01-first-manager-desktop.spec.ts",
+      "durationMs": 2713,
+      "error": null
+    },
+    {
+      "testId": "j02-a-composer-turn-runs-the-real-work-desktop:desktop",
+      "journeyId": "J02",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
+      "file": "tests/browser/production/j02-talk-to-aurum-desktop.spec.ts",
+      "durationMs": 3445,
+      "error": null
+    },
+    {
+      "testId": "j03-the-discovery-chain-chat-starters--desktop:desktop",
+      "journeyId": "J03",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J03 — the discovery chain: chat starters, the Intelligence hub and the Learning surface",
+      "file": "tests/browser/production/j03-unprompted-discovery-desktop.spec.ts",
+      "durationMs": 6045,
+      "error": null
+    },
+    {
+      "testId": "j04-a-finding-drills-down-to-its-evide-desktop:desktop",
+      "journeyId": "J04",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+      "file": "tests/browser/production/j04-investigation-desktop.spec.ts",
+      "durationMs": 2783,
+      "error": null
+    },
+    {
+      "testId": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop",
+      "journeyId": "J05",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J05 — a proposed action waits at the human gate, is decided inline and recorded",
+      "file": "tests/browser/production/j05-consequential-approval-desktop.spec.ts",
+      "durationMs": 12693,
+      "error": null
+    },
+    {
+      "testId": "j06-the-why-drill-down-opens-the-causa-desktop:desktop",
+      "journeyId": "J06",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J06 — the Why drill-down opens the causal chain and returns to the exact message",
+      "file": "tests/browser/production/j06-explainability-desktop.spec.ts",
+      "durationMs": 3525,
+      "error": null
+    },
+    {
+      "testId": "j07-the-learning-lane-mission-ask-plan-desktop:desktop",
+      "journeyId": "J07",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J07 — the learning lane: mission, ask planner, contribution and reward state",
+      "file": "tests/browser/production/j07-learning-contribution-desktop.spec.ts",
+      "durationMs": 4767,
+      "error": null
+    },
+    {
+      "testId": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop",
+      "journeyId": "J08",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J08 — a contextual prompt leads to Connections, a channel is configured and verified",
+      "file": "tests/browser/production/j08-connections-desktop.spec.ts",
+      "durationMs": 5372,
+      "error": null
+    },
+    {
+      "testId": "j09-an-unavailable-provider-becomes-a--desktop:desktop",
+      "journeyId": "J09",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
+      "file": "tests/browser/production/j09-byoa-desktop.spec.ts",
+      "durationMs": 7914,
+      "error": null
+    },
+    {
+      "testId": "j10-the-intervention-governance-chain--desktop:desktop",
+      "journeyId": "J10",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J10 — the intervention governance chain: gaps, alternatives, the gate and the workforce",
+      "file": "tests/browser/production/j10-workforce-intervention-desktop.spec.ts",
+      "durationMs": 5148,
+      "error": null
+    },
+    {
+      "testId": "j11-the-marketplace-discovery-the-publ-desktop:desktop",
+      "journeyId": "J11",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J11 — the marketplace: discovery, the public catalog and the install state",
+      "file": "tests/browser/production/j11-marketplace-desktop.spec.ts",
+      "durationMs": 3888,
+      "error": null
+    },
+    {
+      "testId": "j12-the-developer-console-discovery-ke-desktop:desktop",
+      "journeyId": "J12",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
+      "file": "tests/browser/production/j12-developer-desktop.spec.ts",
+      "durationMs": 8018,
+      "error": null
+    },
+    {
+      "testId": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop",
+      "journeyId": "J13",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J13 — a second tenant sees nothing of the first, and the first keeps its activity",
+      "file": "tests/browser/production/j13-tenant-isolation-desktop.spec.ts",
+      "durationMs": 9182,
+      "error": null
+    },
+    {
+      "testId": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile",
+      "journeyId": "J14",
+      "context": "mobile",
+      "status": "pass",
+      "title": "J14 — the mobile loop: list, full-screen thread, composer turn and back",
+      "file": "tests/browser/production/j14-mobile-loop-mobile.spec.ts",
+      "durationMs": 3438,
+      "error": null
+    },
+    {
+      "testId": "j15-keyboard-focus-aria-task-language--desktop:desktop",
+      "journeyId": "J15",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
+      "file": "tests/browser/production/j15-accessibility-desktop.spec.ts",
+      "durationMs": 2688,
+      "error": null
+    },
+    {
+      "testId": "j16-the-connection-hub-channel-family--desktop:desktop",
+      "journeyId": "J16",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J16 — the connection hub channel family is proven; the v1 channel surface is probed and recorded",
+      "file": "tests/browser/production/j16-cross-channel-desktop.spec.ts",
+      "durationMs": 8339,
+      "error": null,
+      "blockedReasons": [
+        "the v1 public API owns no channel-family operations in the deployed revision a2db98a: its discovery document lists 49 operations (discovery/goals/unknowns/beliefs/missions/knowledge/observations/capabilities/agents/approvals/api-keys/webhooks) and none is channel-scoped — the route table is the locked, versioned public surface (W038) and the S003 channels module (W059-era connection hub) surfaced no v1 operations; the connection-hub channel surface itself was proven above"
+      ],
+      "blockedEvidence": {
+        "v1DiscoveryOperations": 49,
+        "v1ChannelFamilyOperations": [],
+        "v1AuthenticatedProbeStatus": 200,
+        "connectionHubChannelsProven": [
+          "email (J08)",
+          "slack (this journey)"
+        ]
+      }
+    },
+    {
+      "testId": "j17-every-legitimate-production-path-t-desktop:desktop",
+      "journeyId": "J17",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J17 — every legitimate production path to a meetings surface is exhausted and recorded honestly",
+      "file": "tests/browser/production/j17-meetings-desktop.spec.ts",
+      "durationMs": 3290,
+      "error": null,
+      "blockedReasons": [
+        "the meetings surface does not exist in the deployed revision a2db98a: the meeting-intelligence module (W085 contract + W097 fixtures) owns no user-facing route and no v1 public API operation — the repo’s own discoverability map defers the meeting UX to the realtime companion (W086); every legitimate production path was probed and carries no meetings entry (rail, More hub, command search, v1 discovery: 49 operations, none meeting-scoped)"
+      ],
+      "blockedEvidence": {
+        "v1DiscoveryOperations": 49,
+        "v1MeetingFamilyOperations": [],
+        "navigationPathsProbed": [
+          "rail",
+          "More hub",
+          "command search",
+          "v1 discovery"
+        ]
+      }
+    },
+    {
+      "testId": "j18-every-legitimate-production-path-t-desktop:desktop",
+      "journeyId": "J18",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J18 — every legitimate production path to a cellular surface is exhausted; the module’s environment limit is recorded",
+      "file": "tests/browser/production/j18-cellular-desktop.spec.ts",
+      "durationMs": 3414,
+      "error": null,
+      "blockedReasons": [
+        "the cellular reachability surface does not exist in the deployed revision a2db98a: the cellular module (SMS/voice reachability) owns no user-facing route and no v1 public API operation (v1 discovery: 49 operations, none cellular/SMS/voice-scoped); environment limit as the module itself reports it: no transport is wired by default, so deliveries fail explicitly with provider_unavailable (retryable) — the contract-faithful production behavior cannot be observed through any user-visible surface in this revision"
+      ],
+      "blockedEvidence": {
+        "v1DiscoveryOperations": 49,
+        "v1CellularFamilyOperations": [],
+        "moduleReportedEnvironmentLimit": "provider_unavailable (no transport wired by default; retryable)",
+        "navigationPathsProbed": [
+          "rail",
+          "More hub",
+          "command search",
+          "v1 discovery"
+        ]
+      }
+    },
+    {
+      "testId": "j19-the-full-connection-surface-channe-desktop:desktop",
+      "journeyId": "J19",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J19 — the full connection surface: channels, a source, a destination, identities and the approval gate",
+      "file": "tests/browser/production/j19-integrations-desktop.spec.ts",
+      "durationMs": 7739,
+      "error": null
+    },
+    {
+      "testId": "j20-outcome-preferences-the-authorizat-desktop:desktop",
+      "journeyId": "J20",
+      "context": "desktop",
+      "status": "fail",
+      "title": "J20 — outcome preferences, the authorization-gated advanced area and the provider/billing surfaces",
+      "file": "tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
+      "durationMs": 1832,
+      "error": "Error: the /ai/preferences surface answers HTTP 200 in production (the W091 outcome-preferences surface)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m500\u001b[39m"
+    },
+    {
+      "testId": "j21-the-learning-surfaces-the-mission--desktop:desktop",
+      "journeyId": "J21",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J21 — the learning surfaces, the mission chain and the v1 missions read with real auth",
+      "file": "tests/browser/production/j21-durable-cognition-desktop.spec.ts",
+      "durationMs": 7315,
+      "error": null
+    },
+    {
+      "testId": "j22-the-marketplace-installed-governan-desktop:desktop",
+      "journeyId": "J22",
+      "context": "desktop",
+      "status": "pass",
+      "title": "J22 — the marketplace, installed-governance and developer surfaces are proven; the kit path is recorded",
+      "file": "tests/browser/production/j22-specialist-execution-desktop.spec.ts",
+      "durationMs": 6121,
+      "error": null,
+      "blockedReasons": [
+        "the W092 vertical kits own no user-visible path in the deployed revision a2db98a: the two signed starter kits (legal-case-management, accounting-ledger-erp) live in the vertical-kits module (versioned manifests, invocation ledger) with no user-facing route — the repo’s own discoverability map defers kit surfacing to the vertical journeys; the marketplace catalog surfaces governed extension/agent packages only (the live registry is empty — nothing has been published yet) and the installed surface governs installed extensions; the marketplace, installed-package governance, honest not-found and developer publish surfaces were proven above"
+      ],
+      "blockedEvidence": {
+        "kitKeys": [
+          "legal-case-management",
+          "accounting-ledger-erp"
+        ],
+        "marketplaceSurfacesProven": [
+          "public catalog (governed, live empty state)",
+          "package detail (honest not-found)",
+          "installed extensions (honest empty + governance view)",
+          "developer console (publish path, claim-gated review queue)"
+        ],
+        "kitEntriesOnMarketplaceSurfaces": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "testId": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j02-a-composer-turn-runs-the-real-work-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j03-the-discovery-chain-chat-starters--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j04-a-finding-drills-down-to-its-evide-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j06-the-why-drill-down-opens-the-causa-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j07-the-learning-lane-mission-ask-plan-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j09-an-unavailable-provider-becomes-a--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j10-the-intervention-governance-chain--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j11-the-marketplace-discovery-the-publ-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j12-the-developer-console-discovery-ke-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile",
+      "violations": 0
+    },
+    {
+      "testId": "j15-keyboard-focus-aria-task-language--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j16-the-connection-hub-channel-family--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j17-every-legitimate-production-path-t-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j18-every-legitimate-production-path-t-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j19-the-full-connection-surface-channe-desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j20-outcome-preferences-the-authorizat-desktop:desktop",
+      "violations": 3
+    },
+    {
+      "testId": "j21-the-learning-surfaces-the-mission--desktop:desktop",
+      "violations": 0
+    },
+    {
+      "testId": "j22-the-marketplace-installed-governan-desktop:desktop",
+      "violations": 0
+    }
+  ],
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-b/transcripts/j01-anonymous-visitor-reaches-chat-thr-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j02-a-composer-turn-runs-the-real-work-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j03-the-discovery-chain-chat-starters--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j04-a-finding-drills-down-to-its-evide-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j05-a-proposed-action-waits-at-the-hum-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j06-the-why-drill-down-opens-the-causa-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j07-the-learning-lane-mission-ask-plan-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j08-a-contextual-prompt-leads-to-conne-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j09-an-unavailable-provider-becomes-a--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j10-the-intervention-governance-chain--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j11-the-marketplace-discovery-the-publ-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j12-the-developer-console-discovery-ke-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j13-a-second-tenant-sees-nothing-of-th-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j14-the-mobile-loop-list-full-screen-t-mobile.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j15-keyboard-focus-aria-task-language--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j16-the-connection-hub-channel-family--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j17-every-legitimate-production-path-t-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j18-every-legitimate-production-path-t-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j19-the-full-connection-surface-channe-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j20-outcome-preferences-the-authorizat-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j21-the-learning-surfaces-the-mission--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/transcripts/j22-the-marketplace-installed-governan-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__anonymous-entry-the-production-sign-in-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__onboarding-the-workspace-setup-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__the-first-screen-the-messenger-with-its-starters.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-working-state-the-real-execution-is-running.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-answer-honest-company-state-delivered.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-evidence-backed-answer-with-its-citations.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-discovery-questions-asked-conversationally.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-intelligence-hub-the-chain-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-learning-hub-missions-and-company-knowledge.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-issued-invitation-shown-once.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-employee-joined-landing-in-the-company-chat.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approval-card-the-comparison-waiting-at-the-human-gate.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-decision-acknowledged-in-place.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approvals-surface-the-append-only-decision-trail.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-answer-carrying-its-why-affordance.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-explainability-trace-the-full-causal-chain.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-return-anchored-on-the-exact-originating-message.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-hub-the-live-mission.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-planner-decision-honest-on-the-record.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-contribution-and-reward-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-answer-in-chat.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-contextual-prompt-connect-your-systems.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-connections-hub.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-configured-channel-registered-with-its-opaque-credential.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-verified-connection-the-hub-state-after-reload.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-honest-answer-the-provider-prompt.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-ai-surface-no-accounts-yet-the-unavailable-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-registered-byoa-account-opaque-reference-only.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-routing-panel-the-usable-route.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__back-to-the-task-the-answer-still-evidence-backed.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-more-hub-the-intervention-discovery.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-interventions-surface-gaps-alternatives-the-human-gate.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-workforce-surface-the-honest-read-model.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-agents-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-discovered-from-the-hub.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-public-catalog-the-governed-listing-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-installed-state-the-tenant-review-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-developer-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-developer-console-discovered-from-the-hub.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-key-roster-the-recorded-grant.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-webhook-registered-with-its-delivery-contract.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-mcp-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-revoked-keys-the-roster-retains-the-audit-trail.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-recorded-activity-marker.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-created-through-the-real-flow.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-empty-conversation-list.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-isolated-surfaces.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-activity-preserved.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-touch-chrome.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-conversation-list-home.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-full-screen-thread.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-composer.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-reply-landed.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-back-to-the-list.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__keyboard-focus-the-visible-ring.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-aria-landmark-structure.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__command-search-task-language.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-dead-code-the-honest-no-dead-end-page.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-connections-hub-the-channel-family.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-second-channel-registered-with-its-opaque-credential-ref.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-channel-roster-the-tenant-scoped-envelope.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-developer-console-the-key-grant-recorded.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j17-every-legitimate-production-path-t-desktop__the-product-rail-no-meetings-entry.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j17-every-legitimate-production-path-t-desktop__the-more-hub-no-meetings-capability.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j17-every-legitimate-production-path-t-desktop__command-search-no-meetings-entry.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j18-every-legitimate-production-path-t-desktop__the-product-rail-no-cellular-entry.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j18-every-legitimate-production-path-t-desktop__the-more-hub-no-cellular-capability.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j18-every-legitimate-production-path-t-desktop__command-search-no-cellular-entry.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-connections-hub-the-full-connection-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-channels-family-the-run-tenant-s-two-channels.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-system-registered-with-its-opaque-credential-refe.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-systems-family-the-registered-inbound-integration.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destination-registered-with-its-opaque-credential-refere.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destinations-family-the-registered-outbound-integration.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-family-the-honest-empty-state-and-its-affordanc.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-lookup-the-honest-miss.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-approvals-surface-the-human-authority-gate-the-integrati.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-learning-hub-the-company-learning-surface.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-live-mission-durable-across-the-journey-boundaries.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-contributions-and-reward-state-the-honest-policy-note.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-mission-chain-the-objective-acquisitions-and-beliefs.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-developer-console-the-cognition-reader-grant-recorded.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-marketplace-discovered-from-the-hub.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-public-catalog-the-governed-listing-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-package-page-the-honest-not-found.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-installed-surface-the-tenant-review-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-installed-extension-governance-the-honest-not-found.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-developer-surface-the-governed-publish-path.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-b/errors/j01-anonymous-visitor-reaches-chat-thr-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j02-a-composer-turn-runs-the-real-work-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j03-the-discovery-chain-chat-starters--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j04-a-finding-drills-down-to-its-evide-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j05-a-proposed-action-waits-at-the-hum-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j06-the-why-drill-down-opens-the-causa-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j07-the-learning-lane-mission-ask-plan-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j08-a-contextual-prompt-leads-to-conne-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j09-an-unavailable-provider-becomes-a--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j10-the-intervention-governance-chain--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j11-the-marketplace-discovery-the-publ-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j12-the-developer-console-discovery-ke-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j13-a-second-tenant-sees-nothing-of-th-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j14-the-mobile-loop-list-full-screen-t-mobile.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j15-keyboard-focus-aria-task-language--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j16-the-connection-hub-channel-family--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j17-every-legitimate-production-path-t-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j18-every-legitimate-production-path-t-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j19-the-full-connection-surface-channe-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j20-outcome-preferences-the-authorizat-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j21-the-learning-surfaces-the-mission--desktop.json",
+      "docs/productization-evidence/W101/production-run-b/errors/j22-the-marketplace-installed-governan-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-b/results/j01-anonymous-visitor-reaches-chat-thr-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j02-a-composer-turn-runs-the-real-work-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j03-the-discovery-chain-chat-starters--desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j04-a-finding-drills-down-to-its-evide-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j05-a-proposed-action-waits-at-the-hum-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j06-the-why-drill-down-opens-the-causa-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j07-the-learning-lane-mission-ask-plan-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j08-a-contextual-prompt-leads-to-conne-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j09-an-unavailable-provider-becomes-a--desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j10-the-intervention-governance-chain--desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j11-the-marketplace-discovery-the-publ-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j12-the-developer-console-discovery-ke-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j13-a-second-tenant-sees-nothing-of-th-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j14-the-mobile-loop-list-full-screen-t-mobile-mobile.json",
+      "docs/productization-evidence/W101/production-run-b/results/j15-keyboard-focus-aria-task-language--desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j16-the-connection-hub-channel-family--desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j17-every-legitimate-production-path-t-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j18-every-legitimate-production-path-t-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j19-the-full-connection-surface-channe-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j20-outcome-preferences-the-authorizat-desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j21-the-learning-surfaces-the-mission--desktop-desktop.json",
+      "docs/productization-evidence/W101/production-run-b/results/j22-the-marketplace-installed-governan-desktop-desktop.json"
+    ]
+  }
+}

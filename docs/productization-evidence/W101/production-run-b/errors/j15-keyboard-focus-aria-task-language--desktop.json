@@ -1,0 +1,13 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j15-accessibility-desktop.spec.ts",
+  "title": "J15 — keyboard, focus, ARIA, task-language discovery and no dead ends",
+  "project": "desktop",
+  "runLabel": "B",
+  "violationCount": 0,
+  "violations": [],
+  "documentedFilter": [
+    "favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)",
+    "net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)",
+    "Chromium password-manager caret-color hydration warnings (browser-injected style attribute; every other hydration mismatch fails)"
+  ]
+}

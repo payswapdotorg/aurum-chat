@@ -1,0 +1,110 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j22-specialist-execution-desktop.spec.ts",
+  "title": "J22 — the marketplace, installed-governance and developer surfaces are proven; the kit path is recorded",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-26T15:43:27.783Z",
+      "step": "sign in and discover the marketplace from the More hub",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:30.136Z",
+      "step": "screenshot: the marketplace — discovered from the hub",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-marketplace-discovered-from-the-hub.png"
+    },
+    {
+      "at": "2026-09-26T15:43:30.136Z",
+      "step": "the marketplace page carries the shell accessibility contract",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:30.176Z",
+      "step": "the public catalog renders its live, governed state",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:30.359Z",
+      "step": "screenshot: the public catalog — the governed listing state",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-public-catalog-the-governed-listing-state.png"
+    },
+    {
+      "at": "2026-09-26T15:43:30.359Z",
+      "step": "an unknown package answers with the honest not-found page",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:30.866Z",
+      "step": "screenshot: the package page — the honest not-found",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/package/00000000-0000-0000-0000-000000000000",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-package-page-the-honest-not-found.png"
+    },
+    {
+      "at": "2026-09-26T15:43:30.866Z",
+      "step": "the installed-extensions surface renders its honest state",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/package/00000000-0000-0000-0000-000000000000",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:31.306Z",
+      "step": "screenshot: the installed surface — the tenant review state",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-installed-surface-the-tenant-review-state.png"
+    },
+    {
+      "at": "2026-09-26T15:43:31.306Z",
+      "step": "an unknown extension governs honestly (no dead-end governance)",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:31.855Z",
+      "step": "screenshot: the installed-extension governance — the honest not-found",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed/w101-no-such-extension",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-installed-extension-governance-the-honest-not-found.png"
+    },
+    {
+      "at": "2026-09-26T15:43:31.855Z",
+      "step": "the developer surface renders the publish path with its claim gate",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed/w101-no-such-extension",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:32.617Z",
+      "step": "screenshot: the developer surface — the governed publish path",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/developer",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-developer-surface-the-governed-publish-path.png"
+    },
+    {
+      "at": "2026-09-26T15:43:32.617Z",
+      "step": "the marketplace surfaces carry no vertical-kit entries",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:33.421Z",
+      "step": "record the honest BLOCKED reason for the kit path",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:33.422Z",
+      "step": "BLOCKED: the W092 vertical kits own no user-visible path in the deployed revision a2db98a: the two signed starter kits (legal-case-management, accounting-ledger-erp) live in the vertical-kits module (versioned manifests, invocation ledger) with no user-facing route — the repo’s own discoverability map defers kit surfacing to the vertical journeys; the marketplace catalog surfaces governed extension/agent packages only (the live registry is empty — nothing has been published yet) and the installed surface governs installed extensions; the marketplace, installed-package governance, honest not-found and developer publish surfaces were proven above",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:43:33.422Z",
+      "step": "return to the conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
+      "shot": null
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j12-developer-desktop.spec.ts",
+  "title": "J12 — the developer console: discovery, keys, webhooks, MCP and the audit trail",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-26T15:42:34.863Z",
+      "step": "sign in and discover the console from the More hub",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:42:37.565Z",
+      "step": "screenshot: the developer console — discovered from the hub",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-developer-console-discovered-from-the-hub.png"
+    },
+    {
+      "at": "2026-09-26T15:42:37.565Z",
+      "step": "create an API key through the real form",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:42:38.041Z",
+      "step": "the key list records the new key (the audit state)",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:42:39.246Z",
+      "step": "screenshot: the key roster — the recorded grant",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-key-roster-the-recorded-grant.png"
+    },
+    {
+      "at": "2026-09-26T15:42:39.246Z",
+      "step": "register a webhook endpoint through the real form",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:42:39.968Z",
+      "step": "screenshot: the webhook — registered with its delivery contract",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-webhook-registered-with-its-delivery-contract.png"
+    },
+    {
+      "at": "2026-09-26T15:42:39.968Z",
+      "step": "the MCP surface documents the env contract",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:42:40.515Z",
+      "step": "screenshot: the MCP surface",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-mcp-surface.png"
+    },
+    {
+      "at": "2026-09-26T15:42:40.516Z",
+      "step": "the operations audit is on the record",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:42:40.523Z",
+      "step": "revoke the run’s API keys (nothing minted outlives the run)",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-26T15:42:42.844Z",
+      "step": "screenshot: the revoked keys — the roster retains the audit trail",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W101/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-revoked-keys-the-roster-retains-the-audit-trail.png"
+    }
+  ]
+}

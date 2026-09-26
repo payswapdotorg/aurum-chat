@@ -1,0 +1,27 @@
+{
+  "testId": "j02-a-composer-turn-runs-the-real-work-desktop:desktop",
+  "journeyId": "J02",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
+  "file": "tests/browser/production/j02-talk-to-aurum-desktop.spec.ts",
+  "durationMs": 3445,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-b/transcripts/j02-a-composer-turn-runs-the-real-work-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-working-state-the-real-execution-is-running.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-answer-honest-company-state-delivered.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-evidence-backed-answer-with-its-citations.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-b/errors/j02-a-composer-turn-runs-the-real-work-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-b/results/j02-a-composer-turn-runs-the-real-work-desktop-desktop.json"
+    ]
+  }
+}

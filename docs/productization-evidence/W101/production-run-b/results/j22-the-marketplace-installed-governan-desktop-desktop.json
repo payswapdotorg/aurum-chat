@@ -1,0 +1,46 @@
+{
+  "testId": "j22-the-marketplace-installed-governan-desktop:desktop",
+  "journeyId": "J22",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J22 — the marketplace, installed-governance and developer surfaces are proven; the kit path is recorded",
+  "file": "tests/browser/production/j22-specialist-execution-desktop.spec.ts",
+  "durationMs": 6121,
+  "error": null,
+  "violations": 0,
+  "blockedReasons": [
+    "the W092 vertical kits own no user-visible path in the deployed revision a2db98a: the two signed starter kits (legal-case-management, accounting-ledger-erp) live in the vertical-kits module (versioned manifests, invocation ledger) with no user-facing route — the repo’s own discoverability map defers kit surfacing to the vertical journeys; the marketplace catalog surfaces governed extension/agent packages only (the live registry is empty — nothing has been published yet) and the installed surface governs installed extensions; the marketplace, installed-package governance, honest not-found and developer publish surfaces were proven above"
+  ],
+  "blockedEvidence": {
+    "kitKeys": [
+      "legal-case-management",
+      "accounting-ledger-erp"
+    ],
+    "marketplaceSurfacesProven": [
+      "public catalog (governed, live empty state)",
+      "package detail (honest not-found)",
+      "installed extensions (honest empty + governance view)",
+      "developer console (publish path, claim-gated review queue)"
+    ],
+    "kitEntriesOnMarketplaceSurfaces": 0
+  },
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-b/transcripts/j22-the-marketplace-installed-governan-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-marketplace-discovered-from-the-hub.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-public-catalog-the-governed-listing-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-package-page-the-honest-not-found.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-installed-surface-the-tenant-review-state.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-installed-extension-governance-the-honest-not-found.png",
+      "docs/productization-evidence/W101/production-run-b/screenshots/j22-the-marketplace-installed-governan-desktop__the-developer-surface-the-governed-publish-path.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-b/errors/j22-the-marketplace-installed-governan-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-b/results/j22-the-marketplace-installed-governan-desktop-desktop.json"
+    ]
+  }
+}

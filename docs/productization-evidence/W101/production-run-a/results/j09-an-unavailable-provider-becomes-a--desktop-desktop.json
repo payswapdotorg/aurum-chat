@@ -1,0 +1,29 @@
+{
+  "testId": "j09-an-unavailable-provider-becomes-a--desktop:desktop",
+  "journeyId": "J09",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J09 — an unavailable provider becomes a configured, usable route and the task resumes",
+  "file": "tests/browser/production/j09-byoa-desktop.spec.ts",
+  "durationMs": 8488,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-a/transcripts/j09-an-unavailable-provider-becomes-a--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-honest-answer-the-provider-prompt.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-ai-surface-no-accounts-yet-the-unavailable-state.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-registered-byoa-account-opaque-reference-only.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-routing-panel-the-usable-route.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j09-an-unavailable-provider-becomes-a--desktop__back-to-the-task-the-answer-still-evidence-backed.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-a/errors/j09-an-unavailable-provider-becomes-a--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-a/results/j09-an-unavailable-provider-becomes-a--desktop-desktop.json"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "spec": "/home/z/my-project/aurum-chat/tests/browser/production/j18-cellular-desktop.spec.ts",
+  "title": "J18 — every legitimate production path to a cellular surface is exhausted; the module’s environment limit is recorded",
+  "project": "desktop",
+  "runLabel": "A",
+  "violationCount": 0,
+  "violations": [],
+  "documentedFilter": [
+    "favicon 404s (/favicon.ico — no favicon asset ships; browser-automatic request noise)",
+    "net::ERR_ABORTED request cancellations (navigation/close mid-request bookkeeping)",
+    "Chromium password-manager caret-color hydration warnings (browser-injected style attribute; every other hydration mismatch fails)"
+  ]
+}

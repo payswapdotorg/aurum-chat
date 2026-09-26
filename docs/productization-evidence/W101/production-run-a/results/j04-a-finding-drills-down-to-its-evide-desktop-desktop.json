@@ -1,0 +1,26 @@
+{
+  "testId": "j04-a-finding-drills-down-to-its-evide-desktop:desktop",
+  "journeyId": "J04",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+  "file": "tests/browser/production/j04-investigation-desktop.spec.ts",
+  "durationMs": 3004,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W101/production-run-a/transcripts/j04-a-finding-drills-down-to-its-evide-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W101/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png",
+      "docs/productization-evidence/W101/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W101/production-run-a/errors/j04-a-finding-drills-down-to-its-evide-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W101/production-run-a/results/j04-a-finding-drills-down-to-its-evide-desktop-desktop.json"
+    ]
+  }
+}

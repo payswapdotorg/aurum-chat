@@ -36,7 +36,7 @@ import path from 'node:path';
 import { runDeploymentSmoke } from '@/modules/deployment-smoke/contract';
 import type { SmokeReport } from '@/modules/deployment-smoke/contract';
 import { deploymentFromListing, deploymentIdentity, identityVerificationReasons, observeG1Health } from './identity';
-import { JOURNEY_MATRIX, matrixConsistency } from './matrix';
+import { JOURNEY_MATRIX, matrixConsistency, programJourneys } from './matrix';
 import {
   commandManifestToJson,
   identityManifestToJson,
@@ -46,6 +46,7 @@ import {
 import type {
   BrowserRunDigest,
   CertificationCheck,
+  CertificationProgram,
   CertificationRunResult,
   G1HealthObservation,
   JourneyResult,
@@ -57,6 +58,7 @@ import {
   gateThreeReasons,
   journeyResultsFromDigest,
   quickSignInOffReasons,
+  rollbackEvidenceReasons,
   runVerdict,
   summarizeRun,
   w078RerunReasons,
@@ -65,6 +67,8 @@ import {
 
 /** One certification pass configuration. */
 export interface CertificationRunConfig {
+  /** The certification program ('W079' historical default, 'W101' post-S002). */
+  program?: CertificationProgram;
   /** The production target (https://aurum-chat-livid.vercel.app). */
   target: string;
   /** 'A' or 'B' — the two-run rule's label. */
@@ -92,6 +96,12 @@ export interface CertificationRunConfig {
   evidenceRoot: string;
   /** The exact command line (contract §3.9). */
   command: string;
+  /**
+   * The repository identity the run records (contract §3.10): the branch
+   * and base commit the certification tree was produced on. Defaults to
+   * the frozen W079 values so historical callers keep their manifest.
+   */
+  repository?: { branch: string; baseCommit: string };
   /** Skip the browser matrix (used by the dev harness ONLY — never certification). */
   skipBrowser?: boolean;
   /** Skip the repo gates (G2 runs in the finalizer instead). */
@@ -150,10 +160,27 @@ async function fetchDeploymentListing(
   config: CertificationRunConfig,
   vercelToken: string | null,
 ): Promise<{ deploymentId: string | null; readyState: string | null; createdAt: string | null; commitSha: string | null } | null> {
+  const entries = await fetchDeploymentEntries(config, vercelToken, 1);
+  return entries === null ? null : entries[0] ?? null;
+}
+
+/**
+ * Fetch the newest production deployment entries (read-only, identifiers
+ * only). Entry [0] is the current production deployment; entry [1] — when
+ * present — is the prior READY production deployment, the known-good
+ * ROLLBACK TARGET the W101 rollback-evidence gate records.
+ */
+async function fetchDeploymentEntries(
+  config: CertificationRunConfig,
+  vercelToken: string | null,
+  limit: number,
+): Promise<
+  { deploymentId: string | null; readyState: string | null; createdAt: string | null; commitSha: string | null }[] | null
+> {
   if (vercelToken === null) return null;
   const url =
     'https://api.vercel.com/v6/deployments?projectId=prj_PljFx5DnZ1MCqQ5bA1uK6G1o8gFy' +
-    '&teamId=team_4KOoA5CgtYaOF85yFXPeMXLt&target=production&limit=1';
+    `&teamId=team_4KOoA5CgtYaOF85yFXPeMXLt&target=production&limit=${limit}`;
   const response = await (config.fetchImpl ?? fetch)(url, {
     headers: { authorization: `Bearer ${vercelToken}` },
   });
@@ -162,7 +189,7 @@ async function fetchDeploymentListing(
   if (body === null || !Array.isArray(body['deployments']) || body['deployments'].length === 0) {
     return null;
   }
-  return deploymentFromListing(body['deployments'][0]);
+  return body['deployments'].map((entry) => deploymentFromListing(entry));
 }
 
 /** The G1 probes (pure observations over public HTTP, read-only). */
@@ -358,13 +385,14 @@ async function runW078(
   }
 }
 
-/** Run the J01–J15 browser matrix (the Playwright subprocess). */
+/** Run the J01–J15 (W079) or J01–J22 (W101) browser matrix (the Playwright subprocess). */
 async function runBrowserMatrix(
   config: CertificationRunConfig,
   runDir: string,
   secretsScratchDir: string,
 ): Promise<{ digest: BrowserRunDigest | null; error: string | null }> {
   const execImpl = config.execImpl ?? defaultExec;
+  const program: CertificationProgram = config.program ?? 'W079';
 
   const digestPath = path.join(runDir, 'browser-run-digest.json');
   const env: Record<string, string> = {
@@ -380,9 +408,17 @@ async function runBrowserMatrix(
     // The config (playwright.certification.config.ts) owns the reporters:
     // the list reporter for the console and the JSON reporter writing the
     // full Playwright results to the run directory (W079_PLAYWRIGHT_JSON).
+    // The W079 program greps to its frozen fifteen journeys — the suite
+    // directory now also carries the J16+ specs of the post-S002 program,
+    // and a historical W079 pass must not fold them into its verdict. The
+    // W101 program runs the full catalog.
+    const grepArgs =
+      program === 'W079'
+        ? ['--grep', 'J(0[1-9]|1[0-5])\\b']
+        : [];
     const result = await execImpl(
       'node',
-      ['node_modules/@playwright/test/cli.js', 'test', '-c', 'playwright.certification.config.ts'],
+      ['node_modules/@playwright/test/cli.js', 'test', '-c', 'playwright.certification.config.ts', ...grepArgs],
       { cwd: config.repoRoot, env },
     );
     // The digest is assembled by the suite's global teardown (fixture-side
@@ -408,6 +444,8 @@ export async function runCertificationPass(
   config: CertificationRunConfig,
 ): Promise<CertificationRunResult> {
   const startedAt = new Date().toISOString();
+  const program: CertificationProgram = config.program ?? 'W079';
+  const programJourneysCount = programJourneys(program).length;
   const runDir = path.resolve(
     config.repoRoot,
     config.evidenceRoot,
@@ -436,11 +474,16 @@ export async function runCertificationPass(
   const matrixReasons = matrixConsistency();
   gates.push({
     id: 'matrix.consistency',
-    title: 'the J01–J15 matrix is the contract matrix',
+    title:
+      program === 'W101'
+        ? 'the J01–J22 matrix is the W101 contract matrix (J01–J15 frozen + the post-S002 journeys)'
+        : 'the J01–J15 matrix is the contract matrix',
     status: matrixReasons.length === 0 ? 'pass' : 'fail',
     detail:
       matrixReasons.length === 0
-        ? `all ${JOURNEY_MATRIX.length} journeys declared with their mandatory proofs`
+        ? `all ${JOURNEY_MATRIX.length} journeys declared; ${program} mandates ${programJourneysCount} (${programJourneys(program)
+            .map((journey) => journey.id)
+            .join(', ')})`
         : matrixReasons.join('; '),
   });
 
@@ -471,6 +514,69 @@ export async function runCertificationPass(
       observedCreatedAt: listing?.createdAt ?? null,
     },
   });
+
+  // The W101 rollback-evidence gate (the acceptance's rollback dimension):
+  // the deployment/health/worker seams' recorded state a rollback would
+  // preserve/restore, the prior READY production deployment (the known-good
+  // rollback target), and the committed rollback runbook + W078 operations
+  // evidence this run links. Runs for the W101 program only — the frozen
+  // W079 program keeps its historical gate set exactly.
+  if (program === 'W101') {
+    const entries = await fetchDeploymentEntries(config, vercelToken, 2);
+    const rollbackTarget = entries === null ? null : entries[1] ?? null;
+    const runbookPath = path.join(config.repoRoot, 'docs', 'DEPLOYMENT.md');
+    const runbookRaw = await readFile(runbookPath, 'utf8').catch(() => null);
+    const runbookPresent =
+      runbookRaw !== null && /## 12\. Rollback/.test(runbookRaw);
+    const w078EvidenceDir = path.join(config.repoRoot, 'docs', 'productization-evidence', 'W078');
+    const w078EvidencePresent = (await readdir(w078EvidenceDir).catch(() => [])).length > 0;
+    const rollbackReasons = rollbackEvidenceReasons({
+      healthSnapshot: {
+        environment: g1.health.environment,
+        dbBackend: g1.health.dbBackend,
+        dbMigrations: g1.health.dbMigrations,
+      },
+      workerSnapshot: {
+        environment: g1.workerObservation.environment,
+        queueDepth: g1.workerObservation.queueDepth,
+        reachable: g1.workerObservation.snapshotReachable === true,
+      },
+      rollbackTarget: rollbackTarget === null
+        ? null
+        : {
+            deploymentId: rollbackTarget.deploymentId,
+            commitSha: rollbackTarget.commitSha,
+            readyState: rollbackTarget.readyState,
+          },
+      runbookPresent,
+      w078EvidencePresent,
+    });
+    gates.push({
+      id: 'rollback.evidence',
+      title:
+        'the rollback evidence surface is on record (seam state, rollback target, runbook, W078 link)',
+      status: rollbackReasons.length === 0 ? 'pass' : 'blocked',
+      detail:
+        rollbackReasons.length === 0
+          ? `the seams' recorded state a rollback preserves: environment ${g1.health.environment} · db ${g1.health.dbBackend} (${g1.health.dbMigrations} migrations) · worker ${g1.workerObservation.environment} (queue depth ${g1.workerObservation.queueDepth}); the known-good rollback target is ${rollbackTarget?.deploymentId} @ ${rollbackTarget?.commitSha} (${rollbackTarget?.readyState}); the runbook (docs/DEPLOYMENT.md §12) and the W078 operations evidence tree are linked, not restated`
+          : rollbackReasons.join('; '),
+      evidence: {
+        healthSeam: {
+          environment: g1.health.environment,
+          dbBackend: g1.health.dbBackend,
+          dbMigrations: g1.health.dbMigrations,
+        },
+        workerSeam: {
+          environment: g1.workerObservation.environment,
+          queueDepth: g1.workerObservation.queueDepth,
+          seamTokenGated: g1.workerObservation.seamTokenGated,
+        },
+        rollbackTarget: rollbackTarget,
+        runbook: runbookPresent ? 'docs/DEPLOYMENT.md §12 Rollback' : null,
+        w078Evidence: w078EvidencePresent ? 'docs/productization-evidence/W078/' : null,
+      },
+    });
+  }
 
   // G2 — the repository gates.
   const repoGates: { command: string; exitCode: number | null; summary: string }[] = config.skipRepoGates
@@ -507,7 +613,7 @@ export async function runCertificationPass(
   // G3b — the browser matrix.
   let journeys: JourneyResult[];
   if (config.skipBrowser === true) {
-    journeys = JOURNEY_MATRIX.map((spec) => ({
+    journeys = programJourneys(program).map((spec) => ({
       journeyId: spec.id,
       status: 'blocked' as const,
       contexts: spec.contexts.map((context) => ({
@@ -532,17 +638,20 @@ export async function runCertificationPass(
     const gate3Reasons =
       browser.digest === null
         ? [browser.error ?? 'the browser matrix produced no digest']
-        : gateThreeReasons(browser.digest);
+        : gateThreeReasons(browser.digest, program);
     gates.push({
       id: 'g3.browser-matrix',
-      title: 'the J01–J15 browser matrix runs against the hosted production URL (desktop + mobile)',
+      title:
+        program === 'W101'
+          ? 'the J01–J22 browser matrix runs against the hosted production URL (desktop + mobile)'
+          : 'the J01–J15 browser matrix runs against the hosted production URL (desktop + mobile)',
       status: gate3Reasons.length === 0 ? 'pass' : 'fail',
       detail:
         gate3Reasons.length === 0 && browser.digest !== null
           ? `${browser.digest.passed}/${browser.digest.total} browser tests green across ${browser.digest.tests.length} journey-context pairs — real production auth, zero-violation record attached`
           : gate3Reasons.join('; ').slice(0, 500),
     });
-    journeys = browser.digest === null ? [] : journeyResultsFromDigest(browser.digest);
+    journeys = browser.digest === null ? [] : journeyResultsFromDigest(browser.digest, program);
   }
 
   // The summary + verdict for this run.
@@ -561,14 +670,15 @@ export async function runCertificationPass(
     command: config.command,
     git: {
       remote: 'https://github.com/payswapdotorg/aurum-chat.git',
-      branch: 'work/w079-production-certification',
-      baseCommit: 'c0ea5f78f8979d46029ac6124eff2bf0ebd6d988',
+      branch: config.repository?.branch ?? 'work/w079-production-certification',
+      baseCommit: config.repository?.baseCommit ?? 'c0ea5f78f8979d46029ac6124eff2bf0ebd6d988',
       headCommit: await currentCommit(config.repoRoot),
     },
   });
 
   const run: CertificationRunResult = {
     runLabel: config.runLabel,
+    program,
     startedAt,
     finishedAt,
     target: config.target,
