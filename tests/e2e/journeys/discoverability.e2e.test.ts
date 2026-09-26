@@ -315,6 +315,7 @@ describe('capability coverage', () => {
       'deep-actions',
       'demo',
       'deployment-smoke',
+      'edge-connector',
       'journey-proof',
       'meetings',
       'provider-billing',

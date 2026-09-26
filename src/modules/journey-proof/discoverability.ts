@@ -601,6 +601,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the cross-modality identity-proof layer (W095 — one person stays one organizational identity across messaging, meetings, SMS, voice, realtime and Edge Connector paths) composed over the identity/people/meetings/realtime contracts: the modality-scoped identity registry for the paths beyond the identity module’s channel-provider vocabulary, the ambiguity ledger that keeps ambiguous matches external/unverified instead of auto-merging them, the unified resolution/profile surface, and the meetings/realtime participant unification passes; it owns no user-facing route yet — the identity-mapping UX it strengthens lives in the connection hub — and is exercised by its own vitest suite',
   },
+  {
+    module: 'edge-connector',
+    label: 'The Aurum Edge Connector (W088)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the customer-controlled edge runtime boundary (W088 — a tenant-scoped, outbound-only connector that executes signed tenant-scoped job envelopes against private/on-prem APIs, MCP/OpenAPI services, databases, file shares and approved browser adapters, with local secret handling, a twice-checked capability allowlist, heartbeat health/version reporting, and results normalized onto the W084 deep-action transport shapes) composed over the deep-actions contract (its transport port) with the W082 credentialRef discipline passing straight through; it owns no user-facing route yet — the edge-management surface arrives with the integration E2E journeys (W096) — and is exercised by its own vitest suite plus the tenant-isolation sweep',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
