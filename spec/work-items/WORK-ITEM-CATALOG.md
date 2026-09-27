@@ -489,3 +489,49 @@ Acceptance: reproducible seeds, multiple firm sizes/industries, explicit baselin
 ### W101 — Final Post-S002 Production Certification
 Dependencies: W096, W097, W098, W100 plus production infrastructure. Certify complete production journeys including cross-channel communication, meetings, cellular reachability, integrations, provider choice/billing, durable cognition and specialist execution.
 Acceptance: two consecutive same-revision production runs, zero failed/blocked/flaky mandatory journeys, tenant isolation, approval authority, accessibility, evidence and rollback proof.
+
+## Post-W106 operational closure
+
+The mandatory W080–W101 program is complete. The following continuation items close
+environment-dependent composition seams discovered by post-W106 adversarial review.
+
+### W107 — Vertical Kit ↔ Edge Execution Composition Closure
+Dependencies: W084, W088, W092. Bind the existing VerticalKitEdge port to the implemented
+W088 Edge Connector transport without importing edge internals into the vertical-kits module.
+Acceptance: a kit integration can inspect and execute through W088-backed transport; W009
+grant authority remains enforced; W084 reconciliation/evidence shapes remain canonical;
+tenant isolation is proven; stale deferred-on-W088 wording is removed only after real binding exists.
+
+### W108 — Cellular Live Transport + Manager-Inbound Authority Closure
+Dependencies: W009, W030, W031, W087, W095. Close production-configurable Twilio/Telnyx transport
+wiring, carrier webhook/reply handling and the manager-originated inbound path's formal W009
+authority record. Acceptance: a configured live test route can execute the "Tell Sarah" outcome;
+SMS→voice fallback obeys policy/budget; recipient needs no Internet/Aurum; replies re-enter the
+canonical conversation; manager-originated requests carry an auditable authority decision;
+unconfigured environments remain explicitly provider-unavailable.
+
+### W109 — Meeting / Realtime Live-Provider Closure
+Dependencies: W085, W086, W095, W097. Wire at least one real meeting provider and one realtime
+provider behind the existing contracts and prove capture/participation with the existing
+consent, transcript, interruption and durable-finalization semantics. Acceptance: live provider
+evidence exists; deterministic fixtures remain separately labeled; consent refusal and revocation
+remain blocking/stop conditions; provider-specific objects never cross domain contracts.
+
+### W110 — Real Browser / Computer-Use Driver Composition
+Dependencies: W084, W088, W093. Add a real BrowserDriver implementation behind the existing W093
+port, preferably reusing reviewed provider/OSS technology. Acceptance: one real browser task
+executes through the existing frozen-plan/allowlist/evidence/reconciliation/resume lifecycle;
+credentials remain isolated; no provider object crosses the contract; deterministic double remains
+available for tests.
+
+### W111 — Production Migration Reader / Native-Reader Adapters
+Dependencies: W088, W092, W094, W096. Provide one real incumbent reader and one real/native Aurum
+reader behind the W094 ports. Acceptance: staged import, explicit human conflict resolution,
+W084 comparison/reconciliation, progressive retirement and sequestration rollback work in a real
+environment; if an external prerequisite is unavailable, mark it BLOCKED with the exact prerequisite.
+
+### W112 — Post-W106 Live-Capability Certification
+Dependencies: W107, W108, W109, W110, W111. Certify the exact deployed revision's live capability
+matrix. Acceptance: every capability is classified as LIVE-PROVEN, FIXTURE-PROVEN, or
+ENVIRONMENT-BLOCKED with machine-checkable evidence; no fixture is presented as live; required
+release certification uses the exact deployment ID/SHA and its governing two-run rule.
