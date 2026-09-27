@@ -245,3 +245,40 @@ A worker may start an item only after every dependency contract listed in the ca
 ### Scope rule
 
 W080-W101 are the only post-S002 implementation scope in this DAG. Historical out-of-scope research artifacts are not implementation dependencies for these work items.
+## Post-W106 operational closure DAG
+
+```text
+W084 + W088 + W092 → W107 Vertical Kit ↔ Edge Execution Closure
+W009 + W030 + W031 + W087 + W095 → W108 Cellular Live Transport + Inbound Authority Closure
+W085 + W086 + W095 + W097 → W109 Meeting / Realtime Live-Provider Closure
+
+W084 + W088 + W093 → W110 Real Browser / Computer-Use Driver Composition
+W088 + W092 + W094 + W096 → W111 Production Migration Reader / Native-Reader Adapters
+
+W107 + W108 + W109 + W110 + W111 → W112 Post-W106 Live-Capability Certification
+```
+
+### Post-W106 parallel waves
+
+```text
+Wave 1:
+  Worker A → W107
+  Worker B → W108
+  Worker C → W109
+
+Wave 2:
+  Worker A → W110
+  Worker B → W111
+  Worker C → migration-runner hardening investigation (conditional; no architecture change without evidence)
+
+Wave 3:
+  Tech Lead → integration/reconciliation
+  All workers → W112 certification
+  W099 → optional only when a concrete customer/use-case exists
+```
+
+### Post-W106 orchestration law
+
+Independent dependency-ready items must be dispatched concurrently up to three workers.
+A new wave may begin only after the TL reconciles the prior wave at an exact base SHA and
+updates the repository state/evidence. W099 never blocks the closure program.
