@@ -1,3 +1,5 @@
+> **SUPERSEDED — 2026-09-27.** This historical takeover document records the pre-W106 continuation state. The canonical handoff is `spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md`. Start with `spec/REPOSITORY-SOURCE-OF-TRUTH.md` and `spec/TECH-LEAD-ORCHESTRATOR-PROMPT-2026-09-27.md` instead. Do not use this file for current work-item status or dispatch decisions.
+
 # Final Tech Lead Takeover Handoff — Aurum Post-W083
 
 **Repository:** `payswapdotorg/aurum-chat`  
