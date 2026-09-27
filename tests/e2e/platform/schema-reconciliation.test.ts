@@ -469,10 +469,10 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     }
     // Everything else in the repo applied too (the other modules' real
     // migrations): 131 files total — 134 discovered minus the 3 skips.
-    // W104 (deliberate update): 130 → 131, 133 → 134 — the api module's
-    // 003-api-scopes-w104.sql (the meetings/cellular scope expansion)
-    // joined the discovered set.
-    expect(repair.applied).toHaveLength(131);
+    // INTEGRATION (W103 + W104, deliberate): 130 → 132, 133 → 135 — the api
+    // module gained BOTH 003 migrations (003-api-channels-scopes.sql for the
+    // channels family and 003-api-scopes-w104.sql for meetings/cellular).
+    expect(repair.applied).toHaveLength(132);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -480,7 +480,9 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     for (const name of REPAIR_MIGRATIONS) {
       expect(names).toContain(name);
     }
-    expect(names).toHaveLength(134);
+    // INTEGRATION (W103 + W104): the api module's two 003 migrations both
+    // extend the api_keys scope vocabulary (channels + meetings/cellular).
+    expect(names).toHaveLength(135);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -579,8 +581,9 @@ describe('W102 — the reconciliation is idempotent', () => {
   it('a second runner pass applies nothing and the schema still verifies', async () => {
     const report = await runMigrations(getDb());
     expect(report.applied).toEqual([]);
-    // W104 (deliberate update): 133 → 134 (the api scopes expansion).
-    expect(report.skipped).toHaveLength(134);
+    // INTEGRATION (W103 + W104): 135 — every discovered migration is now
+    // ledger-recorded (133 through W102 + both api 003 scope expansions).
+    expect(report.skipped).toHaveLength(135);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });
