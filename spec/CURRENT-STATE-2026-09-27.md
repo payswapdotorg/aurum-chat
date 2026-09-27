@@ -2,7 +2,8 @@
 
 ## Snapshot identity
 
-- Main: `c3d6a331c69ed3f8b9edcb4e86750cbc89c84caa`
+- Code/evidence baseline at takeover: `c3d6a331c69ed3f8b9edcb4e86750cbc89c84caa`
+- Current `main`: always fetch the branch at takeover; subsequent commits in this setup are documentation-only unless the repository says otherwise.
 - Latest certified production revision: `625a133e22904972394b6e418f2a3b2c9cda676a`
 - Deployment: `dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ`
 - Production host: `aurum-chat-livid.vercel.app`
@@ -79,6 +80,10 @@ These are independent enough for three concurrent workers.
 Then:
 
 W112 — post-W106 live-capability certification.
+
+## Canonical setup overlay
+
+The repository-source-of-truth, continuation DAG, orchestrator prompt, current-state snapshot and canonical handoff were committed after the W106 code/evidence baseline. Those documentation commits do not change the certified production revision. The next TL must always fetch `main` and use the actual branch head as its integration base.
 
 ## Handoff law
 
