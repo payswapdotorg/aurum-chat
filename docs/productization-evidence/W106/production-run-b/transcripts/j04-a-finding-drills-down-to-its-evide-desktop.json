@@ -1,0 +1,44 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/production/j04-investigation-desktop.spec.ts",
+  "title": "J04 — a finding drills down to its evidence and returns to the conversation",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-27T02:59:19.304Z",
+      "step": "sign in and ask the investigation question",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:22.955Z",
+      "step": "screenshot: the answer — the finding with its evidence citations",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=14d095cb-f0d0-43fe-a443-7ad2bb900803",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png"
+    },
+    {
+      "at": "2026-09-27T02:59:22.955Z",
+      "step": "follow the evidence citation to the detail surface",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=14d095cb-f0d0-43fe-a443-7ad2bb900803",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:23.428Z",
+      "step": "the observation detail carries its provenance",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D14d095cb-f0d0-43fe-a443-7ad2bb900803%23m-93c7317d-7519-47f2-99ee-7ea900d4557d",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:23.535Z",
+      "step": "screenshot: the Evidence surface — the observation detail",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D14d095cb-f0d0-43fe-a443-7ad2bb900803%23m-93c7317d-7519-47f2-99ee-7ea900d4557d",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+    },
+    {
+      "at": "2026-09-27T02:59:23.536Z",
+      "step": "return to the originating conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3D14d095cb-f0d0-43fe-a443-7ad2bb900803%23m-93c7317d-7519-47f2-99ee-7ea900d4557d",
+      "shot": null
+    }
+  ]
+}

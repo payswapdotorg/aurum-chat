@@ -1,0 +1,804 @@
+{
+  "runLabel": "B",
+  "program": "W106",
+  "startedAt": "2026-09-27T02:58:53.118Z",
+  "finishedAt": "2026-09-27T03:01:51.159Z",
+  "target": "https://aurum-chat-livid.vercel.app",
+  "identity": {
+    "hostname": "aurum-chat-livid.vercel.app",
+    "deploymentId": "dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ",
+    "commitSha": "625a133e22904972394b6e418f2a3b2c9cda676a",
+    "deploymentCreatedAt": "2026-09-27",
+    "certificationStartedAt": "2026-09-27T02:58:53.118Z",
+    "environmentLabel": "production",
+    "databaseBackendClass": "postgres",
+    "workerRuntimeState": {
+      "seamTokenGated": true,
+      "snapshotReachable": true,
+      "environment": "production",
+      "queueDepth": 0
+    },
+    "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w106 --deployment-id dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ --expect-commit 625a133e22904972394b6e418f2a3b2c9cda676a --deployment-created 2026-09-27 --worker-token-file <redacted> --vercel-token-file <redacted>",
+    "repository": {
+      "remote": "https://github.com/payswapdotorg/aurum-chat.git",
+      "branch": "work/w106-four-surface-recertification",
+      "baseCommit": "625a133e22904972394b6e418f2a3b2c9cda676a",
+      "headCommit": "625a133e22904972394b6e418f2a3b2c9cda676a"
+    }
+  },
+  "gates": [
+    {
+      "id": "matrix.consistency",
+      "title": "the J01–J22 matrix is the W106 contract matrix (J01–J15 frozen + the post-S002 journeys)",
+      "status": "pass",
+      "detail": "all 22 journeys declared; W106 mandates 22 (J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12, J13, J14, J15, J16, J17, J18, J19, J20, J21, J22)"
+    },
+    {
+      "id": "g1.health",
+      "title": "the production runtime is genuinely production (health contract)",
+      "status": "pass",
+      "detail": "/api/health status ok · environment production · db postgres (136 migrations) · queue/cache/lock redis · 0 refusals · 0 warnings",
+      "evidence": {
+        "httpStatus": 200,
+        "healthStatus": "ok",
+        "environment": "production",
+        "backends": {
+          "db": "postgres",
+          "queue": "redis",
+          "cache": "redis",
+          "lock": "redis",
+          "email": "resend",
+          "blob": "vercel-blob"
+        }
+      }
+    },
+    {
+      "id": "g1.quick-sign-in-off",
+      "title": "production quick-sign-in/demo credentials remain OFF",
+      "status": "pass",
+      "detail": "POST /api/auth/quick-sign-in answered 404 — the quick-access panel is off in the production runtime",
+      "evidence": {
+        "status": 404
+      }
+    },
+    {
+      "id": "g1.worker-authorization",
+      "title": "WORKER_TOKEN exists and worker authorization works",
+      "status": "pass",
+      "detail": "the seam is fail-closed (401 no/bad token) and the valid token reads the snapshot (environment production, queue depth 0)",
+      "evidence": {
+        "noTokenStatus": 401,
+        "badTokenStatus": 401,
+        "validStatus": 200,
+        "snapshotEnvironment": "production"
+      }
+    },
+    {
+      "id": "g1.deployment-identity",
+      "title": "the target is the expected production deployment (identity manifest)",
+      "status": "pass",
+      "detail": "the live production deployment is dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ @ 625a133e22904972394b6e418f2a3b2c9cda676a (READY, created 2026-09-27T00:16:35.425Z)",
+      "evidence": {
+        "expectedDeploymentId": "dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ",
+        "expectedCommitSha": "625a133e22904972394b6e418f2a3b2c9cda676a",
+        "observedDeploymentId": "dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ",
+        "observedReadyState": "READY",
+        "observedCommitSha": "625a133e22904972394b6e418f2a3b2c9cda676a",
+        "observedCreatedAt": "2026-09-27T00:16:35.425Z"
+      }
+    },
+    {
+      "id": "rollback.evidence",
+      "title": "the rollback evidence surface is on record (seam state, rollback target, runbook, W078 link)",
+      "status": "pass",
+      "detail": "the seams' recorded state a rollback preserves: environment production · db postgres (136 migrations) · worker production (queue depth 0); the known-good rollback target is dpl_2J55BXJ139c4bbgv89psJGpDT3by @ 0c0a29dd5b13fdbc0f2a3a270bc326d164b4ce33 (READY); the runbook (docs/DEPLOYMENT.md §12) and the W078 operations evidence tree are linked, not restated",
+      "evidence": {
+        "healthSeam": {
+          "environment": "production",
+          "dbBackend": "postgres",
+          "dbMigrations": 136
+        },
+        "workerSeam": {
+          "environment": "production",
+          "queueDepth": 0,
+          "seamTokenGated": true
+        },
+        "rollbackTarget": {
+          "deploymentId": "dpl_2J55BXJ139c4bbgv89psJGpDT3by",
+          "readyState": "READY",
+          "createdAt": "2026-09-26T23:50:00.412Z",
+          "commitSha": "0c0a29dd5b13fdbc0f2a3a270bc326d164b4ce33"
+        },
+        "runbook": "docs/DEPLOYMENT.md §12 Rollback",
+        "w078Evidence": "docs/productization-evidence/W078/"
+      }
+    },
+    {
+      "id": "g3.w078-rerun",
+      "title": "the W078 hosted smoke rerun is green with zero blocked",
+      "status": "pass",
+      "detail": "27 passed · 0 failed · 0 blocked · 13 skipped (the seeded demo checks are inapplicable on production — the demo gate keeps the production runtime demo-free by design)",
+      "evidence": {
+        "summary": {
+          "total": 40,
+          "passed": 27,
+          "failed": 0,
+          "blocked": 0,
+          "skipped": 13
+        }
+      }
+    },
+    {
+      "id": "g3.browser-matrix",
+      "title": "the J01–J22 browser matrix runs against the hosted production URL (desktop + mobile)",
+      "status": "pass",
+      "detail": "22/22 browser tests green across 22 journey-context pairs — real production auth, zero-violation record attached"
+    }
+  ],
+  "repoGates": [
+    {
+      "command": "bun run typecheck",
+      "exitCode": 0,
+      "summary": "tsc --noEmit — no output, exit 0 (clean typecheck over the delivered W106 tree, including the 004 reconciliation migration, the aligned schema-reconciliation test and the J19 four-surface roster alignment)"
+    },
+    {
+      "command": "bun run test",
+      "exitCode": 0,
+      "summary": "5591 passed · 0 failed · 6 skipped across 268 test files — executed per-file in 7 chunks against the delivered W106 tree INCLUDING the 004 reconciliation migration and the aligned schema-reconciliation counts (batch runner adapted from scripts/run-suite-chunked.sh, output /tmp/w106-suite: the single-window run exceeds the sandbox command limit on 2 CPUs — batch summaries 847/727/950/1079/856/812/320 passed, 0 failed)"
+    },
+    {
+      "command": "bun run arch",
+      "exitCode": 0,
+      "summary": "architecture check passed — module files: 669, app/mcp files: 305, tables checked: 248"
+    },
+    {
+      "command": "bun run lint",
+      "exitCode": 0,
+      "summary": "eslint . — no output, exit 0 (clean lint over the delivered W106 tree, including the 004 reconciliation migration, the aligned schema-reconciliation test and the J19 four-surface roster alignment)"
+    }
+  ],
+  "w078": {
+    "label": "production-certification-run-b",
+    "summary": {
+      "total": 40,
+      "passed": 27,
+      "failed": 0,
+      "blocked": 0,
+      "skipped": 13
+    },
+    "reportPath": "docs/productization-evidence/W106/production-run-b/w078/smoke-report.json"
+  },
+  "journeys": [
+    {
+      "journeyId": "J01",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j01-anonymous-visitor-reaches-chat-thr-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__anonymous-entry-the-production-sign-in-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__onboarding-the-workspace-setup-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j01-anonymous-visitor-reaches-chat-thr-desktop__the-first-screen-the-messenger-with-its-starters.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j01-anonymous-visitor-reaches-chat-thr-desktop.json"
+      ],
+      "detail": "observed as specified: anonymous → sign-in → onboarding → company → Chat"
+    },
+    {
+      "journeyId": "J02",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j02-a-composer-turn-runs-the-real-work-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j02-a-composer-turn-runs-the-real-work-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j02-a-composer-turn-runs-the-real-work-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-working-state-the-real-execution-is-running.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-answer-honest-company-state-delivered.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-evidence-backed-answer-with-its-citations.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j02-a-composer-turn-runs-the-real-work-desktop.json"
+      ],
+      "detail": "observed as specified: conversation list → thread → compose → working → answer → evidence"
+    },
+    {
+      "journeyId": "J03",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j03-the-discovery-chain-chat-starters--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j03-the-discovery-chain-chat-starters--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j03-the-discovery-chain-chat-starters--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-discovery-questions-asked-conversationally.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-intelligence-hub-the-chain-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j03-the-discovery-chain-chat-starters--desktop__the-learning-hub-missions-and-company-knowledge.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j03-the-discovery-chain-chat-starters--desktop.json"
+      ],
+      "detail": "observed as specified: goal/situation → gap → unknown → learning mission"
+    },
+    {
+      "journeyId": "J04",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j04-a-finding-drills-down-to-its-evide-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j04-a-finding-drills-down-to-its-evide-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j04-a-finding-drills-down-to-its-evide-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j04-a-finding-drills-down-to-its-evide-desktop.json"
+      ],
+      "detail": "observed as specified: finding → detail → evidence/action → return to originating conversation"
+    },
+    {
+      "journeyId": "J05",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j05-a-proposed-action-waits-at-the-hum-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j05-a-proposed-action-waits-at-the-hum-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-issued-invitation-shown-once.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-employee-joined-landing-in-the-company-chat.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approval-card-the-comparison-waiting-at-the-human-gate.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-decision-acknowledged-in-place.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approvals-surface-the-append-only-decision-trail.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j05-a-proposed-action-waits-at-the-hum-desktop.json"
+      ],
+      "detail": "observed as specified: recommendation → comparison → explicit human decision → activation → outcome"
+    },
+    {
+      "journeyId": "J06",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j06-the-why-drill-down-opens-the-causa-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j06-the-why-drill-down-opens-the-causa-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j06-the-why-drill-down-opens-the-causa-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-answer-carrying-its-why-affordance.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-explainability-trace-the-full-causal-chain.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-return-anchored-on-the-exact-originating-message.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j06-the-why-drill-down-opens-the-causa-desktop.json"
+      ],
+      "detail": "observed as specified: answer/action → Why → evidence/provenance → return to exact chat message"
+    },
+    {
+      "journeyId": "J07",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j07-the-learning-lane-mission-ask-plan-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j07-the-learning-lane-mission-ask-plan-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j07-the-learning-lane-mission-ask-plan-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-hub-the-live-mission.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-planner-decision-honest-on-the-record.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-contribution-and-reward-state.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-answer-in-chat.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j07-the-learning-lane-mission-ask-plan-desktop.json"
+      ],
+      "detail": "observed as specified: knowledge request in Chat → answer → acknowledgement → contribution/evidence → reward state"
+    },
+    {
+      "journeyId": "J08",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j08-a-contextual-prompt-leads-to-conne-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j08-a-contextual-prompt-leads-to-conne-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-contextual-prompt-connect-your-systems.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-connections-hub.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-configured-channel-registered-with-its-opaque-credential.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j08-a-contextual-prompt-leads-to-conne-desktop__the-verified-connection-the-hub-state-after-reload.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j08-a-contextual-prompt-leads-to-conne-desktop.json"
+      ],
+      "detail": "observed as specified: Chat/contextual prompt → Connections → configure/verify → return to investigation"
+    },
+    {
+      "journeyId": "J09",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j09-an-unavailable-provider-becomes-a--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j09-an-unavailable-provider-becomes-a--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j09-an-unavailable-provider-becomes-a--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-honest-answer-the-provider-prompt.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-ai-surface-no-accounts-yet-the-unavailable-state.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-registered-byoa-account-opaque-reference-only.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__the-routing-panel-the-usable-route.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j09-an-unavailable-provider-becomes-a--desktop__back-to-the-task-the-answer-still-evidence-backed.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j09-an-unavailable-provider-becomes-a--desktop.json"
+      ],
+      "detail": "observed as specified: unavailable capability/model → provider configuration → usable route → return to task"
+    },
+    {
+      "journeyId": "J10",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j10-the-intervention-governance-chain--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j10-the-intervention-governance-chain--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j10-the-intervention-governance-chain--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-more-hub-the-intervention-discovery.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-interventions-surface-gaps-alternatives-the-human-gate.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-workforce-surface-the-honest-read-model.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-agents-surface.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j10-the-intervention-governance-chain--desktop.json"
+      ],
+      "detail": "observed as specified: capability gap → alternatives → proposal → human approval → activation → lifecycle"
+    },
+    {
+      "journeyId": "J11",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j11-the-marketplace-discovery-the-publ-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j11-the-marketplace-discovery-the-publ-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j11-the-marketplace-discovery-the-publ-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-discovered-from-the-hub.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-public-catalog-the-governed-listing-state.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-installed-state-the-tenant-review-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j11-the-marketplace-discovery-the-publ-desktop__the-marketplace-developer-surface.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j11-the-marketplace-discovery-the-publ-desktop.json"
+      ],
+      "detail": "observed as specified: discover capability → public catalog/package → install/review state → return to task"
+    },
+    {
+      "journeyId": "J12",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j12-the-developer-console-discovery-ke-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j12-the-developer-console-discovery-ke-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j12-the-developer-console-discovery-ke-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-developer-console-discovered-from-the-hub.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-key-roster-the-recorded-grant.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-webhook-registered-with-its-delivery-contract.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-mcp-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j12-the-developer-console-discovery-ke-desktop__the-revoked-keys-the-roster-retains-the-audit-trail.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j12-the-developer-console-discovery-ke-desktop.json"
+      ],
+      "detail": "observed as specified: discover from More/search → developer console → key/webhook/MCP surface → audit state"
+    },
+    {
+      "journeyId": "J13",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j13-a-second-tenant-sees-nothing-of-th-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-recorded-activity-marker.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-created-through-the-real-flow.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-empty-conversation-list.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-isolated-surfaces.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-activity-preserved.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j13-a-second-tenant-sees-nothing-of-th-desktop.json"
+      ],
+      "detail": "observed as specified: manager tenant activity → sign out → second tenant → no first-tenant data visible"
+    },
+    {
+      "journeyId": "J14",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "mobile",
+          "status": "pass",
+          "detail": "j14-the-mobile-loop-list-full-screen-t-mobile:mobile green"
+        }
+      ],
+      "testIds": [
+        "j14-the-mobile-loop-list-full-screen-t-mobile:mobile"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j14-the-mobile-loop-list-full-screen-t-mobile.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-touch-chrome.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-conversation-list-home.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-full-screen-thread.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-composer.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-reply-landed.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-back-to-the-list.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j14-the-mobile-loop-list-full-screen-t-mobile.json"
+      ],
+      "detail": "observed as specified: mobile Chat list → full-screen thread → composer → reply → back to list"
+    },
+    {
+      "journeyId": "J15",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j15-keyboard-focus-aria-task-language--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j15-keyboard-focus-aria-task-language--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j15-keyboard-focus-aria-task-language--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__keyboard-focus-the-visible-ring.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-aria-landmark-structure.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__command-search-task-language.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j15-keyboard-focus-aria-task-language--desktop__the-dead-code-the-honest-no-dead-end-page.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j15-keyboard-focus-aria-task-language--desktop.json"
+      ],
+      "detail": "observed as specified: keyboard/focus/ARIA; task-language discovery; no dead-end/no-match states"
+    },
+    {
+      "journeyId": "J16",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j16-the-connection-hub-channel-family--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j16-the-connection-hub-channel-family--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j16-the-connection-hub-channel-family--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-connections-hub-the-channel-family.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-second-channel-registered-with-its-opaque-credential-ref.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-channel-roster-the-tenant-scoped-envelope.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-v1-discovery-the-channel-family-listed.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-developer-console-the-channels-scoped-key-grant-recorded.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-v1-channel-family-the-tenant-scoped-round-trip-recorded.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j16-the-connection-hub-channel-family--desktop.json"
+      ],
+      "detail": "observed as specified: connection hub channel surfaces + the v1 public API channel surfaces, real production auth"
+    },
+    {
+      "journeyId": "J17",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j17-the-meetings-surface-is-proven-thr-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j17-the-meetings-surface-is-proven-thr-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j17-the-meetings-surface-is-proven-thr-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__the-more-hub-the-meetings-capability-navigates-to-the-surfac.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__the-meetings-surface-the-registry-families-with-their-honest.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__command-search-the-meetings-destination.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__the-developer-console-the-meetings-scoped-key-grant-recorded.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j17-the-meetings-surface-is-proven-thr-desktop.json"
+      ],
+      "detail": "observed as specified: the meetings surface via the v1 API — the meeting-intelligence contract’s user-visible path"
+    },
+    {
+      "journeyId": "J18",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j18-the-cellular-surface-is-proven-thr-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j18-the-cellular-surface-is-proven-thr-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j18-the-cellular-surface-is-proven-thr-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-more-hub-the-cellular-capability-navigates-to-the-surfac.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-state-families-with-their-honest-em.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-module-reported-environment-limit.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__command-search-the-cellular-destination.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-v1-cellular-family-the-honest-read-and-the-registered-co.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-v1-written-state-rendered.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j18-the-cellular-surface-is-proven-thr-desktop.json"
+      ],
+      "detail": "observed as specified: the cellular surface via the v1 API — the SMS/voice contract’s user-visible path; environment limits recorded as the module reports them"
+    },
+    {
+      "journeyId": "J19",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j19-the-full-connection-surface-channe-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j19-the-full-connection-surface-channe-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j19-the-full-connection-surface-channe-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-connections-hub-the-full-connection-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-channels-family-the-run-tenant-s-channels-across-both-re.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-system-registered-with-its-opaque-credential-refe.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-source-systems-family-the-registered-inbound-integration.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destination-registered-with-its-opaque-credential-refere.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-destinations-family-the-registered-outbound-integration.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-family-the-honest-empty-state-and-its-affordanc.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-identity-lookup-the-honest-miss.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j19-the-full-connection-surface-channe-desktop__the-approvals-surface-the-human-authority-gate-the-integrati.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j19-the-full-connection-surface-channe-desktop.json"
+      ],
+      "detail": "observed as specified: the full connection surface — connections hub UI (channels, sources, destinations, identities) + integration capabilities; the human approval gate"
+    },
+    {
+      "journeyId": "J20",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j20-outcome-preferences-the-authorizat-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j20-outcome-preferences-the-authorizat-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j20-outcome-preferences-the-authorizat-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__ai-preferences-the-outcome-oriented-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-honest-default-the-attribution-pill.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-personal-priority-the-attribution-flipped-honestly.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-company-priority-set-by-the-authorized-administrator.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-explanations-feed-the-honest-empty-state.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-authorized-technical-view.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-foreign-record-the-uniform-honest-refusal.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-ai-surface-the-provider-catalog-cost-and-routing-panels.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-member-view-no-company-preference-form.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-honest-refusal-for-a-plain-member.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j20-outcome-preferences-the-authorizat-desktop.json"
+      ],
+      "detail": "observed as specified: /ai/preferences outcome preferences + explanations; /ai/preferences/advanced authorization-gated; provider/billing surfaces"
+    },
+    {
+      "journeyId": "J21",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j21-the-learning-surfaces-the-mission--desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j21-the-learning-surfaces-the-mission--desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j21-the-learning-surfaces-the-mission--desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-learning-hub-the-company-learning-surface.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-live-mission-durable-across-the-journey-boundaries.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-contributions-and-reward-state-the-honest-policy-note.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-mission-chain-the-objective-acquisitions-and-beliefs.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-developer-console-the-cognition-reader-grant-recorded.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j21-the-learning-surfaces-the-mission--desktop.json"
+      ],
+      "detail": "observed as specified: learning/contributions surfaces + the v1 missions surface — the company-learning journey"
+    },
+    {
+      "journeyId": "J22",
+      "status": "pass",
+      "contexts": [
+        {
+          "context": "desktop",
+          "status": "pass",
+          "detail": "j22-the-marketplace-surfaces-and-the-v-desktop:desktop green"
+        }
+      ],
+      "testIds": [
+        "j22-the-marketplace-surfaces-and-the-v-desktop:desktop"
+      ],
+      "transcripts": [
+        "docs/productization-evidence/W106/production-run-b/transcripts/j22-the-marketplace-surfaces-and-the-v-desktop.json"
+      ],
+      "screenshots": [
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-marketplace-discovered-from-the-hub.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-public-catalog-the-governed-listing-state.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kits-section-both-signed-starter-kits-listed.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__command-search-the-vertical-starter-kits-destination.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-package-page-the-honest-not-found.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-detail-page-the-signed-manifest-and-the-lifecycle-st.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-registered-the-shipped-version-frozen-in-the-tenant-.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-verified-the-recorded-run-over-the-stored-bytes.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-installed-the-state-below-is-live.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-pending-grant-review-the-human-authority-gate.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-separation-of-duties-refusal-the-honest-authority-gate.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-installed-surface-the-kit-installation-under-governance.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-installed-extension-governance-the-honest-not-found.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-page-the-honest-not-found.png",
+        "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-developer-surface-the-governed-publish-path.png"
+      ],
+      "errorCaptures": [
+        "docs/productization-evidence/W106/production-run-b/errors/j22-the-marketplace-surfaces-and-the-v-desktop.json"
+      ],
+      "detail": "observed as specified: the marketplace + installed-kit surfaces — the W092 vertical kits’ user-visible path"
+    }
+  ],
+  "summary": {
+    "passed": 22,
+    "failed": 0,
+    "blocked": 0,
+    "flaky": 0,
+    "unexpected": 0
+  },
+  "verdict": "CERTIFIED READY",
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w106 --deployment-id dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ --expect-commit 625a133e22904972394b6e418f2a3b2c9cda676a --deployment-created 2026-09-27 --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "evidenceDir": "docs/productization-evidence/W106/production-run-b"
+}

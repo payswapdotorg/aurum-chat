@@ -260,6 +260,35 @@ describe('the evidence renderers (contract §9)', () => {
     expect(finalMarkdown).toContain('Run A journey J17 is BLOCKED');
   });
 
+  it('renders the W106 program-stamped artifacts (title, matrix range, carried notes, reproduction)', () => {
+    const w106Run = {
+      ...sampleRun(),
+      program: 'W106' as const,
+      evidenceDir: 'docs/productization-evidence/W106/production-run-a',
+      summary: { passed: 22, failed: 0, blocked: 0, flaky: 0, unexpected: 0 },
+      verdict: 'CERTIFIED READY' as const,
+    };
+    const runMarkdown = runReportToMarkdown(w106Run);
+    expect(runMarkdown).toContain('# W106 production journey certification — Run A');
+    expect(runMarkdown).toContain('Journey matrix (J01–J22)');
+    expect(runMarkdown).toContain('Run verdict: **CERTIFIED READY**');
+    const finalMarkdown = finalCertificationToMarkdown({
+      verdict: 'CERTIFIED READY',
+      runA: w106Run,
+      runB: { ...w106Run, runLabel: 'B' as const },
+      reasons: [],
+      checks: [],
+      generatedAt: '2026-09-27T12:00:00Z',
+    });
+    expect(finalMarkdown).toContain('# W106 — Four-Surface Production Journey Re-Certification');
+    expect(finalMarkdown).toContain('POST-S002-PRODUCTION-JOURNEY-MATRIX-W101-2026-09-26.md');
+    expect(finalMarkdown).toContain('the W103 channels, W104 meetings/cellular and W105 vertical-kit surfaces live');
+    expect(finalMarkdown).toContain('The honest BLOCKED channel (W101 §2)');
+    expect(finalMarkdown).toContain('Rollback evidence (W101 §5, carried by W106)');
+    expect(finalMarkdown).toContain('--program w106');
+    expect(finalMarkdown).toContain('_none — every mandatory gate passed on both runs against the same deployment revision._');
+  });
+
   it('names the blockers when the verdict is BLOCKED', () => {
     const markdown = finalCertificationToMarkdown({
       verdict: 'BLOCKED',

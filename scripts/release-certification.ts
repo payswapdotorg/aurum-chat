@@ -1,4 +1,4 @@
-// W079/W101 — the production journey certification operator CLI.
+// W079/W101/W106 — the production journey certification operator CLI.
 //
 //   # one certification pass (Run A, then Run B — the SAME deployment revision)
 //   bun run cert:production -- --target https://aurum-chat-livid.vercel.app \
@@ -9,8 +9,13 @@
 //   # evidence root docs/productization-evidence/W101, the rollback gate)
 //   bun run cert:production -- --program w101 --target … --run a …
 //
+//   # the four-surface re-certification program (W106 — the same full
+//   # J01–J22 matrix against the CURRENT production revision, the W106
+//   # evidence root docs/productization-evidence/W106)
+//   bun run cert:production -- --program w106 --target … --run a …
+//
 //   # the finalizer (the two-run verdict + the canonical document)
-//   bun run cert:production -- --finalize [--program w101]
+//   bun run cert:production -- --finalize [--program w101|w106]
 //
 // Each pass (contract §5-§9): the G1 read-only infrastructure probes, the
 // G2 repository gates, the G3 W078 hosted smoke rerun (embedded as the
@@ -52,10 +57,14 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '..');
 
 /**
- * The program model (W101): 'w079' is the frozen historical program
+ * The program model (W101 + W106): 'w079' is the frozen historical program
  * (J01–J15, the W079 evidence root, the W079 document names); 'w101' is
  * the post-S002 program (the full J01–J22 matrix, the W101 evidence
- * root, the W101 repository identity and the rollback-evidence gate).
+ * root, the W101 repository identity and the rollback-evidence gate);
+ * 'w106' is the four-surface re-certification program — the SAME full
+ * J01–J22 matrix and rollback gate against the current production
+ * revision (W103 channels + W104 meetings/cellular + W105 vertical
+ * kits live), with its own W106 evidence root and repository identity.
  */
 const PROGRAMS: Record<
   CertificationProgram,
@@ -79,6 +88,14 @@ const PROGRAMS: Record<
     repository: {
       branch: 'work/w101-final-certification',
       baseCommit: 'a2db98a25b5ff9756fa849d3e196a80bafba1104',
+    },
+  },
+  W106: {
+    evidenceRoot: path.join('docs', 'productization-evidence', 'W106'),
+    documentName: 'W106-PRODUCTION-JOURNEY-CERTIFICATION.md',
+    repository: {
+      branch: 'work/w106-four-surface-recertification',
+      baseCommit: '625a133e22904972394b6e418f2a3b2c9cda676a',
     },
   },
 };
@@ -132,11 +149,11 @@ function parseArgs(argv: readonly string[]): CliArgs {
       args.run = value;
     } else if (arg === '--program') {
       const value = next().toLowerCase();
-      if (value !== 'w079' && value !== 'w101') {
-        console.error(`--program must be w079|w101 (got '${value}')`);
+      if (value !== 'w079' && value !== 'w101' && value !== 'w106') {
+        console.error(`--program must be w079|w101|w106 (got '${value}')`);
         process.exit(1);
       }
-      args.program = value === 'w101' ? 'W101' : 'W079';
+      args.program = value === 'w101' ? 'W101' : value === 'w106' ? 'W106' : 'W079';
     } else if (arg === '--finalize') args.finalize = true;
     else if (arg === '--deployment-id') args.deploymentId = next();
     else if (arg === '--expect-commit') args.expectCommit = next();
@@ -149,14 +166,18 @@ function parseArgs(argv: readonly string[]): CliArgs {
       console.log(
         [
           'usage: bun run cert:production -- --target <url> --run a|b',
-          '         [--program w079|w101] --deployment-id <dpl> --expect-commit <sha> --deployment-created <iso>',
+          '         [--program w079|w101|w106] --deployment-id <dpl> --expect-commit <sha> --deployment-created <iso>',
           '         [--worker-token-file <path>] [--vercel-token-file <path>]',
           '         [--repo-gates-from <dir>] [--skip-repo-gates]',
-          '       bun run cert:production -- --finalize [--program w079|w101]',
+          '       bun run cert:production -- --finalize [--program w079|w101|w106]',
           '',
           'programs: w079 (default) — the frozen J01–J15 matrix, the W079 evidence root;',
           '          w101       — the post-S002 J01–J22 matrix, the W101 evidence root,',
-          '                       the rollback-evidence gate and the W101 repository identity.',
+          '                       the rollback-evidence gate and the W101 repository identity;',
+          '          w106       — the four-surface re-certification: the same J01–J22 matrix',
+          '                       and rollback gate against the current production revision',
+          '                       (W103/W104/W105 surfaces live), the W106 evidence root and',
+          '                       the W106 repository identity.',
         ].join('\n'),
       );
       process.exit(0);
@@ -230,7 +251,7 @@ async function main(): Promise<number> {
     return 1;
   }
   const command = `bun run cert:production -- --target ${args.target} --run ${args.run}` +
-    (program === 'W101' ? ' --program w101' : '') +
+    (program === 'W079' ? '' : ` --program ${program.toLowerCase()}`) +
     ` --deployment-id ${args.deploymentId} --expect-commit ${args.expectCommit}` +
     (args.deploymentCreated === null ? '' : ` --deployment-created ${args.deploymentCreated}`) +
     ' --worker-token-file <redacted> --vercel-token-file <redacted>';

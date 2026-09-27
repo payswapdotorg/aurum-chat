@@ -1,0 +1,34 @@
+{
+  "testId": "j20-outcome-preferences-the-authorizat-desktop:desktop",
+  "journeyId": "J20",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J20 — outcome preferences, the authorization-gated advanced area and the provider/billing surfaces",
+  "file": "tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
+  "durationMs": 11775,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W106/production-run-b/transcripts/j20-outcome-preferences-the-authorizat-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__ai-preferences-the-outcome-oriented-surface.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-honest-default-the-attribution-pill.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-personal-priority-the-attribution-flipped-honestly.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-company-priority-set-by-the-authorized-administrator.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-explanations-feed-the-honest-empty-state.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-authorized-technical-view.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-foreign-record-the-uniform-honest-refusal.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-ai-surface-the-provider-catalog-cost-and-routing-panels.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-member-view-no-company-preference-form.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-honest-refusal-for-a-plain-member.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W106/production-run-b/errors/j20-outcome-preferences-the-authorizat-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W106/production-run-b/results/j20-outcome-preferences-the-authorizat-desktop-desktop.json"
+    ]
+  }
+}

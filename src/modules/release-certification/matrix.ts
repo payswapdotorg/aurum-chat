@@ -178,10 +178,12 @@ export const JOURNEY_MATRIX: readonly JourneySpec[] = [
 ];
 
 /**
- * The program model (W101): which journeys are MANDATORY per program.
- * 'W079' keeps the frozen historical scope (J01–J15); 'W101' extends the
- * mandatory set with the post-S002 journeys (J01–J22). J01–J15 are
- * mandatory in BOTH — the W079 catalog invariant is preserved exactly.
+ * The program model (W101 + W106): which journeys are MANDATORY per
+ * program. 'W079' keeps the frozen historical scope (J01–J15); 'W101'
+ * extends the mandatory set with the post-S002 journeys (J01–J22); 'W106'
+ * (the four-surface re-certification) mandates the same full J01–J22 set
+ * against the current production revision. J01–J15 are mandatory in
+ * every program — the W079 catalog invariant is preserved exactly.
  */
 export const PROGRAM_JOURNEYS: Readonly<Record<CertificationProgram, readonly JourneyId[]>> = {
   W079: [
@@ -189,6 +191,11 @@ export const PROGRAM_JOURNEYS: Readonly<Record<CertificationProgram, readonly Jo
     'J11', 'J12', 'J13', 'J14', 'J15',
   ],
   W101: [
+    'J01', 'J02', 'J03', 'J04', 'J05', 'J06', 'J07', 'J08', 'J09', 'J10',
+    'J11', 'J12', 'J13', 'J14', 'J15', 'J16', 'J17', 'J18', 'J19', 'J20',
+    'J21', 'J22',
+  ],
+  W106: [
     'J01', 'J02', 'J03', 'J04', 'J05', 'J06', 'J07', 'J08', 'J09', 'J10',
     'J11', 'J12', 'J13', 'J14', 'J15', 'J16', 'J17', 'J18', 'J19', 'J20',
     'J21', 'J22',

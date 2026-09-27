@@ -24,8 +24,12 @@ import { ApiError } from './errors';
  * src/modules/api/migrations/001-api-keys.sql and extended by the 003
  * migrations (003-api-channels-scopes.sql added the channels family in
  * W103; 003-api-scopes-w104.sql added the meetings + cellular families in
- * W104 and carries the constraint's authoritative current shape — it runs
- * last and its list must therefore include EVERY family).
+ * W104) — and RECONCILED by 004-api-scopes-reconciliation-w106.sql, which
+ * carries the constraint's authoritative current shape: the W104 branch's
+ * preview deployment applied the unamended 003 (no channels) to the shared
+ * production database, so the name-keyed ledger skipped the merged file
+ * forever (the W102 drift class — constraint content is invisible to the
+ * table census). 004's list must therefore include EVERY family.
  */
 export const API_SCOPES = [
   'goals:read',

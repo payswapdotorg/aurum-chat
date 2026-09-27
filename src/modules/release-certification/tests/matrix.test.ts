@@ -77,23 +77,36 @@ describe('the J01–J22 production journey matrix (W079 frozen + W101 extension)
     expect(pairs.map((pair) => pair.journeyId)).toContain('J22');
   });
 
+  it('requires the W106 program’s full J01–J22 inventory (the four-surface re-certification)', () => {
+    const pairs = requiredBrowserTests('W106');
+    expect(pairs.filter((pair) => pair.context === 'mobile')).toEqual([{ journeyId: 'J14', context: 'mobile' }]);
+    expect(pairs.filter((pair) => pair.context === 'desktop').length).toBe(21);
+    expect(pairs.length).toBe(22);
+    expect(pairs.map((pair) => pair.journeyId)).toEqual(requiredBrowserTests('W101').map((pair) => pair.journeyId));
+  });
+
   it('defaults the required inventory to the frozen W079 program (historical call sites)', () => {
     expect(requiredBrowserTests()).toEqual(requiredBrowserTests('W079'));
   });
 
-  it('the program model keeps J01–J15 mandatory in BOTH programs', () => {
+  it('the program model keeps J01–J15 mandatory in every program', () => {
     expect(PROGRAM_JOURNEYS.W079).toEqual([
       'J01', 'J02', 'J03', 'J04', 'J05', 'J06', 'J07', 'J08', 'J09', 'J10',
       'J11', 'J12', 'J13', 'J14', 'J15',
     ]);
     expect(PROGRAM_JOURNEYS.W101.slice(0, 15)).toEqual(PROGRAM_JOURNEYS.W079);
+    expect(PROGRAM_JOURNEYS.W106.slice(0, 15)).toEqual(PROGRAM_JOURNEYS.W079);
     expect(programJourneys('W101').map((journey) => journey.id)).toEqual([
       'J01', 'J02', 'J03', 'J04', 'J05', 'J06', 'J07', 'J08', 'J09', 'J10',
       'J11', 'J12', 'J13', 'J14', 'J15', 'J16', 'J17', 'J18', 'J19', 'J20',
       'J21', 'J22',
     ]);
+    expect(programJourneys('W106').map((journey) => journey.id)).toEqual(
+      programJourneys('W101').map((journey) => journey.id),
+    );
     expect(programJourneys('W079')).toHaveLength(15);
     expect(programJourneys('W101')).toHaveLength(22);
+    expect(programJourneys('W106')).toHaveLength(22);
   });
 
   it('marks exactly the cross-surface journeys that leave Chat', () => {

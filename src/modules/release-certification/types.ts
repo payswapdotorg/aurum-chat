@@ -34,15 +34,19 @@ export type JourneyId =
   | 'J22';
 
 /**
- * The certification program (W101): 'W079' is the frozen historical
+ * The certification program (W101 + W106): 'W079' is the frozen historical
  * program — the J01–J15 matrix, the W079 evidence root and the W079
  * document names; 'W101' is the post-S002 program — the full J01–J22
  * matrix, the W101 evidence root, the W101 repository identity and the
- * rollback-evidence gate. The catalog itself is ONE closed list; the
- * program selects which journeys are MANDATORY for a run (J01–J15 stay
- * mandatory in both).
+ * rollback-evidence gate. 'W106' is the four-surface re-certification
+ * program (W103 channels + W104 meetings/cellular + W105 vertical kits
+ * live): the SAME full J01–J22 matrix, the W106 evidence root, the W106
+ * repository identity and the same rollback-evidence gate — a re-run of
+ * the W101 discipline against the current production revision. The
+ * catalog itself is ONE closed list; the program selects which journeys
+ * are MANDATORY for a run (J01–J15 stay mandatory in all programs).
  */
-export type CertificationProgram = 'W079' | 'W101';
+export type CertificationProgram = 'W079' | 'W101' | 'W106';
 
 /** One journey's matrix definition (contract §5, verbatim semantics). */
 export interface JourneySpec {

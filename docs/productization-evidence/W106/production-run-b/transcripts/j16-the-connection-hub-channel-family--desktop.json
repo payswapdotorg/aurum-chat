@@ -1,0 +1,104 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/production/j16-cross-channel-desktop.spec.ts",
+  "title": "J16 — the connection hub channel family and the v1 channel surfaces are proven with real production auth",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-27T03:00:33.902Z",
+      "step": "sign in as the run manager and open the Connections hub",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:36.397Z",
+      "step": "screenshot: the Connections hub — the channel family",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-connections-hub-the-channel-family.png"
+    },
+    {
+      "at": "2026-09-27T03:00:36.397Z",
+      "step": "the hub page carries the shell accessibility contract",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:37.145Z",
+      "step": "register a second channel through the real form",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:38.375Z",
+      "step": "screenshot: the second channel — registered with its opaque credential reference",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-second-channel-registered-with-its-opaque-credential-ref.png"
+    },
+    {
+      "at": "2026-09-27T03:00:38.375Z",
+      "step": "the channel roster is tenant-scoped and verifiable",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:38.959Z",
+      "step": "screenshot: the channel roster — the tenant-scoped envelope",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-channel-roster-the-tenant-scoped-envelope.png"
+    },
+    {
+      "at": "2026-09-27T03:00:38.959Z",
+      "step": "the channel roster is stable across reload",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:39.397Z",
+      "step": "the v1 discovery document lists the channel family",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:39.912Z",
+      "step": "screenshot: the v1 discovery — the channel family listed",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-v1-discovery-the-channel-family-listed.png"
+    },
+    {
+      "at": "2026-09-27T03:00:39.912Z",
+      "step": "mint a channels-scoped key through the real developer console",
+      "url": "https://aurum-chat-livid.vercel.app/connections",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:41.768Z",
+      "step": "screenshot: the developer console — the channels-scoped key grant recorded",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-developer-console-the-channels-scoped-key-grant-recorded.png"
+    },
+    {
+      "at": "2026-09-27T03:00:41.768Z",
+      "step": "the v1 channel family answers with real production auth (the tenant-scoped round-trip)",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:44.358Z",
+      "step": "screenshot: the v1 channel family — the tenant-scoped round-trip recorded",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j16-the-connection-hub-channel-family--desktop__the-v1-channel-family-the-tenant-scoped-round-trip-recorded.png"
+    },
+    {
+      "at": "2026-09-27T03:00:44.358Z",
+      "step": "revoke the channels key (nothing minted outlives the journey)",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T03:00:45.909Z",
+      "step": "return to the conversation (cross-surface rule)",
+      "url": "https://aurum-chat-livid.vercel.app/developer",
+      "shot": null
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "testId": "j18-the-cellular-surface-is-proven-thr-desktop:desktop",
+  "journeyId": "J18",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J18 — the cellular surface is proven through the hub, the command search, the page and the v1 API; the environment limit is recorded as the module reports it",
+  "file": "tests/browser/production/j18-cellular-desktop.spec.ts",
+  "durationMs": 12136,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W106/production-run-a/transcripts/j18-the-cellular-surface-is-proven-thr-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W106/production-run-a/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-more-hub-the-cellular-capability-navigates-to-the-surfac.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-state-families-with-their-honest-em.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-module-reported-environment-limit.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__command-search-the-cellular-destination.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-v1-cellular-family-the-honest-read-and-the-registered-co.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-v1-written-state-rendered.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W106/production-run-a/errors/j18-the-cellular-surface-is-proven-thr-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W106/production-run-a/results/j18-the-cellular-surface-is-proven-thr-desktop-desktop.json"
+    ]
+  }
+}
