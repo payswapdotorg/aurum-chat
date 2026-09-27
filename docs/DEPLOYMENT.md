@@ -167,6 +167,9 @@ See `.env.example` for the annotated list. Production essentials:
 | `CRON_SECRET`           | auth for Vercel cron deliveries                        | optional                                  |
 | `DEPLOYMENT_ENV`        | explicit environment separation                        | validated                                 |
 | `AURUM_COMMERCIAL`      | `1` marks Profile B                                    | informational                             |
+| `CELLULAR_TWILIO_ACCOUNT_SID` / `CELLULAR_TWILIO_AUTH_TOKEN` | live Twilio transport (SMS + voice reach) + X-Twilio-Signature webhook verification | both required together; unset/partial = transport stays unwired (honest `provider_unavailable`; carrier webhook edge fails closed 503) |
+| `CELLULAR_TELNYX_API_KEY` / `CELLULAR_TELNYX_CALL_CONTROL_APP_ID` / `CELLULAR_TELNYX_PUBLIC_KEY` | live Telnyx transport (`CALL_CONTROL_APP_ID` optional — SMS-only without it) + Telnyx-Signature webhook verification (`PUBLIC_KEY`) | unset/partial = transport stays unwired (honest `provider_unavailable`); missing `PUBLIC_KEY` = carrier webhook edge fails closed 503 |
+| `CELLULAR_WEBHOOK_PUBLIC_URL` | signature-URL override for proxy-rewritten Hosts        | optional                                  |
 
 Usage guardrails (defaults are the free-tier budgets; clamped env
 overrides): `AURUM_WORKER_MAX_ATTEMPTS` (5), `AURUM_WORKER_BATCH_LIMIT`

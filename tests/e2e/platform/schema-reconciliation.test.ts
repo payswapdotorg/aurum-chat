@@ -477,7 +477,10 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // the production constraint repair: the authoritative closed scope
     // vocabulary after the W104 preview applied the unamended 003 to the
     // shared production database).
-    expect(repair.applied).toHaveLength(133);
+    // INTEGRATION (W108, deliberate): 133 → 134 — the cellular module gained
+    // 006-cellular-inbound-authority.sql (the manager-inbound W009 authority
+    // determination ledger + the reach-request origin columns).
+    expect(repair.applied).toHaveLength(134);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -489,7 +492,9 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // extend the api_keys scope vocabulary (channels + meetings/cellular).
     // INTEGRATION (W106): 135 → 136 — the api module's 004 reconciliation
     // migration carries the constraint's authoritative shape forward.
-    expect(names).toHaveLength(136);
+    // INTEGRATION (W108): 136 → 137 — the cellular module's 006 inbound-
+    // authority migration (deliberate count-pin extension).
+    expect(names).toHaveLength(137);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -591,7 +596,9 @@ describe('W102 — the reconciliation is idempotent', () => {
     // INTEGRATION (W103 + W104): 135 — every discovered migration is now
     // ledger-recorded (133 through W102 + both api 003 scope expansions).
     // INTEGRATION (W106): 136 — plus the api 004 reconciliation migration.
-    expect(report.skipped).toHaveLength(136);
+    // INTEGRATION (W108): 137 — plus the cellular 006 inbound-authority
+    // migration (deliberate count-pin extension).
+    expect(report.skipped).toHaveLength(137);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });

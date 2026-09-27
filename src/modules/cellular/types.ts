@@ -358,6 +358,17 @@ export interface CellularReach {
   actionRequestId: string | null;
   /** The action kind the request was gated under. */
   actionKind: string;
+  /**
+   * W108 — the manager-inbound origin: the inbound reply row (and its
+   * provider event) this reach originates from, when the ask arrived as
+   * a manager-originated `inbound_request`. Null for ordinary asks. The
+   * W009 gate payload of an originated reach references the same
+   * triple, and the per-event determination ledger
+   * (`cellular_inbound_authority`) records the consequential decision.
+   */
+  originReplyId: string | null;
+  originProvider: CellularProvider | null;
+  originProviderEventId: string | null;
   status: CellularReachStatus;
   failureCode: CellularFailureCode | null;
   // The policy snapshot governing this request (notifications discipline:
@@ -412,12 +423,32 @@ export interface ReachAnyoneInput {
   /** Optional explicit sending connection (auto-selected when omitted). */
   connectionId?: string | null;
   /**
+   * W108 — the manager-inbound origin: when the ask arrived as a
+   * manager-originated `inbound_request` (a manager texting/calling
+   * Aurum's own number) and the caller is creating the consequential
+   * outbound reach FROM that ask, pass the inbound reply's evidence
+   * triple here. The reach row, its W009 gate payload and the inbound
+   * determination ledger all reference the origin — the W097 deferral
+   * closure. Omit for ordinary asks.
+   */
+  origin?: CellularReachOrigin | null;
+  /**
    * Optional notification target for terminal failure/blocking (W031):
    * when the reach terminally fails or is blocked, a notification of kind
    * 'cellular-reach-failed' is created for this canonical channel party
    * through the notifications contract.
    */
   failureNotification?: CellularNotificationTarget | null;
+}
+
+/** The manager-inbound origin evidence triple of a reach request (W108). */
+export interface CellularReachOrigin {
+  /** The recorded inbound reply row (`inbound_request`) the ask arrived as. */
+  replyId: string;
+  /** The vendor whose webhook carried the inbound message. */
+  provider: CellularProvider;
+  /** The vendor's stable event id of the inbound message (the dedupe key). */
+  providerEventId: string;
 }
 
 /** A canonical channel party a failure notification is delivered to. */
@@ -609,6 +640,72 @@ export interface CellularReply {
 }
 
 // ---------------------------------------------------------------------------
+// Manager-inbound authority determinations (W108 — the W097 deferral
+// closure)
+// ---------------------------------------------------------------------------
+
+/**
+ * What Aurum determined about one manager-originated inbound request:
+ *
+ *  * `consequential`      — the ask led to an authority-gated action; the
+ *    W009 gate record (referenced by `actionRequestId`) carries the full
+ *    decision, and its payload references the inbound origin.
+ *  * `not_consequential`  — a recorded NEGATIVE determination: the ask
+ *    required no authority-gated action (evidence, not silence).
+ *  * `ambiguous_sender`   — the sender's identity could not be resolved
+ *    unambiguously to a verified person: no consequential action was
+ *    taken and NO identity was merged (lock 15 / the W002 posture —
+ *    ambiguous identities never auto-merge).
+ */
+export type CellularInboundDeterminationKind =
+  | 'consequential'
+  | 'not_consequential'
+  | 'ambiguous_sender';
+
+/**
+ * One recorded determination: the per-event authority ledger row
+ * (append-only; UNIQUE per (tenant, provider, event id) — idempotent per
+ * inbound event, first write wins).
+ */
+export interface CellularInboundDetermination {
+  id: string;
+  tenantId: string;
+  provider: CellularProvider;
+  providerEventId: string;
+  /** The manager-originated inbound reply row the determination is about. */
+  replyId: string;
+  determination: CellularInboundDeterminationKind;
+  /** The W009 gate record of the consequential action (consequential only). */
+  actionRequestId: string | null;
+  /** Which action surface produced the action (e.g. 'cellular-reach'). */
+  originKind: string;
+  note: string | null;
+  /** The principal that made (or recorded) the determination. */
+  decidedBy: string;
+  createdAt: string;
+}
+
+/** Input of `recordCellularInboundDetermination` (negative/ambiguous records). */
+export interface RecordCellularInboundDeterminationInput {
+  provider: CellularProvider;
+  providerEventId: string;
+  determination: 'not_consequential' | 'ambiguous_sender';
+  /** Human-auditable reasoning (<= 2000 chars). */
+  note?: string | null;
+}
+
+/** Query shape of `listCellularInboundDeterminations`. */
+export interface ListCellularInboundDeterminationsQuery {
+  provider?: CellularProvider;
+  /** Restrict to one inbound event's determination. */
+  providerEventId?: string | null;
+  /** Restrict to one inbound reply row's determination. */
+  replyId?: string | null;
+  /** 1..500, default 50. */
+  limit?: number;
+}
+
+// ---------------------------------------------------------------------------
 // The provider event edge
 // ---------------------------------------------------------------------------
 
@@ -773,6 +870,13 @@ export interface CellularVoiceReceipt {
  * wired by default — deliveries then fail explicitly with
  * `provider_unavailable` (the channels/realtime modules' honest "as
  * provider availability permits").
+ *
+ * W108 adds the PER-PROVIDER registry (`setCellularTransportForProvider`)
+ * for production wiring: several providers' live transports can be wired
+ * simultaneously, and the attempt's pinned connection decides which one
+ * serves the delivery. The single-transport seam remains the explicit
+ * override (tests substitute a scripted transport through it; it takes
+ * precedence for its own provider when both are set).
  */
 export interface CellularTransport {
   /** The canonical vendor this transport delivers for. */
@@ -780,3 +884,84 @@ export interface CellularTransport {
   sendSms(request: CellularSmsRequest): Promise<CellularSmsReceipt>;
   placeVoiceCall(request: CellularVoiceRequest): Promise<CellularVoiceReceipt>;
 }
+
+// ---------------------------------------------------------------------------
+// Provider credentials — the W108 live-wiring configuration (opaque
+// credential VALUES ONLY; vendor interpretation lives inside adapters/)
+// ---------------------------------------------------------------------------
+
+/**
+ * The configuration one provider's live transport and webhook
+ * verification are constructed from. Field meanings per canonical
+ * provider (documented for the operator; the values themselves are
+ * OPAQUE strings — never persisted, never logged):
+ *
+ *  * twilio — `accountSid`: the Twilio Account SID; `credential`: the
+ *    account's Auth Token (HTTP Basic REST auth AND the
+ *    X-Twilio-Signature webhook co-signature).
+ *  * telnyx — `credential`: the Telnyx API key (Bearer REST auth);
+ *    `callControlAppId`: the Call Control Application id voice legs are
+ *    placed through; `webhookPublicKey`: the webhook signing PUBLIC key
+ *    (base64 DER/SPKI Ed25519) that verifies Telnyx-Signature.
+ *
+ * `accountSid` (twilio), `credential` (both), `callControlAppId` +
+ * `webhookPublicKey` (telnyx voice/webhooks) are interpreted by the
+ * provider's adapter; `apiBaseUrl`/`voiceWaitMs` are optional tuning.
+ * PARTIAL configuration is rejected loudly at construction (an
+ * unwired transport stays honestly `provider_unavailable`).
+ */
+export interface CellularProviderCredentials {
+  provider: CellularProvider;
+  /** twilio: the Account SID the transport delivers for. */
+  accountSid?: string | null;
+  /** twilio/telnyx: the account credential (auth token / API key). */
+  credential?: string | null;
+  /** telnyx: the Call Control Application id for voice legs. */
+  callControlAppId?: string | null;
+  /** telnyx: the webhook signing public key (base64 DER/SPKI Ed25519). */
+  webhookPublicKey?: string | null;
+  /** Optional vendor API base URL override. */
+  apiBaseUrl?: string | null;
+  /** Optional voice-leg wait window in ms (default 60000). */
+  voiceWaitMs?: number | null;
+}
+
+// ---------------------------------------------------------------------------
+// The carrier webhook edge (W108 — the carrier-facing HTTP seam)
+// ---------------------------------------------------------------------------
+
+/** One carrier webhook request as the route hands it to the module. */
+export interface ReceiveCellularCarrierWebhookInput {
+  provider: CellularProvider;
+  /** The EXACT full URL the carrier POSTed to (signature input). */
+  url: string;
+  /** The EXACT raw body as received (signature input; parsed inside). */
+  rawBody: string;
+  /** The request's headers (lowercased names; signature input). */
+  headers: Readonly<Record<string, string>>;
+  /** The request's Content-Type header value (null when absent). */
+  contentType: string | null;
+}
+
+/**
+ * The composite outcome of the carrier edge. The route maps:
+ * `unconfigured` → 503 (fail-closed: an unverifiable carrier edge never
+ * processes), `unverified` → 403, `invalid` → 400, `unsupported` → 200
+ * (acknowledge recognized non-record pings so the carrier does not
+ * retry), `unknown_tenant` → 202 (observed, not errored), `applied` →
+ * 200 with the application result (redelivery dedupes: `applied:false`).
+ */
+export type CellularCarrierWebhookResult =
+  | { status: 'unconfigured'; detail: string }
+  | { status: 'unverified'; detail: string }
+  | { status: 'invalid'; detail: string }
+  | { status: 'unsupported'; detail: string }
+  | { status: 'unknown_tenant'; provider: CellularProvider; providerAccountId: string }
+  | {
+      status: 'applied';
+      /** false when the provider event id was already applied (redelivery). */
+      applied: boolean;
+      kind: CellularEventKind;
+      replyId: string | null;
+      reachId: string | null;
+    };

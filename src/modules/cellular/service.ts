@@ -78,12 +78,20 @@ import {
 } from '@/modules/people/contract';
 import { createNotification, NotificationsError } from '@/modules/notifications/contract';
 import { getCellularAdapter } from './adapters';
+import { createTelnyxTransport } from './adapters/transport-telnyx';
+import { createTwilioTransport } from './adapters/transport-twilio';
+import {
+  twilioSignatureParams,
+  verifyTelnyxWebhookSignature,
+  verifyTwilioWebhookSignature,
+} from './adapters/webhook-verify';
 import { CellularError } from './errors';
 import {
   BUILT_IN_DEFAULT_POLICY,
   CELLULAR_FAILURE_NOTIFICATION_KIND,
   CELLULAR_REACH_AUTHORITY_LEVEL,
   fitsCostCap,
+  isCellularProvider,
   reachActionKindFor,
   reachGateKey,
   resolveCellularPolicyRows,
@@ -106,9 +114,11 @@ import {
   validateListCellularReachQuery,
   validateListCellularRepliesQuery,
   validateListCellularAttemptsQuery,
+  validateListInboundDeterminationsQuery,
   validatePumpQuery,
   validateReachAnyoneInput,
   validateReceiveCellularEventInput,
+  validateRecordInboundDeterminationInput,
   validateRegisterCellularConnectionInput,
   validateRetryCellularReachInput,
   validateSetCellularConnectionStatusInput,
@@ -117,6 +127,7 @@ import {
   validateTransportVoiceReceipt,
   type ValidatedListConnectionsQuery,
   type ValidatedPolicySubjectQuery,
+  type ValidatedReachOrigin,
   type ValidatedRegisterConnectionInput,
   type ValidatedSetConnectionStatusInput,
   type ValidatedSetPolicyInput,
@@ -124,11 +135,14 @@ import {
 import type {
   CanonicalCellularEvent,
   CellularAttempt,
+  CellularCarrierWebhookResult,
   CellularConnection,
   CellularConnectionStatus,
   CellularEventRecord,
   CellularEventResult,
+  CellularInboundDetermination,
   CellularPolicy,
+  CellularProviderCredentials,
   CellularPumpSummary,
   CellularReach,
   CellularReachKind,
@@ -138,12 +152,15 @@ import type {
   CellularTransport,
   ListCellularConnectionsQuery,
   ListCellularEventsQuery,
+  ListCellularInboundDeterminationsQuery,
   ListCellularPoliciesQuery,
   ListCellularReachQuery,
   ListCellularRepliesQuery,
   ListCellularAttemptsQuery,
   ReachAnyoneInput,
+  ReceiveCellularCarrierWebhookInput,
   ReceiveCellularEventInput,
+  RecordCellularInboundDeterminationInput,
   RegisterCellularConnectionInput,
   RegisterCellularConnectionResult,
   ResolvedCellularPolicy,
@@ -214,6 +231,9 @@ interface ReachRow extends DbRow {
   requested_by: string;
   action_request_id: string | null;
   action_kind: string;
+  origin_reply_id: string | null;
+  origin_provider: string | null;
+  origin_provider_event_id: string | null;
   status: string;
   failure_code: string | null;
   policy_source: string;
@@ -293,6 +313,20 @@ interface ReplyRow extends DbRow {
   created_at: Date | string;
 }
 
+interface InboundAuthorityRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  provider: string;
+  provider_event_id: string;
+  reply_id: string;
+  determination: string;
+  action_request_id: string | null;
+  origin_kind: string;
+  note: string | null;
+  decided_by: string;
+  created_at: Date | string;
+}
+
 function toIso(value: Date | string): string {
   return (value instanceof Date ? value : new Date(value)).toISOString();
 }
@@ -351,6 +385,9 @@ function mapReach(row: ReachRow): CellularReach {
     requestedBy: row.requested_by,
     actionRequestId: row.action_request_id,
     actionKind: row.action_kind,
+    originReplyId: row.origin_reply_id,
+    originProvider: row.origin_provider as CellularReach['originProvider'],
+    originProviderEventId: row.origin_provider_event_id,
     status: row.status as CellularReachStatus,
     failureCode: row.failure_code as CellularReach['failureCode'],
     policySource: row.policy_source as CellularReach['policySource'],
@@ -436,6 +473,22 @@ function mapReply(row: ReplyRow): CellularReply {
   };
 }
 
+function mapInboundAuthority(row: InboundAuthorityRow): CellularInboundDetermination {
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    provider: row.provider as CellularInboundDetermination['provider'],
+    providerEventId: row.provider_event_id,
+    replyId: row.reply_id,
+    determination: row.determination as CellularInboundDetermination['determination'],
+    actionRequestId: row.action_request_id,
+    originKind: row.origin_kind,
+    note: row.note,
+    decidedBy: row.decided_by,
+    createdAt: toIso(row.created_at),
+  };
+}
+
 function isDuplicateKeyOn(error: unknown, table: string): boolean {
   return (
     error instanceof Error &&
@@ -465,14 +518,116 @@ export function getCellularTransport(): CellularTransport | null {
   return cellularTransport;
 }
 
-function transportFor(provider: string): CellularTransport {
-  if (cellularTransport === null || cellularTransport.provider !== provider) {
+/**
+ * W108 — the PER-PROVIDER transport registry for production wiring:
+ * several providers' live transports can be wired simultaneously (the
+ * infrastructure wiring module constructs them from environment
+ * configuration); the attempt's pinned connection decides which provider
+ * serves the delivery. The single-transport seam above stays the EXPLICIT
+ * OVERRIDE for its own provider (tests substitute a scripted transport
+ * through it — when both are set for one provider, the explicit seam
+ * wins, so a test override is always honored).
+ */
+const cellularTransportsByProvider = new Map<string, CellularTransport>();
+
+export function setCellularTransportForProvider(
+  provider: string,
+  transport: CellularTransport | null,
+): void {
+  if (!isCellularProvider(provider)) {
     throw new CellularError(
-      'provider_unavailable',
-      `no cellular transport is wired for provider '${provider}' (wire one via setCellularTransport)`,
+      'invalid_cellular_input',
+      `transport wiring provider must be 'twilio' or 'telnyx' (got '${provider}')`,
     );
   }
-  return cellularTransport;
+  if (transport === null) {
+    cellularTransportsByProvider.delete(provider);
+    return;
+  }
+  if (transport.provider !== provider) {
+    throw new CellularError(
+      'invalid_cellular_input',
+      `the transport's provider '${transport.provider}' does not match the wiring provider '${provider}'`,
+    );
+  }
+  cellularTransportsByProvider.set(provider, transport);
+}
+
+/** The per-provider wired transport (null when none — the honest unwired state). */
+export function getCellularTransportForProvider(provider: string): CellularTransport | null {
+  return cellularTransportsByProvider.get(provider) ?? null;
+}
+
+function transportFor(provider: string): CellularTransport {
+  if (cellularTransport !== null && cellularTransport.provider === provider) {
+    return cellularTransport;
+  }
+  const perProvider = cellularTransportsByProvider.get(provider);
+  if (perProvider !== undefined) {
+    return perProvider;
+  }
+  throw new CellularError(
+    'provider_unavailable',
+    `no cellular transport is wired for provider '${provider}' (wire one via setCellularTransport or setCellularTransportForProvider)`,
+  );
+}
+
+/**
+ * W108 — construct one provider's LIVE transport from its credentials
+ * (the infrastructure wiring module's entry point; the vendor
+ * interpretation lives inside adapters/). Partial configuration is
+ * rejected loudly: an unwired transport stays honestly
+ * `provider_unavailable` rather than half-constructed.
+ */
+export function createCellularTransportFromConfig(
+  config: CellularProviderCredentials,
+): CellularTransport {
+  if (!isPlainCredentials(config)) {
+    throw new CellularError('invalid_cellular_input', 'provider credentials must be an object');
+  }
+  switch (config.provider) {
+    case 'twilio': {
+      const accountSid = config.accountSid ?? null;
+      const authToken = config.credential ?? null;
+      if (accountSid === null || accountSid.trim() === '') {
+        throw new CellularError(
+          'invalid_cellular_input',
+          'twilio transport requires accountSid (CELLULAR_TWILIO_ACCOUNT_SID)',
+        );
+      }
+      if (authToken === null || authToken.trim() === '') {
+        throw new CellularError(
+          'invalid_cellular_input',
+          'twilio transport requires credential (CELLULAR_TWILIO_AUTH_TOKEN)',
+        );
+      }
+      return createTwilioTransport({
+        accountSid,
+        authToken,
+        baseUrl: config.apiBaseUrl ?? undefined,
+        voiceWaitMs: config.voiceWaitMs ?? undefined,
+      });
+    }
+    case 'telnyx': {
+      const apiKey = config.credential ?? null;
+      if (apiKey === null || apiKey.trim() === '') {
+        throw new CellularError(
+          'invalid_cellular_input',
+          'telnyx transport requires credential (CELLULAR_TELNYX_API_KEY)',
+        );
+      }
+      return createTelnyxTransport({
+        apiKey,
+        callControlAppId: config.callControlAppId ?? null,
+        baseUrl: config.apiBaseUrl ?? undefined,
+        voiceWaitMs: config.voiceWaitMs ?? undefined,
+      });
+    }
+  }
+}
+
+function isPlainCredentials(value: unknown): value is CellularProviderCredentials {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /** Connection-level failures that are TRANSIENT (the notifications discipline). */
@@ -1030,8 +1185,24 @@ async function authorizeReachGate(ctx: TenantContext, row: ReachRow): Promise<Ac
         },
         text: row.text,
         voiceFallback: row.voice_fallback,
+        // W108 — when the ask ORIGINATED from a manager-inbound request,
+        // the gate record references the inbound origin (the W097
+        // deferral closure: the authority decision is auditable back to
+        // the manager's own text/call into Aurum).
+        ...(row.origin_reply_id === null
+          ? {}
+          : {
+              origin: {
+                replyId: row.origin_reply_id,
+                provider: row.origin_provider,
+                providerEventId: row.origin_provider_event_id,
+              },
+            }),
       },
-      justification: `reach ${row.phone_number} by SMS with voice fallback (cellular reach request ${row.id})`,
+      justification:
+        row.origin_reply_id === null
+          ? `reach ${row.phone_number} by SMS with voice fallback (cellular reach request ${row.id})`
+          : `reach ${row.phone_number} by SMS with voice fallback, originating from the manager-inbound request ${row.origin_provider_event_id} (cellular reach request ${row.id})`,
       idempotencyKey: reachGateKey(row.id),
     });
   } catch (error) {
@@ -1050,6 +1221,178 @@ async function authorizeReachGate(ctx: TenantContext, row: ReachRow): Promise<Ac
     [ctx.tenantId, row.id, request.id, now()],
   );
   return request;
+}
+
+// ---------------------------------------------------------------------------
+// Manager-inbound W009 authority records (W108 — the W097 deferral
+// closure): the per-event determination ledger
+// ---------------------------------------------------------------------------
+
+/**
+ * Load and validate the manager-inbound origin reply of a reach request:
+ * the row must exist in THIS tenant, be an `inbound_request`
+ * (manager-originated — a reach REPLY is a recipient answering, never an
+ * ask), and match the caller's evidence triple exactly. A foreign
+ * tenant's reply is indistinguishable from a missing one (ADR-0001).
+ */
+async function loadInboundOriginReply(
+  ctx: TenantContext,
+  origin: ValidatedReachOrigin,
+): Promise<ReplyRow> {
+  const result = await getDb().query<ReplyRow>(
+    `SELECT * FROM cellular_replies WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, origin.replyId],
+  );
+  const row = result.rows[0];
+  if (row === undefined) {
+    throw new CellularError(
+      'invalid_cellular_input',
+      `reach request origin reply '${origin.replyId}' does not exist in this tenant`,
+    );
+  }
+  if (row.inbound_kind !== 'inbound_request') {
+    throw new CellularError(
+      'invalid_cellular_input',
+      `reach request origin reply '${origin.replyId}' is a '${row.inbound_kind}', not a manager-originated inbound request`,
+    );
+  }
+  if (row.provider !== origin.provider || row.provider_event_id !== origin.providerEventId) {
+    throw new CellularError(
+      'invalid_cellular_input',
+      `reach request origin does not match the reply row's evidence (reply is ${row.provider}:${row.provider_event_id}, origin says ${origin.provider}:${origin.providerEventId})`,
+    );
+  }
+  return row;
+}
+
+/**
+ * Record the CONSEQUENTIAL determination of a manager-inbound-originated
+ * reach: one append-only ledger row referencing the W009 gate record.
+ * Idempotent per inbound event — the UNIQUE (tenant, provider, event id)
+ * constraint is the claim; a redelivery or a second consequential action
+ * from the same ask never duplicates the row (the second action's gate
+ * payload still references the origin through the actions surface).
+ */
+async function recordConsequentialDetermination(
+  ctx: TenantContext,
+  row: ReachRow,
+  gate: ActionRequest,
+): Promise<void> {
+  await getDb().query(
+    `INSERT INTO cellular_inbound_authority (
+       tenant_id, provider, provider_event_id, reply_id, determination,
+       action_request_id, origin_kind, decided_by, created_at
+     ) VALUES ($1, $2, $3, $4, 'consequential', $5, 'cellular-reach', $6, $7)
+     ON CONFLICT (tenant_id, provider, provider_event_id) DO NOTHING`,
+    [
+      ctx.tenantId,
+      row.origin_provider,
+      row.origin_provider_event_id,
+      row.origin_reply_id,
+      gate.id,
+      ctx.principalId,
+      now(),
+    ],
+  );
+}
+
+/**
+ * Record a NEGATIVE or AMBIGUOUS determination for one manager-inbound
+ * request — evidence, not silence:
+ *  * `not_consequential` — the ask required no authority-gated action;
+ *  * `ambiguous_sender` — the sender's identity could not be resolved
+ *    unambiguously to a verified person; NO consequential action was
+ *    taken and NO identity was merged (lock 15 / the W002 posture —
+ *    ambiguous identities never auto-merge).
+ * Idempotent per inbound event (first write wins; the recorded row is
+ * returned on replay). The referenced inbound message must exist in THIS
+ * tenant and be a manager-originated `inbound_request`.
+ */
+export async function recordCellularInboundDetermination(
+  ctx: TenantContext,
+  input: RecordCellularInboundDeterminationInput,
+): Promise<CellularInboundDetermination> {
+  assertCellularTenantContext(ctx);
+  const valid = validateRecordInboundDeterminationInput(input);
+  const reply = await loadInboundReplyByEvent(ctx, valid.provider, valid.providerEventId);
+  const at = now();
+  const inserted = await getDb().query<InboundAuthorityRow>(
+    `INSERT INTO cellular_inbound_authority (
+       tenant_id, provider, provider_event_id, reply_id, determination,
+       action_request_id, origin_kind, note, decided_by, created_at
+     ) VALUES ($1, $2, $3, $4, $5, NULL, 'cellular-inbound', $6, $7, $8)
+     ON CONFLICT (tenant_id, provider, provider_event_id) DO NOTHING
+     RETURNING *`,
+    [ctx.tenantId, valid.provider, valid.providerEventId, reply.id, valid.determination, valid.note, ctx.principalId, at],
+  );
+  if (inserted.rows[0] !== undefined) {
+    return mapInboundAuthority(inserted.rows[0]);
+  }
+  // Idempotent replay — the first determination for this event stands.
+  const existing = await getDb().query<InboundAuthorityRow>(
+    `SELECT * FROM cellular_inbound_authority
+       WHERE tenant_id = $1 AND provider = $2 AND provider_event_id = $3`,
+    [ctx.tenantId, valid.provider, valid.providerEventId],
+  );
+  return mapInboundAuthority(existing.rows[0]!);
+}
+
+/** The manager-originated inbound reply of one provider event (tenant-scoped, uniform not-found). */
+async function loadInboundReplyByEvent(
+  ctx: TenantContext,
+  provider: string,
+  providerEventId: string,
+): Promise<ReplyRow> {
+  const result = await getDb().query<ReplyRow>(
+    `SELECT * FROM cellular_replies
+       WHERE tenant_id = $1 AND provider = $2 AND provider_event_id = $3`,
+    [ctx.tenantId, provider, providerEventId],
+  );
+  const row = result.rows[0];
+  if (row === undefined) {
+    throw new CellularError(
+      'invalid_cellular_input',
+      `no inbound reply for ${provider} event '${providerEventId}' exists in this tenant`,
+    );
+  }
+  if (row.inbound_kind !== 'inbound_request') {
+    throw new CellularError(
+      'invalid_cellular_input',
+      `${provider} event '${providerEventId}' is a reach reply, not a manager-originated inbound request`,
+    );
+  }
+  return row;
+}
+
+/** The determination ledger's read surface (tenant-scoped, newest first). */
+export async function listCellularInboundDeterminations(
+  ctx: TenantContext,
+  query: ListCellularInboundDeterminationsQuery,
+): Promise<CellularInboundDetermination[]> {
+  assertCellularTenantContext(ctx);
+  const valid = validateListInboundDeterminationsQuery(query);
+  const conditions: string[] = ['tenant_id = $1'];
+  const params: unknown[] = [ctx.tenantId];
+  if (valid.provider !== null) {
+    params.push(valid.provider);
+    conditions.push(`provider = $${params.length}`);
+  }
+  if (valid.providerEventId !== null) {
+    params.push(valid.providerEventId);
+    conditions.push(`provider_event_id = $${params.length}`);
+  }
+  if (valid.replyId !== null) {
+    params.push(valid.replyId);
+    conditions.push(`reply_id = $${params.length}`);
+  }
+  params.push(valid.limit);
+  const limitPlaceholder = `$${params.length}`;
+  const rows = await getDb().query<InboundAuthorityRow>(
+    `SELECT * FROM cellular_inbound_authority WHERE ${conditions.join(' AND ')}
+       ORDER BY created_at DESC, id DESC LIMIT ${limitPlaceholder}`,
+    params,
+  );
+  return rows.rows.map((row) => mapInboundAuthority(row));
 }
 
 // ---------------------------------------------------------------------------
@@ -1538,6 +1881,15 @@ export async function reachAnyone(ctx: TenantContext, input: ReachAnyoneInput): 
   //    time); the resolved connection is pinned onto the request.
   const connection = await resolveSendingConnection(ctx, valid.connectionId);
 
+  // 3b. W108 — validate the manager-inbound ORIGIN, when the ask
+  //     arrived as one: the referenced reply row must exist in THIS
+  //     tenant, be an `inbound_request` (manager-originated), and match
+  //     the caller's evidence triple (a foreign tenant's reply is
+  //     indistinguishable from a missing one — ADR-0001).
+  if (valid.origin !== null) {
+    await loadInboundOriginReply(ctx, valid.origin);
+  }
+
   // 4. Record the durable intent FIRST — the request id must exist before
   //    the authority gate's idempotency key can reference it.
   const actionKind = reachActionKindFor(recipient.recipientKind);
@@ -1549,10 +1901,12 @@ export async function reachAnyone(ctx: TenantContext, input: ReachAnyoneInput): 
        policy_source, voice_fallback, sms_max_attempts, retry_backoff_seconds,
        max_sms_segments, sms_segment_cost_minor, voice_per_minute_cost_minor,
        currency, max_cost_per_reach_minor, failure_notification,
+       origin_reply_id, origin_provider, origin_provider_event_id,
        created_at, updated_at
      ) VALUES (
        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending',
-       $12, $13, $14, $15, $16, $17, $18, $19, $20, $21::jsonb, $22, $22
+       $12, $13, $14, $15, $16, $17, $18, $19, $20, $21::jsonb,
+       $22, $23, $24, $25, $25
      )
      RETURNING *`,
     [
@@ -1577,6 +1931,9 @@ export async function reachAnyone(ctx: TenantContext, input: ReachAnyoneInput): 
       policy.currency,
       policy.maxCostPerReachMinor,
       valid.failureNotification === null ? null : JSON.stringify(valid.failureNotification),
+      valid.origin === null ? null : valid.origin.replyId,
+      valid.origin === null ? null : valid.origin.provider,
+      valid.origin === null ? null : valid.origin.providerEventId,
       at,
     ],
   );
@@ -1584,6 +1941,15 @@ export async function reachAnyone(ctx: TenantContext, input: ReachAnyoneInput): 
 
   // 5. Route through the W009 authority matrix, then deliver when allowed.
   const gate = await authorizeReachGate(ctx, row);
+  // 5b. W108 — a manager-inbound-originated ask is CONSEQUENTIAL by
+  //     construction (it produced an authority-gated action): record the
+  //     per-event determination referencing the gate record. Idempotent
+  //     per inbound event (first write wins — a second consequential
+  //     action from the same ask is still fully auditable through the
+  //     actions surface, whose gate payload references the origin).
+  if (row.origin_reply_id !== null) {
+    await recordConsequentialDetermination(ctx, row, gate);
+  }
   if (gate.status === 'pending') {
     const waiting = await getDb().query<ReachRow>(
       `UPDATE cellular_reach_requests
@@ -1836,6 +2202,178 @@ export async function receiveCellularEvent(
     return applyReplyEvent(ctx, event, parsed.channelPayload, connection);
   }
   return applyCarrierEvent(ctx, event, connection);
+}
+
+// ---------------------------------------------------------------------------
+// The carrier-facing webhook edge (W108) — verify, resolve, receive
+// ---------------------------------------------------------------------------
+
+/**
+ * The deterministic principal the carrier edge acts under: the webhook
+ * is authenticated by the VENDOR'S SIGNATURE (not a user session), the
+ * tenant is resolved from the envelope's account, and every row the
+ * edge writes records this system identity (auditable, reconstructable).
+ */
+const CARRIER_WEBHOOK_PRINCIPAL = 'system:cellular-carrier-webhook';
+
+/**
+ * THE CARRIER → AURUM EDGE. One composite, provider-neutral entry point
+ * for the carrier-facing webhook route:
+ *
+ *  1. AUTHENTICITY — the vendor's documented request signature is
+ *     verified FIRST (Twilio X-Twilio-Signature HMAC-SHA1 with the
+ *     account auth token; Telnyx Ed25519 over `${timestamp}|${rawBody}`
+ *     with the configured public key). No verification credential
+ *     configured → `unconfigured` (the route FAILS CLOSED — an
+ *     unverifiable carrier edge never processes anything); a bad
+ *     signature → `unverified` (403; never processed).
+ *  2. PARSE — the raw body is parsed per its content type
+ *     (form-encoded — the Twilio default — or JSON) and handed to the
+ *     vendor's PRIVATE adapter. Recognized-but-non-record pings
+ *     (queued/sent statuses) → `unsupported` (acknowledged, so the
+ *     carrier does not retry); malformed envelopes → `invalid`.
+ *  3. TENANT RESOLUTION — the envelope's vendor account resolves onto
+ *     the OWNING tenant's registered connection (a platform-level,
+ *     module-internal lookup by (provider, provider_account_id); no
+ *     tenant context exists yet at a carrier ingress). An account no
+ *     tenant registered → `unknown_tenant` (observed, never an error —
+ *     the carrier must not retry another tenant's or a stranger's
+ *     traffic).
+ *  4. RECEIVE — `receiveCellularEvent` runs under the resolved tenant
+ *     with the deterministic system principal; the ordinary cellular
+ *     event machinery applies (ledger claim/dedupe, transcript turn +
+ *     on-sight identity, reach correlation, receipt refinement).
+ *
+ * The function never throws for carrier-shaped input — every outcome is
+ * a discriminated result the route maps onto its HTTP contract.
+ */
+export async function receiveCellularCarrierWebhook(
+  config: CellularProviderCredentials | null,
+  input: ReceiveCellularCarrierWebhookInput,
+): Promise<CellularCarrierWebhookResult> {
+  if (!isCellularProvider(input.provider)) {
+    return { status: 'invalid', detail: `provider must be 'twilio' or 'telnyx'` };
+  }
+  const provider = input.provider;
+
+  // 1. Authenticity (fail-closed before anything is parsed or applied).
+  const header = (name: string): string | null => {
+    const value = input.headers[name];
+    return value === undefined || value.trim() === '' ? null : value.trim();
+  };
+  if (provider === 'twilio') {
+    const authToken = config === null || config.provider !== 'twilio' ? null : config.credential ?? null;
+    if (authToken === null || authToken.trim() === '') {
+      return {
+        status: 'unconfigured',
+        detail: 'twilio webhook verification requires the account auth token (CELLULAR_TWILIO_AUTH_TOKEN)',
+      };
+    }
+    const params = twilioSignatureParams(input.rawBody, input.contentType);
+    const verified = verifyTwilioWebhookSignature({
+      authToken,
+      url: input.url,
+      params,
+      signature: header('x-twilio-signature'),
+    });
+    if (!verified) {
+      return {
+        status: 'unverified',
+        detail: 'the X-Twilio-Signature header does not match the request (wrong auth token, wrong URL, or a forged request)',
+      };
+    }
+  } else {
+    const publicKey = config === null || config.provider !== 'telnyx' ? null : config.webhookPublicKey ?? null;
+    if (publicKey === null || publicKey.trim() === '') {
+      return {
+        status: 'unconfigured',
+        detail: 'telnyx webhook verification requires the signing public key (CELLULAR_TELNYX_PUBLIC_KEY)',
+      };
+    }
+    const verified = verifyTelnyxWebhookSignature({
+      publicKeyBase64Der: publicKey,
+      rawBody: input.rawBody,
+      timestamp: header('telnyx-timestamp'),
+      signature: header('telnyx-signature'),
+    });
+    if (!verified) {
+      return {
+        status: 'unverified',
+        detail: 'the Telnyx-Signature/Telnyx-Timestamp headers do not verify against the configured public key',
+      };
+    }
+  }
+
+  // 2. Parse the raw body into the vendor envelope object.
+  let payload: unknown;
+  const type = input.contentType === null ? '' : input.contentType.toLowerCase();
+  if (type.includes('application/json')) {
+    try {
+      payload = JSON.parse(input.rawBody) as unknown;
+    } catch {
+      return { status: 'invalid', detail: 'the carrier body is not valid JSON' };
+    }
+    if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
+      return { status: 'invalid', detail: 'the carrier JSON body must be an object' };
+    }
+  } else {
+    // The vendor default: application/x-www-form-urlencoded — the form
+    // fields ARE the Twilio-style envelope the adapters document.
+    payload = twilioSignatureParams(input.rawBody, input.contentType);
+  }
+
+  // 3. Vendor envelope → canonical event (adapter-private).
+  const adapter = getCellularAdapter(provider);
+  let providerAccountId: string;
+  try {
+    const parsed = adapter.parseEvent(payload);
+    providerAccountId = adapter.normalizeAccountId(parsed.event.providerAccountId);
+  } catch (error) {
+    if (error instanceof CellularError) {
+      if (error.code === 'unsupported_provider_event') {
+        return { status: 'unsupported', detail: error.message };
+      }
+      if (error.code === 'invalid_provider_payload') {
+        return { status: 'invalid', detail: error.message };
+      }
+    }
+    throw error;
+  }
+
+  // 4. Resolve the owning tenant (platform-level account lookup).
+  const tenantId = await resolveCarrierTenant(provider, providerAccountId);
+  if (tenantId === null) {
+    return { status: 'unknown_tenant', provider, providerAccountId };
+  }
+
+  // 5. Receive under the resolved tenant with the system principal.
+  const ctx: TenantContext = { tenantId, principalId: CARRIER_WEBHOOK_PRINCIPAL, authority: [] };
+  const result = await receiveCellularEvent(ctx, { provider, payload });
+  return {
+    status: 'applied',
+    applied: result.applied,
+    kind: result.kind,
+    replyId: result.reply === null ? null : result.reply.id,
+    reachId: result.reach === null ? null : result.reach.id,
+  };
+}
+
+/**
+ * The platform-level account→tenant resolution of the carrier ingress:
+ * which tenant registered this (provider, provider_account_id)
+ * connection. Deterministic (first by creation); a vendor account is
+ * expected to be owned by exactly one tenant — two tenants registering
+ * the same account id is a documented misconfiguration (the webhook
+ * resolves to the first; per-account credential routing is future work).
+ */
+async function resolveCarrierTenant(provider: string, providerAccountId: string): Promise<string | null> {
+  const result = await getDb().query<{ tenant_id: string }>(
+    `SELECT tenant_id FROM cellular_connections
+       WHERE provider = $1 AND provider_account_id = $2
+       ORDER BY created_at ASC, id ASC LIMIT 1`,
+    [provider, providerAccountId],
+  );
+  return result.rows[0]?.tenant_id ?? null;
 }
 
 // ---------------------------------------------------------------------------

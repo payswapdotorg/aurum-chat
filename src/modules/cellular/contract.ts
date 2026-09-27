@@ -138,6 +138,14 @@ export {
   pumpCellularReach,
   // The carrier webhook edge
   receiveCellularEvent,
+  // W108 — the carrier-FACING webhook edge (signature verification +
+  // tenant resolution + receive, one composite call for the route)
+  receiveCellularCarrierWebhook,
+  // W108 — the manager-inbound W009 authority record (the W097
+  // deferral closure): negative/ambiguous determinations + the ledger's
+  // read surface
+  recordCellularInboundDetermination,
+  listCellularInboundDeterminations,
   // Reads
   getCellularReach,
   listCellularAttempts,
@@ -147,6 +155,11 @@ export {
   // Transport wiring
   getCellularTransport,
   setCellularTransport,
+  // W108 — the per-provider transport registry (production wiring) and
+  // the credentials-driven live-transport factory
+  getCellularTransportForProvider,
+  setCellularTransportForProvider,
+  createCellularTransportFromConfig,
 } from './service';
 
 export { CellularError } from './errors';
@@ -221,21 +234,26 @@ export type {
   CanonicalCellularEvent,
   CellularAttempt,
   CellularCallStatus,
+  CellularCarrierWebhookResult,
   CellularConnection,
   CellularConnectionStatus,
   CellularEventKind,
   CellularEventRecord,
   CellularEventResult,
   CellularFailureCode,
+  CellularInboundDetermination,
+  CellularInboundDeterminationKind,
   CellularInboundKind,
   CellularLeg,
   CellularNotificationTarget,
   CellularPolicy,
   CellularPolicySource,
   CellularProvider,
+  CellularProviderCredentials,
   CellularPumpSummary,
   CellularReach,
   CellularReachKind,
+  CellularReachOrigin,
   CellularReachStatus,
   CellularRecipientKind,
   CellularReply,
@@ -250,11 +268,14 @@ export type {
   ListCellularAttemptsQuery,
   ListCellularConnectionsQuery,
   ListCellularEventsQuery,
+  ListCellularInboundDeterminationsQuery,
   ListCellularPoliciesQuery,
   ListCellularReachQuery,
   ListCellularRepliesQuery,
   ReachAnyoneInput,
+  ReceiveCellularCarrierWebhookInput,
   ReceiveCellularEventInput,
+  RecordCellularInboundDeterminationInput,
   RegisterCellularConnectionInput,
   RegisterCellularConnectionResult,
   ResolvedCellularPolicy,

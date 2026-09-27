@@ -1,0 +1,85 @@
+{
+  "workItem": "W108",
+  "title": "Cellular Live Transport + Manager-Inbound Authority Closure",
+  "base": "361c6a5d889b1bf38a2ff9df5a994fb4beedb4e7",
+  "branch": "work/w108-cellular-live-transport",
+  "disposition": "DELIVERED",
+  "liveLeg": "ENVIRONMENT-BLOCKED",
+  "gates": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "arch": "PASS",
+    "test": "PASS",
+    "build": "PASS",
+    "secretsHygiene": "PASS"
+  },
+  "testTotals": {
+    "files": 271,
+    "passed": 5657,
+    "skipped": 1,
+    "failed": 0,
+    "executionMode": "chunked per-file batches (the W101 precedent)"
+  },
+  "newTestFiles": [
+    { "path": "src/modules/cellular/tests/cellular-transports.test.ts", "tests": 20, "layer": "vendor-shape" },
+    { "path": "src/modules/cellular/tests/cellular-authority.test.ts", "tests": 11, "layer": "deterministic" },
+    { "path": "src/app/api/webhooks/cellular/[provider]/tests/cellular-carrier-webhook.test.ts", "tests": 14, "layer": "deterministic" },
+    { "path": "src/infra/cellular.test.ts", "tests": 14, "layer": "deterministic" },
+    { "path": "src/modules/cellular/tests/cellular-live-composition.test.ts", "tests": 7, "layer": "vendor-shape-composed" }
+  ],
+  "amendedTestFiles": [
+    {
+      "path": "tests/e2e/platform/schema-reconciliation.test.ts",
+      "reason": "deliberate W102 count-pin extension for the new 006 migration (133->134, 136->137)"
+    }
+  ],
+  "transports": {
+    "twilio": {
+      "file": "src/modules/cellular/adapters/transport-twilio.ts",
+      "api": "POST /2010-04-01/Accounts/{sid}/Messages.json; POST /2010-04-01/Accounts/{sid}/Calls.json (Twiml <Say>); GET /2010-04-01/Accounts/{sid}/Calls/{sid}.json (bounded poll)",
+      "auth": "HTTP Basic (AccountSid:AuthToken)",
+      "verification": "X-Twilio-Signature = base64(HMAC-SHA1(authToken, url + sorted params))"
+    },
+    "telnyx": {
+      "file": "src/modules/cellular/adapters/transport-telnyx.ts",
+      "api": "POST /v2/messages; POST /v2/calls (connection_id); GET /v2/calls/{id}; POST /v2/calls/{id}/actions/speak",
+      "auth": "Authorization: Bearer <API key>",
+      "verification": "Telnyx-Signature/Telnyx-Timestamp Ed25519 over ${timestamp}|${rawBody} with base64-DER/SPKI public key",
+      "note": "voice call-control state vocabulary is SHAPE-VERIFIED ONLY (highest residual uncertainty); live verification pending credentials"
+    }
+  },
+  "wiring": {
+    "file": "src/infra/cellular.ts",
+    "entry": "ensureCellularTransportsWired()",
+    "env": [
+      "CELLULAR_TWILIO_ACCOUNT_SID",
+      "CELLULAR_TWILIO_AUTH_TOKEN",
+      "CELLULAR_TELNYX_API_KEY",
+      "CELLULAR_TELNYX_CALL_CONTROL_APP_ID",
+      "CELLULAR_TELNYX_PUBLIC_KEY",
+      "CELLULAR_WEBHOOK_PUBLIC_URL"
+    ],
+    "unsetPartialBehavior": "transport stays unwired -> honest provider_unavailable",
+    "invocationSites": ["src/app/api/webhooks/cellular/[provider]/lib.ts (lazy process-start on carrier contact)"]
+  },
+  "webhookRoute": {
+    "path": "/api/webhooks/cellular/[provider]",
+    "files": ["src/app/api/webhooks/cellular/[provider]/route.ts", "src/app/api/webhooks/cellular/[provider]/lib.ts"],
+    "contractFunction": "receiveCellularCarrierWebhook (cellular contract)",
+    "statusMapping": { "unconfigured": 503, "unverified": 403, "invalid": 400, "unsupported": 200, "unknown_tenant": 202, "applied": 200 }
+  },
+  "authority": {
+    "migration": "src/modules/cellular/migrations/006-cellular-inbound-authority.sql",
+    "table": "cellular_inbound_authority",
+    "determinations": ["consequential", "not_consequential", "ambiguous_sender"],
+    "idempotency": "UNIQUE (tenant_id, provider, provider_event_id) — first write wins",
+    "ambiguousIdentityPosture": "recorded without action; identity never auto-merged (lock 15)",
+    "censusPin": "EXPECTED_TABLE_CENSUS 256 -> 257 (src/app/api/health/lib.ts)"
+  },
+  "liveLegPrerequisites": [
+    "CELLULAR_TWILIO_ACCOUNT_SID + CELLULAR_TWILIO_AUTH_TOKEN (and a Twilio number) OR CELLULAR_TELNYX_API_KEY (+ CALL_CONTROL_APP_ID for voice)",
+    "carrier webhook route configured at the vendor for /api/webhooks/cellular/{provider}",
+    "CELLULAR_TELNYX_PUBLIC_KEY for the telnyx webhook edge",
+    "tenant connection registration with the SAME provider account id as the env transport"
+  ]
+}

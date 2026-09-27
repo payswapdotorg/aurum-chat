@@ -42,6 +42,7 @@ import type {
   CellularVoiceFallbackMode,
   ListCellularConnectionsQuery,
   ListCellularEventsQuery,
+  ListCellularInboundDeterminationsQuery,
   ListCellularPoliciesQuery,
   ListCellularReachQuery,
   ListCellularRepliesQuery,
@@ -49,6 +50,7 @@ import type {
   CanonicalCellularEvent,
   ReachAnyoneInput,
   ReceiveCellularEventInput,
+  RecordCellularInboundDeterminationInput,
   RegisterCellularConnectionInput,
   RetryCellularReachInput,
   SetCellularConnectionStatusInput,
@@ -120,9 +122,12 @@ const REACH_KEYS = [
   'text',
   'connectionId',
   'failureNotification',
+  'origin',
 ] as const;
 const NOTIFICATION_TARGET_KEYS = ['provider', 'providerAccountId', 'displayName'] as const;
 const EVENT_KEYS = ['provider', 'payload'] as const;
+const REACH_ORIGIN_KEYS = ['replyId', 'provider', 'providerEventId'] as const;
+const INBOUND_DETERMINATION_KEYS = ['provider', 'providerEventId', 'determination', 'note'] as const;
 
 // ---------------------------------------------------------------------------
 // Context + authority guards
@@ -222,6 +227,14 @@ function optionalText(
 function requireProvider(value: unknown, field: string): CellularProvider {
   if (!isCellularProvider(value)) {
     throw inputError(`${field} must be one of: twilio, telnyx`);
+  }
+  return value;
+}
+
+/** An opaque provider-minted id: printable, 1..255 chars (the SQL CHECK mirror). */
+function requirePrintableId(value: unknown, field: string): string {
+  if (typeof value !== 'string' || !PRINTABLE_ID_PATTERN.test(value)) {
+    throw inputError(`${field} must be a printable string of 1..255 characters`);
   }
   return value;
 }
@@ -479,6 +492,31 @@ export interface ValidatedReachInput {
   text: string;
   connectionId: string | null;
   failureNotification: CellularNotificationTarget | null;
+  /** W108 — the manager-inbound origin triple, when the ask arrived as one. */
+  origin: ValidatedReachOrigin | null;
+}
+
+/** The validated manager-inbound origin triple (W108). */
+export interface ValidatedReachOrigin {
+  replyId: string;
+  provider: CellularProvider;
+  providerEventId: string;
+}
+
+function validateReachOrigin(value: unknown): ValidatedReachOrigin {
+  if (!isPlainObject(value)) {
+    throw inputError('reach request origin must be an object');
+  }
+  rejectUnknownKeys(value, REACH_ORIGIN_KEYS, 'reach request origin');
+  const provider = value.provider;
+  if (!isCellularProvider(provider)) {
+    throw inputError("reach request origin.provider must be 'twilio' or 'telnyx'");
+  }
+  return {
+    replyId: requireUuid(value.replyId, 'origin.replyId'),
+    provider,
+    providerEventId: requirePrintableId(value.providerEventId, 'origin.providerEventId'),
+  };
 }
 
 export function validateReachAnyoneInput(input: ReachAnyoneInput): ValidatedReachInput {
@@ -508,6 +546,10 @@ export function validateReachAnyoneInput(input: ReachAnyoneInput): ValidatedReac
   if (input.failureNotification !== undefined && input.failureNotification !== null) {
     failureNotification = validateNotificationTarget(input.failureNotification);
   }
+  let origin: ValidatedReachOrigin | null = null;
+  if (input.origin !== undefined && input.origin !== null) {
+    origin = validateReachOrigin(input.origin);
+  }
   return {
     personId,
     phoneNumber,
@@ -515,6 +557,7 @@ export function validateReachAnyoneInput(input: ReachAnyoneInput): ValidatedReac
     text,
     connectionId: optionalConnectionId(input.connectionId),
     failureNotification,
+    origin,
   };
 }
 
@@ -526,6 +569,86 @@ export function validateRetryCellularReachInput(
   }
   rejectUnknownKeys(input, ['reachRequestId'], 'retry request');
   return { reachRequestId: requireUuid(input.reachRequestId, 'reachRequestId') };
+}
+
+// ---------------------------------------------------------------------------
+// Manager-inbound authority determinations (W108)
+// ---------------------------------------------------------------------------
+
+export interface ValidatedInboundDeterminationInput {
+  provider: CellularProvider;
+  providerEventId: string;
+  determination: 'not_consequential' | 'ambiguous_sender';
+  note: string | null;
+}
+
+/**
+ * The NEGATIVE/AMBIGUOUS determination recorder's input. (The
+ * CONSEQUENTIAL determination is recorded by the reach path itself —
+ * `reachAnyone` with an origin — never by direct calls: a consequential
+ * record without its action request would be unauditable.)
+ */
+export function validateRecordInboundDeterminationInput(
+  input: RecordCellularInboundDeterminationInput,
+): ValidatedInboundDeterminationInput {
+  if (!isPlainObject(input)) {
+    throw inputError('inbound determination must be an object');
+  }
+  rejectUnknownKeys(input, INBOUND_DETERMINATION_KEYS, 'inbound determination');
+  if (!isCellularProvider(input.provider)) {
+    throw inputError("inbound determination provider must be 'twilio' or 'telnyx'");
+  }
+  if (
+    input.determination !== 'not_consequential' &&
+    input.determination !== 'ambiguous_sender'
+  ) {
+    throw inputError(
+      "inbound determination must be 'not_consequential' or 'ambiguous_sender' (consequential determinations are recorded by the reach path)",
+    );
+  }
+  return {
+    provider: input.provider,
+    providerEventId: requirePrintableId(input.providerEventId, 'providerEventId'),
+    determination: input.determination,
+    note: optionalText(input.note, 'note', MAX_NOTE_LENGTH),
+  };
+}
+
+export interface ValidatedListInboundDeterminationsQuery {
+  provider: CellularProvider | null;
+  providerEventId: string | null;
+  replyId: string | null;
+  limit: number;
+}
+
+export function validateListInboundDeterminationsQuery(
+  query: ListCellularInboundDeterminationsQuery,
+): ValidatedListInboundDeterminationsQuery {
+  if (!isPlainObject(query)) {
+    throw queryError('inbound determination list query must be an object');
+  }
+  rejectUnknownKeys(
+    query,
+    ['provider', 'providerEventId', 'replyId', 'limit'],
+    'inbound determination list query',
+    queryError,
+  );
+  const provider =
+    query.provider === undefined || query.provider === null
+      ? null
+      : requireProvider(query.provider, 'provider');
+  return {
+    provider,
+    providerEventId:
+      query.providerEventId === undefined || query.providerEventId === null
+        ? null
+        : requirePrintableId(query.providerEventId, 'providerEventId'),
+    replyId:
+      query.replyId === undefined || query.replyId === null
+        ? null
+        : requireUuid(query.replyId, 'replyId'),
+    limit: requireLimit(query.limit, DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT),
+  };
 }
 
 export function validatePumpQuery(query: { limit?: number }): { limit: number } {
