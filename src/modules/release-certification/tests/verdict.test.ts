@@ -550,6 +550,61 @@ describe('the W101 two-run rule (the post-S002 program)', () => {
   });
 });
 
+describe('the W106 two-run rule (the four-surface re-certification program)', () => {
+  /** A W106 run folded from the digest (the four surfaces live — no blocked channel). */
+  function w106Run(
+    label: 'A' | 'B',
+    blockedJourneys: readonly string[] = [],
+  ): CertificationRunResult {
+    const base = greenRun(label);
+    const journeys = journeyResultsFromDigest(greenW101Digest(blockedJourneys), 'W106');
+    const passed = journeys.filter((journey) => journey.status === 'pass').length;
+    const blocked = journeys.filter((journey) => journey.status === 'blocked').length;
+    return {
+      ...base,
+      program: 'W106',
+      journeys,
+      summary: { passed, failed: 0, blocked, flaky: 0, unexpected: 0 },
+      verdict: blocked > 0 ? 'BLOCKED' : 'CERTIFIED READY',
+      evidenceDir: `docs/productization-evidence/W106/production-run-${label.toLowerCase()}`,
+    };
+  }
+
+  it('demands the full J01–J22 inventory (the same matrix as W101)', () => {
+    expect(gateThreeReasons(greenW101Digest(), 'W106')).toEqual([]);
+    const reasons = gateThreeReasons(greenDigest(), 'W106');
+    expect(reasons.join(' ')).toContain('J16 has no desktop browser test');
+  });
+
+  it('certifies READY when both W106 runs are fully green (the four surfaces proven)', () => {
+    const outcome = finalVerdict(w106Run('A'), w106Run('B'));
+    expect(outcome.verdict).toBe('CERTIFIED READY');
+    expect(outcome.reasons).toEqual([]);
+    expect(
+      outcome.checks.find((check) => check.id === 'runs.program-agreement')?.status,
+    ).toBe('pass');
+  });
+
+  it('stays honestly BLOCKED when a surface regresses (the channel never launders)', () => {
+    const outcome = finalVerdict(w106Run('A', ['J18']), w106Run('B', ['J18']));
+    expect(outcome.verdict).toBe('BLOCKED');
+    expect(outcome.reasons.join(' ')).toContain('Run A journey J18 is BLOCKED');
+  });
+
+  it('stays BLOCKED when a W101 pass is paired with a W106 pass (program mismatch)', () => {
+    // Both runs carry the full J01–J22 journey set (green) — the ONLY
+    // disagreement is the program label, which must stay BLOCKED.
+    const w101Full = {
+      ...w106Run('A'),
+      program: 'W101' as const,
+      evidenceDir: 'docs/productization-evidence/W101/production-run-a',
+    };
+    const outcome = finalVerdict(w101Full, w106Run('B'));
+    expect(outcome.verdict).toBe('BLOCKED');
+    expect(outcome.reasons.join(' ')).toContain('do not certify the same program');
+  });
+});
+
 describe('the W101 rollback-evidence gate', () => {
   const greenInput = {
     healthSnapshot: { environment: 'production', dbBackend: 'postgres', dbMigrations: 91 },

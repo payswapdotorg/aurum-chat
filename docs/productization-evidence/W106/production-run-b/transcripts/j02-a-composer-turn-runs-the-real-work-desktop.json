@@ -1,0 +1,74 @@
+{
+  "spec": "/home/z/aurum-chat/tests/browser/production/j02-talk-to-aurum-desktop.spec.ts",
+  "title": "J02 — a composer turn runs the real workflow: working, answer and evidence",
+  "project": "desktop",
+  "runLabel": "B",
+  "steps": [
+    {
+      "at": "2026-09-27T02:59:07.229Z",
+      "step": "sign in as the run manager through the real form",
+      "url": "about:blank",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:08.462Z",
+      "step": "the first-run starter surface is the entry point",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:08.527Z",
+      "step": "send the turn through the composer",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:08.545Z",
+      "step": "the optimistic member bubble + the working indicator",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:08.665Z",
+      "step": "screenshot: the working state — the real execution is running",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-working-state-the-real-execution-is-running.png"
+    },
+    {
+      "at": "2026-09-27T02:59:08.665Z",
+      "step": "the honest answer lands in the thread",
+      "url": "https://aurum-chat-livid.vercel.app/chat",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:09.622Z",
+      "step": "screenshot: the answer — honest company state, delivered",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=6518bef3-5d61-4f4a-b079-9d217aaf1bdb",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-answer-honest-company-state-delivered.png"
+    },
+    {
+      "at": "2026-09-27T02:59:09.622Z",
+      "step": "the answer carries its evidence (the citations block)",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=6518bef3-5d61-4f4a-b079-9d217aaf1bdb",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:09.719Z",
+      "step": "screenshot: the evidence-backed answer with its citations",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=6518bef3-5d61-4f4a-b079-9d217aaf1bdb",
+      "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j02-a-composer-turn-runs-the-real-work-desktop__the-evidence-backed-answer-with-its-citations.png"
+    },
+    {
+      "at": "2026-09-27T02:59:09.719Z",
+      "step": "a second turn — the why question with its evidence spine",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=6518bef3-5d61-4f4a-b079-9d217aaf1bdb",
+      "shot": null
+    },
+    {
+      "at": "2026-09-27T02:59:11.646Z",
+      "step": "the conversation persists in the list under its derived title",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=6518bef3-5d61-4f4a-b079-9d217aaf1bdb",
+      "shot": null
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "testId": "j22-the-marketplace-surfaces-and-the-v-desktop:desktop",
+  "journeyId": "J22",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J22 — the marketplace surfaces and the vertical-kit lifecycle are proven through the real forms",
+  "file": "tests/browser/production/j22-specialist-execution-desktop.spec.ts",
+  "durationMs": 11658,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W106/production-run-b/transcripts/j22-the-marketplace-surfaces-and-the-v-desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-marketplace-discovered-from-the-hub.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-public-catalog-the-governed-listing-state.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kits-section-both-signed-starter-kits-listed.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__command-search-the-vertical-starter-kits-destination.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-package-page-the-honest-not-found.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-detail-page-the-signed-manifest-and-the-lifecycle-st.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-registered-the-shipped-version-frozen-in-the-tenant-.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-verified-the-recorded-run-over-the-stored-bytes.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-installed-the-state-below-is-live.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-pending-grant-review-the-human-authority-gate.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-separation-of-duties-refusal-the-honest-authority-gate.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-installed-surface-the-kit-installation-under-governance.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-installed-extension-governance-the-honest-not-found.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-page-the-honest-not-found.png",
+      "docs/productization-evidence/W106/production-run-b/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-developer-surface-the-governed-publish-path.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W106/production-run-b/errors/j22-the-marketplace-surfaces-and-the-v-desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W106/production-run-b/results/j22-the-marketplace-surfaces-and-the-v-desktop-desktop.json"
+    ]
+  }
+}

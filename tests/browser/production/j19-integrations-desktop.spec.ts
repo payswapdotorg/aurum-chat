@@ -7,7 +7,9 @@
 // authority dimension carried where it applies).
 //
 // The real production flow: the run tenant's channels (J08's email
-// channel + J16's Slack channel) are on the roster, a SOURCE system is
+// channel + J16's Slack channel + J16's v1-API email inbox — W106: J16
+// now completes, so the tenant carries THREE channel connections across
+// BOTH registration surfaces) are on the roster, a SOURCE system is
 // registered through the real form (the inbound integration family), a
 // DESTINATION is registered through the real form (the outbound family),
 // the identity & verification family renders with its honest empty state
@@ -16,6 +18,21 @@
 // /approvals surface renders the human authority gate, and the journey
 // returns to the originating conversation. The accessibility probes ride
 // the hub page (the W101 extension's discipline).
+//
+// W106 (the four-surface roster reality): the hub's channel roster is
+// provider-shaped (the W030 design — one card per channel provider, the
+// NEWEST endpoint on that provider is the card's primary because
+// listChannelConnections orders created_at DESC; extra same-provider
+// endpoints stay COUNTED in the stat row, not carded). With J16
+// completing under W106, the run tenant's SECOND email endpoint (the
+// v1-API inbox) is the email card's primary and J08's older email
+// endpoint is the counted-but-not-carded one — so the roster asserts the
+// Slack endpoint (hub-UI registration), the v1-API inbox (the W103
+// registration surface VISIBLE on the user-facing hub — the integration
+// this four-surface program certifies) and the 3-connected stat (the
+// displaced J08 endpoint proven counted). The full connection roster —
+// every endpoint, newest first — is the v1 API's channels.list surface,
+// certified by J16.
 
 import { certTest as test, expect } from './fixtures';
 import { signInRunManager } from './helpers';
@@ -40,11 +57,18 @@ test.describe('J19 — integrations (desktop)', () => {
     await expectPageShellA11y(page, 'the Connections hub');
 
     await cert.step('the channel family roster shows the run tenant’s channels');
-    await expect(page.getByText('Certification workspace').first()).toBeVisible({ timeout: 30_000 });
+    // W106: three connections across both registration surfaces — the
+    // Slack endpoint (hub UI), the v1-API inbox (the email card's
+    // primary — the newest email endpoint) and the counted J08 email
+    // endpoint (the stat row’s 3 connected; see the header note).
     await expect(page.getByText('Cross-channel certification desk').first()).toBeVisible({
       timeout: 30_000,
     });
-    await cert.shot('the channels family — the run tenant’s two channels');
+    await expect(page.getByText('W106 v1 certification inbox').first()).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText('3/12').first()).toBeVisible({ timeout: 30_000 });
+    await cert.shot('the channels family — the run tenant’s channels across both registration surfaces');
 
     await cert.step('register a source system through the real form');
     await page.locator('summary', { hasText: 'Connect a source system' }).first().click();

@@ -472,11 +472,12 @@ export async function runCertificationPass(
 
   // The matrix itself must be consistent before anything runs.
   const matrixReasons = matrixConsistency();
+  const postS002 = program === 'W101' || program === 'W106';
   gates.push({
     id: 'matrix.consistency',
     title:
-      program === 'W101'
-        ? 'the J01–J22 matrix is the W101 contract matrix (J01–J15 frozen + the post-S002 journeys)'
+      postS002
+        ? `the J01–J22 matrix is the ${program} contract matrix (J01–J15 frozen + the post-S002 journeys)`
         : 'the J01–J15 matrix is the contract matrix',
     status: matrixReasons.length === 0 ? 'pass' : 'fail',
     detail:
@@ -515,13 +516,14 @@ export async function runCertificationPass(
     },
   });
 
-  // The W101 rollback-evidence gate (the acceptance's rollback dimension):
-  // the deployment/health/worker seams' recorded state a rollback would
-  // preserve/restore, the prior READY production deployment (the known-good
-  // rollback target), and the committed rollback runbook + W078 operations
-  // evidence this run links. Runs for the W101 program only — the frozen
-  // W079 program keeps its historical gate set exactly.
-  if (program === 'W101') {
+  // The W101/W106 rollback-evidence gate (the acceptance's rollback
+  // dimension): the deployment/health/worker seams' recorded state a
+  // rollback would preserve/restore, the prior READY production
+  // deployment (the known-good rollback target), and the committed
+  // rollback runbook + W078 operations evidence this run links. Runs for
+  // the post-S002 programs (W101 and W106) only — the frozen W079 program
+  // keeps its historical gate set exactly.
+  if (postS002) {
     const entries = await fetchDeploymentEntries(config, vercelToken, 2);
     const rollbackTarget = entries === null ? null : entries[1] ?? null;
     const runbookPath = path.join(config.repoRoot, 'docs', 'DEPLOYMENT.md');
@@ -641,10 +643,9 @@ export async function runCertificationPass(
         : gateThreeReasons(browser.digest, program);
     gates.push({
       id: 'g3.browser-matrix',
-      title:
-        program === 'W101'
-          ? 'the J01–J22 browser matrix runs against the hosted production URL (desktop + mobile)'
-          : 'the J01–J15 browser matrix runs against the hosted production URL (desktop + mobile)',
+      title: postS002
+        ? 'the J01–J22 browser matrix runs against the hosted production URL (desktop + mobile)'
+        : 'the J01–J15 browser matrix runs against the hosted production URL (desktop + mobile)',
       status: gate3Reasons.length === 0 ? 'pass' : 'fail',
       detail:
         gate3Reasons.length === 0 && browser.digest !== null

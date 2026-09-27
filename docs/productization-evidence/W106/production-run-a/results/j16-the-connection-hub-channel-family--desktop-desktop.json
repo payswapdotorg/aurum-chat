@@ -1,0 +1,30 @@
+{
+  "testId": "j16-the-connection-hub-channel-family--desktop:desktop",
+  "journeyId": "J16",
+  "context": "desktop",
+  "status": "pass",
+  "title": "J16 — the connection hub channel family and the v1 channel surfaces are proven with real production auth",
+  "file": "tests/browser/production/j16-cross-channel-desktop.spec.ts",
+  "durationMs": 11152,
+  "error": null,
+  "violations": 0,
+  "evidence": {
+    "transcripts": [
+      "docs/productization-evidence/W106/production-run-a/transcripts/j16-the-connection-hub-channel-family--desktop.json"
+    ],
+    "screenshots": [
+      "docs/productization-evidence/W106/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-connections-hub-the-channel-family.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-second-channel-registered-with-its-opaque-credential-ref.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-channel-roster-the-tenant-scoped-envelope.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-v1-discovery-the-channel-family-listed.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-developer-console-the-channels-scoped-key-grant-recorded.png",
+      "docs/productization-evidence/W106/production-run-a/screenshots/j16-the-connection-hub-channel-family--desktop__the-v1-channel-family-the-tenant-scoped-round-trip-recorded.png"
+    ],
+    "errorCaptures": [
+      "docs/productization-evidence/W106/production-run-a/errors/j16-the-connection-hub-channel-family--desktop.json"
+    ],
+    "results": [
+      "docs/productization-evidence/W106/production-run-a/results/j16-the-connection-hub-channel-family--desktop-desktop.json"
+    ]
+  }
+}

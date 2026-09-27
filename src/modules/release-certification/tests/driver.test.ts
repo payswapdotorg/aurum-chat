@@ -469,6 +469,168 @@ describe('the certification driver — one full pass over a canned production ta
   }, 30_000);
 });
 
+/**
+ * A fully-green W106 browser digest: the SAME 21 desktop tests + the J14
+ * mobile pair, with NO blocked channel — the four post-S002 surfaces
+ * (channels, meetings, cellular, vertical kits) exist in the canned
+ * deployment (mirroring the current production revision with
+ * W103/W104/W105 merged).
+ */
+function greenW106Digest(): BrowserRunDigest {
+  const digest = greenW101Digest();
+  return {
+    ...digest,
+    tests: digest.tests.map((test) => ({
+      ...test,
+      blockedReasons: undefined,
+      blockedEvidence: undefined,
+    })),
+  };
+}
+
+describe('the certification driver — one W106 pass over a canned production target', () => {
+  let w106EvidenceRoot: string;
+  let w106RepoRoot: string;
+
+  beforeAll(async () => {
+    w106EvidenceRoot = await mkdtemp(path.join(tmpdir(), 'w106-evidence-'));
+    w106RepoRoot = await mkdtemp(path.join(tmpdir(), 'w106-repo-'));
+    // The repo-side rollback evidence the W106 gate reads (the same gate
+    // the post-S002 programs carry): the §12 runbook + the W078 tree.
+    await mkdir(path.join(w106RepoRoot, 'docs'), { recursive: true });
+    await writeFile(
+      path.join(w106RepoRoot, 'docs', 'DEPLOYMENT.md'),
+      '# Deployment\n\n## 12. Rollback\n\nThe rollback runbook…\n',
+      'utf8',
+    );
+    await mkdir(path.join(w106RepoRoot, 'docs', 'productization-evidence', 'W078'), {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(w106RepoRoot, 'docs', 'productization-evidence', 'W078', 'W078-OPERATIONS-PROOF.md'),
+      '# W078\n',
+      'utf8',
+    );
+  });
+  afterAll(async () => {
+    await rm(w106EvidenceRoot, { recursive: true, force: true });
+    await rm(w106RepoRoot, { recursive: true, force: true });
+  });
+
+  it('runs the four-surface re-certification program: the rollback gate, the full green matrix and the W106 identity', async () => {
+    const workerTokenFile = path.join(w106EvidenceRoot, 'worker-token');
+    await writeFile(workerTokenFile, 'the-worker-token');
+    const vercelTokenFile = path.join(w106EvidenceRoot, 'vercel-token');
+    await writeFile(vercelTokenFile, 'the-vercel-token');
+    const fetchImpl = cannedFetch();
+    // The Vercel listing with BOTH the current production deployment and
+    // the prior READY deployment (the rollback target).
+    const listingFetch: typeof fetch = async (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('api.vercel.com')) {
+        return new Response(
+          JSON.stringify({
+            deployments: [
+              {
+                uid: 'dpl_cur',
+                readyState: 'READY',
+                createdAt: 1790468195425,
+                meta: { githubCommitSha: 'sha-cur' },
+              },
+              {
+                uid: 'dpl_prior',
+                readyState: 'READY',
+                createdAt: 1790466600412,
+                meta: { githubCommitSha: 'sha-prior' },
+              },
+            ],
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return fetchImpl(input, init);
+    };
+    const execImpl = async (
+      command: string,
+      args: string[],
+      execOptions: { cwd: string; env: Record<string, string> },
+    ) => {
+      if (args.includes('playwright.certification.config.ts')) {
+        const { writeFile: write, mkdir: make } = await import('node:fs/promises');
+        await make(execOptions.env.W079_RUN_DIR!, { recursive: true });
+        await write(
+          path.join(execOptions.env.W079_RUN_DIR!, 'browser-run-digest.json'),
+          JSON.stringify(greenW106Digest()),
+        );
+        return { code: 0, stdout: '22 passed', stderr: '' };
+      }
+      if (args.includes('rev-parse')) {
+        return { code: 0, stdout: 'w106head\n', stderr: '' };
+      }
+      return { code: 0, stdout: `${command} ok`, stderr: '' };
+    };
+    const run = await runCertificationPass({
+      target: BASE,
+      program: 'W106',
+      runLabel: 'A',
+      expectedDeployment: {
+        deploymentId: 'dpl_cur',
+        commitSha: 'sha-cur',
+        createdAt: '2026-09-27',
+      },
+      workerTokenFile,
+      vercelTokenFile,
+      repoRoot: w106RepoRoot,
+      evidenceRoot: w106EvidenceRoot,
+      command: 'bun run cert:production -- --program w106 --run a',
+      repository: { branch: 'work/w106-four-surface-recertification', baseCommit: '625a133e' },
+      fetchImpl: listingFetch as typeof fetch,
+      execImpl,
+    });
+
+    // The W106 gate set is the W101 gate set (the rollback-evidence gate
+    // carries over — the post-S002 discipline is unchanged).
+    expect(run.gates.map((gate) => [gate.id, gate.status])).toEqual([
+      ['matrix.consistency', 'pass'],
+      ['g1.health', 'pass'],
+      ['g1.quick-sign-in-off', 'pass'],
+      ['g1.worker-authorization', 'pass'],
+      ['g1.deployment-identity', 'pass'],
+      ['rollback.evidence', 'pass'],
+      ['g3.w078-rerun', 'pass'],
+      ['g3.browser-matrix', 'pass'],
+    ]);
+    const rollbackGate = run.gates.find((gate) => gate.id === 'rollback.evidence')!;
+    expect(rollbackGate.detail).toContain('dpl_prior');
+    expect(rollbackGate.detail).toContain('sha-prior');
+
+    // The four surfaces live: no blocked channel anywhere — the run is
+    // fully green (the W106 certification target's honest shape).
+    expect(run.program).toBe('W106');
+    expect(run.summary).toEqual({ passed: 22, failed: 0, blocked: 0, flaky: 0, unexpected: 0 });
+    expect(run.verdict).toBe('CERTIFIED READY');
+    expect(run.journeys).toHaveLength(22);
+    expect(run.journeys.every((journey) => journey.status === 'pass')).toBe(true);
+
+    // The W106 repository identity is recorded in the manifest.
+    expect(run.identity.repository.branch).toBe('work/w106-four-surface-recertification');
+    expect(run.identity.repository.baseCommit).toBe('625a133e');
+    expect(run.identity.repository.headCommit).toBe('unknown');
+
+    // The evidence tree lands under the W106 evidence root with the
+    // program-stamped report; no secret ever lands in the artifacts.
+    const runDir = path.join(w106EvidenceRoot, 'production-run-a');
+    const runResult = await readFile(path.join(runDir, 'run-result.json'), 'utf8');
+    expect(runResult).toContain('"program": "W106"');
+    const report = await readFile(path.join(runDir, 'run-report.md'), 'utf8');
+    expect(report).toContain('W106 production journey certification — Run A');
+    expect(report).toContain('Journey matrix (J01–J22)');
+    const identity = await readFile(path.join(runDir, 'deployment-identity.json'), 'utf8');
+    expect(`${runResult}${report}${identity}`.includes('the-worker-token')).toBe(false);
+    expect(`${runResult}${report}${identity}`.includes('the-vercel-token')).toBe(false);
+  }, 30_000);
+});
+
 describe('the certification driver — one W101 pass over a canned production target', () => {
   let w101EvidenceRoot: string;
   let w101RepoRoot: string;
