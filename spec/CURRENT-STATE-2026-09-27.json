@@ -1,0 +1,57 @@
+{
+  "schema": "aurum.tech-lead-state",
+  "schemaVersion": 1,
+  "asOf": "2026-09-27",
+  "repository": "payswapdotorg/aurum-chat",
+  "canonicalBranch": "main",
+  "takeoverCodeEvidenceBaseline": "c3d6a331c69ed3f8b9edcb4e86750cbc89c84caa",
+  "latestCertifiedProduction": {
+    "deploymentId": "dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ",
+    "commitSha": "625a133e22904972394b6e418f2a3b2c9cda676a",
+    "host": "aurum-chat-livid.vercel.app",
+    "verdict": "CERTIFIED READY",
+    "runs": [
+      {
+        "label": "A",
+        "passed": 22,
+        "failed": 0,
+        "blocked": 0,
+        "flaky": 0,
+        "unexpected": 0
+      },
+      {
+        "label": "B",
+        "passed": 22,
+        "failed": 0,
+        "blocked": 0,
+        "flaky": 0,
+        "unexpected": 0
+      }
+    ]
+  },
+  "mandatoryRoadmap": {
+    "range": "W080-W101",
+    "status": "complete"
+  },
+  "optional": {
+    "W099": "non-blocking"
+  },
+  "continuation": {
+    "W107": "ready",
+    "W108": "ready",
+    "W109": "ready",
+    "W110": "depends-on-W107-W109-integration",
+    "W111": "depends-on-W107-W109-integration",
+    "W112": "depends-on-W107-W111"
+  },
+  "firstParallelWave": [
+    "W107",
+    "W108",
+    "W109"
+  ],
+  "maxConcurrentWorkers": 3,
+  "sourceOfTruth": "spec/REPOSITORY-SOURCE-OF-TRUTH.md",
+  "canonicalHandoff": "spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md",
+  "orchestratorPrompt": "spec/TECH-LEAD-ORCHESTRATOR-PROMPT-2026-09-27.md",
+  "continuationDag": "spec/POST-W106-CONTINUATION-DAG-2026-09-27.md"
+}
