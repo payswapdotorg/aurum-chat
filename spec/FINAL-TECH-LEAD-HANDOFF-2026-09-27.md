@@ -2,7 +2,7 @@
 
 **Repository:** `payswapdotorg/aurum-chat`
 **Canonical branch:** `main`
-**Takeover base:** `c3d6a331c69ed3f8b9edcb4e86750cbc89c84caa`
+**Takeover code/evidence baseline:** `c3d6a331c69ed3f8b9edcb4e86750cbc89c84caa` (always fetch the actual current `main` before integrating)
 **Latest certified production revision:** `625a133e22904972394b6e418f2a3b2c9cda676a`
 **Latest certified deployment:** `dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ`
 **Production host recorded by W106:** `https://aurum-chat-livid.vercel.app`
@@ -58,7 +58,7 @@ Verified mandatory implementation lineage:
 - W094 Migration + Dual Run — `9f4f15b32a8d6bdbe222c926025d775640de9a14`
 - W095 Unified Identity — `2f415e3c959f67b7507ae31e7c2cdaae9ba73871`
 - W096 Integration Intelligence E2E — `e37f1d444c6e414923f054f1f9f5cff7fa789e1f`
-- W097 Meeting + Cellular E2E — `c71f2e2`
+- W097 Meeting + Cellular E2E — `c71f2e220e202f391dede8cf5cd2681a3f55c281`
 - W098 Persistent Supervision + Recovery — `239502a671cd114f39af5243c6115dff3c498119`
 - W100 Longitudinal S003 Benchmark — `73d00ecbabc9402dde8374671d18108a2958d2e0`
 
@@ -292,6 +292,7 @@ Read, in this order:
 
 1. `spec/REPOSITORY-SOURCE-OF-TRUTH.md`
 2. `spec/CURRENT-STATE-2026-09-27.md`
+- Machine-readable current state: `spec/CURRENT-STATE-2026-09-27.json`
 3. `spec/POST-W106-CONTINUATION-DAG-2026-09-27.md`
 4. `spec/TECH-LEAD-ORCHESTRATOR-PROMPT-2026-09-27.md`
 5. `spec/ARCHITECTURE.md`
