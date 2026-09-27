@@ -14,6 +14,7 @@ history.
 - Work-item definitions: `spec/work-items/WORK-ITEM-CATALOG.md`
 - Dependency DAG: `spec/WORK-ITEM-DEPENDENCY-GRAPH.md`
 - Current state: `spec/CURRENT-STATE-2026-09-27.md`
+- Machine-readable current state: `spec/CURRENT-STATE-2026-09-27.json`
 - Current continuation DAG: `spec/POST-W106-CONTINUATION-DAG-2026-09-27.md`
 - TL execution prompt: `spec/TECH-LEAD-ORCHESTRATOR-PROMPT-2026-09-27.md`
 - Final takeover handoff: `spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md`
