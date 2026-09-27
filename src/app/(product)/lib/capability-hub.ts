@@ -372,6 +372,36 @@ export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
         icon: 'marketplace',
         note: null,
       },
+      {
+        // W105 — the W092 vertical starter kits: the specialist
+        // extension/agent starter kits for system-of-record-heavy
+        // industries, surfaced through the marketplace catalog's kits
+        // section (the same intent registry feeds the command search).
+        id: 'marketplace-kits',
+        label: 'Install a specialist starter kit',
+        summary:
+          'Signed vertical kits for system-of-record industries — legal case management, accounting ledger-ERP — with their own grant-review lifecycle.',
+        href: '/marketplace',
+        keywords: [
+          'kit',
+          'kits',
+          'vertical',
+          'starter',
+          'specialist',
+          'legal',
+          'law',
+          'case',
+          'matter',
+          'docket',
+          'accounting',
+          'ledger',
+          'erp',
+          'industry',
+          'practice',
+        ],
+        icon: 'marketplace',
+        note: 'vertical starter kits',
+      },
     ],
   },
   {

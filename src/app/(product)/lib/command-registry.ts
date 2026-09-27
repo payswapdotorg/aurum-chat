@@ -24,9 +24,11 @@ import { capabilityEntries, capabilityEntry } from './capability-hub';
 // they are search terms, not labels.
 
 /**
- * The marketplace area's keyboard destinations (W064). The area's hub
- * is already a PRODUCT_AREAS command; these are its three working
- * surfaces, so Cmd/Ctrl+K reaches them without a second registry.
+ * The marketplace area's keyboard destinations (W064 + W105). The area's
+ * hub is already a PRODUCT_AREAS command; these are its working
+ * surfaces — the governed catalog, the installed registry, the
+ * developer console, and the vertical starter kits' catalog section
+ * (W105) — so Cmd/Ctrl+K reaches them without a second registry.
  */
 export const MARKETPLACE_DESTINATIONS: readonly {
   id: string;
@@ -67,6 +69,35 @@ export const MARKETPLACE_DESTINATIONS: readonly {
     subtitle: 'Build extensions, publish packages, review submissions',
     href: '/marketplace/developer',
     keywords: ['marketplace', 'developer', 'builder', 'publish', 'review', 'submit', 'build', 'package'],
+  },
+  {
+    // W105 — the W092 vertical starter kits' catalog section: the
+    // specialist kit a user arrives looking for ('legal', 'accounting',
+    // 'case management', 'ledger') is a TASK, and the kits section of
+    // the marketplace catalog is its destination.
+    id: 'vertical-kits',
+    title: 'Find a specialist starter kit',
+    subtitle: 'Signed vertical kits: legal, accounting and other system-of-record industries',
+    href: '/marketplace',
+    keywords: [
+      'marketplace',
+      'kit',
+      'kits',
+      'vertical',
+      'starter',
+      'specialist',
+      'legal',
+      'law',
+      'case',
+      'matter',
+      'docket',
+      'accounting',
+      'ledger',
+      'erp',
+      'journal',
+      'industry',
+      'practice',
+    ],
   },
 ];
 

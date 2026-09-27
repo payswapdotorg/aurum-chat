@@ -218,6 +218,19 @@ export const ROUTE_CATALOG: readonly RouteSpec[] = [
     mobileArea: null,
   },
   {
+    // W105 — the W092 vertical starter kits' detail destination (the
+    // kit-scoped companion of the package detail: identity, the signed
+    // version manifest, verification, the invocation ledger summary and
+    // the install/lifecycle state through the kit's own lifecycle).
+    path: '/marketplace/kit/:kitKey',
+    kind: 'page',
+    area: 'product',
+    auth: 'public',
+    title: 'One vertical starter kit',
+    file: 'src/app/(product)/marketplace/kit/[kitKey]/page.tsx',
+    mobileArea: null,
+  },
+  {
     path: '/developer',
     kind: 'page',
     area: 'product',

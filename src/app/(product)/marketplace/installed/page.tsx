@@ -12,6 +12,7 @@ import { withProductScope } from '../../lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import type { PageSearchParams } from '../../lib/context';
 import { buildInstalledView } from '../lib/views';
+import { buildInstalledKitsView } from '../lib/kit-views';
 import {
   EmptyState,
   ErrorState,
@@ -33,6 +34,10 @@ export default async function InstalledPage({
   const session = await requireAuthenticatedPage();
   const scopeQuery = withProductScope(params);
   const view = await buildInstalledView(session.context);
+  // W105 — the installed vertical starter kits (the W092 kits' own
+  // lifecycle states — additive; the extensions registry above is
+  // untouched).
+  const kits = await buildInstalledKitsView(session.context);
 
   return (
     <>
@@ -94,6 +99,81 @@ export default async function InstalledPage({
           ))}
         </ul>
       )}
+
+      <section className="aurum-panel" aria-labelledby="aurum-mkt-installed-kits-title">
+        <h2 className="aurum-panel-title" id="aurum-mkt-installed-kits-title">
+          <span>Vertical starter kits</span>
+        </h2>
+        <p className="aurum-panel-blurb">
+          The W092 specialist kits your company installed — governed by the
+          vertical-kits module&apos;s own lifecycle (the grant review, the minted
+          capability grants, and the invocation ledger live on each kit&apos;s
+          detail page).
+        </p>
+        {!kits.ok ? (
+          <ErrorState
+            title="Kit registry read failed"
+            detail="Your kit installations could not be read right now. Nothing changed — try again in a moment."
+            retryHref={`/marketplace/installed${scopeQuery}`}
+          />
+        ) : kits.items.length === 0 ? (
+          <EmptyState
+            title="No vertical kits installed yet"
+            hint="Install a specialist starter kit from the catalog — it lands here with its grant-review state, minted grants and lifecycle trail."
+            action={
+              <Link
+                className="aurum-btn"
+                data-variant="quiet"
+                href={`/marketplace${scopeQuery}#vertical-kits`}
+              >
+                Browse the vertical starter kits
+              </Link>
+            }
+          />
+        ) : (
+          <ul className="aurum-item-list">
+            {kits.items.map((item) => (
+              <li key={item.installationId}>
+                <div className="aurum-item-head">
+                  <Link
+                    className="aurum-mkt-item-title"
+                    href={`/marketplace/kit/${item.kitKey}${scopeQuery}`}
+                  >
+                    {item.kitKey}
+                  </Link>
+                  <StatusPill tone={item.stateTone}>{item.stateLabel}</StatusPill>
+                </div>
+                <div className="aurum-item-foot">
+                  <span className="aurum-mono">v{item.kitVersion}</span>
+                  {item.verificationState === null ? null : (
+                    <Tag>
+                      <StatusPill tone={verificationTone(item.verificationState as never)}>
+                        {item.verificationState.toLowerCase()}
+                      </StatusPill>
+                    </Tag>
+                  )}
+                  {item.grants === null ? (
+                    <Tag>grants unreadable</Tag>
+                  ) : (
+                    <Tag>
+                      {item.grants.active} active · {item.grants.revoked} revoked grant
+                      {item.grants.active + item.grants.revoked === 1 ? '' : 's'}
+                    </Tag>
+                  )}
+                  <span>installed {item.installedAt.slice(0, 10)}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {kits.ok && kits.removedCount > 0 ? (
+          <p className="aurum-item-text" style={{ marginTop: 10 }}>
+            {kits.removedCount} removed kit lifecycle{kits.removedCount === 1 ? '' : 's'} retained
+            as append-only audit — visible on each kit&apos;s detail trail, never
+            listed as running.
+          </p>
+        ) : null}
+      </section>
 
       <div style={{ marginTop: 18 }}>
         <Panel

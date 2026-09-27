@@ -21,6 +21,12 @@ import {
   parseKindFilter,
   publicBrowsingContext,
 } from './lib/views';
+import { buildKitsCatalogView } from './lib/kit-views';
+import {
+  kitVerificationLabel,
+  kitVerificationTone,
+  shortDigest,
+} from './lib/kit-labels';
 import {
   EmptyState,
   ErrorState,
@@ -55,6 +61,10 @@ export default async function MarketplacePage({
   const rawKind = Array.isArray(params['kind']) ? (params['kind'][0] ?? null) : (params['kind'] ?? null);
   const kindFilter = parseKindFilter(rawKind);
   const view = await buildCatalogView(ctx, kindFilter);
+  // W105 — the vertical starter kits' own section (the W092 kits ride
+  // their own signed-manifest lifecycle, listed beside the governed
+  // package catalog — additive; the package listing is untouched).
+  const kits = await buildKitsCatalogView(ctx);
 
   const tabs = KIND_TABS.map((tab) => ({
     ...tab,
@@ -190,6 +200,80 @@ export default async function MarketplacePage({
                   <Tag>{item.permissionCount} permission{item.permissionCount === 1 ? '' : 's'}</Tag>
                 </div>
                 {item.description === null || item.description === '' ? null : (
+                  <p className="aurum-item-text">{item.description}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* W105 — the vertical starter kits: the W092 kits' user-visible
+          catalog path. A distinct category with its own honest states
+          (SIGNED manifests + the module's deterministic verification,
+          and the tenant's install lifecycle state) — never marketplace
+          package states the kits do not carry. */}
+      <section
+        className="aurum-panel"
+        id="vertical-kits"
+        aria-labelledby="aurum-mkt-kits-title"
+      >
+        <h2 className="aurum-panel-title" id="aurum-mkt-kits-title">
+          <span>Vertical starter kits</span>
+        </h2>
+        <p className="aurum-panel-blurb">
+          Signed, verified content packages for system-of-record-heavy
+          industries (legal, accounting…): the required capabilities, starter
+          extension/agent definitions and system-of-record integration
+          declarations frozen in one digest-signed manifest. Kits install
+          through their own grant-review lifecycle — not the package chain
+          above.
+        </p>
+        {!kits.ok ? (
+          <ErrorState
+            title="Kit registry unavailable"
+            detail="Your company's kit registry could not be read right now. The shipped starter kits below keep rendering; the install states will return."
+          />
+        ) : kits.items.length === 0 ? (
+          <EmptyState
+            title="No vertical kits"
+            hint="The platform's shipped starter kits list here — and, once you register kit versions of your own, so do those."
+          />
+        ) : (
+          <ul className="aurum-item-list">
+            {kits.items.map((item) => (
+              <li key={item.kitKey}>
+                <div className="aurum-item-head">
+                  <Link
+                    className="aurum-mkt-item-title"
+                    href={`${item.href}${scopeQuery}`}
+                  >
+                    {item.displayName}
+                  </Link>
+                  {kits.scoped ? (
+                    <StatusPill tone={item.installTone}>{item.installLabel}</StatusPill>
+                  ) : null}
+                </div>
+                <div className="aurum-item-foot">
+                  <span
+                    className="aurum-mono"
+                    title={item.manifestDigest}
+                  >
+                    {item.kitKey} · v{item.version} · digest {shortDigest(item.manifestDigest)}
+                  </span>
+                  <Tag>{item.kindLabel}</Tag>
+                  <Tag>
+                    <StatusPill tone={kitVerificationTone(item.verificationState)}>
+                      {kitVerificationLabel(item.verificationState)}
+                    </StatusPill>
+                  </Tag>
+                  <Tag>{item.counts.capabilities} capabilit{item.counts.capabilities === 1 ? 'y' : 'ies'}</Tag>
+                  <Tag>
+                    {item.counts.extensions} extension{item.counts.extensions === 1 ? '' : 's'} ·{' '}
+                    {item.counts.agents} agent{item.counts.agents === 1 ? '' : 's'}
+                  </Tag>
+                </div>
+                {item.description === '' ? null : (
                   <p className="aurum-item-text">{item.description}</p>
                 )}
               </li>

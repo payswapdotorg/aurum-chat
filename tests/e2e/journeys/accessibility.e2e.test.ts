@@ -163,6 +163,11 @@ function concretePath(pattern: string): string {
       return `/marketplace/package/${anchorId(report, 'marketplace', 'vendor-package')}`;
     case '/marketplace/installed/:extensionKey':
       return '/marketplace/installed/roast-batch-tracker';
+    case '/marketplace/kit/:kitKey':
+      // The W092 shipped starter kit renders without any seed (the
+      // signed manifest + deterministic verification are first-party
+      // module content).
+      return '/marketplace/kit/legal-case-management';
     case '/explain/:kind/:id':
       return `/explain/execution/${anchorId(report, 'consequential-approval', 'cognition-execution')}`;
     case '/invite/:code':

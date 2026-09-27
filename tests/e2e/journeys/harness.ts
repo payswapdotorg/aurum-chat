@@ -265,6 +265,10 @@ const PAGE_MODULES: Record<string, RouteModule> = {
     area: 'product',
     load: () => import('../../../src/app/(product)/marketplace/package/[packageId]/page'),
   },
+  '/marketplace/kit/:kitKey': {
+    area: 'product',
+    load: () => import('../../../src/app/(product)/marketplace/kit/[kitKey]/page'),
+  },
   '/developer': { area: 'product', load: () => import('../../../src/app/(product)/developer/page') },
   '/ai': { area: 'product', load: () => import('../../../src/app/(product)/ai/page') },
   '/ai/preferences': {
@@ -487,6 +491,11 @@ export function concretePathFor(
       return `/marketplace/package/${anchorId(report, 'marketplace', 'vendor-package')}`;
     case '/marketplace/installed/:extensionKey':
       return '/marketplace/installed/roast-batch-tracker';
+    case '/marketplace/kit/:kitKey':
+      // The W092 shipped starter kit renders without any seed (the
+      // signed manifest + deterministic verification are first-party
+      // module content, readable before any tenant registers it).
+      return '/marketplace/kit/legal-case-management';
     case '/explain/:kind/:id':
       return `/explain/execution/${anchorId(report, 'consequential-approval', 'cognition-execution')}`;
     case '/invite/:code':
