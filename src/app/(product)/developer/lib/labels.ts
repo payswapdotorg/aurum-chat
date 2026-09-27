@@ -44,6 +44,10 @@ export const DEV_API_SCOPES: readonly ApiScope[] = [
   'channels:write',
   'webhooks:manage',
   'api:administer',
+  // W104 — the meetings (W085) and cellular (W087) read/write families.
+  'meetings:read',
+  'cellular:read',
+  'cellular:write',
 ];
 
 /** The api contract's key authority-claim vocabulary (client-safe copy; test-locked). */
@@ -119,6 +123,21 @@ const SCOPE_COPY: Record<ApiScope, { label: string; explanation: string }> = {
   'api:administer': {
     label: 'API · administer',
     explanation: 'Manage the machine credentials themselves: create, list and revoke keys over HTTP.',
+  },
+  'meetings:read': {
+    label: 'Meetings · read',
+    explanation:
+      'Inspect captured meeting intelligence: meetings, sessions, participants, transcripts, artifacts and capture connections (GET /api/v1/meetings…).',
+  },
+  'cellular:read': {
+    label: 'Cellular · read',
+    explanation:
+      'Read SMS/voice reachability state: telecom connections, reach requests with their attempt audits and replies, and the routing/cost policies (GET /api/v1/cellular…).',
+  },
+  'cellular:write': {
+    label: 'Cellular · write',
+    explanation:
+      'Register (or re-authorize) telecom sending accounts — the cellular connection-management half of the reachability surface.',
   },
 };
 

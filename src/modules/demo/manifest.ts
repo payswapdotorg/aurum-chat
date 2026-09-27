@@ -206,6 +206,15 @@ export const DEMO_KEYS = {
   /** The demo goal metric names. */
   freshnessMetric: 'wholesale-freshness-score',
   shipTimeMetric: 'order-to-ship-hours',
+  /** The W104 meeting-capture demo literals (J17). */
+  meetingZoomAccount: 'zoom-acct-meridian',
+  meetingProviderMeetingId: 'mtg-meridian-weekly',
+  meetingProviderSessionId: 'occ-meridian-weekly',
+  meetingTitle: 'Weekly supplier review',
+  /** The W104 cellular demo literals (J18). */
+  cellularTwilioAccount: 'twilio-acct-meridian',
+  cellularSendingNumber: '+15550100142',
+  cellularReachNumber: '+15550100642',
 } as const;
 
 // ---------------------------------------------------------------------------

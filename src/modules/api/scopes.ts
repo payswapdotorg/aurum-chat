@@ -21,11 +21,11 @@ import { ApiError } from './errors';
 /**
  * The closed capability-scope vocabulary of the v1 public API.
  * KEEP IN SYNC with the scopes CHECK constraint on api_keys — installed by
- * src/modules/api/migrations/001-api-keys.sql and EXTENDED by
- * src/modules/api/migrations/003-api-channels-scopes.sql (W103 added the
- * channels family; the repair discipline keeps applied migrations
- * immutable, so the constraint's authoritative current shape lives in the
- * highest-numbered migration).
+ * src/modules/api/migrations/001-api-keys.sql and extended by the 003
+ * migrations (003-api-channels-scopes.sql added the channels family in
+ * W103; 003-api-scopes-w104.sql added the meetings + cellular families in
+ * W104 and carries the constraint's authoritative current shape — it runs
+ * last and its list must therefore include EVERY family).
  */
 export const API_SCOPES = [
   'goals:read',
@@ -44,6 +44,9 @@ export const API_SCOPES = [
   'channels:write',
   'webhooks:manage',
   'api:administer',
+  'meetings:read',
+  'cellular:read',
+  'cellular:write',
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];

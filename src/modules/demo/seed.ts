@@ -139,6 +139,24 @@ import {
   type RegisterExtensionManifestInput,
 } from '@/modules/extensions/contract';
 import { createApiKey, createWebhookSubscription } from '@/modules/api/contract';
+// W104 (journeys J17/J18) — the meeting-intelligence capture edge and the
+// cellular reachability state, seeded through the REAL contracts exactly as
+// the W097 fixture suite drives them (provider webhook envelopes parsed by
+// the private zoom adapter; the reach records the honest
+// provider_unavailable environment limit because no transport is wired).
+import {
+  listMeetingArtifacts,
+  listMeetings,
+  listMeetingSessions,
+  listMeetingTranscripts,
+  receiveMeetingWebhook,
+  registerMeetingConnection,
+} from '@/modules/meetings/contract';
+import {
+  reachAnyone,
+  registerCellularConnection,
+  setCellularPolicy,
+} from '@/modules/cellular/contract';
 import { DemoError } from './errors';
 import { evaluateDemoSeedGate } from './gate';
 import { demoJourney } from './journeys';
@@ -1782,6 +1800,278 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
       courierObservationId: contradiction.metadata['courierObservationId'],
     },
   }));
+
+  // --- journey M (W104): meeting intelligence + cellular reachability ----
+  // The provider envelopes are the DOCUMENTED zoom webhook shapes (the
+  // meetings module's own test fixtures — no invented payload), delivered
+  // through the contract's webhook edge so every record lands in the
+  // canonical registry AND the immutable evidence model. The cellular reach
+  // deliberately records the module's honest environment limit: no
+  // transport is wired by default, so both legs fail explicitly with the
+  // retryable provider_unavailable state (never a faked delivery).
+  const meetingCtx = (): TenantContext => managerCtx();
+
+  const meetingConnection = await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'meeting-cellular',
+    'meeting-connection',
+    async () => {
+      const { connection } = await registerMeetingConnection(meetingCtx(), {
+        provider: 'zoom',
+        providerAccountId: DEMO_KEYS.meetingZoomAccount,
+        displayName: 'Meridian Roasters Zoom',
+        authKind: 'oauth',
+        credentialRef: 'secret-store://zoom/meridian',
+        oauthScopes: ['meeting:read'],
+        oauthExpiresAt: '2027-03-01T00:00:00Z',
+      });
+      return {
+        recordId: connection.id,
+        metadata: { provider: connection.provider, providerAccountId: connection.providerAccountId },
+      };
+    },
+  );
+
+  /** One documented zoom webhook envelope (see adapters/zoom.ts). */
+  const zoomEnvelope = (
+    event: string,
+    eventId: string,
+    overrides: Record<string, unknown> = {},
+  ): unknown => ({
+    event,
+    event_id: eventId,
+    occurredAt: '2026-10-06T09:00:00Z',
+    account: { id: DEMO_KEYS.meetingZoomAccount },
+    meeting: { id: DEMO_KEYS.meetingProviderMeetingId },
+    ...overrides,
+  });
+
+  const meetingAnchor = await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'meeting-cellular',
+    'meeting-weekly-review',
+    async () => {
+      const result = await receiveMeetingWebhook(meetingCtx(), {
+        provider: 'zoom',
+        payload: zoomEnvelope('meeting.updated', 'demo-meeting-meta-1', {
+          meeting: {
+            id: DEMO_KEYS.meetingProviderMeetingId,
+            title: DEMO_KEYS.meetingTitle,
+            agenda: 'Supplier deliveries, cold-chain exceptions, the October roast plan',
+            scheduled_start: '2026-10-06T09:00:00Z',
+            scheduled_end: '2026-10-06T10:00:00Z',
+            host: { id: 'host-june', name: 'June Park', email: DEMO_KEYS.employeePersonEmail },
+          },
+        }),
+      });
+      const [meeting] = (await listMeetings(meetingCtx(), {})).filter(
+        (candidate) => candidate.providerMeetingId === DEMO_KEYS.meetingProviderMeetingId,
+      );
+      if (meeting === undefined) {
+        throw new DemoError('seed_failed', 'the meeting metadata webhook did not register the meeting');
+      }
+      return {
+        recordId: meeting.id,
+        metadata: {
+          connectionId: meetingConnection.record_id,
+          observationIds: result.records.map((record) => record.observationId),
+        },
+      };
+    },
+  );
+
+  const meetingSession = await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'meeting-cellular',
+    'meeting-session',
+    async () => {
+      await receiveMeetingWebhook(meetingCtx(), {
+        provider: 'zoom',
+        payload: zoomEnvelope('meeting.ended', 'demo-meeting-session-1', {
+          session: {
+            id: DEMO_KEYS.meetingProviderSessionId,
+            status: 'ended',
+            started_at: '2026-10-06T09:00:23Z',
+            ended_at: '2026-10-06T09:54:10Z',
+            participants: [
+              {
+                id: 'host-june',
+                name: 'June Park',
+                email: DEMO_KEYS.employeePersonEmail,
+                joined_at: '2026-10-06T09:00:23Z',
+                left_at: '2026-10-06T09:54:10Z',
+              },
+              {
+                id: 'guest-sam',
+                name: 'Sam Okafor',
+                email: null,
+                joined_at: '2026-10-06T09:04:51Z',
+                left_at: null,
+              },
+            ],
+          },
+        }),
+      });
+      const [session] = (await listMeetingSessions(meetingCtx(), { meetingId: meetingAnchor.record_id })).filter(
+        (candidate) => candidate.providerSessionId === DEMO_KEYS.meetingProviderSessionId,
+      );
+      if (session === undefined) {
+        throw new DemoError('seed_failed', 'the session webhook did not register the occurrence');
+      }
+      return { recordId: session.id, metadata: { meetingId: meetingAnchor.record_id } };
+    },
+  );
+
+  await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'meeting-cellular',
+    'meeting-transcript',
+    async () => {
+      const result = await receiveMeetingWebhook(meetingCtx(), {
+        provider: 'zoom',
+        payload: zoomEnvelope('recording.transcript_completed', 'demo-meeting-transcript-1', {
+          session: { id: DEMO_KEYS.meetingProviderSessionId },
+          transcript: {
+            id: 'tr-meridian-weekly',
+            language: 'en-US',
+            segments: [
+              {
+                participant_id: 'host-june',
+                speaker_name: 'June',
+                started_at: '2026-10-06T09:01:05Z',
+                ended_at: '2026-10-06T09:01:30Z',
+                text: 'Cold-chain held above target this week, but the Nordic Cafe shipment slipped a day.',
+                confidence: 0.97,
+              },
+              {
+                participant_id: 'guest-sam',
+                speaker_name: 'Sam',
+                started_at: '2026-10-06T09:02:10Z',
+                ended_at: null,
+                text: 'The port strike pushed our consolidation window; next week is back to normal.',
+                confidence: 0.91,
+              },
+            ],
+          },
+        }),
+      });
+      const [transcript] = await listMeetingTranscripts(meetingCtx(), {
+        sessionId: meetingSession.record_id,
+      });
+      if (transcript === undefined) {
+        throw new DemoError('seed_failed', 'the transcript webhook did not register the transcript');
+      }
+      return {
+        recordId: transcript.id,
+        metadata: {
+          sessionId: meetingSession.record_id,
+          evidenceObservationId: transcript.evidenceObservationId,
+          ingested: result.ingested,
+        },
+      };
+    },
+  );
+
+  await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'meeting-cellular',
+    'meeting-artifact',
+    async () => {
+      await receiveMeetingWebhook(meetingCtx(), {
+        provider: 'zoom',
+        payload: zoomEnvelope('recording.completed', 'demo-meeting-artifact-1', {
+          session: { id: DEMO_KEYS.meetingProviderSessionId },
+          artifact: {
+            id: 'rec-meridian-weekly',
+            type: 'recording',
+            name: 'GMT20261006-090000_Weekly_supplier_review.mp4',
+            media_type: 'video/mp4',
+            size_bytes: 2097152,
+            storage_ref: 'provider://zoom/rec-meridian-weekly',
+            checksum: 'sha256:meridian-demo',
+          },
+        }),
+      });
+      const [artifact] = await listMeetingArtifacts(meetingCtx(), {
+        sessionId: meetingSession.record_id,
+      });
+      if (artifact === undefined) {
+        throw new DemoError('seed_failed', 'the artifact webhook did not register the artifact');
+      }
+      return {
+        recordId: artifact.id,
+        metadata: {
+          sessionId: meetingSession.record_id,
+          evidenceObservationId: artifact.evidenceObservationId,
+        },
+      };
+    },
+  );
+
+  const cellularConnection = await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'meeting-cellular',
+    'cellular-connection',
+    async () => {
+      const { connection } = await registerCellularConnection(meetingCtx(), {
+        provider: 'twilio',
+        providerAccountId: DEMO_KEYS.cellularTwilioAccount,
+        phoneNumber: DEMO_KEYS.cellularSendingNumber,
+        displayName: 'Meridian Roasters Twilio',
+        credentialRef: 'secret-store://twilio/meridian',
+      });
+      return {
+        recordId: connection.id,
+        metadata: { provider: connection.provider, phoneNumber: connection.phoneNumber },
+      };
+    },
+  );
+
+  await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'meeting-cellular',
+    'cellular-reach-fallback',
+    async () => {
+      // A one-attempt SMS budget with voice fallback: with no transport
+      // wired, the reach terminally fails with the module-reported
+      // provider_unavailable after an honest SMS + voice attempt pair.
+      await setCellularPolicy(managerCtx(['cellular:administer']), {
+        reachKind: 'tell',
+        voiceFallback: 'on_sms_failure',
+        smsMaxAttempts: 1,
+        note: 'the demo company’s reach policy: one SMS attempt, then voice escalation (the honest environment limit shows when no transport is wired)',
+      });
+      const reach = await reachAnyone(meetingCtx(), {
+        phoneNumber: DEMO_KEYS.cellularReachNumber,
+        kind: 'tell',
+        text: 'The weekly supplier review moved to 15:00 — no reply needed.',
+      });
+      if (reach.status !== 'failed' || reach.failureCode !== 'provider_unavailable') {
+        throw new DemoError(
+          'seed_failed',
+          `the demo reach did not record the honest environment limit (status '${reach.status}', failure '${String(
+            reach.failureCode,
+          )}')`,
+        );
+      }
+      return {
+        recordId: reach.id,
+        metadata: {
+          connectionId: cellularConnection.record_id,
+          status: reach.status,
+          failureCode: reach.failureCode,
+          environmentLimit: 'provider_unavailable (no transport wired by default; retryable)',
+        },
+      };
+    },
+  );
 
   // --- the report ---------------------------------------------------------
   const pendingRequests = await listActionRequests(managerCtx(), { status: 'pending', limit: 50 });

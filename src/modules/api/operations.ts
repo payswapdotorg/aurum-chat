@@ -98,6 +98,52 @@ import type {
   AuthorizeActionInput,
   AuthorityLevel,
 } from '@/modules/actions/contract';
+// W104 — the meetings (W085) and cellular (W087) read families: thin
+// delegations to the owning modules' contracts, exactly like the families
+// above. Read-heavy by design; the internal seams (the meeting transport
+// port, the carrier webhook edge, the worker pump) are never exposed.
+import {
+  getMeeting,
+  getMeetingSession,
+  listMeetingAccessEvents,
+  listMeetingArtifacts,
+  listMeetingConnections,
+  listMeetingParticipants,
+  listMeetings,
+  listMeetingSessions,
+  listMeetingTranscripts,
+} from '@/modules/meetings/contract';
+import type {
+  ListMeetingAccessEventsQuery,
+  ListMeetingArtifactsQuery,
+  ListMeetingConnectionsQuery,
+  ListMeetingsQuery,
+  ListMeetingParticipantsQuery,
+  ListMeetingSessionsQuery,
+  ListMeetingTranscriptsQuery,
+  MeetingAccessCode,
+  MeetingArtifactKind,
+  MeetingConnectionStatus,
+  MeetingProvider,
+  MeetingSessionStatus,
+} from '@/modules/meetings/contract';
+import {
+  getCellularConnection,
+  getCellularReach,
+  listCellularAttempts,
+  listCellularConnections,
+  listCellularPolicies,
+  listCellularReach,
+  listCellularReplies,
+  registerCellularConnection,
+} from '@/modules/cellular/contract';
+import type {
+  CellularProvider,
+  CellularReachStatus,
+  ListCellularConnectionsQuery,
+  ListCellularReachQuery,
+  RegisterCellularConnectionInput,
+} from '@/modules/cellular/contract';
 import { ApiError } from './errors';
 import {
   createApiKey,
@@ -406,6 +452,90 @@ export const OPERATIONS: Record<string, ApiOperationHandler> = {
     const input = requireRecordBody(body);
     return fanoutEvent(ctx, { eventId: input.eventId as string });
   },
+
+  // -- meetings (W085/W104): the meeting-intelligence read family ----------
+  // Every row is a read of the capture registry; validation, tenancy and
+  // the uniform not-found discipline stay inside the owning module (lock
+  // 31). The query translation mirrors the goals/missions families.
+  'meetings.list': ({ ctx, query }) =>
+    listMeetings(ctx, {
+      provider: queryValue(query, 'provider') as MeetingProvider | undefined,
+      connectionId: queryValue(query, 'connectionId'),
+      scheduledFrom: queryValue(query, 'scheduledFrom'),
+      scheduledTo: queryValue(query, 'scheduledTo'),
+      limit: queryInt(query, 'limit'),
+    } satisfies ListMeetingsQuery),
+  'meetings.get': ({ ctx, params }) => getMeeting(ctx, params.meetingId ?? ''),
+  'meetings.sessions': ({ ctx, params, query }) =>
+    listMeetingSessions(ctx, {
+      meetingId: params.meetingId,
+      status: queryValue(query, 'status') as MeetingSessionStatus | undefined,
+      startedFrom: queryValue(query, 'startedFrom'),
+      startedTo: queryValue(query, 'startedTo'),
+      limit: queryInt(query, 'limit'),
+    } satisfies ListMeetingSessionsQuery),
+  'meetings.session': ({ ctx, params }) => getMeetingSession(ctx, params.sessionId ?? ''),
+  'meetings.transcripts': ({ ctx, params, query }) =>
+    listMeetingTranscripts(ctx, {
+      sessionId: params.sessionId ?? '',
+      limit: queryInt(query, 'limit'),
+    } satisfies ListMeetingTranscriptsQuery),
+  'meetings.artifacts': ({ ctx, params, query }) =>
+    listMeetingArtifacts(ctx, {
+      sessionId: params.sessionId ?? '',
+      kind: queryValue(query, 'kind') as MeetingArtifactKind | undefined,
+      limit: queryInt(query, 'limit'),
+    } satisfies ListMeetingArtifactsQuery),
+  'meetings.participants': ({ ctx, query }) =>
+    listMeetingParticipants(ctx, {
+      provider: queryValue(query, 'provider') as MeetingProvider | undefined,
+      limit: queryInt(query, 'limit'),
+    } satisfies ListMeetingParticipantsQuery),
+  'meetings.connections': ({ ctx, query }) =>
+    listMeetingConnections(ctx, {
+      provider: queryValue(query, 'provider') as MeetingProvider | undefined,
+      status: queryValue(query, 'status') as MeetingConnectionStatus | undefined,
+      limit: queryInt(query, 'limit'),
+    } satisfies ListMeetingConnectionsQuery),
+  'meetings.accessEvents': ({ ctx, query }) =>
+    listMeetingAccessEvents(ctx, {
+      connectionId: queryValue(query, 'connectionId'),
+      code: queryValue(query, 'code') as MeetingAccessCode | undefined,
+      limit: queryInt(query, 'limit'),
+    } satisfies ListMeetingAccessEventsQuery),
+
+  // -- cellular (W087/W104): connections + the delivery/reply state ---------
+  // The one write is connection registration (re-authorization included);
+  // createdBy is stamped from the authenticated principal by the owning
+  // module's TenantContext. Reach attempts surface the module's honest
+  // provider_unavailable state as data — never a faked delivery.
+  'cellular.connections.list': ({ ctx, query }) =>
+    listCellularConnections(ctx, {
+      provider: queryValue(query, 'provider') as CellularProvider | undefined,
+      limit: queryInt(query, 'limit'),
+    } satisfies ListCellularConnectionsQuery),
+  'cellular.connections.register': ({ ctx, body }) =>
+    registerCellularConnection(ctx, requireRecordBody(body) as unknown as RegisterCellularConnectionInput),
+  'cellular.connections.get': ({ ctx, params }) =>
+    getCellularConnection(ctx, { connectionId: params.connectionId ?? '' }),
+  'cellular.reach.list': ({ ctx, query }) =>
+    listCellularReach(ctx, {
+      status: queryValue(query, 'status') as CellularReachStatus | undefined,
+      personId: queryValue(query, 'personId'),
+      phoneNumber: queryValue(query, 'phoneNumber'),
+      limit: queryInt(query, 'limit'),
+    } satisfies ListCellularReachQuery),
+  'cellular.reach.get': ({ ctx, params }) =>
+    getCellularReach(ctx, { reachRequestId: params.reachId ?? '' }),
+  'cellular.reach.attempts': ({ ctx, params }) =>
+    listCellularAttempts(ctx, { reachRequestId: params.reachId ?? '' }),
+  'cellular.reach.replies': ({ ctx, params, query }) =>
+    listCellularReplies(ctx, {
+      reachRequestId: params.reachId ?? '',
+      limit: queryInt(query, 'limit'),
+    }),
+  'cellular.policies.list': ({ ctx, query }) =>
+    listCellularPolicies(ctx, { limit: queryInt(query, 'limit') }),
 
   // -- channels (W030/W059, surfaced W103): the tenant's channel
   //    connections. The contract takes NO actor fields — the channels
