@@ -9,11 +9,13 @@
 // data. Errors are reserved for caller mistakes, missing state, wiring
 // gaps and non-canonical edge results:
 //
-//   * `edge_unavailable`     — no system-of-record edge is wired; the kit
-//     runtime refuses to fake success. The Edge Connector (W088) is the
-//     future implementor of the `VerticalKitEdge` port this seam awaits —
-//     every deep-integration execution/inspection path is
-//     DEFERRED-ON-W088 until it lands.
+//   * `edge_unavailable`     — no system-of-record edge is wired for the
+//     calling tenant; the kit runtime refuses to fake success. Since
+//     W107 the module ships the composition adapter
+//     (`createEdgeConnectorKitEdge`) that implements the
+//     `VerticalKitEdge` port over the W088 Edge Connector's public
+//     transport — wire it per tenant (`setTenantKitEdge`) or through
+//     the global seam; an unwired tenant still fails honestly here.
 //   * `invalid_edge_result`  — a wired edge returned a non-canonical
 //     value (a provider object cannot cross the kit runtime — lock 16).
 //   * `version_not_monotonic` — a kit version was registered at or below

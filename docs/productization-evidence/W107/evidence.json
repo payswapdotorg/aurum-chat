@@ -1,0 +1,97 @@
+{
+  "workItem": "W107",
+  "title": "Vertical Kit <-> Edge Execution Composition Closure",
+  "base": "53bd2711982a7016fc36e1376e375d7551142652",
+  "branch": "work/w107-vertical-edge-composition",
+  "disposition": "DELIVERED",
+  "liveLeg": "ENVIRONMENT-BLOCKED",
+  "gates": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "arch": "PASS",
+    "scopedTests": "PASS"
+  },
+  "testTotals": {
+    "scopedFilter": "vertical-kits edge-connector",
+    "files": 7,
+    "passed": 81,
+    "failed": 0,
+    "adjacent": [
+      { "filter": "marketplace-kits", "files": 2, "passed": 48 },
+      { "filter": "migration-service", "files": 1, "passed": 11 },
+      { "filter": "s003-conversion", "files": 1, "passed": 31 }
+    ]
+  },
+  "newTestFiles": [
+    {
+      "path": "src/modules/vertical-kits/tests/vertical-kits-edge-composition.test.ts",
+      "tests": 5,
+      "layer": "deterministic-real-w088"
+    }
+  ],
+  "composition": {
+    "adapter": "src/modules/vertical-kits/edge-adapter.ts",
+    "factory": "createEdgeConnectorKitEdge(ctx, options)",
+    "kitSidePort": "VerticalKitEdge (W092, frozen)",
+    "edgeSideTransport": "createEdgeDeepActionTransport (W088 public contract; the W084 DeepActionTransport over signed, tenant-scoped edge jobs)",
+    "imports": "@/modules/edge-connector/contract only (no edge internals; arch check PASS)",
+    "idempotency": {
+      "execute": "kit-edge:<installationId>:w:<sha256(scope)>:<sha256(canonicalJson(payload))> — stable content-addressed (identical write replays the original job; changed payload executes fresh)",
+      "inspect": "kit-edge:<installationId>:i:<sha256(scope)>:<uuid> — fresh per call (live read; never a replayed outcome)"
+    },
+    "results": "W084-shaped verbatim ({found,state} reads; {status,receiptId,detail} receipts; accepted/rejected/failed taxonomy)",
+    "errors": "honest propagation — EdgeConnectorError surfaces to the kit caller exactly as it surfaces through the W084 deep-action pipeline"
+  },
+  "registry": {
+    "perTenant": ["setTenantKitEdge", "getTenantKitEdge", "resetTenantKitEdges"],
+    "anchoring": "globalThis (Family A / W108 cellular per-provider pattern; W058 lesson)",
+    "resolution": "tenant's own registration first, then the frozen global setVerticalKitEdge seam (existing tests unchanged)",
+    "crossTenantGuard": "a createEdgeConnectorKitEdge binding registered under a different tenant is refused loudly (invalid_input)"
+  },
+  "authority": {
+    "gate": "gateKitCapability (W009-fronted kit grants) consulted BEFORE any edge call; denial returns data and never invokes the transport",
+    "denialTest": "denies a missing kit grant BEFORE any edge call: no job, no dial-home, denial as data",
+    "edgeBoundary": "the W088 edge allowlist adds the edge's own policy on top (defense in depth)"
+  },
+  "tenantIsolation": {
+    "test": "isolates tenants: each rides its OWN edge; foreign installations are missing; unwired tenants refuse honestly",
+    "proofs": [
+      "two tenants with separate edges: each job feed and adapter record holds ONLY its own targets",
+      "foreign installation access is installation_not_found on both read and write paths",
+      "an unwired tenant fails edge_unavailable and reports the frozen deferred-on-w088 readiness",
+      "a cross-tenant REGISTRATION mistake is refused loudly by the registry"
+    ]
+  },
+  "deferredWording": {
+    "removedIn": [
+      "src/modules/vertical-kits/contract.ts (seam header + status-report + dependency posture)",
+      "src/modules/vertical-kits/types.ts (seam header, integration declaration docs, port doc, status docs)",
+      "src/modules/vertical-kits/service.ts (acceptance property 5, EDGE_UNAVAILABLE_MESSAGE, 2 call-site comments)",
+      "src/modules/vertical-kits/errors.ts (edge_unavailable doc)",
+      "src/modules/vertical-kits/kits.ts (header + 4 integration descriptions)",
+      "spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md (the superseded 'next TL should close the composition seam' sentence)"
+    ],
+    "keptDeliberately": [
+      "KitIntegrationReadiness 'deferred-on-w088' | 'ready' union literal (frozen W092 contract value — the honest unwired state)",
+      "edge_unavailable error code (frozen vocabulary)",
+      "W092-era test comments/describe label (describe the still-true unwired behavior)",
+      "marketplace surface readiness literal (out of ownership)",
+      "dated planning docs (TECH-LEAD-ORCHESTRATOR-PROMPT, POST-W106-CONTINUATION-DAG)"
+    ]
+  },
+  "liveLegPrerequisites": [
+    "a customer-operated edge runtime enrolled per the W088 contract with its own opaque signingKeyId",
+    "enrollment key material in gateway wiring (wireEdgeSigner) AND customer-side",
+    "the edge dialed home (verified heartbeat -> connected) with a local allowlist covering the kit integration capability keys and locally-resolvable secret refs",
+    "a per-tenant production wiring call: setTenantKitEdge(tenantId, createEdgeConnectorKitEdge(ctx, {edgeId, drive, credentialRef, systemKey}))",
+    "a live kit write driven through executeKitIntegration recording the edge-minted receipt"
+  ],
+  "frontierNotes": [
+    "production wiring invocation site for setTenantKitEdge (no production route calls it yet — same posture as setDeepActionTransport at this base; W112 certification frontier)",
+    "marketplace readiness view still reads the global getVerticalKitEdge seam (out of ownership; one-liner switch to tenant-aware resolution at W112)",
+    "composing full W084 deep-action TASKS (pipeline rows + observation evidence) for kit operations remains the W094/W112 frontier; kit writes ride the W084 TRANSPORT directly with the kit runtime's own ledgers"
+  ],
+  "noMigrations": true,
+  "schemaUntouched": true,
+  "censusPinsUntouched": true
+}

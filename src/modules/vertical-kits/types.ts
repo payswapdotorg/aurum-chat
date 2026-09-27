@@ -52,18 +52,23 @@
 //                     'suspended' ⇄ back to 'active'
 //                     'removed'        — terminal; grants revoked
 //
-// THE EDGE SEAM (DEFERRED-ON-W088). A kit declares the
+// THE EDGE SEAM (COMPOSED SINCE W107). A kit declares the
 // system-of-record integrations it wants to reach (edgeIntegrations).
 // The kit runtime's deep-integration execution path is expressed
 // against the `VerticalKitEdge` port — a clean, provider-neutral adapter
-// seam the kit runtime calls. NO implementation is wired by default: the
-// Edge Connector (W088, in flight) is the future implementor, and once
-// it lands an adapter will route kit integrations through the W082/W083
-// connection + grant machinery and compose them onto the W084 deep-action
-// pipeline (discover→inspect→propose→authorize→execute→verify→reconcile).
-// Until then, executing or inspecting a kit integration without a wired
-// edge fails explicitly with `edge_unavailable` — the module never fakes
-// success, never stubs Edge internals and never guesses W088's API.
+// seam the kit runtime calls. NOTHING is wired by default: wiring is
+// infrastructure. Since W107 the module SHIPS the composition adapter
+// (`createEdgeConnectorKitEdge`) that implements this port over the
+// W088 Edge Connector's public transport (the W084 DeepActionTransport
+// riding signed, tenant-scoped edge jobs — the full discover→inspect→
+// propose→authorize→execute→verify→reconcile evidence discipline stays
+// W084's), registered per tenant through `setTenantKitEdge` or through
+// the global `setVerticalKitEdge` seam. Executing or inspecting a kit
+// integration without a wired edge fails explicitly with
+// `edge_unavailable` — the module never fakes success and never stubs
+// Edge internals. A wired edge's results are canonicalized and
+// validated; the only provider-minted values persisted are OPAQUE
+// strings (receipt ids, the edge's own wiring identity).
 
 // ---------------------------------------------------------------------------
 // Capability declarations (the kit's requested authority — the W081/W083
@@ -179,18 +184,19 @@ export interface KitDataSchemaHint {
 }
 
 // ---------------------------------------------------------------------------
-// Edge integration declarations (the DEFERRED-ON-W088 deep-integration
-// surface)
+// Edge integration declarations (the deep-integration surface — composed
+// with the Edge Connector since W107)
 // ---------------------------------------------------------------------------
 
 /**
  * One declared system-of-record integration of a kit: the external
  * system family the kit's deep integration reaches THROUGH the Edge
- * Connector once W088 lands. The declaration is provider-neutral by
- * construction — a plain-language system label plus the kit capabilities
- * the integration exercises (its read and its write path). Executing or
- * inspecting an integration rides the `VerticalKitEdge` port; with no
- * edge wired, the path fails explicitly (`edge_unavailable`).
+ * Connector (W088) over the W107 composition adapter. The declaration
+ * is provider-neutral by construction — a plain-language system label
+ * plus the kit capabilities the integration exercises (its read and its
+ * write path). Executing or inspecting an integration rides the
+ * `VerticalKitEdge` port; with no edge wired for the tenant, the path
+ * fails explicitly (`edge_unavailable`).
  */
 export interface KitEdgeIntegrationDeclaration {
   /** Stable slug naming the integration within the kit. */
@@ -240,7 +246,8 @@ export interface VerticalKitManifest {
   agentDefinitions: KitAgentDefinition[];
   /** Vertical data-schema hints (stay inside the kit). */
   dataSchemaHints: KitDataSchemaHint[];
-  /** Declared system-of-record integrations (DEFERRED-ON-W088 paths). */
+  /** Declared system-of-record integrations (composed with the Edge
+   * Connector through the W107 adapter). */
   edgeIntegrations: KitEdgeIntegrationDeclaration[];
 }
 
@@ -430,7 +437,12 @@ export interface KitInstallation {
 export interface KitIntegrationReadiness {
   integrationKey: string;
   systemLabel: string;
-  /** 'deferred-on-w088' until an edge is wired; 'ready' once one is. */
+  /**
+   * The frozen contract literal of the unwired state: no edge serves
+   * the tenant yet (kept verbatim for contract stability — the value
+   * W092 froze). 'ready' once one is wired (W107 composition or any
+   * other VerticalKitEdge implementation).
+   */
   readiness: 'deferred-on-w088' | 'ready';
   /** The wired edge's opaque identity (ready only). */
   edgeId: string | null;
@@ -449,9 +461,10 @@ export interface KitComponentStatus {
 /**
  * The honest health/status report of one installation: what is
  * installed, which capabilities hold authority, which components are
- * defined (never claimed as running), which integrations are deferred on
- * the Edge Connector, and the latest audit events. The report never
- * claims execution the module is not performing.
+ * defined (never claimed as running), which integrations are wired
+ * (ready, with the edge identity) or unwired (the frozen
+ * 'deferred-on-w088' literal), and the latest audit events. The
+ * report never claims execution the module is not performing.
  */
 export interface KitStatusReport {
   installationId: string;
@@ -469,7 +482,7 @@ export interface KitStatusReport {
 }
 
 // ---------------------------------------------------------------------------
-// The edge port (the DEFERRED-ON-W088 adapter seam)
+// The edge port (the composed adapter seam — W107)
 // ---------------------------------------------------------------------------
 
 /** A kit runtime edge inspection request (the read path). */
@@ -509,14 +522,15 @@ export interface VerticalKitEdgeReceipt {
 
 /**
  * The kit runtime's system-of-record edge port — the clean seam every
- * deep-integration path calls. The Edge Connector (W088, in flight in a
- * parallel work stream) is the intended future implementor: once it
- * lands, an adapter will implement this port over the brokered
- * connections and progressive grants (W082/W083), composing kit writes
- * onto the W084 deep-action pipeline so every execution carries its
- * full evidence chain. Until then the port stays unwired and the
- * execution paths fail explicitly (`edge_unavailable`) — never stubbed,
- * never faked.
+ * deep-integration path calls. Since W107 the module ships the
+ * composition adapter (`createEdgeConnectorKitEdge`): a VerticalKitEdge
+ * implemented over the W088 Edge Connector's PUBLIC transport — the W084
+ * DeepActionTransport riding signed, tenant-scoped edge jobs, so every
+ * kit execution carries the W084-shaped evidence chain. Providers and
+ * runtimes never cross this contract: only plain-JSON requests,
+ * W084-shaped results and OPAQUE edge-minted strings (receipt ids).
+ * Nothing is wired by default — an unwired tenant fails explicitly
+ * (`edge_unavailable`): never stubbed, never faked.
  */
 export interface VerticalKitEdge {
   /** Opaque wiring identity recorded on executed actions. */

@@ -68,30 +68,42 @@
 //        paths. Both consult the gate FIRST (a denial is returned as data
 //        and stops the call), then ride the VerticalKitEdge port.
 //
-//   THE EDGE SEAM (DEFERRED-ON-W088)
-//     setVerticalKitEdge / getVerticalKitEdge — infrastructure wiring
-//        for the kit runtime's system-of-record port. NOTHING is wired by
-//        default: the Edge Connector (W088, in flight in a parallel work
-//        stream) is the future implementor, and once it lands an adapter
-//        will implement this port over the brokered connections and
-//        progressive grants (W082/W083), composing kit writes onto the
-//        W084 deep-action pipeline (discover→inspect→propose→authorize→
-//        execute→verify→reconcile) so every execution carries its full
-//        evidence chain. Until then the inspect/execute paths fail
-//        explicitly with `edge_unavailable` — the module never fakes
-//        success, never stubs Edge internals and never guesses W088's
-//        API. A wired edge's results are canonicalized and validated (a
-//        provider object cannot cross the kit runtime — lock 16); the
-//        only provider-minted values persisted are OPAQUE strings
-//        (receipt ids, the edge's own wiring identity).
+//   THE EDGE SEAM (COMPOSED — W107)
+//     setVerticalKitEdge / getVerticalKitEdge — the frozen global wiring
+//        seam of the kit runtime's system-of-record port (the explicit
+//        override; single-tenant deployments and the scripted test
+//        double ride it).
+//     setTenantKitEdge / getTenantKitEdge / resetTenantKitEdges — the
+//        W107 per-tenant registry (the Family-A globalThis-anchored
+//        pattern): each tenant registers the edge that serves ITS kit
+//        integrations; the runtime resolves the CALLING tenant's edge
+//        first (isolation by construction), falling back to the global
+//        seam.
+//     createEdgeConnectorKitEdge — THE COMPOSITION: an adapter that
+//        implements the VerticalKitEdge port over the W088 Edge
+//        Connector's PUBLIC transport composition (the W084
+//        DeepActionTransport over signed, tenant-scoped edge jobs).
+//        Kit integrations execute against the customer-controlled edge
+//        exactly as the deep-action pipeline does — same envelopes,
+//        same dial-home loop, same W084-shaped evidence — with kit
+//        grants still evaluated at the W009-fronted gate BEFORE any
+//        edge call. Nothing is wired by default; an unwired tenant
+//        still fails explicitly with `edge_unavailable` — the module
+//        never fakes success, and no edge-connector INTERNAL is ever
+//        imported (the public contract only — lock 16 both ways). A
+//        wired edge's results are canonicalized and validated (a
+//        provider object cannot cross the kit runtime); the only
+//        provider-minted values persisted are OPAQUE strings (receipt
+//        ids, the edge's own wiring identity).
 //
 //   THE HONEST STATUS REPORT
 //     getKitStatus        — what is installed, which capabilities hold
 //        authority, which components are DEFINED (starter definitions,
 //        never claimed as deployed software — materialization into the
 //        extension/agent registries follows those modules' own governed
-//        lifecycles downstream), and which integrations are
-//        'deferred-on-w088' until an edge is wired.
+//        lifecycles downstream), and which integrations are wired
+//        ('ready', with the edge identity) or still unwired (the frozen
+//        'deferred-on-w088' literal — no edge serves the tenant yet).
 //
 //   THE LEDGERS (append-only at the storage level — triggers refuse
 //   UPDATE/DELETE/TRUNCATE)
@@ -121,14 +133,18 @@
 // `installation_not_found`) — no existence leak.
 //
 // Dependency posture (WORK-ITEM-CATALOG W092 ← W025, W026, W027, W084,
-// W088): this module imports ONLY module contracts — actions (the W009
-// approval gate), extensions (the W025 pure manifest rule sets + semver
-// the kit layer reuses) and agents (the W021 vocabularies kit agent
-// definitions are validated against). The W026 runtime and W027 builder
-// surfaces compose downstream when kit component definitions are
-// materialized into real extensions; the W084 deep-action pipeline is
-// what kit integrations will ride once the W088 Edge Connector implements
-// this module's edge port (DEFERRED-ON-W088, above).
+// W088; W107 composes W092×W088): this module imports ONLY module
+// contracts — actions (the W009 approval gate), extensions (the W025
+// pure manifest rule sets + semver the kit layer reuses), agents (the
+// W021 vocabularies kit agent definitions are validated against) and,
+// since W107, the edge-connector contract (the PUBLIC transport
+// composition `createEdgeDeepActionTransport` + the canonical-JSON
+// helper the edge idempotency discipline rides — never an edge
+// internal). The W026 runtime and W027 builder surfaces compose
+// downstream when kit component definitions are materialized into real
+// extensions; the W084 deep-action pipeline is what the W107 edge
+// adapter rides (through the W088 transport) for kit integrations —
+// evidence, verification and reconciliation stay W084-shaped.
 // ============================================================================
 
 export {
@@ -156,10 +172,20 @@ export {
   listKitEvents,
   // the honest status report
   getKitStatus,
-  // the edge port wiring (the DEFERRED-ON-W088 seam)
+  // the edge port wiring (the global seam + the W107 per-tenant
+  // registry)
   setVerticalKitEdge,
   getVerticalKitEdge,
+  setTenantKitEdge,
+  getTenantKitEdge,
+  resetTenantKitEdges,
 } from './service';
+
+// The W107 composition adapter: the kit-side VerticalKitEdge port
+// implemented over the W088 Edge Connector's public transport (the W084
+// DeepActionTransport riding signed, tenant-scoped edge jobs).
+export { createEdgeConnectorKitEdge } from './edge-adapter';
+export type { EdgeConnectorKitEdgeOptions } from './edge-adapter';
 
 export { VerticalKitsError } from './errors';
 export type { VerticalKitsErrorCode } from './errors';

@@ -25,9 +25,9 @@
 // software: materializing them into the tenant's extension/agent
 // registries follows those modules' own governed lifecycles downstream.
 // The edge integrations declare the system-of-record surfaces the kit
-// will reach THROUGH the Edge Connector once W088 lands — until then
-// they are honestly reported as 'deferred-on-w088' by the status
-// surface.
+// reaches THROUGH the Edge Connector (W088) over the W107 composition
+// adapter — honestly reported as 'deferred-on-w088' by the status
+// surface until the tenant wires an edge, 'ready' once one serves it.
 //
 // The capability keys follow the W081 read./write. plain-language
 // convention; the agent definitions use the agents module's closed
@@ -234,7 +234,7 @@ export const LEGAL_CASE_MANAGEMENT_KIT: VerticalKitManifest = {
       integrationKey: 'case-management-sor',
       systemLabel: 'Legal case management system of record',
       description:
-        'Reaches the matter registry of record: reads matters and engagement records, and opens/updates/closes matters. Deep-integration path DEFERRED-ON-W088 (the Edge Connector).',
+        'Reaches the matter registry of record: reads matters and engagement records, and opens/updates/closes matters. Deep-integration path rides the Edge Connector (W088) through the kit edge composition once the tenant wires an edge.',
       readCapabilityKey: 'read.case-matters',
       writeCapabilityKey: 'write.case-matters',
       schemaHintEntities: ['matter', 'engagement-letter'],
@@ -243,7 +243,7 @@ export const LEGAL_CASE_MANAGEMENT_KIT: VerticalKitManifest = {
       integrationKey: 'court-docket-sor',
       systemLabel: 'Court docket calendar system of record',
       description:
-        'Reaches the docket calendar of record: reads hearings and statutory deadlines, records docket-entry changes. Deep-integration path DEFERRED-ON-W088 (the Edge Connector).',
+        'Reaches the docket calendar of record: reads hearings and statutory deadlines, records docket-entry changes. Deep-integration path rides the Edge Connector (W088) through the kit edge composition once the tenant wires an edge.',
       readCapabilityKey: 'read.docket-calendar',
       writeCapabilityKey: 'write.docket-entries',
       schemaHintEntities: ['docket-entry', 'matter'],
@@ -451,7 +451,7 @@ export const ACCOUNTING_LEDGER_ERP_KIT: VerticalKitManifest = {
       integrationKey: 'ledger-erp-sor',
       systemLabel: 'Ledger ERP system of record',
       description:
-        'Reaches the ledger ERP of record: reads the chart of accounts and journal entries, posts and adjusts journal entries. Deep-integration path DEFERRED-ON-W088 (the Edge Connector).',
+        'Reaches the ledger ERP of record: reads the chart of accounts and journal entries, posts and adjusts journal entries. Deep-integration path rides the Edge Connector (W088) through the kit edge composition once the tenant wires an edge.',
       readCapabilityKey: 'read.journal-entries',
       writeCapabilityKey: 'write.journal-entries',
       schemaHintEntities: ['ledger-account', 'journal-entry'],
@@ -460,7 +460,7 @@ export const ACCOUNTING_LEDGER_ERP_KIT: VerticalKitManifest = {
       integrationKey: 'ar-aging-sor',
       systemLabel: 'Receivables aging system of record',
       description:
-        'Reads customer invoices and receivables aging from the receivables subledger of record. Read-only deep integration — no write path, and the write side stays DEFERRED-ON-W088 (the Edge Connector).',
+        'Reads customer invoices and receivables aging from the receivables subledger of record. Read-only deep integration — no write path, and no edge execution until the tenant wires an edge for the kit.',
       readCapabilityKey: 'read.receivables-ledger',
       writeCapabilityKey: null,
       schemaHintEntities: ['ar-invoice'],

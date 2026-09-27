@@ -43,17 +43,21 @@
 //      the events, invocations and verification runs are append-only at
 //      the storage level (triggers refuse UPDATE/DELETE/TRUNCATE).
 //
-//   5. THE EDGE SEAM IS HONEST: the deep-integration execution path
-//      calls the VerticalKitEdge port and NOTHING is wired by default —
-//      inspect/execute fail explicitly with `edge_unavailable`
-//      (DEFERRED-ON-W088: the Edge Connector work item is the future
-//      implementor; it will compose onto the W084 deep-action pipeline
-//      through brokered connections and progressive grants). The module
-//      never fakes success, never stubs Edge internals and never guesses
-//      W088's API. A wired edge's results are canonicalized and
-//      validated — a provider object cannot cross the kit runtime
-//      (lock 16); the only provider-minted values persisted are OPAQUE
-//      strings (receipt ids, the edge's own wiring identity).
+//   5. THE EDGE SEAM IS REAL AND HONEST: the deep-integration execution
+//      path calls the VerticalKitEdge port and NOTHING is wired by
+//      default — inspect/execute fail explicitly with `edge_unavailable`
+//      (never a faked success). Since W107 the composition EXISTS: the
+//      module's edge adapter (edge-adapter.ts) implements the port over
+//      the W088 Edge Connector's public transport (the W084
+//      DeepActionTransport composition riding signed edge jobs), wired
+//      per tenant through `setTenantKitEdge` (the Family-A registry
+//      below) or through the global `setVerticalKitEdge` seam. The
+//      module never stubs Edge internals and never guesses the edge's
+//      API — it imports only the edge-connector CONTRACT. A wired
+//      edge's results are canonicalized and validated — a provider
+//      object cannot cross the kit runtime (lock 16); the only
+//      provider-minted values persisted are OPAQUE strings (receipt
+//      ids, the edge's own wiring identity).
 //
 //   6. CORE STAYS INDUSTRY-INDEPENDENT: every vertical word lives in
 //      kit manifests (data), never in this module's code or schema —
@@ -86,6 +90,7 @@ import {
 import { verifyKitManifest } from './verification';
 import {
   assertVerticalKitsTenantContext,
+  isUuid,
   validateDecideKitReviewInput,
   validateExecuteKitIntegrationInput,
   validateGetInstallationQuery,
@@ -153,10 +158,11 @@ export const VERTICAL_KITS_AUTHORITY_ADMINISTER = 'vertical-kits:administer';
 /** The canonical W009 action kind of a kit install grant review. */
 export const VERTICAL_KIT_ACTION_KIND = 'vertical-kit-deployment';
 
-/** The human-readable prefix of the DEFERRED-ON-W088 refusal. */
+/** The human-readable refusal when no edge serves the calling tenant. */
 const EDGE_UNAVAILABLE_MESSAGE =
-  'no system-of-record edge is wired — the kit runtime refuses to fake success; ' +
-  'the deep-integration execution path is DEFERRED-ON-W088 (the Edge Connector work item will implement the VerticalKitEdge port)';
+  'no system-of-record edge is wired for this tenant — the kit runtime refuses to fake success; ' +
+  'wire the W107 edge-connector composition (createEdgeConnectorKitEdge + setTenantKitEdge) or ' +
+  'a VerticalKitEdge through setVerticalKitEdge';
 
 // ---------------------------------------------------------------------------
 // The edge port wiring (infrastructure, not domain state)
@@ -164,21 +170,90 @@ const EDGE_UNAVAILABLE_MESSAGE =
 
 let wiredEdge: VerticalKitEdge | null = null;
 
-/** Wires (or clears) the system-of-record edge — the DEFERRED-ON-W088 seam. */
+/** Wires (or clears) the global system-of-record edge seam. */
 export function setVerticalKitEdge(edge: VerticalKitEdge | null): void {
   wiredEdge = edge;
 }
 
-/** The currently wired edge (null = none; every deep path refuses then). */
+/** The globally wired edge (null = none; every deep path refuses then). */
 export function getVerticalKitEdge(): VerticalKitEdge | null {
   return wiredEdge;
 }
 
-function requireEdge(): VerticalKitEdge {
-  if (wiredEdge === null) {
+// W107 — the PER-TENANT edge registry (the Family-A discipline of the
+// W108 cellular per-provider pattern, adapted to the kit seam's tenant
+// scope): each tenant registers the VerticalKitEdge that serves ITS kit
+// integrations — the natural wiring for `createEdgeConnectorKitEdge`
+// bindings, whose captured TenantContext scopes every issued edge job
+// to exactly one tenant. globalThis-anchored so the wiring survives
+// Next's per-bundle module registries (the W058 lesson); the map's keys
+// are tenant ids, so a recycled test worker's leftover entries can
+// never collide with a fresh tenant's uuid.
+interface KitEdgeWiringGlobal {
+  __aurumVerticalKitEdges?: Map<string, VerticalKitEdge>;
+}
+
+const kitEdgeWiringGlobal = globalThis as unknown as KitEdgeWiringGlobal;
+const tenantEdges: Map<string, VerticalKitEdge> =
+  (kitEdgeWiringGlobal.__aurumVerticalKitEdges ??= new Map<string, VerticalKitEdge>());
+
+/**
+ * Registers (or clears) the system-of-record edge serving ONE tenant's
+ * kit integrations (the production wiring of the W107 composition). A
+ * binding created by `createEdgeConnectorKitEdge` carries its wiring
+ * tenant; registering it under a DIFFERENT tenant is refused loudly —
+ * a cross-tenant wiring mistake must never become a silent leak.
+ */
+export function setTenantKitEdge(tenantId: string, edge: VerticalKitEdge | null): void {
+  if (typeof tenantId !== 'string' || !isUuid(tenantId)) {
+    throw new VerticalKitsError(
+      'invalid_input',
+      'the tenant edge registry requires a uuid tenantId',
+    );
+  }
+  if (edge === null) {
+    tenantEdges.delete(tenantId);
+    return;
+  }
+  const boundTenant = (edge as { tenantId?: unknown }).tenantId;
+  if (typeof boundTenant === 'string' && boundTenant !== tenantId) {
+    throw new VerticalKitsError(
+      'invalid_input',
+      `this edge binding is scoped to tenant '${boundTenant}' — it cannot be registered for tenant '${tenantId}' (a cross-tenant wiring mistake, refused loudly)`,
+    );
+  }
+  tenantEdges.set(tenantId, edge);
+}
+
+/** The tenant's registered edge (null = none registered). */
+export function getTenantKitEdge(tenantId: string): VerticalKitEdge | null {
+  if (typeof tenantId !== 'string' || !isUuid(tenantId)) return null;
+  return tenantEdges.get(tenantId) ?? null;
+}
+
+/** Clears every per-tenant registration (test hygiene / process reset). */
+export function resetTenantKitEdges(): void {
+  tenantEdges.clear();
+}
+
+/**
+ * The kit runtime's edge resolution for one tenant: the tenant's OWN
+ * registration first (the isolation-correct path — a registered tenant
+ * always rides its own edge), then the global seam (the frozen W092
+ * wiring — single-tenant deployments and the scripted test double).
+ */
+function resolveEdgeForTenant(tenantId: string): VerticalKitEdge | null {
+  const own = tenantEdges.get(tenantId);
+  if (own !== undefined) return own;
+  return wiredEdge;
+}
+
+function requireEdgeForTenant(tenantId: string): VerticalKitEdge {
+  const edge = resolveEdgeForTenant(tenantId);
+  if (edge === null) {
     throw new VerticalKitsError('edge_unavailable', EDGE_UNAVAILABLE_MESSAGE);
   }
-  return wiredEdge;
+  return edge;
 }
 
 // ---------------------------------------------------------------------------
@@ -1445,9 +1520,12 @@ export async function inspectKitIntegration(
     return { invocation, state: null };
   }
 
-  // DEFERRED-ON-W088: the edge port is the only exit seam and nothing is
-  // wired by default — the module refuses to fake success.
-  const edge = requireEdge();
+  // The W107 composition exit seam: the transport is invoked only
+  // AFTER the gate allowed — and only the CALLING tenant's wired edge
+  // (per-tenant registry first, the global seam as the frozen
+  // single-tenant/test fallback). No edge wired: the module refuses to
+  // fake success.
+  const edge = requireEdgeForTenant(ctx.tenantId);
   const raw = await edge.inspect({
     installationId: valid.installationId,
     integrationKey: valid.integrationKey,
@@ -1489,9 +1567,9 @@ export async function executeKitIntegration(
     return { invocation, receipt: null };
   }
 
-  // DEFERRED-ON-W088: the edge port is the only exit seam and nothing is
-  // wired by default — the module refuses to fake success.
-  const edge = requireEdge();
+  // The W107 composition exit seam (see inspectKitIntegration): the
+  // gate has allowed, the CALLING tenant's edge executes the write.
+  const edge = requireEdgeForTenant(ctx.tenantId);
   const raw = await edge.execute({
     installationId: valid.installationId,
     integrationKey: valid.integrationKey,
@@ -1638,11 +1716,13 @@ export async function getKitStatus(
     }),
   );
 
-  // Honest integration readiness: the deep-integration paths wait on the
-  // Edge Connector (W088) behind the VerticalKitEdge seam. Only a wired
-  // edge reports 'ready' — with its opaque identity, never a claim of
-  // execution that is not happening.
-  const wired = getVerticalKitEdge();
+  // Honest integration readiness: the deep-integration paths ride the
+  // CALLING tenant's wired edge (the W107 composition binding, or the
+  // global seam). Only a wired edge reports 'ready' — with its opaque
+  // identity, never a claim of execution that is not happening. The
+  // 'deferred-on-w088' state value is the frozen contract literal for
+  // the unwired case (kept verbatim for contract stability).
+  const wired = resolveEdgeForTenant(ctx.tenantId);
   const integrations: KitIntegrationReadiness[] = version.manifest.edgeIntegrations.map(
     (integration) => ({
       integrationKey: integration.integrationKey,

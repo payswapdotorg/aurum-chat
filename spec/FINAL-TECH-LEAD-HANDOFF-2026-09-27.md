@@ -138,8 +138,11 @@ The following are known and intentionally explicit environment-dependent seams:
 `src/modules/vertical-kits/service.ts` still has a nullable Edge port and reports
 `deferred-on-w088` / `edge_unavailable` when it is not wired.
 
-W088 itself is implemented. The next TL should close the composition seam rather than
-reimplement either module.
+W088 itself is implemented. The composition seam was closed by W107 (base 53bd271): the
+vertical-kits edge adapter (`src/modules/vertical-kits/edge-adapter.ts`) implements the
+kit-side `VerticalKitEdge` port over the W088 Edge Connector's public transport with
+per-tenant wiring (`setTenantKitEdge`) — see `docs/productization-evidence/W107/`. Neither
+module was reimplemented.
 
 ### Cellular
 
