@@ -56,6 +56,12 @@
 //   7. DRIFT GUARD (integration): a converged database with a dropped
 //      table fails verification loudly — the missing-table class, now
 //      caught at build time instead of serving 500s at runtime.
+//   8. CONTENT-CHECKSUM HARDENING (WMIG): the ledger records each
+//      applied migration's content sha256 (`content_sha`) and
+//      re-compares it on every run — a mutated applied file REFUSES the
+//      run (the content-drift class: name identical, content different,
+//      the W102 incident's undetected half), and legacy NULL-hash rows
+//      are pinned forward with the pin reported.
 
 process.env.AURUM_DB = 'embedded';
 process.env.AURUM_DB_MEMORY = '1';
@@ -63,6 +69,10 @@ delete process.env.DATABASE_URL;
 delete process.env.REDIS_URL;
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { closeDb, getDb, type DbPort, type DbResult, type DbRow, type Queryable } from '@/infra/db';
 import {
@@ -734,13 +744,169 @@ SELECT 'create table fake_three (id int)' AS memo;`),
 // ---------------------------------------------------------------------------
 
 describe('W102 — the drift guard catches the production failure mode', () => {
-  // LAST in this file: dropping a table leaves the shared database
-  // diverged — nothing after this test may rely on schema health.
+  // LAST schema-health-dependent test in this file: dropping a table
+  // leaves the shared database diverged — nothing after this test may
+  // rely on schema health (the WMIG content-checksum section below
+  // exercises the LEDGER only, never schema health).
   it('a converged database with a dropped table fails verification loudly', async () => {
     const db = getDb();
     await db.query(`DROP TABLE edge_auth_nonces`);
     await expect(verifyMigratedSchema(db)).rejects.toThrow(
       /schema verification FAILED[\s\S]*edge_auth_nonces \(expected by edge-connector\/001-edge-connector\.sql\)/,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. WMIG — content-checksum hardening (the content-drift class)
+// ---------------------------------------------------------------------------
+//
+// The W102 guard above catches MISSING TABLES; it cannot see the
+// incident's other half — a ledger row recorded under the same NAME with
+// DIFFERENT content while every expected table still exists. The runner
+// now stores each applied migration's content sha256 in the ledger
+// (`content_sha`, node:crypto — no new dependency) and re-compares it on
+// every run: a mismatch is CONTENT DRIFT and the run REFUSES to migrate
+// or deploy; a NULL hash (a legacy row from before this hardening) is
+// pinned forward to the current file's hash with the pin reported.
+// These tests run after the schema-health-dependent sections ON
+// PURPOSE: the shared database is already diverged (edge_auth_nonces
+// dropped above), and these proofs exercise the LEDGER ONLY — they
+// never rely on schema health.
+
+const FIXTURE_MODULE_SOURCE = fileURLToPath(
+  new URL('../fixtures/schema-drift/drift-fixture', import.meta.url),
+);
+
+/** sha256 hex of a file's content — computed independently of the runner. */
+async function fileSha256(file: string): Promise<string> {
+  return createHash('sha256').update(await readFile(file, 'utf8'), 'utf8').digest('hex');
+}
+
+/** A temp modules root holding a fresh copy of the repo's drift-fixture module. */
+async function tempFixtureRoot(prefix: string, moduleName: string): Promise<string> {
+  const root = await mkdtemp(path.join(tmpdir(), prefix));
+  await cp(FIXTURE_MODULE_SOURCE, path.join(root, moduleName), { recursive: true });
+  return root;
+}
+
+describe('WMIG — content drift: a mutated applied migration refuses the run', () => {
+  it('apply → mutate → re-run REFUSES with the name and both hashes; nothing else applies', async () => {
+    const root = await tempFixtureRoot('aurum-content-drift-', 'drift-fixture');
+    try {
+      const migrationPath = path.join(root, 'drift-fixture', 'migrations', '001-fixture-tables.sql');
+      const db = getDb();
+
+      // Apply: the ledger records the migration TOGETHER with the sha256
+      // of its file content (proven independently here with node:crypto).
+      const first = await runMigrations(db, root);
+      expect(first.applied).toEqual(['drift-fixture/001-fixture-tables.sql']);
+      expect(first.pinned).toEqual([]);
+      const storedSha = (
+        await db.query<{ content_sha: string | null }>(
+          `SELECT content_sha FROM _migrations WHERE name = 'drift-fixture/001-fixture-tables.sql'`,
+        )
+      ).rows[0]!.content_sha;
+      expect(storedSha).toBe(await fileSha256(migrationPath));
+
+      // A pending 002 the refusal must also block (nothing may apply on
+      // a refused run).
+      await writeFile(
+        path.join(root, 'drift-fixture', 'migrations', '002-fixture-extension.sql'),
+        `-- WMIG drift proof: never applied by a refused run.
+CREATE TABLE drift_gamma (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid NOT NULL
+);
+`,
+      );
+      // Mutate the applied 001's content — same NAME, different CONTENT:
+      // exactly the W102 seam, previously invisible to the name-keyed
+      // ledger.
+      const mutated = `${await readFile(migrationPath, 'utf8')}
+-- mutated: content drift proof (same migration name, different content)
+`;
+      await writeFile(migrationPath, mutated);
+      const mutatedSha = createHash('sha256').update(mutated, 'utf8').digest('hex');
+
+      // Re-run REFUSES with the exact drift list: migration name, the
+      // stored hash and the current file hash.
+      const refusal = await runMigrations(db, root).then(
+        () => undefined,
+        (error: unknown) => error as Error,
+      );
+      expect(refusal).toBeInstanceOf(Error);
+      expect(refusal!.message).toContain('content drift REFUSED');
+      expect(refusal!.message).toContain('refusing to migrate or deploy');
+      expect(refusal!.message).toContain(
+        `  - drift-fixture/001-fixture-tables.sql (ledger sha256: ${storedSha}, file sha256: ${mutatedSha})`,
+      );
+
+      // The refusal is total: the pending 002 was NOT applied (no ledger
+      // row, no table) and the stored hash was NOT clobbered.
+      const ledger002 = (
+        await db.query<{ name: string }>(
+          `SELECT name FROM _migrations WHERE name = 'drift-fixture/002-fixture-extension.sql'`,
+        )
+      ).rows;
+      expect(ledger002).toEqual([]);
+      expect((await publicTables()).has('drift_gamma')).toBe(false);
+      const storedAfterRefusal = (
+        await db.query<{ content_sha: string | null }>(
+          `SELECT content_sha FROM _migrations WHERE name = 'drift-fixture/001-fixture-tables.sql'`,
+        )
+      ).rows[0]!.content_sha;
+      expect(storedAfterRefusal).toBe(storedSha);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('WMIG — the backfill path: legacy NULL rows are pinned forward', () => {
+  it('a legacy row (name recorded, content_sha NULL) is pinned to the current hash and reported; the second run is clean', async () => {
+    const root = await tempFixtureRoot('aurum-content-backfill-', 'drift-fixture-legacy');
+    try {
+      const db = getDb();
+      const legacyName = 'drift-fixture-legacy/001-fixture-tables.sql';
+      // The legacy shape: exactly how every row recorded BEFORE the
+      // hardening looks (and how production's ledger looked through the
+      // W102 incident) — name present, no content hash.
+      await db.query(`INSERT INTO _migrations (name) VALUES ($1)`, [legacyName]);
+      const stored = (
+        await db.query<{ content_sha: string | null }>(
+          `SELECT content_sha FROM _migrations WHERE name = $1`,
+          [legacyName],
+        )
+      ).rows[0]!.content_sha;
+      expect(stored).toBe(null);
+
+      // The run skips the migration by name (no re-apply) and pins the
+      // row FORWARD to the current file's hash — the pin is recorded in
+      // the run report, never silent.
+      const first = await runMigrations(db, root);
+      expect(first.applied).toEqual([]);
+      expect(first.skipped).toEqual([legacyName]);
+      const expectedSha = await fileSha256(
+        path.join(root, 'drift-fixture-legacy', 'migrations', '001-fixture-tables.sql'),
+      );
+      expect(first.pinned).toEqual([{ name: legacyName, contentSha: expectedSha }]);
+      const pinned = (
+        await db.query<{ content_sha: string | null }>(
+          `SELECT content_sha FROM _migrations WHERE name = $1`,
+          [legacyName],
+        )
+      ).rows[0]!.content_sha;
+      expect(pinned).toBe(expectedSha);
+
+      // The second run is CLEAN: nothing applied, nothing pinned, no
+      // drift — the pinned hash now matches the file.
+      const second = await runMigrations(db, root);
+      expect(second.applied).toEqual([]);
+      expect(second.pinned).toEqual([]);
+      expect(second.skipped).toEqual([legacyName]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

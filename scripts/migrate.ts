@@ -25,7 +25,25 @@
 // 500s. The verification pass makes that state FAIL LOUDLY at build time
 // (non-zero exit with the exact missing table list) instead of serving
 // 500s at runtime.
+//
+// WMIG — CONTENT-CHECKSUM HARDENING: the name-keyed ledger could not
+// detect the incident's other half — a diverged database recording the
+// same migration NAME with DIFFERENT content. The ledger now records the
+// sha256 of each migration file's content (`content_sha`, node:crypto —
+// no new dependency) at apply time, and every run re-compares the stored
+// hash against the current file for each ledger-recorded migration:
+//   * MISMATCH — "content drift": the run REFUSES to migrate or deploy
+//     (non-zero exit listing every drifted migration with its stored and
+//     current hashes) BEFORE applying anything and WITHOUT touching the
+//     ledger.
+//   * NULL — a legacy row from before this hardening: historical content
+//     is unverifiable, so the row is pinned FORWARD to the current file
+//     hash, with the pin recorded in the run report (never silent).
+// The name-skip logic and the W102 missing-table guard are unchanged;
+// this is an additive seam closure on the runner's own bookkeeping
+// table (the ledger is runner infrastructure, not canonical schema).
 
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -49,11 +67,26 @@ export interface MigrationFile {
   path: string;
 }
 
+/**
+ * A legacy ledger row (NULL `content_sha`, recorded before the
+ * content-checksum hardening) that a run pinned FORWARD to the current
+ * file's hash — historical content is unverifiable, so the pin is
+ * recorded in the run report, never applied silently.
+ */
+export interface ContentPin {
+  /** The migration whose ledger row was pinned (`<module>/<file>`). */
+  name: string;
+  /** The sha256 hex digest the row was pinned to (the current file's content hash). */
+  contentSha: string;
+}
+
 export interface MigrationReport {
   /** Modules in migration order (dependencies before dependents). */
   order: string[];
   applied: string[];
   skipped: string[];
+  /** Legacy NULL-hash ledger rows this run pinned forward (see ContentPin). */
+  pinned: ContentPin[];
 }
 
 /**
@@ -327,11 +360,33 @@ export async function discoverMigrations(
   return (await moduleMigrationsInOrder(modulesDir)).migrations;
 }
 
+/** The sha256 hex digest of a migration file's content (node:crypto). */
+function contentSha256(content: string): string {
+  return createHash('sha256').update(content, 'utf8').digest('hex');
+}
+
+/** A ledger-recorded migration whose current file hash differs from the stored one. */
+interface ContentDrift {
+  name: string;
+  storedSha: string;
+  currentSha: string;
+}
+
 /**
  * Apply all pending migrations against `db`:
  * `_migrations` bookkeeping table, then each new file inside its own
  * transaction (statements executed one by one, split quote-aware).
  * Idempotent — already-recorded migrations are skipped.
+ *
+ * WMIG — content-checksum hardening: the ledger records each applied
+ * migration's content sha256 (`content_sha`), and every run re-compares
+ * the stored hash against the current file's sha256 for each
+ * ledger-recorded migration of the discovered set. A mismatch is
+ * CONTENT DRIFT (the undetected half of the W102 incident: same name,
+ * different content) and the run REFUSES to migrate or deploy — before
+ * applying anything and without touching the ledger. A NULL stored hash
+ * (a legacy row from before this hardening) is pinned forward to the
+ * current file's hash with the pin recorded in the run report.
  */
 export async function runMigrations(
   db: DbPort,
@@ -341,13 +396,64 @@ export async function runMigrations(
     `CREATE TABLE IF NOT EXISTS _migrations (
        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
        name text NOT NULL UNIQUE,
-       applied_at timestamptz NOT NULL DEFAULT now()
+       applied_at timestamptz NOT NULL DEFAULT now(),
+       content_sha text
      )`,
   );
-  const applied = await db.query<{ name: string }>(`SELECT name FROM _migrations`);
+  // Legacy ledgers (created before the content-checksum hardening) lack
+  // the column — add it idempotently so their rows can be pinned forward.
+  await db.query(`ALTER TABLE _migrations ADD COLUMN IF NOT EXISTS content_sha text`);
+  const applied = await db.query<{ name: string; content_sha: string | null }>(
+    `SELECT name, content_sha FROM _migrations`,
+  );
   const alreadyApplied = new Set(applied.rows.map((row) => row.name));
+  const recordedSha = new Map(
+    applied.rows.map((row): [string, string | null] => [row.name, row.content_sha]),
+  );
   const { order, migrations } = await moduleMigrationsInOrder(modulesDir);
-  const report: MigrationReport = { order, applied: [], skipped: [] };
+  const report: MigrationReport = { order, applied: [], skipped: [], pinned: [] };
+  // Content-checksum pass over every ledger-recorded migration of the
+  // discovered set: collect drift and legacy rows to pin. READ-ONLY — a
+  // refused run must leave the ledger byte-identical (the drift refusal
+  // below fires before any backfill write).
+  const drift: ContentDrift[] = [];
+  const pins: ContentPin[] = [];
+  for (const migration of migrations) {
+    const storedSha = recordedSha.get(migration.name);
+    if (storedSha === undefined) continue; // pending — recorded at apply time below
+    const currentSha = contentSha256(await readFile(migration.path, 'utf8'));
+    if (storedSha === null) {
+      pins.push({ name: migration.name, contentSha: currentSha });
+    } else if (storedSha !== currentSha) {
+      drift.push({ name: migration.name, storedSha, currentSha });
+    }
+  }
+  if (drift.length > 0) {
+    const lines = drift.map(
+      (entry) =>
+        `  - ${entry.name} (ledger sha256: ${entry.storedSha}, file sha256: ${entry.currentSha})`,
+    );
+    throw new Error(
+      [
+        'content drift REFUSED — the _migrations ledger records ' +
+          `${drift.length} applied migration(s) whose current file content hash differs ` +
+          'from the recorded hash (a migration name was recorded against DIFFERENT ' +
+          'content; refusing to migrate or deploy; restore the recorded file content ' +
+          'or reconcile the ledger deliberately):',
+        ...lines,
+      ].join('\n'),
+    );
+  }
+  // No drift: pin legacy NULL-hash rows forward to the current content.
+  // Each pin is recorded in the run report so the pin-forward is
+  // explicit — historical content is unverifiable, and the report says so.
+  for (const pin of pins) {
+    await db.query(`UPDATE _migrations SET content_sha = $1 WHERE name = $2`, [
+      pin.contentSha,
+      pin.name,
+    ]);
+    report.pinned.push(pin);
+  }
   for (const migration of migrations) {
     if (alreadyApplied.has(migration.name)) {
       report.skipped.push(migration.name);
@@ -359,7 +465,10 @@ export async function runMigrations(
       for (const statement of statements) {
         await tx.query(statement);
       }
-      await tx.query(`INSERT INTO _migrations (name) VALUES ($1)`, [migration.name]);
+      await tx.query(`INSERT INTO _migrations (name, content_sha) VALUES ($1, $2)`, [
+        migration.name,
+        contentSha256(sql),
+      ]);
     });
     report.applied.push(migration.name);
   }
@@ -431,6 +540,13 @@ async function main(): Promise<void> {
   const order = report.order.length > 0 ? report.order.join(' -> ') : '(no modules found)';
   console.log(`module order: ${order}`);
   console.log(`applied ${report.applied.length} migration(s), skipped ${report.skipped.length}`);
+  if (report.pinned.length > 0) {
+    console.log(
+      `pinned ${report.pinned.length} legacy ledger row(s) to current content hashes ` +
+        '(historical content unverifiable — pinned forward):',
+    );
+    for (const pin of report.pinned) console.log(`  = ${pin.name} -> ${pin.contentSha}`);
+  }
   console.log(
     `schema verification passed — ${verification.expectedTables.length} expected table(s) all present ` +
       `(public table census: ${verification.tableCensus})`,
