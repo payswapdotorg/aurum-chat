@@ -1,0 +1,14 @@
+# W111 gate outputs (captured 2026-09-28T04:15:13Z, base 53bd2711982a7016fc36e1376e375d7551142652 + W111 branch work)
+
+$ bun run typecheck
+$ tsc --noEmit
+exit=0
+
+$ bun run lint
+$ eslint .
+exit=0
+
+$ bun run arch
+$ tsx scripts/check-architecture.ts
+architecture check passed — module files: 684, app/mcp files: 308, tables checked: 250
+exit=0

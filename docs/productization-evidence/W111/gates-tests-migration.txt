@@ -1,0 +1,14 @@
+# W111 gate output (captured 2026-09-28T04:17:55Z)
+
+$ bun run test -- migration   (filter: 'migration' — matches every test file whose path contains 'migration')
+     ✓ staged import → edge verification → delta → native catch-up → W084 comparison → progressive retirement 344ms
+ ✓ src/modules/migration/tests/migration-readers.test.ts (11 tests) 4956ms
+ ✓ tests/tenant-isolation/migration-sweep.test.ts (1 test) 4742ms
+ ✓ src/modules/migration/tests/migration-unit.test.ts (31 tests) 22ms
+ ↓ src/modules/migration/tests/migration-readers-hosted.test.ts (1 test | 1 skipped)
+
+ Test Files  5 passed | 1 skipped (6)
+      Tests  56 passed | 1 skipped (57)
+   Start at  04:17:55
+   Duration  23.71s (tests 89%, import 6%, transform 5%)
+

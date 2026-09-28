@@ -1,0 +1,9 @@
+$ tsx scripts/dev-db.ts
+module order: actions -> capabilities -> events -> goals -> identity -> journey-proof -> observations -> organizations -> provider-sdk -> world -> agents -> auth -> destinations -> freshness -> llm -> meetings -> memory -> people -> processes -> sources -> suppliers -> workforce -> agent-recruitment -> agent-teams -> automation -> conversations -> epistemics -> extensions -> workflow -> channels -> integration-intelligence -> marketplace -> missions -> provider-billing -> realtime -> vertical-kits -> connection-broker -> knowledge-acquisition -> notifications -> provider-preferences -> unified-identity -> capability-grants -> cellular -> cognition -> rewards -> api -> attention -> audit -> briefings -> deep-actions -> environment -> learning -> opportunities -> agent-evaluation -> contributions -> edge-connector -> outcomes -> quality -> agent-supervision -> computer-use -> demo -> migration -> simulator -> deployment-smoke -> release-certification
+applied 138 migration(s), skipped 0
+tables (258):
+  - _migrations
+  - acquisition_outcomes
+  - acquisition_plans
+  - action_approval_decisions
+  - action_authority_policies

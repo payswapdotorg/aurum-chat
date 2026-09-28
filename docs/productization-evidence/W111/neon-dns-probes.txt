@@ -1,0 +1,17 @@
+=== W111 hosted-Postgres environment probes (sandbox, 2026-09-28T03:47:49Z) ===
+
+$ getent hosts api.neon.tech
+exit=2
+
+$ node -e 'dns lookup'
+lookup error: ENOTFOUND getaddrinfo ENOTFOUND api.neon.tech
+exit=1
+
+$ curl -sS -m 10 https://api.neon.tech/v2/users/me -o /dev/null -w '%{http_code}\n'
+curl: (6) Could not resolve host: api.neon.tech
+000
+exit=6
+
+$ getent hosts github.com (control)
+20.205.243.166  github.com
+exit=0

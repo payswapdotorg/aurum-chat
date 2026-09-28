@@ -1,0 +1,17 @@
+# W111 full-suite gate (captured 2026-09-28T04:20:07Z) — the W101 chunked precedent
+
+273 tracked test files (git ls-files '*.test.ts', tests/browser excluded — the vitest
+config's own baseline) run in 6 chunked batches (scripts/run-suite-chunked.sh, per-batch
+vitest JSON aggregates under /tmp/w105-suite/):
+
+  tracked-files total: files=1931 suites passed=5657 failed=0 skipped=6
+  (the 6 pre-existing skips include worker-realpostgres — also AURUM_TEST_DATABASE_URL-gated)
+
+The 3 NEW (untracked at capture time) W111 test files, run directly:
+
+  Tests  13 passed | 1 skipped (14)
+  - migration-readers.test.ts (11) — the deterministic adapter/ledger/wiring suite
+  - migration-readers-real.test.ts (2) — the real-environment full path + rollback proof
+  - migration-readers-hosted.test.ts (1 skipped — no AURUM_TEST_DATABASE_URL in this sandbox)
+
+COMBINED: 5670 passed, 7 skipped, 0 failed.

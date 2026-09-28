@@ -103,6 +103,7 @@ import {
 import {
   assertMigrationTenantContext,
   canonicalizeNativeStates,
+  canonicalizeReaderRejection,
   canonicalizeSnapshotResult,
   isPlainJsonValue,
   validateCaptureSnapshotInput,
@@ -117,6 +118,7 @@ import {
   validateListIdentifierMappingsQuery,
   validateListMigrationEventsQuery,
   validateListMigrationsQuery,
+  validateListReaderRejectionsQuery,
   validateMigrationIdInput,
   validateListCurrentImportedStatesQuery,
   validateResolveConflictInput,
@@ -140,10 +142,12 @@ import type {
   ImportRound,
   ImportedRecord,
   ImportedRecordIssue,
+  IncumbentRejectionSource,
   Migration,
   MigrationEventType,
   MigrationIncumbentReader,
   MigrationNativeReader,
+  MigrationReaderRejection,
   ResolveExternalIdResult,
   ResolveIdentityConflictInput,
   RunComparisonRoundResult,
@@ -359,6 +363,21 @@ interface ComparisonEntryRow extends DbRow {
   reason: string | null;
 }
 
+interface RejectionRow extends DbRow {
+  id: string;
+  tenant_id: string;
+  migration_id: string;
+  round_id: string;
+  reader_kind: string;
+  snapshot_ref: string;
+  external_id: string | null;
+  line_number: number;
+  reason_code: string;
+  reason: string;
+  raw_row: string | null;
+  created_at: Date | string;
+}
+
 interface EventRow extends DbRow {
   id: string;
   tenant_id: string;
@@ -532,6 +551,22 @@ function mapEvent(row: EventRow) {
     comparisonRoundId: row.comparison_round_id,
     recordedBy: row.recorded_by,
     recordedAt: toIso(row.recorded_at)!,
+  };
+}
+
+function mapRejection(row: RejectionRow): MigrationReaderRejection {
+  return {
+    id: row.id,
+    migrationId: row.migration_id,
+    roundId: row.round_id,
+    readerKind: row.reader_kind,
+    snapshotRef: row.snapshot_ref,
+    externalId: row.external_id,
+    lineNumber: row.line_number,
+    reasonCode: row.reason_code,
+    reason: row.reason,
+    rawRow: row.raw_row,
+    createdAt: toIso(row.created_at)!,
   };
 }
 
@@ -956,6 +991,23 @@ export async function captureSnapshot(
     'the incumbent reader',
   );
 
+  // W111 — no silent data loss: a first-party reader that rejects rows
+  // PER ROW (the module's canonicalization is all-or-nothing per snapshot,
+  // so real incumbents with malformed rows must reject row-wise) drains
+  // its rejections here; they are persisted in the rejection ledger INSIDE
+  // the round's transaction, linked to this round, so the count
+  // reconciliation is auditable: export rows = staged + rejected +
+  // conflicted. A reader that does not implement the capability (the
+  // fixture double, third-party readers) rejects nothing row-wise.
+  const rejectionSource = reader as Partial<IncumbentRejectionSource>;
+  const drained =
+    typeof rejectionSource.drainRejections === 'function'
+      ? rejectionSource.drainRejections().map((rejection) =>
+          canonicalizeReaderRejection(rejection),
+        )
+      : [];
+  const rejectionIds = drained.map(() => newId());
+
   const at = now();
   const recordIds = snapshot.records.map(() => newId());
   await db.transaction(async (tx) => {
@@ -1007,12 +1059,36 @@ export async function captureSnapshot(
         ],
       );
     }
+    for (const [index, rejection] of drained.entries()) {
+      await tx.query(
+        `INSERT INTO migration_reader_rejections (
+           id, tenant_id, migration_id, round_id, reader_kind, snapshot_ref,
+           external_id, line_number, reason_code, reason, raw_row, created_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+        [
+          rejectionIds[index],
+          ctx.tenantId,
+          migration.id,
+          roundId,
+          rejection.readerKind,
+          rejection.snapshotRef,
+          rejection.externalId,
+          rejection.lineNumber,
+          rejection.reasonCode,
+          rejection.reason,
+          rejection.rawRow,
+          at,
+        ],
+      );
+    }
     await recordEvent(
       tx,
       ctx,
       migration.id,
       'snapshot-captured',
-      `${kind} round ${roundNumber}: ${snapshot.records.length} record(s) at snapshot '${snapshot.snapshotRef}'`,
+      (`${kind} round ${roundNumber}: ${snapshot.records.length} record(s) at snapshot '${snapshot.snapshotRef}'`
+        + (drained.length > 0 ? `; ${drained.length} row(s) explicitly rejected by the '${drained[0]!.readerKind}' reader (see the rejection ledger)` : '')
+      ).slice(0, 500),
       at,
       { roundId },
     );
@@ -1020,7 +1096,14 @@ export async function captureSnapshot(
 
   const round = mapRound((await findRoundRow(db, ctx, roundId))!);
   const records = (await listRecordRows(db, ctx, roundId)).map(mapRecord);
-  return { round, records };
+  const rejections = (
+    await db.query<RejectionRow>(
+      `SELECT * FROM migration_reader_rejections
+         WHERE tenant_id = $1 AND round_id = $2 ORDER BY line_number`,
+      [ctx.tenantId, roundId],
+    )
+  ).rows.map(mapRejection);
+  return { round, records, rejections };
 }
 
 // ---------------------------------------------------------------------------
@@ -1529,7 +1612,9 @@ export async function commitImportRound(
   const entryRows = mapEntryIds.length
     ? (
         await db.query<MapEntryRow>(
-          `SELECT * FROM migration_identifier_map WHERE tenant_id = $1 AND id = ANY($2::uuid[])`,
+          `SELECT * FROM migration_identifier_map
+             WHERE tenant_id = $1 AND id = ANY($2::uuid[])
+             ORDER BY external_id`,
           [ctx.tenantId, mapEntryIds],
         )
       ).rows
@@ -2258,11 +2343,18 @@ export async function listMigrationEvents(
 
 export async function listCurrentImportedStates(
   ctx: TenantContext,
-  query: { migrationId: string; includeTombstoned?: boolean },
+  query: { migrationId: string; includeTombstoned?: boolean; includeSequestered?: boolean },
 ): Promise<CurrentImportedState[]> {
   assertMigrationTenantContext(ctx);
   const valid = validateListCurrentImportedStatesQuery(query);
   const migration = await loadMigration(ctx, valid.migrationId);
+  // SEQUESTERED migrations' imports are quarantined — excluded from this
+  // live view (derived from the migration's status; the rows themselves
+  // are untouched). The audit view opts in explicitly (the W111 rollback
+  // proof exercises both).
+  if (migration.status === 'sequestered' && !valid.includeSequestered) {
+    return [];
+  }
   const rows = await listCurrentStateRows(getDb(), ctx, migration.id);
   return rows
     .filter((row) => valid.includeTombstoned || !row.tombstone)
@@ -2336,4 +2428,35 @@ export async function resolveExternalId(
             recordId: state.record_id,
           },
   };
+}
+
+// ---------------------------------------------------------------------------
+// The reader-rejection ledger reads (W111 — the no-silent-loss audit view)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lists the rows the migration's incumbent reader EXPLICITLY REJECTED, in
+ * source order — the audit counterpart of the staged records. Every read
+ * is tenant-scoped; another tenant's rejections are indistinguishable
+ * from none.
+ */
+export async function listReaderRejections(
+  ctx: TenantContext,
+  query: { migrationId: string; roundId?: string | null; limit?: number },
+): Promise<MigrationReaderRejection[]> {
+  assertMigrationTenantContext(ctx);
+  const valid = validateListReaderRejectionsQuery(query);
+  const db = getDb();
+  // The migration boundary: a foreign or unknown migration id is
+  // not-found (no existence leak), exactly like every other read here.
+  await loadMigration(ctx, valid.migrationId);
+  const rows = await db.query<RejectionRow>(
+    `SELECT * FROM migration_reader_rejections
+       WHERE tenant_id = $1 AND migration_id = $2
+         AND ($3::uuid IS NULL OR round_id = $3)
+       ORDER BY created_at, line_number
+       LIMIT $4`,
+    [ctx.tenantId, valid.migrationId, valid.roundId, valid.limit],
+  );
+  return rows.rows.map(mapRejection);
 }

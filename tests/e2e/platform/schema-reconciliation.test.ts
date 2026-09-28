@@ -490,7 +490,10 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // INTEGRATION (W108, deliberate): 133 → 134 — the cellular module gained
     // 006-cellular-inbound-authority.sql (the manager-inbound W009 authority
     // determination ledger + the reach-request origin columns).
-    expect(repair.applied).toHaveLength(134);
+    // INTEGRATION (W111, deliberate): 134 → 135 — the migration module gained
+    // 002-w111-migration-readers.sql (the reader rejection ledger — the
+    // durable audit home for no-silent-loss row rejections).
+    expect(repair.applied).toHaveLength(135);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -504,7 +507,9 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // migration carries the constraint's authoritative shape forward.
     // INTEGRATION (W108): 136 → 137 — the cellular module's 006 inbound-
     // authority migration (deliberate count-pin extension).
-    expect(names).toHaveLength(137);
+    // INTEGRATION (W111): 137 → 138 — the migration module's 002 reader-
+    // rejections migration (deliberate count-pin extension).
+    expect(names).toHaveLength(138);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -608,7 +613,9 @@ describe('W102 — the reconciliation is idempotent', () => {
     // INTEGRATION (W106): 136 — plus the api 004 reconciliation migration.
     // INTEGRATION (W108): 137 — plus the cellular 006 inbound-authority
     // migration (deliberate count-pin extension).
-    expect(report.skipped).toHaveLength(137);
+    // INTEGRATION (W111): 138 — plus the migration module's 002 reader-
+    // rejections migration (deliberate count-pin extension).
+    expect(report.skipped).toHaveLength(138);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });

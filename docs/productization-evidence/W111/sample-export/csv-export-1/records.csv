@@ -1,0 +1,6 @@
+external_id,match_key,entity_type,deleted_at,payload_json
+C-100,k-100,customer,,{"stage":"active","seats":10,"emails":["ops@acme.test","billing@acme.test"]}
+C-200,k-200,customer,,{"stage":"onboarding"}
+C-300,k-300,customer,,{"stage":"active"}
+C-400,,customer,,{"stage":"active","note":"no natural key — mints a fresh entity"}
+C-500,k-500,customer,,this row is malformed and will be rejected with reason invalid-record

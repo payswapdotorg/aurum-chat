@@ -99,7 +99,9 @@
 //     listImportedRecords (includeSequestered = the audit view) /
 //     listIdentifierMappings / getIdentityConflict /
 //     listIdentityConflicts / getComparisonRound / listComparisonRounds /
-//     listMigrationEvents — every surface tenant-scoped.
+//     listMigrationEvents / listReaderRejections (the W111 no-silent-loss
+//     audit view of rows the incumbent reader explicitly rejected) —
+//     every surface tenant-scoped.
 //
 //   THE PORTS (infrastructure wiring, not domain state)
 //     setMigrationIncumbentReader / getMigrationIncumbentReader — the
@@ -190,6 +192,7 @@ export {
   listComparisonRounds,
   listMigrationEvents,
   listCurrentImportedStates,
+  listReaderRejections,
   // the port wiring (infrastructure, not domain state)
   setMigrationIncumbentReader,
   getMigrationIncumbentReader,
@@ -217,6 +220,35 @@ export type {
   FixtureIncumbentEntity,
   FixtureNativeDivergence,
 } from './fixture-incumbent';
+
+// The REAL reader adapters (W111 — production migration readers). The
+// CSV export-library incumbent reader reads a REAL on-disk versioned
+// export directory (the private/on-prem incumbent pattern: the incumbent
+// drops csv-export-<NNN>/ snapshots onto a share); the world native reader
+// reads the tenant's REAL world_entities (the W005 schema) through the db
+// port; the file-share edge adapter re-reads the SAME export through the
+// W088 edge boundary for commit-time verification. The env-driven wiring
+// follows the W108 cellular precedent (Family A: honest unwired when the
+// environment is unset).
+export {
+  createCsvExportIncumbentReader,
+  type CsvExportIncumbentReader,
+  type CsvExportIncumbentReaderOptions,
+} from './adapters/csv-export-incumbent-reader';
+export {
+  createWorldEntitiesNativeReader,
+  type WorldEntitiesNativeReader,
+} from './adapters/world-native-reader';
+export {
+  createCsvFileShareAdapter,
+  type CsvFileShareAdapter,
+} from './adapters/file-share-verify';
+export {
+  ensureMigrationReadersWired,
+  resetMigrationReadersWiring,
+  type MigrationReadersWiringReport,
+  type MigrationReaderWiringState,
+} from './adapters/env-wiring';
 
 // The pure deterministic surface (unit-tested; exported for tests and
 // downstream surfaces — lock 10: comparison is a computation, not an
@@ -250,6 +282,7 @@ export {
   MAX_MATCH_KEY_LENGTH,
   MAX_NOTE_LENGTH,
   MAX_REASON_LENGTH,
+  MAX_RAW_ROW_LENGTH,
   MAX_ROUND_RECORDS,
   MAX_SNAPSHOT_REF_LENGTH,
   MAX_SYSTEM_KEY_LENGTH,
@@ -261,6 +294,7 @@ export {
   assertMigrationTenantContext,
   canonicalizeIncumbentRecord,
   canonicalizeNativeStates,
+  canonicalizeReaderRejection,
   canonicalizeSnapshotResult,
   isIdentityConflictKind,
   isIdentityConflictStatus,
@@ -288,9 +322,11 @@ export type {
   ValidatedListMappingsQuery,
   ValidatedListMigrationsQuery,
   ValidatedListRecordsQuery,
+  ValidatedListReaderRejectionsQuery,
   ValidatedListRoundsQuery,
   ValidatedMigrationIdInput,
   ValidatedNativeStateReadResult,
+  ValidatedReaderRejection,
   ValidatedResolveConflictInput,
   ValidatedResolveExternalIdQuery,
   ValidatedRoundIdInput,
@@ -330,6 +366,8 @@ export type {
   ImportedRecordDisposition,
   ImportedRecordIssue,
   ImportedRecordState,
+  IncumbentReaderRejection,
+  IncumbentRejectionSource,
   IncumbentRecord,
   IncumbentSnapshotRequest,
   IncumbentSnapshotResult,
@@ -340,11 +378,13 @@ export type {
   ListIdentifierMappingsQuery,
   ListMigrationEventsQuery,
   ListMigrationsQuery,
+  ListReaderRejectionsQuery,
   Migration,
   MigrationEventType,
   MigrationIncumbentReader,
   MigrationKitBindingInput,
   MigrationNativeReader,
+  MigrationReaderRejection,
   MigrationStatus,
   NativeStateReadRequest,
   NativeStateReadResult,
