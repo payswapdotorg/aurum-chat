@@ -5,69 +5,69 @@
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-27T02:57:03.120Z",
+      "at": "2026-09-28T12:46:59.115Z",
       "step": "sign in as the run manager and record tenant activity",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:04.493Z",
+      "at": "2026-09-28T12:47:00.781Z",
       "step": "screenshot: the first tenant — the recorded activity marker",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-recorded-activity-marker.png"
     },
     {
-      "at": "2026-09-27T02:57:04.493Z",
+      "at": "2026-09-28T12:47:00.781Z",
       "step": "sign out through the real button",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:05.957Z",
+      "at": "2026-09-28T12:47:02.139Z",
       "step": "create the second tenant through the real flow",
       "url": "https://aurum-chat-livid.vercel.app/signin",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:07.796Z",
+      "at": "2026-09-28T12:47:04.069Z",
       "step": "screenshot: the second tenant — created through the real flow",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-created-through-the-real-flow.png"
     },
     {
-      "at": "2026-09-27T02:57:07.796Z",
+      "at": "2026-09-28T12:47:04.069Z",
       "step": "no first-tenant data is visible in the conversation list",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:08.261Z",
+      "at": "2026-09-28T12:47:04.582Z",
       "step": "screenshot: the second tenant — the empty conversation list",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-empty-conversation-list.png"
     },
     {
-      "at": "2026-09-27T02:57:08.261Z",
+      "at": "2026-09-28T12:47:04.582Z",
       "step": "no first-tenant data on the intelligence or evidence surfaces",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:09.267Z",
+      "at": "2026-09-28T12:47:05.490Z",
       "step": "screenshot: the second tenant — the isolated surfaces",
       "url": "https://aurum-chat-livid.vercel.app/evidence",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-second-tenant-the-isolated-surfaces.png"
     },
     {
-      "at": "2026-09-27T02:57:09.267Z",
+      "at": "2026-09-28T12:47:05.490Z",
       "step": "sign out and back into the first tenant — the activity is intact",
       "url": "https://aurum-chat-livid.vercel.app/evidence",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:12.220Z",
+      "at": "2026-09-28T12:47:08.478Z",
       "step": "screenshot: the first tenant — the activity preserved",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j13-a-second-tenant-sees-nothing-of-th-desktop__the-first-tenant-the-activity-preserved.png"
     }
   ]

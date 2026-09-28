@@ -1,6 +1,6 @@
 {
   "verdict": "CERTIFIED READY",
-  "generatedAt": "2026-09-27T03:01:57.496Z",
+  "generatedAt": "2026-09-28T13:10:20.382Z",
   "reasons": [],
   "checks": [
     {
@@ -37,13 +37,13 @@
       "id": "identity.deployment-id",
       "title": "the runs agree on the deployment id",
       "status": "pass",
-      "detail": "Run A deployment id: dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ · Run B deployment id: dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ"
+      "detail": "Run A deployment id: dpl_B53sTKNRvcXCMYSafQ3XEboagD4a · Run B deployment id: dpl_B53sTKNRvcXCMYSafQ3XEboagD4a"
     },
     {
       "id": "identity.commit-SHA",
       "title": "the runs agree on the commit SHA",
       "status": "pass",
-      "detail": "Run A commit SHA: 625a133e22904972394b6e418f2a3b2c9cda676a · Run B commit SHA: 625a133e22904972394b6e418f2a3b2c9cda676a"
+      "detail": "Run A commit SHA: 1b7ba4b11e0ff3995b60d1229fa9584de47c35a4 · Run B commit SHA: 1b7ba4b11e0ff3995b60d1229fa9584de47c35a4"
     },
     {
       "id": "identity.environment-label",

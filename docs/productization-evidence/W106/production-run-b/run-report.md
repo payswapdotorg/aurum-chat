@@ -1,9 +1,9 @@
 # W106 production journey certification — Run B
 
 - **Target:** https://aurum-chat-livid.vercel.app
-- **Deployment:** `dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ` @ `625a133e22904972394b6e418f2a3b2c9cda676a` (created 2026-09-27)
-- **Run:** 2026-09-27T02:58:53.118Z → 2026-09-27T03:01:51.159Z
-- **Command:** `bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w106 --deployment-id dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ --expect-commit 625a133e22904972394b6e418f2a3b2c9cda676a --deployment-created 2026-09-27 --worker-token-file <redacted> --vercel-token-file <redacted>`
+- **Deployment:** `dpl_B53sTKNRvcXCMYSafQ3XEboagD4a` @ `1b7ba4b11e0ff3995b60d1229fa9584de47c35a4` (created 2026-09-28T12:28:35.809Z)
+- **Run:** 2026-09-28T12:51:35.937Z → 2026-09-28T13:05:47.921Z
+- **Command:** `bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w106 --deployment-id dpl_B53sTKNRvcXCMYSafQ3XEboagD4a --expect-commit 1b7ba4b11e0ff3995b60d1229fa9584de47c35a4 --deployment-created 2026-09-28T12:28:35.809Z --worker-token-file <redacted> --vercel-token-file <redacted>`
 - **Evidence:** `docs/productization-evidence/W106/production-run-b`
 
 ## Infrastructure gates (G1/G3)
@@ -11,20 +11,20 @@
 | Verdict | Gate | Observation |
 | --- | --- | --- |
 | ✅ `PASS` | `matrix.consistency` | all 22 journeys declared; W106 mandates 22 (J01, J02, J03, J04, J05, J06, J07, J08, J09, J10, J11, J12, J13, J14, J15, J16, J17, J18, J19, J20, J21, J22) |
-| ✅ `PASS` | `g1.health` | /api/health status ok · environment production · db postgres (136 migrations) · queue/cache/lock redis · 0 refusals · 0 warnings |
+| ✅ `PASS` | `g1.health` | /api/health status ok · environment production · db postgres (138 migrations) · queue/cache/lock redis · 0 refusals · 0 warnings |
 | ✅ `PASS` | `g1.quick-sign-in-off` | POST /api/auth/quick-sign-in answered 404 — the quick-access panel is off in the production runtime |
 | ✅ `PASS` | `g1.worker-authorization` | the seam is fail-closed (401 no/bad token) and the valid token reads the snapshot (environment production, queue depth 0) |
-| ✅ `PASS` | `g1.deployment-identity` | the live production deployment is dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ @ 625a133e22904972394b6e418f2a3b2c9cda676a (READY, created 2026-09-27T00:16:35.425Z) |
-| ✅ `PASS` | `rollback.evidence` | the seams' recorded state a rollback preserves: environment production · db postgres (136 migrations) · worker production (queue depth 0); the known-good rollback target is dpl_2J55BXJ139c4bbgv89psJGpDT3by @ 0c0a29dd5b13fdbc0f2a3a270bc326d164b4ce33 (READY); the runbook (docs/DEPLOYMENT.md §12) and the W078 operations evidence tree are linked, not restated |
+| ✅ `PASS` | `g1.deployment-identity` | the live production deployment is dpl_B53sTKNRvcXCMYSafQ3XEboagD4a @ 1b7ba4b11e0ff3995b60d1229fa9584de47c35a4 (READY, created 2026-09-28T12:28:35.809Z) |
+| ✅ `PASS` | `rollback.evidence` | the seams' recorded state a rollback preserves: environment production · db postgres (138 migrations) · worker production (queue depth 0); the known-good rollback target is dpl_GxApj6s3CECESUvToWzoUPDokCdj @ c079cab7fd7eacd363a643c83d3697c4667b6410 (READY); the runbook (docs/DEPLOYMENT.md §12) and the W078 operations evidence tree are linked, not restated |
 | ✅ `PASS` | `g3.w078-rerun` | 27 passed · 0 failed · 0 blocked · 13 skipped (the seeded demo checks are inapplicable on production — the demo gate keeps the production runtime demo-free by design) |
 | ✅ `PASS` | `g3.browser-matrix` | 22/22 browser tests green across 22 journey-context pairs — real production auth, zero-violation record attached |
 
 ## Repository gates (G2)
 
-- `bun run typecheck` → exit 0 — tsc --noEmit — no output, exit 0 (clean typecheck over the delivered W106 tree, including the 004 reconciliation migration, the aligned schema-reconciliation test and the J19 four-surface roster alignment)
-- `bun run test` → exit 0 — 5591 passed · 0 failed · 6 skipped across 268 test files — executed per-file in 7 chunks against the delivered W106 tree INCLUDING the 004 reconciliation migration and the aligned schema-reconciliation counts (batch runner adapted from scripts/run-suite-chunked.sh, output /tmp/w106-suite: the single-window run exceeds the sandbox command limit on 2 CPUs — batch summaries 847/727/950/1079/856/812/320 passed, 0 failed)
-- `bun run arch` → exit 0 — architecture check passed — module files: 669, app/mcp files: 305, tables checked: 248
-- `bun run lint` → exit 0 — eslint . — no output, exit 0 (clean lint over the delivered W106 tree, including the 004 reconciliation migration, the aligned schema-reconciliation test and the J19 four-surface roster alignment)
+- `bun run typecheck` → exit 0 — $ tsc --noEmit
+- `bun run test` → exit 1 — (pass) validation — queries and context > exposes the vocabulary guards [0.02ms] ⏎  ⏎ src/modules/workflow/tests/workflow-service.test.ts:
+- `bun run arch` → exit 0 — architecture check passed — module files: 700, app/mcp files: 308, tables checked: 250 ⏎ $ tsx scripts/check-architecture.ts
+- `bun run lint` → exit 0 — $ eslint .
 
 ## W078 hosted smoke rerun (operations proof, contract §8)
 

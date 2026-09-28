@@ -5,81 +5,81 @@
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-27T02:58:27.403Z",
+      "at": "2026-09-28T12:48:31.207Z",
       "step": "sign in as the run manager on the mobile viewport",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:28.634Z",
+      "at": "2026-09-28T12:48:32.938Z",
       "step": "the touch chrome: top bar + five-area bottom nav (44px+)",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:28.943Z",
+      "at": "2026-09-28T12:48:33.307Z",
       "step": "screenshot: mobile — the touch chrome",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-touch-chrome.png"
     },
     {
-      "at": "2026-09-27T02:58:28.944Z",
+      "at": "2026-09-28T12:48:33.307Z",
       "step": "the conversation list fills the screen (one pane at a time)",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:29.069Z",
+      "at": "2026-09-28T12:48:33.462Z",
       "step": "screenshot: mobile — the conversation list home",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-conversation-list-home.png"
     },
     {
-      "at": "2026-09-27T02:58:29.069Z",
+      "at": "2026-09-28T12:48:33.462Z",
       "step": "tap the conversation — the thread takes the screen",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:29.280Z",
+      "at": "2026-09-28T12:48:33.662Z",
       "step": "screenshot: mobile — the full-screen thread",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-full-screen-thread.png"
     },
     {
-      "at": "2026-09-27T02:58:29.280Z",
+      "at": "2026-09-28T12:48:33.662Z",
       "step": "the composer is a 44px+ touch target",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:29.411Z",
+      "at": "2026-09-28T12:48:33.798Z",
       "step": "screenshot: mobile — the composer",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-composer.png"
     },
     {
-      "at": "2026-09-27T02:58:29.411Z",
+      "at": "2026-09-28T12:48:33.798Z",
       "step": "a composer turn runs the real workflow on mobile",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:30.582Z",
+      "at": "2026-09-28T12:48:35.997Z",
       "step": "screenshot: mobile — the reply landed",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-the-reply-landed.png"
     },
     {
-      "at": "2026-09-27T02:58:30.582Z",
+      "at": "2026-09-28T12:48:35.997Z",
       "step": "the back affordance returns to the list",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:30.779Z",
+      "at": "2026-09-28T12:48:36.186Z",
       "step": "screenshot: mobile — back to the list",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=88302cc0-a607-499a-be9c-a2f0475fe93d",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=7e7f2739-8ffc-4dbb-8587-5174e1980884",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j14-the-mobile-loop-list-full-screen-t-mobile__mobile-back-to-the-list.png"
     }
   ]

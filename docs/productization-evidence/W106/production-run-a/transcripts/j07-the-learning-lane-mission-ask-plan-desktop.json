@@ -5,75 +5,75 @@
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-27T02:56:20.952Z",
+      "at": "2026-09-28T12:46:15.000Z",
       "step": "sign in as the run manager",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:22.211Z",
+      "at": "2026-09-28T12:46:16.700Z",
       "step": "the integration registers a learning mission via the public API",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:22.524Z",
+      "at": "2026-09-28T12:46:17.445Z",
       "step": "the Learning hub renders the mission",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:23.155Z",
+      "at": "2026-09-28T12:46:18.170Z",
       "step": "screenshot: the Learning hub — the live mission",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-hub-the-live-mission.png"
     },
     {
-      "at": "2026-09-27T02:56:23.155Z",
+      "at": "2026-09-28T12:46:18.170Z",
       "step": "open the mission chain — the ask planner lives there",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:23.605Z",
+      "at": "2026-09-28T12:46:19.136Z",
       "step": "the ask planner runs and decides honestly",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/c61419cb-1a61-4d6c-ba63-877ca9a2ecff",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/a3a515d0-4f47-429e-a8e0-1ecd27b7c238",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:23.823Z",
+      "at": "2026-09-28T12:46:19.425Z",
       "step": "screenshot: the planner decision — honest, on the record",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/c61419cb-1a61-4d6c-ba63-877ca9a2ecff",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/a3a515d0-4f47-429e-a8e0-1ecd27b7c238",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-planner-decision-honest-on-the-record.png"
     },
     {
-      "at": "2026-09-27T02:56:23.823Z",
+      "at": "2026-09-28T12:46:19.425Z",
       "step": "the contribution and reward state panels render",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/c61419cb-1a61-4d6c-ba63-877ca9a2ecff",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/a3a515d0-4f47-429e-a8e0-1ecd27b7c238",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:24.369Z",
+      "at": "2026-09-28T12:46:20.058Z",
       "step": "screenshot: the contribution and reward state",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-contribution-and-reward-state.png"
     },
     {
-      "at": "2026-09-27T02:56:24.369Z",
+      "at": "2026-09-28T12:46:20.058Z",
       "step": "the chat learning intent answers from live company state",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:25.751Z",
+      "at": "2026-09-28T12:46:22.550Z",
       "step": "screenshot: the learning answer in chat",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=d322ad0a-83f6-46ed-a29e-edfab98331cf",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=2e89e558-d3a1-4df7-94cf-64588958d49d",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j07-the-learning-lane-mission-ask-plan-desktop__the-learning-answer-in-chat.png"
     },
     {
-      "at": "2026-09-27T02:56:25.751Z",
+      "at": "2026-09-28T12:46:22.550Z",
       "step": "the conversation is preserved (the cross-surface return)",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=d322ad0a-83f6-46ed-a29e-edfab98331cf",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=2e89e558-d3a1-4df7-94cf-64588958d49d",
       "shot": null
     }
   ]

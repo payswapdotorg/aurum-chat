@@ -5,85 +5,85 @@
   "runLabel": "B",
   "steps": [
     {
-      "at": "2026-09-27T03:00:46.441Z",
+      "at": "2026-09-28T13:04:38.919Z",
       "step": "sign in as the run manager",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:47.832Z",
+      "at": "2026-09-28T13:04:40.326Z",
       "step": "the More capability hub carries the meetings surface",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:48.804Z",
+      "at": "2026-09-28T13:04:41.446Z",
       "step": "screenshot: the More hub — the meetings capability navigates to the surface",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__the-more-hub-the-meetings-capability-navigates-to-the-surfac.png"
     },
     {
-      "at": "2026-09-27T03:00:48.804Z",
+      "at": "2026-09-28T13:04:41.446Z",
       "step": "the meetings page renders the meeting-intelligence registry families",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:48.984Z",
+      "at": "2026-09-28T13:04:41.645Z",
       "step": "screenshot: the meetings surface — the registry families with their honest empty states",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__the-meetings-surface-the-registry-families-with-their-honest.png"
     },
     {
-      "at": "2026-09-27T03:00:48.984Z",
+      "at": "2026-09-28T13:04:41.645Z",
       "step": "the meetings page carries the shell accessibility contract",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:49.407Z",
+      "at": "2026-09-28T13:04:42.095Z",
       "step": "the command search speaks task language and offers the meetings destination",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:49.724Z",
+      "at": "2026-09-28T13:04:42.407Z",
       "step": "screenshot: command search — the meetings destination",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__command-search-the-meetings-destination.png"
     },
     {
-      "at": "2026-09-27T03:00:49.732Z",
+      "at": "2026-09-28T13:04:42.420Z",
       "step": "the v1 public API discovery document lists the meeting family",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:49.979Z",
+      "at": "2026-09-28T13:04:42.683Z",
       "step": "mint a meetings-scoped key through the real developer console",
       "url": "https://aurum-chat-livid.vercel.app/meetings",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:51.063Z",
+      "at": "2026-09-28T13:04:43.882Z",
       "step": "the v1 meeting family answers with real production auth (the honest read)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:52.915Z",
+      "at": "2026-09-28T13:04:45.632Z",
       "step": "screenshot: the developer console — the meetings-scoped key grant recorded",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j17-the-meetings-surface-is-proven-thr-desktop__the-developer-console-the-meetings-scoped-key-grant-recorded.png"
     },
     {
-      "at": "2026-09-27T03:00:52.915Z",
+      "at": "2026-09-28T13:04:45.632Z",
       "step": "revoke the meetings key (nothing minted outlives the journey)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:54.534Z",
+      "at": "2026-09-28T13:04:47.201Z",
       "step": "return to the conversation (cross-surface rule)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null

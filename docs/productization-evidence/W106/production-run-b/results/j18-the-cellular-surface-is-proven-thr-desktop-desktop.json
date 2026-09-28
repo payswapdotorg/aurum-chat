@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J18 — the cellular surface is proven through the hub, the command search, the page and the v1 API; the environment limit is recorded as the module reports it",
   "file": "tests/browser/production/j18-cellular-desktop.spec.ts",
-  "durationMs": 11423,
+  "durationMs": 12383,
   "error": null,
   "violations": 0,
   "evidence": {

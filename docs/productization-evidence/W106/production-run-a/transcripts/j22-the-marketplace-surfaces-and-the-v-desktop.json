@@ -5,199 +5,199 @@
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-27T02:58:15.809Z",
+      "at": "2026-09-28T12:48:17.595Z",
       "step": "sign in and discover the marketplace from the More hub",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:18.333Z",
+      "at": "2026-09-28T12:48:20.776Z",
       "step": "screenshot: the marketplace — discovered from the hub",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-marketplace-discovered-from-the-hub.png"
     },
     {
-      "at": "2026-09-27T02:58:18.333Z",
+      "at": "2026-09-28T12:48:20.776Z",
       "step": "the marketplace page carries the shell accessibility contract",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:18.361Z",
+      "at": "2026-09-28T12:48:20.812Z",
       "step": "the public catalog renders its live, governed state",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:18.565Z",
+      "at": "2026-09-28T12:48:21.014Z",
       "step": "screenshot: the public catalog — the governed listing state",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-public-catalog-the-governed-listing-state.png"
     },
     {
-      "at": "2026-09-27T02:58:18.565Z",
+      "at": "2026-09-28T12:48:21.014Z",
       "step": "the catalog’s vertical starter kits section lists both signed kits",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:18.776Z",
+      "at": "2026-09-28T12:48:21.226Z",
       "step": "screenshot: the kits section — both signed starter kits listed",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kits-section-both-signed-starter-kits-listed.png"
     },
     {
-      "at": "2026-09-27T02:58:18.776Z",
+      "at": "2026-09-28T12:48:21.226Z",
       "step": "the command search offers the kits destination by task language",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:19.048Z",
+      "at": "2026-09-28T12:48:21.529Z",
       "step": "screenshot: command search — the vertical starter kits destination",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__command-search-the-vertical-starter-kits-destination.png"
     },
     {
-      "at": "2026-09-27T02:58:19.058Z",
+      "at": "2026-09-28T12:48:21.537Z",
       "step": "an unknown package answers with the honest not-found page",
       "url": "https://aurum-chat-livid.vercel.app/marketplace",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:19.535Z",
+      "at": "2026-09-28T12:48:22.061Z",
       "step": "screenshot: the package page — the honest not-found",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/package/00000000-0000-0000-0000-000000000000",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-package-page-the-honest-not-found.png"
     },
     {
-      "at": "2026-09-27T02:58:19.535Z",
+      "at": "2026-09-28T12:48:22.061Z",
       "step": "the kit detail page renders the signed manifest and the governed lifecycle",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/package/00000000-0000-0000-0000-000000000000",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:20.168Z",
+      "at": "2026-09-28T12:48:22.715Z",
       "step": "screenshot: the kit detail page — the signed manifest and the lifecycle state",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-detail-page-the-signed-manifest-and-the-lifecycle-st.png"
     },
     {
-      "at": "2026-09-27T02:58:20.168Z",
+      "at": "2026-09-28T12:48:22.715Z",
       "step": "the kit detail page carries the shell accessibility contract",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:20.233Z",
+      "at": "2026-09-28T12:48:22.763Z",
       "step": "register the shipped version through the real form",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:21.349Z",
+      "at": "2026-09-28T12:48:24.892Z",
       "step": "screenshot: the kit registered — the shipped version frozen in the tenant registry",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-registered-the-shipped-version-frozen-in-the-tenant-.png"
     },
     {
-      "at": "2026-09-27T02:58:21.349Z",
+      "at": "2026-09-28T12:48:24.892Z",
       "step": "record a verification run through the real form",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:22.483Z",
+      "at": "2026-09-28T12:48:26.019Z",
       "step": "screenshot: the kit verified — the recorded run over the stored bytes",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-verified-the-recorded-run-over-the-stored-bytes.png"
     },
     {
-      "at": "2026-09-27T02:58:22.483Z",
+      "at": "2026-09-28T12:48:26.019Z",
       "step": "install the verified version through the real form (the confirmation-gated move)",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:23.671Z",
+      "at": "2026-09-28T12:48:27.228Z",
       "step": "screenshot: the kit installed — the state below is live",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-installed-the-state-below-is-live.png"
     },
     {
-      "at": "2026-09-27T02:58:23.671Z",
+      "at": "2026-09-28T12:48:27.228Z",
       "step": "the grant review waits for a human decision (the authority gate)",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:23.935Z",
+      "at": "2026-09-28T12:48:27.477Z",
       "step": "screenshot: the pending grant review — the human authority gate",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-pending-grant-review-the-human-authority-gate.png"
     },
     {
-      "at": "2026-09-27T02:58:23.935Z",
+      "at": "2026-09-28T12:48:27.477Z",
       "step": "the requesting manager’s own decision is refused by separation of duties",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:24.201Z",
+      "at": "2026-09-28T12:48:27.736Z",
       "step": "screenshot: the separation-of-duties refusal — the honest authority gate",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-separation-of-duties-refusal-the-honest-authority-gate.png"
     },
     {
-      "at": "2026-09-27T02:58:24.201Z",
+      "at": "2026-09-28T12:48:27.736Z",
       "step": "the installed surface carries the kit installation and its lifecycle",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/legal-case-management",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:24.708Z",
+      "at": "2026-09-28T12:48:28.260Z",
       "step": "screenshot: the installed surface — the kit installation under governance",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-installed-surface-the-kit-installation-under-governance.png"
     },
     {
-      "at": "2026-09-27T02:58:24.708Z",
+      "at": "2026-09-28T12:48:28.260Z",
       "step": "an unknown extension governs honestly (no dead-end governance)",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/installed",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:25.168Z",
+      "at": "2026-09-28T12:48:28.723Z",
       "step": "screenshot: the installed-extension governance — the honest not-found",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/installed/w106-no-such-extension",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-installed-extension-governance-the-honest-not-found.png"
     },
     {
-      "at": "2026-09-27T02:58:25.168Z",
+      "at": "2026-09-28T12:48:28.723Z",
       "step": "an unknown kit key answers with the honest not-found page",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/installed/w106-no-such-extension",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:25.632Z",
+      "at": "2026-09-28T12:48:29.228Z",
       "step": "screenshot: the kit page — the honest not-found",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/w106-no-such-kit",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-kit-page-the-honest-not-found.png"
     },
     {
-      "at": "2026-09-27T02:58:25.632Z",
+      "at": "2026-09-28T12:48:29.228Z",
       "step": "the developer surface renders the publish path with its claim gate",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/kit/w106-no-such-kit",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:26.237Z",
+      "at": "2026-09-28T12:48:29.905Z",
       "step": "screenshot: the developer surface — the governed publish path",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/developer",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j22-the-marketplace-surfaces-and-the-v-desktop__the-developer-surface-the-governed-publish-path.png"
     },
     {
-      "at": "2026-09-27T02:58:26.237Z",
+      "at": "2026-09-28T12:48:29.905Z",
       "step": "return to the conversation (cross-surface rule)",
       "url": "https://aurum-chat-livid.vercel.app/marketplace/developer",
       "shot": null

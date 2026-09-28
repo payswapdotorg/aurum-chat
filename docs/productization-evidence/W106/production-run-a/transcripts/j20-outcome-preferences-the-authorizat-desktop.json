@@ -5,145 +5,145 @@
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-27T02:57:54.732Z",
+      "at": "2026-09-28T12:47:54.891Z",
       "step": "sign in as the run manager (the tenant owner) and open AI preferences",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:57.136Z",
+      "at": "2026-09-28T12:47:57.725Z",
       "step": "screenshot: AI preferences — the outcome-oriented surface",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__ai-preferences-the-outcome-oriented-surface.png"
     },
     {
-      "at": "2026-09-27T02:57:57.136Z",
+      "at": "2026-09-28T12:47:57.725Z",
       "step": "the preferences page carries the shell accessibility contract",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:57.169Z",
+      "at": "2026-09-28T12:47:57.760Z",
       "step": "the resolved state is the honest balanced default",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:57.370Z",
+      "at": "2026-09-28T12:47:57.951Z",
       "step": "screenshot: the honest default — the attribution pill",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-honest-default-the-attribution-pill.png"
     },
     {
-      "at": "2026-09-27T02:57:57.370Z",
+      "at": "2026-09-28T12:47:57.951Z",
       "step": "set the personal outcome priority through the real form",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:58.885Z",
+      "at": "2026-09-28T12:47:59.549Z",
       "step": "screenshot: the personal priority — the attribution flipped honestly",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-personal-priority-the-attribution-flipped-honestly.png"
     },
     {
-      "at": "2026-09-27T02:57:58.885Z",
+      "at": "2026-09-28T12:47:59.549Z",
       "step": "set the company-wide priority through the administer-gated form",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:57:59.890Z",
+      "at": "2026-09-28T12:48:00.583Z",
       "step": "screenshot: the company priority — set by the authorized administrator",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-company-priority-set-by-the-authorized-administrator.png"
     },
     {
-      "at": "2026-09-27T02:57:59.890Z",
+      "at": "2026-09-28T12:48:00.583Z",
       "step": "the explanations feed renders its honest state",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:00.072Z",
+      "at": "2026-09-28T12:48:00.762Z",
       "step": "screenshot: the explanations feed — the honest empty state",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-explanations-feed-the-honest-empty-state.png"
     },
     {
-      "at": "2026-09-27T02:58:00.072Z",
+      "at": "2026-09-28T12:48:00.762Z",
       "step": "open the ADVANCED technical area as the authorized owner",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:00.669Z",
+      "at": "2026-09-28T12:48:01.629Z",
       "step": "screenshot: the advanced area — the authorized technical view",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences/advanced",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-authorized-technical-view.png"
     },
     {
-      "at": "2026-09-27T02:58:00.669Z",
+      "at": "2026-09-28T12:48:01.629Z",
       "step": "a foreign explanation id answers uniformly (the tenant boundary)",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences/advanced",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:01.317Z",
+      "at": "2026-09-28T12:48:02.241Z",
       "step": "screenshot: the foreign record — the uniform honest refusal",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences/advanced?explanation=00000000-0000-0000-0000-000000000000",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-foreign-record-the-uniform-honest-refusal.png"
     },
     {
-      "at": "2026-09-27T02:58:01.317Z",
+      "at": "2026-09-28T12:48:02.241Z",
       "step": "the provider/billing surfaces of this revision (/ai)",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences/advanced?explanation=00000000-0000-0000-0000-000000000000",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:02.311Z",
+      "at": "2026-09-28T12:48:03.117Z",
       "step": "screenshot: the /ai surface — the provider catalog, cost and routing panels",
       "url": "https://aurum-chat-livid.vercel.app/ai",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-ai-surface-the-provider-catalog-cost-and-routing-panels.png"
     },
     {
-      "at": "2026-09-27T02:58:02.311Z",
+      "at": "2026-09-28T12:48:03.117Z",
       "step": "recorded honestly: no dedicated /billing route exists in this revision",
       "url": "https://aurum-chat-livid.vercel.app/ai",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:02.311Z",
+      "at": "2026-09-28T12:48:03.117Z",
       "step": "sign in as the run employee (a plain member)",
       "url": "https://aurum-chat-livid.vercel.app/ai",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:05.095Z",
+      "at": "2026-09-28T12:48:05.925Z",
       "step": "the member sees the preferences surface without the company form",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:05.701Z",
+      "at": "2026-09-28T12:48:06.542Z",
       "step": "screenshot: the member view — no company preference form",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-member-view-no-company-preference-form.png"
     },
     {
-      "at": "2026-09-27T02:58:05.701Z",
+      "at": "2026-09-28T12:48:06.542Z",
       "step": "the advanced area honestly refuses the member (the authorization gate)",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:58:06.220Z",
+      "at": "2026-09-28T12:48:07.182Z",
       "step": "screenshot: the advanced area — the honest refusal for a plain member",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences/advanced",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j20-outcome-preferences-the-authorizat-desktop__the-advanced-area-the-honest-refusal-for-a-plain-member.png"
     },
     {
-      "at": "2026-09-27T02:58:06.220Z",
+      "at": "2026-09-28T12:48:07.182Z",
       "step": "return to the conversation (cross-surface rule)",
       "url": "https://aurum-chat-livid.vercel.app/ai/preferences/advanced",
       "shot": null

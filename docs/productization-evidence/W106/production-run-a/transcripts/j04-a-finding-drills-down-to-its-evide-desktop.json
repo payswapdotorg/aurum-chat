@@ -5,39 +5,39 @@
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-27T02:55:55.765Z",
+      "at": "2026-09-28T12:45:46.768Z",
       "step": "sign in and ask the investigation question",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:55:59.199Z",
+      "at": "2026-09-28T12:45:50.823Z",
       "step": "screenshot: the answer — the finding with its evidence citations",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=a7b22450-bdea-4f8b-9a51-f4bf1d46696b",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=e52f212d-d5bd-45b0-a5bf-de0601489dc7",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-answer-the-finding-with-its-evidence-citations.png"
     },
     {
-      "at": "2026-09-27T02:55:59.199Z",
+      "at": "2026-09-28T12:45:50.823Z",
       "step": "follow the evidence citation to the detail surface",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=a7b22450-bdea-4f8b-9a51-f4bf1d46696b",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=e52f212d-d5bd-45b0-a5bf-de0601489dc7",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:55:59.653Z",
+      "at": "2026-09-28T12:45:51.604Z",
       "step": "the observation detail carries its provenance",
-      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3Da7b22450-bdea-4f8b-9a51-f4bf1d46696b%23m-c2fd51f6-51c8-49f7-9c73-feffa24b5f41",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3De52f212d-d5bd-45b0-a5bf-de0601489dc7%23m-f6d65aba-2ff4-4b04-9583-c1d39b4105cc",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:55:59.779Z",
+      "at": "2026-09-28T12:45:51.738Z",
       "step": "screenshot: the Evidence surface — the observation detail",
-      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3Da7b22450-bdea-4f8b-9a51-f4bf1d46696b%23m-c2fd51f6-51c8-49f7-9c73-feffa24b5f41",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3De52f212d-d5bd-45b0-a5bf-de0601489dc7%23m-f6d65aba-2ff4-4b04-9583-c1d39b4105cc",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j04-a-finding-drills-down-to-its-evide-desktop__the-evidence-surface-the-observation-detail.png"
     },
     {
-      "at": "2026-09-27T02:55:59.779Z",
+      "at": "2026-09-28T12:45:51.738Z",
       "step": "return to the originating conversation (cross-surface rule)",
-      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3Da7b22450-bdea-4f8b-9a51-f4bf1d46696b%23m-c2fd51f6-51c8-49f7-9c73-feffa24b5f41",
+      "url": "https://aurum-chat-livid.vercel.app/evidence?back=%2Fchat%3Fc%3De52f212d-d5bd-45b0-a5bf-de0601489dc7%23m-f6d65aba-2ff4-4b04-9583-c1d39b4105cc",
       "shot": null
     }
   ]

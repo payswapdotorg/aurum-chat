@@ -5,39 +5,39 @@
   "runLabel": "B",
   "steps": [
     {
-      "at": "2026-09-27T02:59:36.175Z",
+      "at": "2026-09-28T13:03:24.845Z",
       "step": "sign in and produce a real answer",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:59:39.910Z",
+      "at": "2026-09-28T13:03:28.686Z",
       "step": "screenshot: the answer — carrying its Why affordance",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=9a7b304f-5c6d-4d49-9635-03e8a9e41cde",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=70c66585-cad4-411a-9cfc-d57dbf38ec69",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-answer-carrying-its-why-affordance.png"
     },
     {
-      "at": "2026-09-27T02:59:39.910Z",
+      "at": "2026-09-28T13:03:28.686Z",
       "step": "follow the Why-this-answer link",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=9a7b304f-5c6d-4d49-9635-03e8a9e41cde",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=70c66585-cad4-411a-9cfc-d57dbf38ec69",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:59:40.726Z",
+      "at": "2026-09-28T13:03:29.587Z",
       "step": "screenshot: the explainability trace — the full causal chain",
-      "url": "https://aurum-chat-livid.vercel.app/explain/execution/39358982-ed6b-494c-965d-5e7ca5967a45?back=%2Fchat%3Fc%3D9a7b304f-5c6d-4d49-9635-03e8a9e41cde%23m-1a96ceb3-de30-414c-a48f-5c1be727a5bb",
+      "url": "https://aurum-chat-livid.vercel.app/explain/execution/519fc012-ca6f-461f-8e22-68174df040bd?back=%2Fchat%3Fc%3D70c66585-cad4-411a-9cfc-d57dbf38ec69%23m-f2030135-ddd8-4e96-9005-d124733f69e3",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-explainability-trace-the-full-causal-chain.png"
     },
     {
-      "at": "2026-09-27T02:59:40.726Z",
+      "at": "2026-09-28T13:03:29.587Z",
       "step": "return to the exact originating message (the back link)",
-      "url": "https://aurum-chat-livid.vercel.app/explain/execution/39358982-ed6b-494c-965d-5e7ca5967a45?back=%2Fchat%3Fc%3D9a7b304f-5c6d-4d49-9635-03e8a9e41cde%23m-1a96ceb3-de30-414c-a48f-5c1be727a5bb",
+      "url": "https://aurum-chat-livid.vercel.app/explain/execution/519fc012-ca6f-461f-8e22-68174df040bd?back=%2Fchat%3Fc%3D70c66585-cad4-411a-9cfc-d57dbf38ec69%23m-f2030135-ddd8-4e96-9005-d124733f69e3",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:59:41.327Z",
+      "at": "2026-09-28T13:03:30.185Z",
       "step": "screenshot: the return — anchored on the exact originating message",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=9a7b304f-5c6d-4d49-9635-03e8a9e41cde#m-1a96ceb3-de30-414c-a48f-5c1be727a5bb",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=70c66585-cad4-411a-9cfc-d57dbf38ec69#m-f2030135-ddd8-4e96-9005-d124733f69e3",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j06-the-why-drill-down-opens-the-causa-desktop__the-return-anchored-on-the-exact-originating-message.png"
     }
   ]

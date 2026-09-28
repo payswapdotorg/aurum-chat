@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J20 — outcome preferences, the authorization-gated advanced area and the provider/billing surfaces",
   "file": "tests/browser/production/j20-provider-choice-billing-desktop.spec.ts",
-  "durationMs": 11981,
+  "durationMs": 12812,
   "error": null,
   "violations": 0,
   "evidence": {

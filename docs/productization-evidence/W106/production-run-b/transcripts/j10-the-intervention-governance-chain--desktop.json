@@ -5,61 +5,61 @@
   "runLabel": "B",
   "steps": [
     {
-      "at": "2026-09-27T03:00:04.550Z",
+      "at": "2026-09-28T13:03:54.782Z",
       "step": "sign in and discover the intervention surfaces from More",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:06.959Z",
+      "at": "2026-09-28T13:03:57.714Z",
       "step": "screenshot: the More hub — the intervention discovery",
       "url": "https://aurum-chat-livid.vercel.app/more",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-more-hub-the-intervention-discovery.png"
     },
     {
-      "at": "2026-09-27T03:00:06.959Z",
+      "at": "2026-09-28T13:03:57.714Z",
       "step": "the Interventions surface renders the governance chain",
       "url": "https://aurum-chat-livid.vercel.app/more",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:07.671Z",
+      "at": "2026-09-28T13:03:58.748Z",
       "step": "screenshot: the Interventions surface — gaps, alternatives, the human gate",
       "url": "https://aurum-chat-livid.vercel.app/interventions",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-interventions-surface-gaps-alternatives-the-human-gate.png"
     },
     {
-      "at": "2026-09-27T03:00:07.671Z",
+      "at": "2026-09-28T13:03:58.748Z",
       "step": "the human-authority vocabulary is explicit on the surface",
       "url": "https://aurum-chat-livid.vercel.app/interventions",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:07.678Z",
+      "at": "2026-09-28T13:03:58.753Z",
       "step": "the Workforce surface renders the read model (tower chrome)",
       "url": "https://aurum-chat-livid.vercel.app/interventions",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:08.185Z",
+      "at": "2026-09-28T13:03:59.455Z",
       "step": "screenshot: the Workforce surface — the honest read model",
       "url": "https://aurum-chat-livid.vercel.app/workforce",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-workforce-surface-the-honest-read-model.png"
     },
     {
-      "at": "2026-09-27T03:00:08.185Z",
+      "at": "2026-09-28T13:03:59.455Z",
       "step": "the agents governance surface is reachable (tower chrome)",
       "url": "https://aurum-chat-livid.vercel.app/workforce",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:08.680Z",
+      "at": "2026-09-28T13:04:00.047Z",
       "step": "screenshot: the agents surface",
       "url": "https://aurum-chat-livid.vercel.app/agents",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j10-the-intervention-governance-chain--desktop__the-agents-surface.png"
     },
     {
-      "at": "2026-09-27T03:00:08.680Z",
+      "at": "2026-09-28T13:04:00.047Z",
       "step": "back on the product shell — return to Chat (cross-surface rule)",
       "url": "https://aurum-chat-livid.vercel.app/agents",
       "shot": null

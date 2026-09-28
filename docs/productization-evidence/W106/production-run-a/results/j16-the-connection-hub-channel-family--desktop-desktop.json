@@ -5,7 +5,7 @@
   "status": "pass",
   "title": "J16 — the connection hub channel family and the v1 channel surfaces are proven with real production auth",
   "file": "tests/browser/production/j16-cross-channel-desktop.spec.ts",
-  "durationMs": 11152,
+  "durationMs": 11388,
   "error": null,
   "violations": 0,
   "evidence": {

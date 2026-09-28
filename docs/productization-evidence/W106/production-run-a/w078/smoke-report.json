@@ -2,8 +2,8 @@
   "label": "production-certification-run-a",
   "target": "https://aurum-chat-livid.vercel.app",
   "profile": "full",
-  "startedAt": "2026-09-27T02:55:30.236Z",
-  "finishedAt": "2026-09-27T02:55:39.200Z",
+  "startedAt": "2026-09-28T12:45:13.684Z",
+  "finishedAt": "2026-09-28T12:45:26.421Z",
   "expectedEnvironment": "production",
   "summary": {
     "total": 40,
@@ -74,7 +74,7 @@
       "status": "pass",
       "detail": "observed as specified",
       "evidence": {
-        "asset": "/_next/static/immutable/chunks/0m4f_knaps1dr.css",
+        "asset": "/_next/static/immutable/chunks/3yl1p9goamf4d.css",
         "status": 200,
         "contentType": "text/css; charset=utf-8"
       }
@@ -111,7 +111,7 @@
       "detail": "observed as specified",
       "evidence": {
         "status": "ok",
-        "migrations": 136,
+        "migrations": 138,
         "refusals": 0,
         "warnings": 0
       }
@@ -227,12 +227,12 @@
         "body": {
           "session": {
             "principal": {
-              "id": "c32f160c-dec2-4ccc-86b2-45307cb0c559",
-              "email": "w078-smoke-muj87mik@aurum-smoke.test",
+              "id": "edfbb44f-f747-4a0c-9e51-0340ad69de3e",
+              "email": "w078-smoke-mul8pv84@aurum-smoke.test",
               "displayName": "W078 Smoke Operator"
             },
             "company": null,
-            "expiresAt": "2026-10-04T02:55:32.663Z"
+            "expiresAt": "2026-10-05T12:45:19.672Z"
           }
         }
       }
@@ -250,8 +250,8 @@
         "body": {
           "status": "no-company",
           "principal": {
-            "id": "c32f160c-dec2-4ccc-86b2-45307cb0c559",
-            "email": "w078-smoke-muj87mik@aurum-smoke.test",
+            "id": "edfbb44f-f747-4a0c-9e51-0340ad69de3e",
+            "email": "w078-smoke-mul8pv84@aurum-smoke.test",
             "displayName": "W078 Smoke Operator"
           },
           "company": null,
@@ -287,20 +287,20 @@
         "status": 200,
         "body": {
           "tenant": {
-            "id": "303038db-9124-4455-85f3-5405c5bea9a7",
+            "id": "36919086-eda4-48ff-a716-32a0f917ccd6",
             "name": "W078 Smoke Roasters",
-            "slug": "w078-smoke-muj87mik",
-            "createdAt": "2026-09-27T02:55:33.617Z",
-            "updatedAt": "2026-09-27T02:55:33.617Z"
+            "slug": "w078-smoke-mul8pv84",
+            "createdAt": "2026-09-28T12:45:20.655Z",
+            "updatedAt": "2026-09-28T12:45:20.655Z"
           },
           "session": {
             "principal": {
-              "id": "c32f160c-dec2-4ccc-86b2-45307cb0c559",
-              "email": "w078-smoke-muj87mik@aurum-smoke.test",
+              "id": "edfbb44f-f747-4a0c-9e51-0340ad69de3e",
+              "email": "w078-smoke-mul8pv84@aurum-smoke.test",
               "displayName": "W078 Smoke Operator"
             },
             "company": {
-              "tenantId": "303038db-9124-4455-85f3-5405c5bea9a7",
+              "tenantId": "36919086-eda4-48ff-a716-32a0f917ccd6",
               "workspaceId": null,
               "role": "owner",
               "authority": [
@@ -318,7 +318,7 @@
                 "vertical-kits:administer"
               ]
             },
-            "expiresAt": "2026-10-04T02:55:32.663Z"
+            "expiresAt": "2026-10-05T12:45:19.672Z"
           }
         }
       }
@@ -348,10 +348,10 @@
         "status": 200,
         "body": {
           "chat": "state",
-          "tenantId": "303038db-9124-4455-85f3-5405c5bea9a7",
-          "generatedAt": "2026-09-27T02:55:34.462Z",
+          "tenantId": "36919086-eda4-48ff-a716-32a0f917ccd6",
+          "generatedAt": "2026-09-28T12:45:21.564Z",
           "view": {
-            "generatedAt": "2026-09-27T02:55:34.462Z",
+            "generatedAt": "2026-09-28T12:45:21.564Z",
             "conversations": [],
             "thread": null
           }
@@ -368,8 +368,8 @@
       "detail": "observed as specified",
       "evidence": {
         "status": 200,
-        "conversationId": "0150bebd-412d-4747-bcc5-1498bb45269a",
-        "executionId": "5769e4e8-2dc8-4d3c-a68b-ae0a935a76bb"
+        "conversationId": "1c840213-d751-4bb5-8011-944e4b99851b",
+        "executionId": "99f88d52-5678-44f2-bcb1-168b706653a4"
       }
     },
     {
@@ -381,7 +381,7 @@
       "status": "pass",
       "detail": "observed as specified",
       "evidence": {
-        "conversationId": "0150bebd-412d-4747-bcc5-1498bb45269a",
+        "conversationId": "1c840213-d751-4bb5-8011-944e4b99851b",
         "status": 200
       }
     },
@@ -549,12 +549,12 @@
           "outcomes": [
             {
               "status": "duplicate",
-              "executionId": "5769e4e8-2dc8-4d3c-a68b-ae0a935a76bb",
+              "executionId": "99f88d52-5678-44f2-bcb1-168b706653a4",
               "attempt": 1,
               "executionState": null,
               "completedStages": null,
               "correlationId": null,
-              "detail": "stale job acknowledged — execution 5769e4e8-2dc8-4d3c-a68b-ae0a935a76bb is terminal (cognitive execution '5769e4e8-2dc8-4d3c-a68b-ae0a935a76bb' is completed — terminal executions cannot advance; start a new cycle instead)"
+              "detail": "stale job acknowledged — execution 99f88d52-5678-44f2-bcb1-168b706653a4 is terminal (cognitive execution '99f88d52-5678-44f2-bcb1-168b706653a4' is completed — terminal executions cannot advance; start a new cycle instead)"
             }
           ],
           "metrics": {
@@ -568,7 +568,7 @@
             "jobsDeadLettered": 0,
             "idlePolls": 1,
             "batches": 1,
-            "lastActivityAt": "2026-09-27T02:55:36.888Z"
+            "lastActivityAt": "2026-09-28T12:45:23.960Z"
           },
           "queueDepth": 0
         }
@@ -592,12 +592,12 @@
           "outcomes": [
             {
               "status": "not_found",
-              "executionId": "4e03d861-3003-435d-a6c8-bb5befee939c",
+              "executionId": "f19708a2-2273-4afa-8d5e-24039801cca8",
               "attempt": 1,
               "executionState": null,
               "completedStages": null,
               "correlationId": null,
-              "detail": "execution 4e03d861-3003-435d-a6c8-bb5befee939c is unknown in this tenant — job consumed, never retried"
+              "detail": "execution f19708a2-2273-4afa-8d5e-24039801cca8 is unknown in this tenant — job consumed, never retried"
             }
           ],
           "metrics": {
@@ -611,7 +611,7 @@
             "jobsDeadLettered": 0,
             "idlePolls": 1,
             "batches": 1,
-            "lastActivityAt": "2026-09-27T02:55:37.185Z"
+            "lastActivityAt": "2026-09-28T12:45:24.255Z"
           },
           "queueDepth": 0
         }
@@ -637,7 +637,7 @@
           "jobsDeadLettered": 0,
           "idlePolls": 1,
           "batches": 1,
-          "lastActivityAt": "2026-09-27T02:55:37.185Z"
+          "lastActivityAt": "2026-09-28T12:45:24.255Z"
         },
         "queueDepth": 0
       }
@@ -662,7 +662,7 @@
           "jobsDeadLettered": 0,
           "idlePolls": 1,
           "batches": 1,
-          "lastActivityAt": "2026-09-27T02:55:37.185Z"
+          "lastActivityAt": "2026-09-28T12:45:24.255Z"
         },
         "seamWorker": {
           "jobsEnqueued": 0,
@@ -675,7 +675,7 @@
           "jobsDeadLettered": 0,
           "idlePolls": 1,
           "batches": 1,
-          "lastActivityAt": "2026-09-27T02:55:37.185Z"
+          "lastActivityAt": "2026-09-28T12:45:24.255Z"
         }
       }
     },
@@ -764,7 +764,7 @@
     "dogfoodNotice": "internal/non-commercial dogfood while the free tier is used (plan §7)",
     "dbBackend": "postgres",
     "dbOk": true,
-    "migrations": 136,
+    "migrations": 138,
     "dbError": null,
     "queueBackend": "redis",
     "cacheBackend": "redis",
@@ -785,7 +785,7 @@
       "jobsDeadLettered": 0,
       "idlePolls": 1,
       "batches": 1,
-      "lastActivityAt": "2026-09-27T02:55:37.185Z"
+      "lastActivityAt": "2026-09-28T12:45:24.255Z"
     },
     "guardrails": {
       "workerMaxAttempts": 5,

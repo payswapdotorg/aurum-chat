@@ -5,115 +5,115 @@
   "runLabel": "B",
   "steps": [
     {
-      "at": "2026-09-27T03:00:55.343Z",
+      "at": "2026-09-28T13:04:48.096Z",
       "step": "sign in as the run manager",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:57.073Z",
+      "at": "2026-09-28T13:04:49.992Z",
       "step": "the More capability hub carries the cellular surface",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:58.357Z",
+      "at": "2026-09-28T13:04:51.128Z",
       "step": "screenshot: the More hub — the cellular capability navigates to the surface",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-more-hub-the-cellular-capability-navigates-to-the-surfac.png"
     },
     {
-      "at": "2026-09-27T03:00:58.357Z",
+      "at": "2026-09-28T13:04:51.128Z",
       "step": "the cellular page renders the reachability state families",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:58.508Z",
+      "at": "2026-09-28T13:04:51.337Z",
       "step": "screenshot: the cellular surface — the state families with their honest empty states",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-state-families-with-their-honest-em.png"
     },
     {
-      "at": "2026-09-27T03:00:58.508Z",
+      "at": "2026-09-28T13:04:51.337Z",
       "step": "the module-reported environment limit is on the record, verbatim",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:58.640Z",
+      "at": "2026-09-28T13:04:51.476Z",
       "step": "screenshot: the cellular surface — the module-reported environment limit",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-module-reported-environment-limit.png"
     },
     {
-      "at": "2026-09-27T03:00:58.640Z",
+      "at": "2026-09-28T13:04:51.476Z",
       "step": "the cellular page carries the shell accessibility contract",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:59.094Z",
+      "at": "2026-09-28T13:04:51.973Z",
       "step": "the page’s session envelope carries the active tenant id",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:59.404Z",
+      "at": "2026-09-28T13:04:52.306Z",
       "step": "the command search speaks task language and offers the cellular destination",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:59.627Z",
+      "at": "2026-09-28T13:04:52.529Z",
       "step": "screenshot: command search — the cellular destination",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__command-search-the-cellular-destination.png"
     },
     {
-      "at": "2026-09-27T03:00:59.637Z",
+      "at": "2026-09-28T13:04:52.551Z",
       "step": "the v1 public API discovery document lists the cellular family",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:00:59.923Z",
+      "at": "2026-09-28T13:04:52.842Z",
       "step": "mint a cellular-scoped key through the real developer console",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:01.490Z",
+      "at": "2026-09-28T13:04:54.015Z",
       "step": "the v1 cellular family answers with real production auth (the honest read + the one write)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:03.914Z",
+      "at": "2026-09-28T13:04:57.252Z",
       "step": "screenshot: the v1 cellular family — the honest read and the registered connection",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-v1-cellular-family-the-honest-read-and-the-registered-co.png"
     },
     {
-      "at": "2026-09-27T03:01:03.914Z",
+      "at": "2026-09-28T13:04:57.252Z",
       "step": "the page reflects the v1-written state (the surface and the API agree)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:04.480Z",
+      "at": "2026-09-28T13:04:57.970Z",
       "step": "screenshot: the cellular surface — the v1-written state rendered",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j18-the-cellular-surface-is-proven-thr-desktop__the-cellular-surface-the-v1-written-state-rendered.png"
     },
     {
-      "at": "2026-09-27T03:01:04.480Z",
+      "at": "2026-09-28T13:04:57.970Z",
       "step": "revoke the cellular key (nothing minted outlives the journey)",
       "url": "https://aurum-chat-livid.vercel.app/cellular",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:05.884Z",
+      "at": "2026-09-28T13:04:59.483Z",
       "step": "return to the conversation (cross-surface rule)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null

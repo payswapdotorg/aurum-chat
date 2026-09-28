@@ -5,91 +5,91 @@
   "runLabel": "B",
   "steps": [
     {
-      "at": "2026-09-27T03:01:26.544Z",
+      "at": "2026-09-28T13:05:22.575Z",
       "step": "sign in and open the Learning hub",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:28.856Z",
+      "at": "2026-09-28T13:05:24.521Z",
       "step": "screenshot: the Learning hub — the company-learning surface",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-learning-hub-the-company-learning-surface.png"
     },
     {
-      "at": "2026-09-27T03:01:28.856Z",
+      "at": "2026-09-28T13:05:24.521Z",
       "step": "the learning page carries the shell accessibility contract",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:28.885Z",
+      "at": "2026-09-28T13:05:24.558Z",
       "step": "the run tenant’s live mission is on the hub (durable state)",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:29.024Z",
+      "at": "2026-09-28T13:05:24.712Z",
       "step": "screenshot: the live mission — durable across the journey boundaries",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-live-mission-durable-across-the-journey-boundaries.png"
     },
     {
-      "at": "2026-09-27T03:01:29.024Z",
+      "at": "2026-09-28T13:05:24.712Z",
       "step": "the contributions and rewards panels render with their honest states",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:29.158Z",
+      "at": "2026-09-28T13:05:24.850Z",
       "step": "screenshot: the contributions and reward state — the honest policy note",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-contributions-and-reward-state-the-honest-policy-note.png"
     },
     {
-      "at": "2026-09-27T03:01:29.158Z",
+      "at": "2026-09-28T13:05:24.850Z",
       "step": "open the mission chain page",
       "url": "https://aurum-chat-livid.vercel.app/learning",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:29.953Z",
+      "at": "2026-09-28T13:05:25.613Z",
       "step": "screenshot: the mission chain — the objective, acquisitions and beliefs",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/e986ad6c-166c-449e-ade2-2dc68db2de38",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/aa032b7a-8671-49fa-a3f5-f07de31fe8c6",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-mission-chain-the-objective-acquisitions-and-beliefs.png"
     },
     {
-      "at": "2026-09-27T03:01:29.953Z",
+      "at": "2026-09-28T13:05:25.613Z",
       "step": "mint a read key through the real developer console",
-      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/e986ad6c-166c-449e-ade2-2dc68db2de38",
+      "url": "https://aurum-chat-livid.vercel.app/intelligence/missions/aa032b7a-8671-49fa-a3f5-f07de31fe8c6",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:31.113Z",
+      "at": "2026-09-28T13:05:26.868Z",
       "step": "the v1 missions surface answers with real production auth",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:31.445Z",
+      "at": "2026-09-28T13:05:27.150Z",
       "step": "one mission is readable by id through the public API",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:32.708Z",
+      "at": "2026-09-28T13:05:28.321Z",
       "step": "screenshot: the developer console — the cognition reader grant recorded",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": "docs/productization-evidence/W106/production-run-b/screenshots/j21-the-learning-surfaces-the-mission--desktop__the-developer-console-the-cognition-reader-grant-recorded.png"
     },
     {
-      "at": "2026-09-27T03:01:32.708Z",
+      "at": "2026-09-28T13:05:28.321Z",
       "step": "revoke the read key (nothing minted outlives the journey)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T03:01:34.347Z",
+      "at": "2026-09-28T13:05:30.001Z",
       "step": "return to the conversation (cross-surface rule)",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null

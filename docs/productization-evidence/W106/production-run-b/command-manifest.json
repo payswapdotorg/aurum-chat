@@ -1,7 +1,7 @@
 {
   "run": "B",
   "target": "https://aurum-chat-livid.vercel.app",
-  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w106 --deployment-id dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ --expect-commit 625a133e22904972394b6e418f2a3b2c9cda676a --deployment-created 2026-09-27 --worker-token-file <redacted> --vercel-token-file <redacted>",
+  "command": "bun run cert:production -- --target https://aurum-chat-livid.vercel.app --run b --program w106 --deployment-id dpl_B53sTKNRvcXCMYSafQ3XEboagD4a --expect-commit 1b7ba4b11e0ff3995b60d1229fa9584de47c35a4 --deployment-created 2026-09-28T12:28:35.809Z --worker-token-file <redacted> --vercel-token-file <redacted>",
   "evidenceDir": "docs/productization-evidence/W106/production-run-b",
   "repoGates": [
     {
@@ -10,7 +10,7 @@
     },
     {
       "command": "bun run test",
-      "exitCode": 0
+      "exitCode": 1
     },
     {
       "command": "bun run arch",

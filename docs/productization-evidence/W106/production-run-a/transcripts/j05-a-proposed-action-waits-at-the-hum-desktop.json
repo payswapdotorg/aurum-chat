@@ -5,91 +5,91 @@
   "runLabel": "A",
   "steps": [
     {
-      "at": "2026-09-27T02:55:59.873Z",
+      "at": "2026-09-28T12:45:51.927Z",
       "step": "sign in as the run manager",
       "url": "about:blank",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:01.716Z",
+      "at": "2026-09-28T12:45:53.828Z",
       "step": "invite an employee through the onboarding manager",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:02.888Z",
+      "at": "2026-09-28T12:45:54.914Z",
       "step": "screenshot: the issued invitation — shown once",
       "url": "https://aurum-chat-livid.vercel.app/onboarding",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-issued-invitation-shown-once.png"
     },
     {
-      "at": "2026-09-27T02:56:02.888Z",
+      "at": "2026-09-28T12:45:54.914Z",
       "step": "the employee accepts through the real invitation flow",
       "url": "https://aurum-chat-livid.vercel.app/onboarding",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:06.898Z",
+      "at": "2026-09-28T12:45:59.571Z",
       "step": "screenshot: the employee joined — landing in the company chat",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-employee-joined-landing-in-the-company-chat.png"
     },
     {
-      "at": "2026-09-27T02:56:06.898Z",
+      "at": "2026-09-28T12:45:59.571Z",
       "step": "sign back in as the manager",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:09.620Z",
+      "at": "2026-09-28T12:46:02.582Z",
       "step": "mint the integration API key in the developer console",
       "url": "https://aurum-chat-livid.vercel.app/chat",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:10.892Z",
+      "at": "2026-09-28T12:46:04.463Z",
       "step": "the integration proposes a consequential action via the public API",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:11.290Z",
+      "at": "2026-09-28T12:46:04.853Z",
       "step": "the recommendation arrives in the conversation",
       "url": "https://aurum-chat-livid.vercel.app/developer",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:13.733Z",
+      "at": "2026-09-28T12:46:07.325Z",
       "step": "screenshot: the approval card — the comparison, waiting at the human gate",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=71344738-e32d-4d67-ae73-1cbf6550faca",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=827ed1cc-e1ed-430b-9d97-c400048f85c5",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approval-card-the-comparison-waiting-at-the-human-gate.png"
     },
     {
-      "at": "2026-09-27T02:56:13.733Z",
+      "at": "2026-09-28T12:46:07.325Z",
       "step": "the manager decides the request inline (explicit human decision)",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=71344738-e32d-4d67-ae73-1cbf6550faca",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=827ed1cc-e1ed-430b-9d97-c400048f85c5",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:14.236Z",
+      "at": "2026-09-28T12:46:07.825Z",
       "step": "screenshot: the decision — acknowledged in place",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=71344738-e32d-4d67-ae73-1cbf6550faca",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=827ed1cc-e1ed-430b-9d97-c400048f85c5",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-decision-acknowledged-in-place.png"
     },
     {
-      "at": "2026-09-27T02:56:14.236Z",
+      "at": "2026-09-28T12:46:07.825Z",
       "step": "the Approvals surface records the decided request (the outcome)",
-      "url": "https://aurum-chat-livid.vercel.app/chat?c=71344738-e32d-4d67-ae73-1cbf6550faca",
+      "url": "https://aurum-chat-livid.vercel.app/chat?c=827ed1cc-e1ed-430b-9d97-c400048f85c5",
       "shot": null
     },
     {
-      "at": "2026-09-27T02:56:14.836Z",
+      "at": "2026-09-28T12:46:08.418Z",
       "step": "screenshot: the Approvals surface — the append-only decision trail",
       "url": "https://aurum-chat-livid.vercel.app/approvals",
       "shot": "docs/productization-evidence/W106/production-run-a/screenshots/j05-a-proposed-action-waits-at-the-hum-desktop__the-approvals-surface-the-append-only-decision-trail.png"
     },
     {
-      "at": "2026-09-27T02:56:14.836Z",
+      "at": "2026-09-28T12:46:08.418Z",
       "step": "return to the conversation (cross-surface rule)",
       "url": "https://aurum-chat-livid.vercel.app/approvals",
       "shot": null
