@@ -80,6 +80,15 @@
 //      folder (IMPLEMENTATION-STACK §6 provider isolation); no transport
 //      is wired by default, so session starts fail explicitly with
 //      `provider_unavailable`.
+//   ensureRealtimeTransportsWired / resetRealtimeTransportWiring — the
+//      env-driven PRODUCTION wiring (W109; the cellular.ts discipline):
+//      LIVEKIT_URL/API_KEY/API_SECRET (+ optional ACCOUNT_ID,
+//      EGRESS_STREAM_URL, SIP_TRUNK_ID) construct the real livekit
+//      transport ONCE per process (globalThis-anchored). Unset or partial
+//      env leaves it honestly unwired (`provider_unavailable`); the
+//      deterministic scripted transport remains available for tests via
+//      setRealtimeTransport. The report's `livekitAccountId` is the
+//      providerAccountId a tenant connection must register with.
 //
 // PROVIDER ISOLATION (lock 16 / MODULE-DEPENDENCY-MAP provider
 // boundaries; IMPLEMENTATION-STACK §6): everything exported below is
@@ -151,6 +160,19 @@ export {
   getRealtimeTransport,
   setRealtimeTransport,
 } from './service';
+
+// Env-driven production transport wiring (W109 — the cellular.ts
+// discipline inside the module: globalThis-anchored, fail-closed,
+// additive per provider). A host composes this at its realtime entry
+// points exactly like createRealtimeWorkflowBindings.
+export {
+  ensureRealtimeTransportsWired,
+  resetRealtimeTransportWiring,
+} from './wiring';
+export type {
+  RealtimeTransportWiringReport,
+  RealtimeTransportWiringState,
+} from './wiring';
 
 // The durable finalization workflow's definition key (stable identity).
 export { REALTIME_FINALIZE_DEFINITION_KEY } from './service';
