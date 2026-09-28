@@ -1,0 +1,11 @@
+$ vitest run schema-reconciliation
+
+ RUN  v5.0.0 /home/z/aurum
+
+ ✓ tests/e2e/platform/schema-reconciliation.test.ts (27 tests) 5950ms
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+   Start at  08:31:08
+   Duration  6.67s (tests 91%, transform 7%, import 2%)
+

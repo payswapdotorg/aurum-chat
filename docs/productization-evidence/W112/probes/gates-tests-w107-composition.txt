@@ -1,0 +1,17 @@
+$ vitest run vertical-kits edge-connector
+
+ RUN  v5.0.0 /home/z/aurum
+
+ ✓ src/modules/edge-connector/tests/edge-connector-service.test.ts (19 tests) 5993ms
+ ✓ src/modules/vertical-kits/tests/vertical-kits-service.test.ts (12 tests) 5178ms
+ ✓ src/modules/vertical-kits/tests/vertical-kits-edge-composition.test.ts (5 tests) 5303ms
+ ✓ src/modules/vertical-kits/tests/vertical-kits-unit.test.ts (21 tests) 16ms
+ ✓ tests/tenant-isolation/vertical-kits-sweep.test.ts (3 tests) 4838ms
+ ✓ src/modules/edge-connector/tests/edge-connector-unit.test.ts (19 tests) 11ms
+ ✓ tests/tenant-isolation/edge-connector-sweep.test.ts (2 tests) 4849ms
+
+ Test Files  7 passed (7)
+      Tests  81 passed (81)
+   Start at  08:28:02
+   Duration  28.84s (tests 93%, transform 4%, import 3%)
+

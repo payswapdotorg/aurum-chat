@@ -1,0 +1,18 @@
+$ vitest run computer
+
+ RUN  v5.0.0 /home/z/aurum
+
+ ✓ src/modules/computer-use/tests/computer-use-service.test.ts (17 tests) 5725ms
+ ✓ src/modules/computer-use/tests/computer-use-unit.test.ts (21 tests) 15ms
+ ✓ src/modules/computer-use/tests/computer-use-playwright-composition.test.ts (5 tests) 5320ms
+ ✓ src/modules/computer-use/tests/computer-use-playwright.test.ts (15 tests) 17ms
+ ✓ tests/tenant-isolation/computer-use-sweep.test.ts (3 tests) 5622ms
+   ✓ W044 sweep — computer-use (W093) (3)
+     ✓ the storage partition itself is intact after the sweep fixtures ran 329ms
+ ✓ src/modules/computer-use/tests/computer-use-wiring.test.ts (9 tests) 7ms
+
+ Test Files  6 passed (6)
+      Tests  70 passed (70)
+   Start at  08:30:05
+   Duration  20.85s (tests 82%, import 12%, transform 5%)
+

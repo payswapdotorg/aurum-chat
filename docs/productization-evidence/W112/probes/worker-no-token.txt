@@ -1,0 +1,1 @@
+{"ok":false,"error":"worker token required (Authorization: Bearer or x-worker-token)"}
