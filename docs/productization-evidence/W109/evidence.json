@@ -1,0 +1,139 @@
+{
+  "workItem": "W109",
+  "title": "Meeting / Realtime Live-Provider Closure",
+  "base": "53bd2711982a7016fc36e1376e375d7551142652",
+  "branch": "work/w109-meeting-realtime-live",
+  "disposition": "DELIVERED",
+  "liveLeg": "LIVE-PROVEN",
+  "liveEvidence": {
+    "provider": "LiveKit Cloud (wss://zeck-vuo9lv9v.livekit.cloud, region Japan, server 1.13.7)",
+    "report": "docs/productization-evidence/W109/live-leg/live-leg-latest.json",
+    "runWindow": "2026-09-28T00:26:31.191Z .. 2026-09-28T00:26:54.643Z",
+    "realArtifacts": {
+      "meetingRoom": {
+        "sid": "RM_xTQ3FdxkKcZ7",
+        "name": "aurum-d1d48061-eb95-419e-9d05-fd46b4e39bb7",
+        "creationTime": "1790555191"
+      },
+      "humanJoin": {
+        "identity": "w109-live-human",
+        "participantSid": "PA_TzWmcuZ8u9Mb"
+      },
+      "egress": {
+        "egressId": "EG_wwsWQi7EdsQZ",
+        "participantSid": "PA_Pjpq8o9GfzZh",
+        "finalStatus": "EGRESS_ABORTED"
+      },
+      "disconnect": {
+        "leaveReason": 5,
+        "leaveReasonName": "ROOM_DELETED",
+        "closeCode": 1000,
+        "roomGoneAfterStop": true
+      },
+      "finalizations": [
+        {
+          "sessionIdKind": "meeting_companion",
+          "runStatus": "succeeded",
+          "artifactChecksum": "sha256:c388f808009093a45db45ee4605a134ccc50c7c802167fb7fbbbcc8a59d97003"
+        },
+        {
+          "sessionIdKind": "aurum_voice",
+          "runStatus": "succeeded",
+          "artifactChecksum": "sha256:cbdd1c44efec9532b77366e278dd55e747dc13098c452cca209bc58e894e1467"
+        }
+      ]
+    },
+    "consentFloor": {
+      "refusalBlocked": "consent_required + recording.blocked ledger event BEFORE any grant",
+      "grantStarted": "a REAL egress started (EGRESS_STARTING) and JOINED the room as a real participant",
+      "revocationStopped": "consent.revoked event STOPPED the recording (StopEgress -> EGRESS_ABORTED, recordingState 'recorded')"
+    },
+    "secretsHygiene": "API secret and every minted token REDACTED from all evidence files"
+  },
+  "gates": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "arch": "PASS",
+    "test": "PASS"
+  },
+  "newTestFiles": [
+    {
+      "path": "src/modules/realtime/tests/realtime-livekit-transport.test.ts",
+      "tests": 16,
+      "layer": "vendor-shape (local Twirp stub, deterministic)"
+    },
+    {
+      "path": "src/modules/realtime/tests/realtime-wiring.test.ts",
+      "tests": 6,
+      "layer": "deterministic"
+    },
+    {
+      "path": "src/modules/realtime/tests/realtime-provider-failure.test.ts",
+      "tests": 5,
+      "layer": "deterministic (killable real transport + full domain)"
+    },
+    {
+      "path": "src/modules/realtime/tests/realtime-livekit-live.test.ts",
+      "tests": 17,
+      "layer": "LIVE (credential-gated; 16 live assertions + 1 explicit skip label)"
+    },
+    {
+      "path": "src/modules/realtime/tests/livekit-live-leg.ts",
+      "tests": 0,
+      "layer": "harness (not collected; the live leg runner)"
+    },
+    {
+      "path": "src/modules/realtime/tests/livekit-stub-server.ts",
+      "tests": 0,
+      "layer": "test helper (the killable LiveKit Twirp stub)"
+    }
+  ],
+  "providers": {
+    "realtime": {
+      "provider": "livekit",
+      "transport": "src/modules/realtime/adapters/transport-livekit.ts",
+      "api": "Twirp JSON over HTTPS: livekit.RoomService/{CreateRoom,DeleteRoom,SendData,ListParticipants}, livekit.Egress/{StartRoomCompositeEgress,StopEgress,ListEgress}, livekit.SIP/CreateSIPParticipant",
+      "auth": "per-call short-lived HS256 access tokens (iss=API key, scoped video grants)",
+      "signal": "wss://\u2026/rtc?access_token=\u2026 (join grants minted on demand; the agent worker's own media connection is the W112 frontier)",
+      "note": "this deployment routes the livekit.RoomService prefix (the livekit.Room alias falls to the health responder on LiveKit Cloud)"
+    },
+    "meeting": {
+      "provider": "livekit (rooms) \u2014 the split the frozen contracts dictate",
+      "rationale": "the meetings module's provider vocabulary (zoom/microsoft-teams/google-meet/recall) is frozen with DB CHECK constraints; LiveKit backs the MEETING surface through the realtime module's meeting_participation/meeting_companion session kinds, attached to the meetings module's canonical session through the validated opaque meetingSessionId reference (read through the meetings contract at start)",
+      "meetingReferenceEvidence": "the live leg created the canonical meeting session through the meetings module production webhook ingestion path (zoom envelope, domain-side fixture by design) and the companion session attached to it"
+    }
+  },
+  "wiring": {
+    "file": "src/modules/realtime/wiring.ts",
+    "entry": "ensureRealtimeTransportsWired()",
+    "exportedThrough": "src/modules/realtime/contract.ts (additive)",
+    "env": [
+      "LIVEKIT_URL",
+      "LIVEKIT_API_KEY",
+      "LIVEKIT_API_SECRET",
+      "LIVEKIT_ACCOUNT_ID (optional; default = the URL host)",
+      "LIVEKIT_EGRESS_STREAM_URL (optional; unset -> recording control fails honestly provider_unavailable)",
+      "LIVEKIT_SIP_TRUNK_ID (optional; unset -> dial fails honestly provider_unavailable)"
+    ],
+    "unsetPartialBehavior": "transport stays unwired -> honest provider_unavailable",
+    "invocation": "composed by the host at its realtime entry points (the resident worker is the W112 certification frontier); deterministic double remains available via setRealtimeTransport"
+  },
+  "environmentBlockedExceptions": [
+    "recording FILE artifacts: LiveKit file egress requires an external storage destination (S3/GCP/Azure upload config) the operator project does not include \u2014 the egress CONTROL plane (start/stop/lifecycle, the egress joining the room as a real participant) IS live-proven; the stream destination rtmp://localhost:1935 is a black hole by design and the provider reports the failure honestly (EGRESS_ABORTED)",
+    "telephony SIP dial-out: the SIP feature is not enabled on the operator's LiveKit Cloud project (livekit.SIP/* answers 401 'permissions denied' with full admin grants) \u2014 dial fails honestly provider_unavailable without LIVEKIT_SIP_TRUNK_ID",
+    "WebRTC data-channel RECEIVE: the live client joins through the signal WebSocket (the work order's sanctioned @livekit/protocol + ws approach); receiving the SendData payload on an SCTP data channel requires a full WebRTC stack (real ASR/audio is the agents worker, W112)"
+  ],
+  "migrations": "NONE \u2014 durable session/artifact finalization and provider-failure evidence run on the existing W086 schema (realtime_sessions/events/turns/responses/artifacts + finalize_pending/finalize_run_id/evidence_observation_id)",
+  "dependencies": [
+    {
+      "name": "@livekit/protocol",
+      "kind": "devDependency",
+      "why": "the work-order-sanctioned protobuf codec for the live leg's signal client (production code has ZERO new dependencies)"
+    },
+    {
+      "name": "ws",
+      "kind": "devDependency",
+      "why": "the work-order-sanctioned WebSocket client with protocol-level keepalive for the live leg (production code has ZERO new dependencies)"
+    }
+  ]
+}

@@ -1,0 +1,269 @@
+{
+  "workItem": "W109",
+  "leg": "LIVE",
+  "disposition": "LIVE-PROVEN",
+  "startedAt": "2026-09-28T00:26:31.191Z",
+  "endedAt": "2026-09-28T00:26:54.643Z",
+  "environment": {
+    "url": "wss://zeck-vuo9lv9v.livekit.cloud",
+    "accountId": "zeck-vuo9lv9v.livekit.cloud",
+    "apiKeyPrefix": "APIrgq…",
+    "apiSecret": "REDACTED",
+    "egressStreamUrl": "rtmp://localhost:1935/live/w109-egress-blackhole",
+    "note": "the egress stream destination is the operator-configured recording output; file-based egress requires external storage (environment-blocked on this project) — the egress CONTROL plane (start/stop/lifecycle, egress joining the room as a real participant) is live-proven"
+  },
+  "wiring": {
+    "livekitState": "wired",
+    "detail": "livekit live transport wired (account 'zeck-vuo9lv9v.livekit.cloud'; Twirp room service + egress + signal WebSocket); capabilities: rooms; speech (data publish); join grants; recording (RTMP egress); telephony dial-out UNAVAILABLE (LIVEKIT_SIP_TRUNK_ID unset — dial fails honestly)"
+  },
+  "meetingReference": {
+    "note": "the canonical meeting session is created through the meetings module production webhook ingestion path (zoom envelope — the DOMAIN-SIDE meeting reference, deterministic fixture by design); the LIVE provider evidence of this leg is the LiveKit room, its participants and its events",
+    "providerMeetingId": "w109-live-1790555191197",
+    "providerSessionId": "w109-live-1790555191197-occurrence",
+    "meetingSessionId": "fd26c2c6-7214-41d7-9053-05060fa7da73",
+    "connectionId": "d814ce20-ce80-4def-bfa5-af0f71937121"
+  },
+  "legs": [
+    {
+      "kind": "meeting_companion",
+      "sessionId": "d1d48061-eb95-419e-9d05-fd46b4e39bb7",
+      "providerRoomId": "aurum-d1d48061-eb95-419e-9d05-fd46b4e39bb7",
+      "room": {
+        "sid": "RM_xTQ3FdxkKcZ7",
+        "name": "aurum-d1d48061-eb95-419e-9d05-fd46b4e39bb7",
+        "creationTime": "1790555191",
+        "serverRegion": "Japan",
+        "serverVersion": "1.13.7"
+      },
+      "join": {
+        "identity": "w109-live-human",
+        "participantSid": "PA_TzWmcuZ8u9Mb",
+        "joinedAt": "2026-09-28T00:26:33.142Z",
+        "grantExpiresAt": "2026-09-28T00:36:32.000Z",
+        "token": "REDACTED"
+      },
+      "participantsObserved": [
+        {
+          "identity": "w109-live-human",
+          "sid": "PA_TzWmcuZ8u9Mb",
+          "state": "JOINED",
+          "joinedAt": "1790555193",
+          "isEgress": false
+        },
+        {
+          "identity": "EG_wwsWQi7EdsQZ",
+          "sid": "PA_Pjpq8o9GfzZh",
+          "state": "ACTIVE",
+          "joinedAt": "1790555197",
+          "isEgress": true
+        }
+      ],
+      "signalsReceived": [
+        {
+          "at": "2026-09-28T00:26:33.142Z",
+          "kind": "join",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:33.142Z",
+          "kind": "refreshToken",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:33.143Z",
+          "kind": "update",
+          "detail": {
+            "participants": [
+              {
+                "identity": "w109-live-human",
+                "sid": "PA_TzWmcuZ8u9Mb",
+                "state": 1
+              }
+            ]
+          }
+        },
+        {
+          "at": "2026-09-28T00:26:33.143Z",
+          "kind": "offer",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:33.143Z",
+          "kind": "trickle",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:33.143Z",
+          "kind": "trickle",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:33.143Z",
+          "kind": "trickle",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:33.143Z",
+          "kind": "trickle",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:37.368Z",
+          "kind": "roomUpdate",
+          "detail": {
+            "room": {
+              "sid": "RM_xTQ3FdxkKcZ7",
+              "participants": 2
+            }
+          }
+        },
+        {
+          "at": "2026-09-28T00:26:38.210Z",
+          "kind": "pong",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:43.208Z",
+          "kind": "pong",
+          "detail": {}
+        },
+        {
+          "at": "2026-09-28T00:26:43.805Z",
+          "kind": "roomUpdate",
+          "detail": {
+            "room": {
+              "sid": "RM_xTQ3FdxkKcZ7",
+              "participants": 1
+            }
+          }
+        },
+        {
+          "at": "2026-09-28T00:26:46.503Z",
+          "kind": "leave",
+          "detail": {}
+        }
+      ],
+      "consentFloor": {
+        "blockedBeforeConsent": {
+          "blocked": true,
+          "errorCode": "consent_required",
+          "ledgerEventRecorded": true
+        },
+        "recordingStart": {
+          "started": true,
+          "egressId": "EG_wwsWQi7EdsQZ",
+          "egressStatus": "EGRESS_STARTING",
+          "egressParticipantObserved": true
+        },
+        "revocationStop": {
+          "stopped": true,
+          "egressFinalStatus": "EGRESS_ABORTED",
+          "recordingStateAfter": "recorded"
+        }
+      },
+      "transcript": {
+        "humanTurn": {
+          "text": "This is live speech captured through the real room — attribute me.",
+          "speakerParticipantId": "df45d3e3-2439-4242-a5b1-163a972e22e4",
+          "speakerName": "W109 Live Human"
+        },
+        "aurumTurns": [
+          {
+            "text": "W109 live leg: Aurum speaking into the real room.",
+            "responseId": "7cbcbd07-abb9-42e2-9b6b-4010b29f4f0e"
+          },
+          {
+            "text": "W109 live leg: this response will be cut short by a barge-in.",
+            "responseId": "f01ef499-be44-42af-be10-d71addb068de"
+          }
+        ]
+      },
+      "responses": [
+        {
+          "responseId": "72d378f3-290e-4fba-bc1c-3ffbd6e4606d",
+          "text": "W109 live leg: Aurum speaking into the real room.",
+          "status": "completed",
+          "interruptedByParticipantId": null,
+          "completedAt": "2026-09-28T00:26:43.620Z",
+          "interruptedAt": null
+        },
+        {
+          "responseId": "79057e85-527f-4a93-ad67-011112fb087c",
+          "text": "W109 live leg: this response will be cut short by a barge-in.",
+          "status": "interrupted",
+          "interruptedByParticipantId": "df45d3e3-2439-4242-a5b1-163a972e22e4",
+          "completedAt": null,
+          "interruptedAt": "2026-09-28T00:26:43.701Z"
+        }
+      ],
+      "disconnect": {
+        "leaveReason": 5,
+        "closeCode": 1000,
+        "roomGoneAfterStop": true,
+        "participantsAfterStop": 0
+      },
+      "finalization": {
+        "runId": "56e0edc2-c9c2-45f9-a658-40803f05a7be",
+        "runStatus": "succeeded",
+        "transcriptArtifact": {
+          "storageRef": "memory://blob/realtime/01313c30-855b-40e2-b2a1-f6e4396567a1/d1d48061-eb95-419e-9d05-fd46b4e39bb7/transcript.json",
+          "checksum": "sha256:c388f808009093a45db45ee4605a134ccc50c7c802167fb7fbbbcc8a59d97003",
+          "byteSize": 1878
+        },
+        "observation": {
+          "id": "e651c9ed-0ff9-4899-821b-0acd6e682c4c",
+          "kind": "realtime.session",
+          "turnCount": 3,
+          "participantCount": 1,
+          "recordingState": "recorded",
+          "errorCode": null
+        }
+      },
+      "eventsLedger": [
+        "participant.joined",
+        "transcript.final",
+        "recording.blocked",
+        "consent.granted",
+        "recording.started",
+        "response.completed",
+        "response.interrupted",
+        "consent.revoked",
+        "recording.stopped",
+        "session.ended"
+      ]
+    },
+    {
+      "kind": "aurum_voice",
+      "sessionId": "630c9233-45e7-4252-8b5d-cac3c9ff6c2a",
+      "providerRoomId": "aurum-630c9233-45e7-4252-8b5d-cac3c9ff6c2a",
+      "room": null,
+      "join": null,
+      "participantsObserved": [],
+      "signalsReceived": [],
+      "finalization": {
+        "runId": "3cc9d99d-5377-4994-a6aa-e809123c1144",
+        "runStatus": "succeeded",
+        "transcriptArtifact": {
+          "storageRef": "memory://blob/realtime/01313c30-855b-40e2-b2a1-f6e4396567a1/630c9233-45e7-4252-8b5d-cac3c9ff6c2a/transcript.json",
+          "checksum": "sha256:cbdd1c44efec9532b77366e278dd55e747dc13098c452cca209bc58e894e1467",
+          "byteSize": 947
+        },
+        "observation": {
+          "id": "12dad570-1963-4b8b-af7d-782ee64f4d5d",
+          "kind": "realtime.session",
+          "turnCount": 1,
+          "participantCount": 0,
+          "recordingState": "off",
+          "errorCode": null
+        }
+      },
+      "eventsLedger": [
+        "response.completed",
+        "session.ended"
+      ]
+    }
+  ],
+  "cleanup": {
+    "roomsDeleted": []
+  }
+}
