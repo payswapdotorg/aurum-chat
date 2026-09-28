@@ -703,9 +703,10 @@ export function validateListMigrationEventsQuery(value: unknown): ValidatedListE
 export interface ValidatedListCurrentStatesQuery {
   migrationId: string;
   includeTombstoned: boolean;
+  includeSequestered: boolean;
 }
 
-const LIST_CURRENT_KEYS = ['migrationId', 'includeTombstoned'] as const;
+const LIST_CURRENT_KEYS = ['migrationId', 'includeTombstoned', 'includeSequestered'] as const;
 
 export function validateListCurrentImportedStatesQuery(
   value: unknown,
@@ -718,9 +719,40 @@ export function validateListCurrentImportedStatesQuery(
   if (includeTombstoned !== undefined && typeof includeTombstoned !== 'boolean') {
     throw new MigrationError('invalid_query', 'query.includeTombstoned must be a boolean');
   }
+  const includeSequestered = value.includeSequestered;
+  if (includeSequestered !== undefined && typeof includeSequestered !== 'boolean') {
+    throw new MigrationError('invalid_query', 'query.includeSequestered must be a boolean');
+  }
   return {
     migrationId: requireUuid(value.migrationId, 'query.migrationId'),
     includeTombstoned: includeTombstoned === true,
+    includeSequestered: includeSequestered === true,
+  };
+}
+
+export interface ValidatedListReaderRejectionsQuery {
+  migrationId: string;
+  roundId: string | null;
+  limit: number;
+}
+
+const LIST_REJECTIONS_KEYS = ['migrationId', 'roundId', 'limit'] as const;
+
+export function validateListReaderRejectionsQuery(
+  value: unknown,
+): ValidatedListReaderRejectionsQuery {
+  if (!isPlainObject(value)) {
+    throw new MigrationError('invalid_query', 'query must be an object');
+  }
+  rejectUnknownKeys(value, LIST_REJECTIONS_KEYS, 'query');
+  const roundId = value.roundId;
+  if (roundId !== undefined && roundId !== null && !isUuid(roundId)) {
+    throw new MigrationError('invalid_query', 'query.roundId must be a uuid');
+  }
+  return {
+    migrationId: requireUuid(value.migrationId, 'query.migrationId'),
+    roundId: roundId === undefined || roundId === null ? null : (roundId as string),
+    limit: optionalLimit(value.limit, 'query.limit'),
   };
 }
 
@@ -912,4 +944,70 @@ export function canonicalizeNativeStates(
     });
   }
   return { states };
+}
+
+// ---------------------------------------------------------------------------
+// Reader-rejection canonicalization (W111 — the drained audit rows)
+// ---------------------------------------------------------------------------
+
+/** The ledger's raw-row evidence bound (mirrors the SQL CHECK). */
+export const MAX_RAW_ROW_LENGTH = 4_000;
+
+export interface ValidatedReaderRejection {
+  readerKind: string;
+  snapshotRef: string;
+  externalId: string | null;
+  lineNumber: number;
+  reasonCode: string;
+  reason: string;
+  rawRow: string | null;
+}
+
+/**
+ * Canonicalizes one rejection drained from a first-party reader: the
+ * adapter's environment-dependent output crosses the same guards a reader
+ * result does (bounded strings, bounded evidence, a positive line number)
+ * — a malformed rejection cannot silently vanish either.
+ */
+export function canonicalizeReaderRejection(value: unknown): ValidatedReaderRejection {
+  if (!isPlainObject(value)) {
+    throw new MigrationError(
+      'invalid_reader_result',
+      'the incumbent reader returned a non-object rejection — provider objects never cross the module',
+    );
+  }
+  rejectUnknownKeys(
+    value,
+    ['readerKind', 'snapshotRef', 'externalId', 'lineNumber', 'reasonCode', 'reason', 'rawRow'],
+    'reader rejection',
+  );
+  const readerKind = requireString(
+    value.readerKind,
+    'reader rejection: readerKind',
+    1,
+    100,
+  );
+  const snapshotRef = requireString(
+    value.snapshotRef,
+    'reader rejection: snapshotRef',
+    1,
+    MAX_SNAPSHOT_REF_LENGTH,
+  );
+  const externalId = optionalString(
+    value.externalId,
+    'reader rejection: externalId',
+    1,
+    MAX_EXTERNAL_ID_LENGTH,
+  );
+  const lineNumber = value.lineNumber;
+  if (typeof lineNumber !== 'number' || !Number.isInteger(lineNumber) || lineNumber < 1) {
+    throw new MigrationError(
+      'invalid_reader_result',
+      'reader rejection: lineNumber must be a positive integer (the 1-based source row position)',
+    );
+  }
+  const reasonCode = requireString(value.reasonCode, 'reader rejection: reasonCode', 1, 100);
+  const reason = requireString(value.reason, 'reader rejection: reason', 1, MAX_REASON_LENGTH);
+  const rawRow = optionalString(value.rawRow, 'reader rejection: rawRow', 1, MAX_RAW_ROW_LENGTH);
+  return { readerKind, snapshotRef, externalId, lineNumber, reasonCode, reason, rawRow };
 }

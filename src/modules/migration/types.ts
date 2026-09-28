@@ -320,6 +320,52 @@ export interface MigrationNativeReader {
 }
 
 // ---------------------------------------------------------------------------
+// The reader-rejection surface (W111 — no silent data loss)
+// ---------------------------------------------------------------------------
+
+/**
+ * One row a first-party incumbent reader EXPLICITLY REJECTED during a
+ * snapshot read — the durable, auditable counterpart of returning a
+ * canonical record (validation.ts's canonicalization is all-or-nothing
+ * per snapshot; a real incumbent export with malformed rows must reject
+ * PER ROW, never silently drop and never poison the round).
+ *
+ * The reader mints these; `captureSnapshot` canonicalizes and persists
+ * them into the rejection ledger (migration_reader_rejections) linked to
+ * the round, so the count reconciliation holds: every export row either
+ * lands staged, is explicitly rejected here, or is explicitly conflicted.
+ */
+export interface IncumbentReaderRejection {
+  /** The adapter's stable kind string (e.g. 'csv-export'). */
+  readerKind: string;
+  /** The OPAQUE snapshot reference the read carried. */
+  snapshotRef: string;
+  /** The external id when the row carried a readable one (else null). */
+  externalId: string | null;
+  /** 1-based data-row position in the source export file. */
+  lineNumber: number;
+  /** The adapter-owned machine-checkable reason code. */
+  reasonCode: string;
+  /** The deterministic human-readable reason. */
+  reason: string;
+  /** The raw source row as the adapter saw it (bounded evidence). */
+  rawRow: string | null;
+}
+
+/**
+ * The OPTIONAL rejection capability a first-party incumbent reader may
+ * implement alongside MigrationIncumbentReader: rejections accumulated
+ * by the most recent `readSnapshot` call, drained (and cleared) by
+ * `captureSnapshot` when it persists them into the rejection ledger.
+ * Third-party readers that never reject need not implement it; the
+ * module's fixture double does not.
+ */
+export interface IncumbentRejectionSource {
+  /** Returns and clears the rejections of the last completed read. */
+  drainRejections(): IncumbentReaderRejection[];
+}
+
+// ---------------------------------------------------------------------------
 // The migration and its lifecycle inputs
 // ---------------------------------------------------------------------------
 
@@ -683,6 +729,15 @@ export interface ListCurrentImportedStatesQuery {
   migrationId: string;
   /** Include entities whose latest committed record is a tombstone. */
   includeTombstoned?: boolean;
+  /** Include a sequestered migration's states (the audit view). */
+  includeSequestered?: boolean;
+}
+
+export interface ListReaderRejectionsQuery {
+  migrationId: string;
+  /** Restrict to one import round's read (else every round of the migration). */
+  roundId?: string | null;
+  limit?: number;
 }
 
 /** Result shape of `createMigration`. */
@@ -697,6 +752,27 @@ export interface CaptureSnapshotResult {
   round: ImportRound;
   /** The records as staged by the snapshot (evidence-shaped rows). */
   records: ImportedRecord[];
+  /** The rows the reader explicitly REJECTED (persisted in the ledger). */
+  rejections: MigrationReaderRejection[];
+}
+
+/**
+ * One persisted row of the reader rejection ledger
+ * (migration_reader_rejections) — the durable audit home every explicitly
+ * rejected incumbent row lands in (W111: no silent data loss).
+ */
+export interface MigrationReaderRejection {
+  id: string;
+  migrationId: string;
+  roundId: string;
+  readerKind: string;
+  snapshotRef: string;
+  externalId: string | null;
+  lineNumber: number;
+  reasonCode: string;
+  reason: string;
+  rawRow: string | null;
+  createdAt: string;
 }
 
 /** Result shape of `commitImportRound`. */

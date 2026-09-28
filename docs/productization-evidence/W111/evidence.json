@@ -1,0 +1,102 @@
+{
+  "workItem": "W111",
+  "title": "Production Migration Reader / Native-Reader Adapters",
+  "base": "53bd2711982a7016fc36e1376e375d7551142652",
+  "branch": "work/w111-migration-readers",
+  "disposition": "DELIVERED",
+  "realEnvironment": {
+    "embeddedLeg": "REAL-PROVEN (embedded PGlite PostgreSQL 16, full production migration chain — 138 migrations, 258 tables; see db-dev-full-chain.txt + gates-migrate.txt)",
+    "hostedLeg": "ENVIRONMENT-BLOCKED",
+    "hostedLegPrerequisite": "network egress to api.neon.tech (or any reachable hosted PostgreSQL connection string) from the execution environment — api.neon.tech is DNS-unresolvable from every sandbox on this platform (neon-dns-probes.txt: getent exit 2, node dns ENOTFOUND, curl (6); github.com control resolves)",
+    "hostedLegCredentialNote": "operator-provisioned Neon API keys (REDACTED — never written to source or evidence) were unusable from the sandbox",
+    "hostedLegReadyPath": "src/modules/migration/tests/migration-readers-hosted.test.ts — activates on AURUM_TEST_DATABASE_URL (the worker-realpostgres precedent)"
+  },
+  "gates": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "arch": "PASS",
+    "testMigrationFilter": "PASS — 56 passed, 1 skipped (hosted), 0 failed; filter 'migration' (6 files)",
+    "testFullSuite": "PASS — 5670 passed, 7 skipped, 0 failed (273 tracked files chunked in 6 batches + 3 new files; gates-full-suite.txt)",
+    "migrate": "PASS — fresh apply incl. migration/002-w111-migration-readers.sql; idempotent re-run; drift guard census 258"
+  },
+  "incumbentReader": {
+    "format": "versioned CSV export library: csv-export-<NNN>/records.csv full-state snapshots (RFC 4180; header columns external_id* + payload_json* required, match_key/entity_type/deleted_at optional; JSON-array multi-value fields; deleted_at soft-delete tombstone rows)",
+    "files": [
+      "src/modules/migration/adapters/csv-export-incumbent-reader.ts",
+      "src/modules/migration/adapters/csv-export-format.ts"
+    ],
+    "edgeCasesCovered": [
+      "quoted fields embedding commas, doubled quotes and line breaks",
+      "CRLF / LF / CR separators; missing trailing separator; UTF-8 BOM; blank lines",
+      "multi-value fields (JSON arrays)",
+      "wrong-field-count rows",
+      "invalid-JSON and non-object payloads",
+      "missing/empty/oversized external ids",
+      "non-strict-ISO deleted_at",
+      "tombstone-with-payload and live-without-payload",
+      "duplicate external ids (first wins, duplicate surfaced)",
+      "oversized payloads (> 256 KiB) with bounded+marked raw evidence",
+      "invalid UTF-8 rows (per-row rejection, never whole-file poisoning)",
+      "delta row-diff (changed/added/tombstone/unchanged-skip)",
+      "rows vanished without a tombstone (explicit disappeared-without-tombstone rejection)",
+      "unknown/garbage/missing base snapshot refs, broken headers, empty share (honest loud failures)",
+      "per-round cap (snapshot_too_large — batch windows)"
+    ],
+    "credentialRef": "opaque pass-through, recorded on reader.requests, never interpreted or stored"
+  },
+  "nativeReader": {
+    "reads": "the REAL W005 world_entities schema through the db port (embedded PGlite or node-postgres), tenant-scoped, keyed by world_entities.id, state = attributes",
+    "files": ["src/modules/migration/adapters/world-native-reader.ts"],
+    "convergence": "native catch-up carrying the identifier map's minted ids (the fixture mirror model made real — proven in migration-readers-real.test.ts)"
+  },
+  "verificationLeg": {
+    "file": "src/modules/migration/adapters/file-share-verify.ts",
+    "composition": "createEdgeDeepActionTransport (the W084/W088 composition) + the in-memory edge runtime serving SIGNED edge jobs through the REAL file-share adapter re-reading the CSV",
+    "executePosture": "permanently refused by policy (rejected receipt) — read-only; the golden path asserts every edge job was an inspect"
+  },
+  "rejectionLedger": {
+    "migration": "src/modules/migration/migrations/002-w111-migration-readers.sql",
+    "table": "migration_reader_rejections",
+    "surface": "captureSnapshot drains IncumbentRejectionSource and persists rejections inside the round transaction; listReaderRejections is the tenant-scoped audit read",
+    "countReconciliation": "export data rows = staged + rejected (+ conflicted) — asserted per round in migration-readers.test.ts and migration-readers-real.test.ts"
+  },
+  "wiring": {
+    "file": "src/modules/migration/adapters/env-wiring.ts",
+    "entry": "ensureMigrationReadersWired()",
+    "env": ["MIGRATION_CSV_EXPORT_ROOT", "MIGRATION_NATIVE_TENANT_ID"],
+    "unsetPartialBehavior": "port stays unwired -> honest reader_unavailable / native_reader_unavailable",
+    "precedent": "W108 cellular (Family A: globalThis-guarded lazy singleton)"
+  },
+  "w094Fixes": [
+    "listCurrentImportedStates now excludes sequestered migrations' states unless includeSequestered (the rollback live-view leak the W111 proof surfaced; additive, mirrors listImportedRecords)",
+    "commitImportRound mapEntries result ordered (ORDER BY external_id) — previously an unordered id = ANY(...) heap scan (a latent flake class)"
+  ],
+  "countPins": {
+    "census": "EXPECTED_TABLE_CENSUS 257 -> 258 (src/app/api/health/lib.ts)",
+    "schemaReconciliation": "134 -> 135 applied / 137 -> 138 discovered / 137 -> 138 skipped (tests/e2e/platform/schema-reconciliation.test.ts)"
+  },
+  "newTestFiles": [
+    { "path": "src/modules/migration/tests/migration-readers.test.ts", "tests": 11, "layer": "deterministic-real-adapters" },
+    { "path": "src/modules/migration/tests/migration-readers-real.test.ts", "tests": 2, "layer": "real-environment full path (embedded PGlite)" },
+    { "path": "src/modules/migration/tests/migration-readers-hosted.test.ts", "tests": 1, "layer": "real-environment hosted Postgres (AURUM_TEST_DATABASE_URL-gated)" }
+  ],
+  "fullPathProof": {
+    "file": "src/modules/migration/tests/migration-readers-real.test.ts",
+    "testNames": [
+      "the full migration path over the real adapters (W111) > staged import → edge verification → delta → native catch-up → W084 comparison → progressive retirement",
+      "rollback remains sequestration (W111 — proof by doing it) > sequesters a committed migration: live views exclude, audit retains, native Aurum untouched, fresh ids mint forward"
+    ]
+  },
+  "acceptance": {
+    "noSilentDataLoss": "count reconciliation asserted per round (staged + rejected + conflicted = in); rejection ledger is durable, round-linked, tenant-scoped",
+    "conflictsWaitForHuman": "cross-system collision surfaces an open conflict, links nothing, resolves only through the audited resolveIdentityConflict decision",
+    "noDuplicateAuthority": "world_entities census asserted unchanged across every import phase; imported state lives only in migration tables as provenance",
+    "liveComparisonUsesW084": "compareEntity reuses reconcileOperation; the seeded divergence carries the W084 mismatch enumeration (path/expected/actual)",
+    "rollbackIsSequestration": "executed for real; live views exclude, audit retains, storage-level rows untouched, native world data untouched, terminal"
+  },
+  "frontierNotes": [
+    "worker-pump composition of ensureMigrationReadersWired (the W108-open question, now also W112's)",
+    "one reachable AURUM_TEST_DATABASE_URL run upgrades the hosted leg to REAL-PROVEN",
+    "SaaS incumbent reader (broker-backed) is future additive work — W111 shipped the private/on-prem CSV pattern (the W088 path)"
+  ]
+}

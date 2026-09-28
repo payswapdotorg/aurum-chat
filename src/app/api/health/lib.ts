@@ -36,7 +36,7 @@ import { getWorkerMetrics } from '@/infra/worker';
  * health suite, which re-migrates a fresh embedded database and asserts
  * the census — extend it whenever a migration adds a table.
  */
-export const EXPECTED_TABLE_CENSUS = 257; // W108: cellular_inbound_authority
+export const EXPECTED_TABLE_CENSUS = 258; // W111: migration_reader_rejections
 
 /**
  * A small representative set spanning the incident's modules and the

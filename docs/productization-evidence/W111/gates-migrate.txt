@@ -1,0 +1,20 @@
+# W111 gate output (captured 2026-09-28T04:19:03Z) — FRESH embedded dev db, the deployment migrate path
+
+NOTE: this sandbox exports an ambient DATABASE_URL (a non-Postgres file URL belonging to the
+sandbox's own hosting project — the node-postgres backend dials it as 127.0.0.1:5432 and is
+refused). The gate below pins the repo's default dev backend explicitly (AURUM_DB=embedded) —
+the same real PostgreSQL engine bun run db:dev boots (see db-dev-full-chain.txt: 138 migrations,
+258 tables, matching the /api/health EXPECTED_TABLE_CENSUS).
+
+$ rm -rf .data/aurum.pg && AURUM_DB=embedded bun run migrate
+  + computer-use/001-computer-use.sql
+  + demo/001-demo-harness.sql
+  + migration/001-migration.sql
+  + migration/002-w111-migration-readers.sql
+  + simulator/001-simulator.sql
+exit=0
+
+-- idempotence re-run:
+$ AURUM_DB=embedded bun run migrate
+applied 0 migration(s), skipped 138
+schema verification passed — 257 expected table(s) all present (public table census: 258)

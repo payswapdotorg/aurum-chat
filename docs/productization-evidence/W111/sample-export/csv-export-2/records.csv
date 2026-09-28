@@ -1,0 +1,5 @@
+external_id,match_key,entity_type,deleted_at,payload_json
+C-100,k-100,customer,,{"stage":"churned","seats":10,"emails":["ops@acme.test","billing@acme.test"]}
+C-200,k-200,customer,,{"stage":"active"}
+C-300,k-300,customer,2026-09-27T11:00:00Z,
+C-400,,customer,,{"stage":"active","note":"no natural key — mints a fresh entity"}
