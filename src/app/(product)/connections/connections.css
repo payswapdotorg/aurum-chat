@@ -1,53 +1,66 @@
 /* ============================================================================
    Connection & Integration Hub (W059) — the surface's entire stylesheet.
    Scoped under `.conn` (the root layout is W000's and stays untouched).
-   ShareNet-dominant visual direction (frozen UX direction 2026-09-18):
-   warm off-white canvas, soft graphite typography, restrained neutral
-   palette, subtle teal/green semantic accents, generous whitespace,
-   hairline borders, status pills, quiet states, restrained motion.
-   No glassmorphism, no heavy gradients, no dashboard noise. Gold/amber
-   appears ONLY for degraded/warning tones (sparingly).
+   W113 (UX harmonization) visual direction: the old-site warm DNA —
+   cream canvas, warm near-black typography, hairline borders, brand
+   gold interactive accent (focus ring, actions), green/amber/red semantic
+   status families, generous whitespace, quiet states, restrained motion.
+   No glassmorphism, no heavy gradients, no dashboard noise.
    Mobile-first; interactive targets are 44px+.
    ========================================================================== */
 
 .conn {
-  --canvas: #f9f8f7;
-  --card: #fcfcfb;
-  --ink: #171613;
-  --ink-soft: #3f3d38;
-  --muted: #6f6c66;
-  --line: #e2e1de;
-  --line-strong: #d2d1cd;
+  /* W113: the old-site warm-light system (brand gold on cream). */
+  --canvas: #fdfaf6;
+  --card: #fffefc;
+  --ink: #1f1915;
+  --ink-soft: #4a443d;
+  --muted: #69625d;
+  --line: #e3dfda;
+  --line-strong: #d6d0c8;
 
-  /* subtle teal/green semantic accents (ShareNet accent family) */
-  --ok: #0b6e57;
-  --ok-soft: #d9eee4;
-  --ok-line: #b5d9cb;
-  --teal: #0f766e;
+  /* semantic status families (old-site chart palette) */
+  --ok: #01604a;
+  --ok-soft: #d9f2e8;
+  --ok-line: #b0e0cd;
+  --teal: #029e72;
 
-  /* amber reserved for degraded/warning states ONLY */
+  --aurum: #d9952a;
+  --aurum-soft: #ffeccd;
+
   --warn: #8a5a08;
-  --warn-soft: #f7eed6;
-  --warn-line: #e3d3a8;
+  --warn-soft: #ffeccd;
+  --warn-line: #f0dcb4;
 
   --risk: #a33a34;
-  --risk-soft: #f6e2e0;
-  --risk-line: #e6c3c0;
+  --risk-soft: #ffe9e6;
+  --risk-line: #f6c5c0;
 
-  --neutral-soft: #f1f0ee;
+  --neutral-soft: #f2f0ec;
 
-  --primary: #1d1c1a;
-  --primary-ink: #faf9f8;
-  --focus: #0b6e57;
-  --radius: 10px;
+  --primary: #241e19;
+  --primary-ink: #fdfaf6;
+  --focus: #d9952a;
+  --radius: 12px;
+
+  /* Typography (W113): Fraunces display, Geist Sans body, Geist Mono —
+     served by the Google Fonts stylesheet the root layout links; each
+     stack carries its own graceful fallback. */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman',
+    'Palatino Linotype', serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
 
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--canvas);
   color: var(--ink);
-  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,7 +69,7 @@
 }
 
 .conn .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
 }
 
@@ -103,6 +116,7 @@
 
 .conn-title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 17px;
   font-weight: 650;
   letter-spacing: -0.01em;
@@ -484,7 +498,7 @@ details.disclose > .disclose-body {
 }
 
 .btn:hover {
-  background: #33322f;
+  background: #3a332b;
 }
 
 .btn:disabled {

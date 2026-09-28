@@ -3,14 +3,13 @@
    Scoped under `.aurum-shell` (the root layout stays untouched, exactly the
    discipline the Management Control Tower follows).
 
-   VISUAL DIRECTION (frozen 2026-09-18): ShareNet defines most of Aurum's
-   visual language — warm off-white canvas, soft graphite typography,
-   restrained neutral palette, subtle teal/green semantic accents, generous
-   whitespace, hairline borders, status pills, progressive disclosure,
-   quiet skeleton/empty/error states, restrained motion, accessible focus.
-   WhatsApp defines the conversation INTERACTION MODEL (message density,
-   compact timestamps) — not chrome or colors. Aurum's own branding stays
-   subtle; gold/amber appears ONLY in degraded/warning states.
+   VISUAL DIRECTION (W113, UX harmonization): the old marketing-era site's
+   look — gold-on-cream, warm editorial, soft borders, 12px radius, display
+   serif headings (Fraunces) over Geist Sans body text. The conversation
+   surfaces take the WhatsApp flavor (cream canvas, white/cream-out
+   bubbles, dark chat header bar, gold send) via the --wa-* tokens below.
+   Supersedes the frozen 2026-09-18 ShareNet direction at the TOKEN level
+   only; layout discipline, scoping and structure are unchanged.
 
    Hard constraints (work-item acceptance): no glassmorphism (no backdrop
    blur, no translucency-as-chrome), no gradient chrome (zero gradients),
@@ -18,38 +17,72 @@
    ========================================================================== */
 
 .aurum-shell {
-  /* Canvas, surfaces, ink — the ShareNet warm-light system. */
-  --bg: #f9f8f7;            /* warm off-white canvas (not pure white) */
-  --surface: #fcfcfb;       /* cards, panels, popovers */
-  --sidebar: #f6f5f3;       /* the rail's slightly deeper warm tone */
-  --ink: #171613;           /* soft graphite (not pure black) */
-  --ink-soft: #22221f;
-  --muted-ink: #5f5d59;     /* secondary text */
-  --faint-ink: #8a8781;     /* tertiary/meta text */
+  /* Canvas, surfaces, ink — the old-site warm-light system (W113).
+     Light theme is canonical: --background #fdfaf6, --card #fffefc,
+     --foreground #1f1915, --primary #241e19, --border #e3dfda. */
+  --bg: #fdfaf6;            /* warm cream canvas */
+  --surface: #fffefc;       /* cards, panels, popovers */
+  --sidebar: #fdfaf6;       /* the rail rides the canvas (old-site --sidebar) */
+  --ink: #1f1915;           /* warm near-black foreground */
+  --ink-soft: #241e19;      /* old-site --primary */
+  --muted-ink: #69625d;     /* old-site --muted-foreground */
+  --faint-ink: #8f8880;     /* derived warm tertiary (old site defines none) */
 
   /* Hairlines and fills. */
-  --line: #e2e1de;          /* hairline */
-  --line-strong: #d4d2cd;
-  --fill: #efeeec;          /* warm gray fill (inputs, quiet hovers) */
+  --line: #e3dfda;          /* old-site --border */
+  --line-strong: #d6d0c8;   /* derived: warm border-strong */
+  --fill: #f2f0ec;          /* old-site --secondary */
 
-  /* The accent: calm teal-green (semantic + interactive). */
-  --accent: #5cb28f;
-  --accent-soft: #d9eee4;   /* ~6% tint */
-  --accent-ink: #00563c;    /* AA text on soft */
-  --accent-deep: #043726;   /* deep green text */
+  /* The accent: brand gold (old-site --ring/--aurum). */
+  --aurum: #d9952a;         /* brand gold */
+  --aurum-soft: #ffeccd;    /* soft gold wash (old-site --aurum-soft/--accent) */
+  --accent: #d9952a;
+  --accent-soft: #ffeccd;
+  --accent-ink: #432e14;    /* old-site --accent-foreground: AA text on soft */
+  --accent-deep: #6b4a1a;   /* derived deep gold-brown text */
 
   /* Status pills — each tone carries base/soft/text; color is never the
-     only signal (the dot is always paired with a label). */
-  --pos: #5cb28f;  --pos-soft: #d9eee4;  --pos-text: #00563c;
-  --warn: #d58b4b; --warn-soft: #fbe7d8; --warn-text: #7d460b;
-  --risk: #dc655f; --risk-soft: #ffe4e1; --risk-text: #90302e;
-  --neu: #82807a;  --neu-soft: #e8e8e6;  --neu-text: #57554f;
+     only signal (the dot is always paired with a label). Families follow
+     the old-site chart palette: gold, green #029e72, destructive #e40014. */
+  --pos: #029e72;  --pos-soft: #d9f2e8;  --pos-text: #01604a;
+  --warn: #d9952a; --warn-soft: #ffeccd; --warn-text: #6b4a1a;
+  --risk: #e40014; --risk-soft: #ffe9e6; --risk-text: #9f1015;
+  --neu: #7d766e;  --neu-soft: #f2f0ec;  --neu-text: #575146;
 
-  --graphite: #2b2923;      /* primary actions, the brand tile */
-  --ring: #5cb28f;          /* keyboard focus */
+  --graphite: #241e19;      /* primary actions, the brand tile (old-site --primary) */
+  --ring: #d9952a;          /* keyboard focus (old-site --ring) */
+
+  /* WhatsApp-flavored conversation surfaces (W113) — the signature look.
+     Consumed by chat/chat.css; defined here so the shell owns the tokens. */
+  --wa-bubble-in: #ffffff;
+  --wa-bubble-out: #ffeccb;
+  --wa-bubble-out-fg: #1f1915;
+  --wa-chat-bg: #f7ede0;
+  --wa-header: #241e19;
+  --wa-header-fg: #fdfaf6;
+  --wa-online: #d9952a;
+  --wa-panel: #fffefc;
+  --wa-send: #d9952a;
+
+  /* Old-site dark block (verified values, NOT wired — see W113 report):
+     --aurum #f0ba59, --aurum-soft/--accent #382409, --accent-foreground
+     #f0dbb9, --card #1a1613, --card-foreground #f2f0ec, --border
+     #ffffff17. Wiring a dark theme needs a toggle (logic) plus dark
+     variants of every surface; the light theme above is canonical. */
+
+  /* Typography (W113): Fraunces display serif, Geist Sans body, Geist
+     Mono — served by the Google Fonts stylesheet the root layout links;
+     each stack carries its own graceful fallback (Georgia/system sans),
+     so surfaces render correctly even if the stylesheet is unreachable. */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman',
+    'Palatino Linotype', serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
 
   --radius-s: 8px;
-  --radius: 12px;
+  --radius: 12px;           /* old-site --radius: 0.75rem */
   --radius-l: 16px;
   --rail-w: 248px;
   --shell-break: 920px;     /* rail + topbar vs mobile header + bottom nav */
@@ -60,8 +93,9 @@
   flex-direction: column;
   background: var(--bg);
   color: var(--ink);
-  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -76,7 +110,7 @@
    repo has no global reset; the :has() guard scopes this to product pages
    only — the tower and any other surface keep their own layout). */
 html:has(.aurum-shell) {
-  background-color: #f9f8f7;
+  background-color: #fdfaf6;
 }
 
 body:has(.aurum-shell) {
@@ -176,7 +210,7 @@ body:has(.aurum-shell) {
   height: 32px;
   border-radius: 9px;
   background: var(--graphite);   /* flat tile — no gradient */
-  color: #f9f8f7;
+  color: #fdfaf6;
   font-weight: 700;
   font-size: 15px;
   display: grid;
@@ -185,6 +219,7 @@ body:has(.aurum-shell) {
 }
 
 .aurum-brand-name {
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 650;
   letter-spacing: -0.01em;
@@ -323,7 +358,7 @@ body:has(.aurum-shell) {
 }
 
 .aurum-kbd {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 10.5px;
   color: var(--muted-ink);
   border: 1px solid var(--line-strong);
@@ -343,7 +378,7 @@ body:has(.aurum-shell) {
   padding: 0 5px;
   border-radius: 999px;
   background: var(--risk);
-  color: #fff;
+  color: #fffefc;
   font-size: 10.5px;
   font-weight: 700;
   display: grid;
@@ -517,6 +552,7 @@ body:has(.aurum-shell) {
 
 .aurum-page-head h1 {
   margin: 0 0 6px;
+  font-family: var(--font-display);
   font-size: 26px;
   letter-spacing: -0.02em;
   font-weight: 700;
@@ -613,7 +649,7 @@ body:has(.aurum-shell) {
 }
 
 .aurum-mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 11.5px;
   color: var(--muted-ink);
 }
@@ -641,15 +677,15 @@ body:has(.aurum-shell) {
   flex: none;
 }
 
-.aurum-pill[data-tone="positive"] { background: var(--pos-soft); color: var(--pos-text); border-color: #bce3cf; }
+.aurum-pill[data-tone="positive"] { background: var(--pos-soft); color: var(--pos-text); border-color: #b0e0cd; }
 .aurum-pill[data-tone="positive"] .aurum-pill-dot { background: var(--pos); }
-.aurum-pill[data-tone="warning"]  { background: var(--warn-soft); color: var(--warn-text); border-color: #f0d2b8; }
+.aurum-pill[data-tone="warning"]  { background: var(--warn-soft); color: var(--warn-text); border-color: #f0dcb4; }
 .aurum-pill[data-tone="warning"] .aurum-pill-dot { background: var(--warn); }
-.aurum-pill[data-tone="error"]    { background: var(--risk-soft); color: var(--risk-text); border-color: #f4c1bd; }
+.aurum-pill[data-tone="error"]    { background: var(--risk-soft); color: var(--risk-text); border-color: #f6c5c0; }
 .aurum-pill[data-tone="error"] .aurum-pill-dot { background: var(--risk); }
 .aurum-pill[data-tone="neutral"]  { background: var(--neu-soft); color: var(--neu-text); border-color: var(--line-strong); }
 .aurum-pill[data-tone="neutral"] .aurum-pill-dot { background: var(--neu); }
-.aurum-pill[data-tone="info"]     { background: var(--accent-soft); color: var(--accent-ink); border-color: #bfe3d3; }
+.aurum-pill[data-tone="info"]     { background: var(--accent-soft); color: var(--accent-ink); border-color: #f0dcb4; }
 .aurum-pill[data-tone="info"] .aurum-pill-dot { background: var(--accent); }
 
 /* ---- quiet state patterns: skeleton / empty / error / working ---- */
@@ -716,7 +752,7 @@ body:has(.aurum-shell) {
 }
 
 .aurum-error {
-  border: 1px solid #f4c1bd;
+  border: 1px solid #f6c5c0;
   background: var(--risk-soft);
   color: var(--risk-text);
   border-radius: var(--radius);
@@ -790,7 +826,7 @@ body:has(.aurum-shell) {
 }
 
 .aurum-notice code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -821,7 +857,7 @@ body:has(.aurum-shell) {
 
 .aurum-hub-card:hover {
   border-color: var(--accent);
-  background: #fdfefd;
+  background: #fffefc;
 }
 
 .aurum-hub-card .aurum-hub-label {
@@ -894,7 +930,7 @@ body:has(.aurum-shell) {
 
 .aurum-intel-chain-step[data-active="true"] .aurum-intel-chain-index {
   background: var(--accent);
-  color: #fff;
+  color: #241e19;
 }
 
 .aurum-intel-chain-name {
@@ -928,8 +964,8 @@ body:has(.aurum-shell) {
 }
 
 .aurum-intel-next {
-  border-color: #bfe3d3;
-  background: #fbfefd;
+  border-color: #f0dcb4;
+  background: #fffefc;
 }
 
 .aurum-intel-aid-label {
@@ -1113,7 +1149,7 @@ a.aurum-intel-row-title:hover {
 .aurum-intel-inline-link {
   color: var(--accent-ink);
   text-decoration: none;
-  border-bottom: 1px solid #bfe3d3;
+  border-bottom: 1px solid #f0dcb4;
   font-size: inherit;
 }
 
@@ -1274,7 +1310,7 @@ a.aurum-intel-row-title:hover {
   height: 44px;
   border-radius: 999px;
   background: var(--graphite);
-  color: #f9f8f7;
+  color: #fdfaf6;
   font-weight: 700;
   font-size: 18px;
   display: grid;
@@ -1359,7 +1395,7 @@ a.aurum-intel-row-title:hover {
   border-radius: var(--radius-s);
   border: 1px solid var(--graphite);
   background: var(--graphite);
-  color: #f9f8f7;
+  color: #fdfaf6;
   font-size: 13.5px;
   font-weight: 650;
   cursor: pointer;
@@ -1435,6 +1471,7 @@ a.aurum-intel-row-title:hover {
 }
 
 .aurum-sheet-title {
+  font-family: var(--font-display);
   font-size: 15.5px;
   font-weight: 700;
   margin: 0;
@@ -1540,7 +1577,7 @@ a.aurum-intel-row-title:hover {
 
 .aurum-ctx-next-list a:hover {
   border-color: var(--accent);
-  background: #fdfefd;
+  background: #fffefc;
 }
 
 .aurum-ctx-next-when {
@@ -1577,7 +1614,7 @@ a.aurum-intel-row-title:hover {
 .aurum-prompt-card:hover {
   border-color: var(--accent);
   border-style: solid;
-  background: #fdfefd;
+  background: #fffefc;
 }
 
 .aurum-prompt-card:focus-visible {
@@ -1618,8 +1655,8 @@ a.aurum-intel-row-title:hover {
 }
 
 .aurum-notif[data-attention="true"] {
-  border-color: #f0d2b8;
-  background: #fdfaf7;
+  border-color: #f0dcb4;
+  background: #fffefc;
 }
 
 .aurum-notif-head {
@@ -1795,7 +1832,7 @@ a.aurum-intel-row-title:hover {
 
 .aurum-cmdk-suggest-chip:hover {
   border-color: var(--accent);
-  background: #fdfefd;
+  background: #fffefc;
 }
 
 .aurum-cmdk-suggest-chip:focus-visible {
@@ -2836,7 +2873,7 @@ textarea.aurum-mkt-input {
   padding: 9px 12px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-s);
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   font-size: 13.5px;
   font-family: inherit;
@@ -3047,7 +3084,7 @@ textarea.aurum-learn-input {
 .aurum-intv-activate {
   border-color: var(--accent-deep);
   background: var(--accent-deep);
-  color: #f9f8f7;
+  color: #fdfaf6;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -3375,11 +3412,11 @@ textarea.aurum-learn-input {
 }
 
 .aurum-ai-result-ok {
-  border-color: #bce3cf;
+  border-color: #b0e0cd;
 }
 
 .aurum-ai-result-fail {
-  border-color: #f4c1bd;
+  border-color: #f6c5c0;
 }
 
 .aurum-ai-result-meta {
@@ -3614,7 +3651,7 @@ textarea.aurum-learn-input {
 }
 
 .aurum-ai-verification-detail {
-  border-color: #bce3cf;
+  border-color: #b0e0cd;
 }
 
 /* Small screens: the routing position drops out of the corner, targets
@@ -3901,7 +3938,7 @@ a.aurum-explain-row-meta {
 
 .aurum-dev-reveal {
   margin-top: 10px;
-  border: 1px solid #bce3cf;
+  border: 1px solid #b0e0cd;
   background: var(--surface);
   border-radius: var(--radius-s);
   padding: 12px 14px;

@@ -3,33 +3,46 @@
    Scoped under `.aurum-auth` (the root layout stays untouched; the product
    shell and the tower keep their own stylesheets).
 
-   Same ShareNet-dominant visual language as the product shell (warm
-   off-white canvas, soft graphite typography, hairline borders, the calm
-   teal-green accent, 44px+ touch targets, visible focus, no gradients,
-   no glass). Aurum's branding stays subtle.
+   Same visual language as the product shell (W113, old-site DNA): warm
+   cream canvas, warm near-black typography, hairline borders, the brand
+   gold accent, Fraunces display headings, 44px+ touch targets, visible
+   focus, no gradients, no glass. Aurum's branding stays subtle.
    ========================================================================== */
 
 .aurum-auth {
-  --bg: #f9f8f7;
-  --surface: #fcfcfb;
-  --ink: #171613;
-  --ink-soft: #22221f;
-  --muted-ink: #5f5d59;
-  --faint-ink: #8a8781;
-  --line: #e2e1de;
-  --line-strong: #d4d2cd;
-  --fill: #efeeec;
-  --accent: #5cb28f;
-  --accent-soft: #d9eee4;
-  --accent-ink: #00563c;
-  --accent-deep: #043726;
-  --risk: #dc655f;
-  --risk-soft: #ffe4e1;
-  --risk-text: #90302e;
-  --graphite: #2b2923;
-  --ring: #5cb28f;
+  /* W113: the old-site warm-light system, mirroring the product shell. */
+  --bg: #fdfaf6;
+  --surface: #fffefc;
+  --ink: #1f1915;
+  --ink-soft: #241e19;
+  --muted-ink: #69625d;
+  --faint-ink: #8f8880;
+  --line: #e3dfda;
+  --line-strong: #d6d0c8;
+  --fill: #f2f0ec;
+  --aurum: #d9952a;
+  --aurum-soft: #ffeccd;
+  --accent: #d9952a;
+  --accent-soft: #ffeccd;
+  --accent-ink: #432e14;
+  --accent-deep: #6b4a1a;
+  --risk: #e40014;
+  --risk-soft: #ffe9e6;
+  --risk-text: #9f1015;
+  --graphite: #241e19;
+  --ring: #d9952a;
   --radius-s: 8px;
   --radius: 12px;
+
+  /* Typography (W113): Fraunces display, Geist Sans body, Geist Mono —
+     served by the Google Fonts stylesheet the root layout links; each
+     stack carries its own graceful fallback. */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman',
+    'Palatino Linotype', serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
 
   min-height: 100vh;
   min-height: 100dvh;
@@ -37,8 +50,9 @@
   flex-direction: column;
   background: var(--bg);
   color: var(--ink);
-  font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -49,7 +63,7 @@
 }
 
 html:has(.aurum-auth) {
-  background-color: #f9f8f7;
+  background-color: #fdfaf6;
 }
 
 body:has(.aurum-auth) {
@@ -129,12 +143,13 @@ body:has(.aurum-auth) {
   justify-content: center;
   border-radius: var(--radius-s);
   background: var(--graphite);
-  color: #f9f8f7;
+  color: #fdfaf6;
   font-weight: 700;
   font-size: 15px;
 }
 
 .aurum-auth-brand-name {
+  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -147,6 +162,7 @@ body:has(.aurum-auth) {
 
 .aurum-auth-title {
   margin: 0 0 6px;
+  font-family: var(--font-display);
   font-size: 19px;
   font-weight: 700;
 }
@@ -211,7 +227,7 @@ body:has(.aurum-auth) {
   border-radius: var(--radius-s);
   border: 1px solid var(--graphite);
   background: var(--graphite);
-  color: #f9f8f7;
+  color: #fdfaf6;
   font-size: 13.5px;
   font-weight: 650;
   cursor: pointer;
@@ -477,7 +493,9 @@ body:has(.aurum-auth) {
 }
 
 .aurum-auth-code {
-  font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
   background: var(--fill);
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius-s);
