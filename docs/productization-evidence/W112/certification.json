@@ -1,0 +1,172 @@
+{
+  "workItem": "W112",
+  "title": "Post-W106 Live-Capability Certification",
+  "generatedAt": "2026-09-28T08:35:51Z",
+  "author": "W112 certification worker (sandbox session)",
+  "governingRule": "spec/POST-W106-CONTINUATION-DAG-2026-09-27.md:120 — W112 must never manufacture live evidence from deterministic doubles.",
+  "evidenceSourceTags": {
+    "PROBED": "executed by W112 against production or at the certified revision in this sandbox (raw output in docs/productization-evidence/W112/probes/)",
+    "REPO-FACT": "a committed file at the certified revision (path cited)",
+    "TRANSMITTED": "asserted by the work order; not independently verifiable from this sandbox (no Vercel/token visibility); recorded verbatim with source note"
+  },
+  "premiseRecord": {
+    "workOrderCommitClaim": "c079cab7fd0f7ac0b96606e75936e93100c24ba1",
+    "claimStatus": "NOT-IN-REPOSITORY",
+    "evidence": [
+      "git checkout c079cab7fd0f7ac0b96606e75936e93100c24ba1 -> fatal: unable to read tree",
+      "git cat-file -t c079cab7fd0f7ac0b96606e75936e93100c24ba1 -> fatal: could not get object info",
+      "object absent from the full clone (not reachable from any branch/tag; cross-checked via git ls-remote)"
+    ],
+    "resolution": "the 7-char prefix resolves unambiguously: git rev-parse c079cab -> c079cab7fd7eacd363a643c83d3697c4667b6410 ('W110: real browser/computer-use driver composition (Playwright)') — the last of the W107-W111 merges, parent of 09fbb6d (W113) and 780b05b (deploy-trigger chore)",
+    "disposal": "work-order 40-char tail recorded as a mis-transcription; certification binds to the resolved real SHA; flagged for tech-lead confirmation, never laundered",
+    "otherPremiseItems": "ALL VERIFIED (evidence tree W076..WMIG complete; modules cellular/computer-use/edge-connector/migration/realtime/vertical-kits present; production health live with migrations 138 + census 258/258)"
+  },
+  "deployment": {
+    "id": "dpl_GxApj6s3CECE",
+    "idSource": "TRANSMITTED (work order) — not recorded in any committed file at the certified revision or main@780b05b; verifiable via the harness's Vercel API call (projectId prj_PljFx5DnZ1MCqQ5bA1uK6G1o8gFy, teamId team_4KOoA5CgtYaOF85yFXPeMXLt, target=production) with a token not provisioned in this sandbox",
+    "commit": "c079cab7fd7eacd363a643c83d3697c4667b6410",
+    "target": "https://aurum-chat-livid.vercel.app",
+    "healthProbes": [
+      { "at": "2026-09-28T08:19:30.322Z", "httpStatus": 200, "status": "ok", "environment": "production", "hostedOnVercel": true, "dbBackend": "postgres", "dbOk": true, "migrations": 138, "tableCensus": 258, "tableCensusExpected": 258, "missingTables": 0, "refusals": 0, "warnings": 0, "raw": "probes/health.json" },
+      { "at": "2026-09-28T08:26:56.169Z", "httpStatus": 200, "status": "ok", "environment": "production", "hostedOnVercel": true, "dbBackend": "postgres", "dbOk": true, "migrations": 138, "tableCensus": 258, "tableCensusExpected": 258, "missingTables": 0, "refusals": 0, "warnings": 0, "raw": "probes/health.json" }
+    ],
+    "identityCorroboration": "health does not expose deployment id/SHA; the binding rests on the work-order transmission corroborated by (a) health numbers = post-W111/pre-next-deploy chain, (b) empty trigger commit 780b05b (2026-09-28T07:28:27Z) whose deploy did not take effect"
+  },
+  "matrix": [
+    {
+      "capability": "W107 vertical-kit <-> edge composition",
+      "classification": "FIXTURE-PROVEN (deterministic, over the REAL W088 implementation); live customer-edge leg ENVIRONMENT-BLOCKED",
+      "inDeployedEnvironment": "composition code deployed; no production route invokes setTenantKitEdge (recorded frontier) -> kit edges unwired; honest edge_unavailable / deferred-on-w088 readiness stands",
+      "evidence": [
+        "docs/productization-evidence/W107/DELIVERY.md (§3 deterministic proof; §5 live-leg prerequisites; §6 frontiers) [REPO-FACT]",
+        "docs/productization-evidence/W107/evidence.json [REPO-FACT]",
+        "src/modules/vertical-kits/edge-adapter.ts [REPO-FACT]",
+        "src/modules/vertical-kits/tests/vertical-kits-edge-composition.test.ts [REPO-FACT]",
+        "fresh re-run at the certified revision: bun run test -- vertical-kits edge-connector -> 81/81 PASS (7 files) [PROBED: probes/gates-tests-w107-composition.txt]"
+      ]
+    },
+    {
+      "capability": "W108 cellular live transport",
+      "classification": "ENVIRONMENT-BLOCKED (live carrier legs — no carrier credentials in the deployed env); transport + wiring FIXTURE-PROVEN (deterministic + vendor-shape layers)",
+      "inDeployedEnvironment": "no CELLULAR_* credentials configured -> transports unwired -> honest provider_unavailable; the carrier edge fails closed (503) — LIVE-observed by W112",
+      "evidence": [
+        "src/infra/cellular.ts (env-driven wiring; unset/partial -> unwired -> provider_unavailable) [REPO-FACT]",
+        "src/modules/cellular/adapters/transport-twilio.ts + transport-telnyx.ts [REPO-FACT]",
+        "docs/productization-evidence/W108/DELIVERY.md §5(c): 'No live Twilio or Telnyx call was made, and none was faked' [REPO-FACT]",
+        "docs/productization-evidence/W108/evidence.json (liveLegPrerequisites) [REPO-FACT]",
+        "LIVE probe of the deployed honest posture: POST /api/webhooks/cellular/twilio -> 503 {carrier webhook verification is not configured for 'twilio' (set CELLULAR_TWILIO_AUTH_TOKEN; the edge stays closed...)} [PROBED: probes/cellular-webhook-twilio.txt]",
+        "fresh re-run: bun run test -- cellular -> 179/179 PASS (12 files) [PROBED: probes/gates-tests-cellular.txt]"
+      ],
+      "honestyNote": "the work order cites 'Live test-transport proof from the W108 evidence tree'; repo facts are stricter — the live-composition suite runs REAL adapter code over an injected deterministic fetch double (no network; test header line 4) and is classified fixture/vendor-shape, NOT live"
+    },
+    {
+      "capability": "W109 meeting/realtime LiveKit",
+      "classification": "capability LIVE-PROVEN against real LiveKit Cloud (worker-sandbox scope, committed evidence); in dpl_GxApj6s3CECE: ENVIRONMENT-BLOCKED (LIVEKIT_* env vars absent from this deployment)",
+      "inDeployedEnvironment": "the transport + wiring are deployed at the certified revision, but the LIVEKIT_* env vars were added to the Vercel project AFTER this deployment was built [TRANSMITTED; corroborated by trigger commit 780b05b's message 'final roadmap tree 09fbb6d + LiveKit env + WORKER_TOKEN rotation'] -> deployed wiring unwired -> live meetings/realtime on THIS deployment fail honestly (provider_unavailable); the live proof attaches to the NEXT deployment, which carries the env vars",
+      "evidence": [
+        "docs/productization-evidence/W109/DELIVERY.md (§3 the live leg; §4 the W112 classification table; §5 blocked specifics) [REPO-FACT]",
+        "docs/productization-evidence/W109/evidence.json (RM_xTQ3FdxkKcZ7; PA_TzWmcuZ8u9Mb; EG_wwsWQi7EdsQZ/PA_Pjpq8o9GfzZh; runWindow 2026-09-28T00:26:31.191Z..2026-09-28T00:26:54.643Z; finalization artifacts sha256:c388f808…/sha256:cbdd1c44…) [REPO-FACT]",
+        "docs/productization-evidence/W109/live-leg/live-leg-latest.json [REPO-FACT]",
+        "src/modules/realtime/adapters/transport-livekit.ts + src/modules/realtime/wiring.ts [REPO-FACT]",
+        "fresh re-run: bun run test -- realtime -> 88 passed + 16 credential-gated live skips (the honest skip), 7 files [PROBED: probes/gates-tests-realtime.txt]"
+      ],
+      "subBlocked": [
+        "recording FILE artifacts — LiveKit file egress requires an external storage destination the operator project lacks (egress CONTROL plane is live-proven)",
+        "telephony SIP dial-out — livekit.SIP/* answers 401 'permissions denied' (feature not enabled on the project)",
+        "WebRTC data-channel receive — requires a full WebRTC stack (the agents-worker frontier)"
+      ]
+    },
+    {
+      "capability": "W110 real browser driver",
+      "classification": "browser execution REAL-PROVEN (worker-sandbox scope, committed evidence); in dpl_GxApj6s3CECE: ENVIRONMENT-BLOCKED/unwired (BROWSER_DRIVER unset -> honest driver_unavailable); deterministic double default FIXTURE-PROVEN",
+      "inDeployedEnvironment": "BROWSER_DRIVER unset in the serverless env -> nothing wired -> honest driver_unavailable posture; no production route invokes ensureBrowserDriverWired() (recorded frontier); BROWSER_DRIVER=deterministic remains the test-suite default (a scripted double, not a real browser)",
+      "evidence": [
+        "docs/productization-evidence/W110/report.json (executedAt 2026-09-28T05:15:47.047Z; engine chromium 143.0.7499.4 headless; wiringReport state wired; happy-path 7/7 verified; transient resume; mismatch; secrets sweeps 0 hits) [REPO-FACT]",
+        "docs/productization-evidence/W110/artifacts/ (8 PNG + 5 DOM snapshots, content-addressed, sha256-pinned) [REPO-FACT]",
+        "docs/productization-evidence/W110/run-real-browser-task.ts (re-runnable evidence run) [REPO-FACT]",
+        "src/modules/computer-use/adapters/playwright-driver.ts + src/modules/computer-use/wiring.ts [REPO-FACT]",
+        "fresh re-run: bun run test -- computer -> 70/70 PASS (6 files) [PROBED: probes/gates-tests-computer.txt]"
+      ]
+    },
+    {
+      "capability": "W111 migration readers",
+      "classification": "REAL-PROVEN over the real production schema on the embedded PostgreSQL engine (full chain, fresh at the certified revision); hosted-Postgres (Neon) leg ENVIRONMENT-BLOCKED (DNS)",
+      "inDeployedEnvironment": "readers deployed as code; ensureMigrationReadersWired() not composed into a deployment entry point and MIGRATION_CSV_EXPORT_ROOT/MIGRATION_NATIVE_TENANT_ID unset -> readers honestly unwired (reader_unavailable / native_reader_unavailable) — the recorded frontier",
+      "evidence": [
+        "src/modules/migration/adapters/csv-export-incumbent-reader.ts + csv-export-format.ts + world-native-reader.ts + file-share-verify.ts + env-wiring.ts [REPO-FACT]",
+        "src/modules/migration/tests/migration-readers-real.test.ts (the full path: staged import -> W084 comparison -> verification -> retirement -> sequestration rollback) [REPO-FACT]",
+        "docs/productization-evidence/W111/DELIVERY.md §2 + evidence.json + db-dev-full-chain.txt + gates-migrate.txt [REPO-FACT]",
+        "fresh re-run: bun run test -- migration -> 56 passed + 1 hosted-leg skip (6 files) [PROBED: probes/gates-tests-migration.txt]",
+        "fresh embedded chain at the certified revision: AURUM_DB=embedded bun run migrate -> applied 138, census 258, idempotent re-run 0/138; ledger SELECT count(*), count(content_sha) FROM _migrations -> 138 rows / 138 hashed, incl. cellular/006-cellular-inbound-authority.sql and migration/002-w111-migration-readers.sql [PROBED: probes/gates-migrate-fresh.txt]"
+      ],
+      "hostedLegBlocker": {
+        "prerequisite": "network egress to api.neon.tech (or any reachable hosted PostgreSQL connection string) from the execution environment",
+        "w111Verification": "triple (docs/productization-evidence/W111/neon-dns-probes.txt: getent exit 2, node dns ENOTFOUND, curl (6); github.com control resolves)",
+        "w112ReVerification": "2026-09-28T08:27:09Z from this sandbox: getent exit=2; curl (6) Could not resolve host; github.com control resolves [PROBED: probes/neon-dns-w112.txt]",
+        "readyPath": "src/modules/migration/tests/migration-readers-hosted.test.ts activates on AURUM_TEST_DATABASE_URL — one reachable run upgrades the hosted leg to REAL-PROVEN"
+      }
+    },
+    {
+      "capability": "WMIG migration-runner checksums",
+      "classification": "LIVE-PROVEN in production",
+      "inDeployedEnvironment": "production /api/health reports migrations 138 with census 258/258 (missing []) — the full chain including both post-WMIG migrations (W108's 006, W111's 002), applied by the checksum-hardened runner (vercel:build = bun run migrate && next build)",
+      "evidence": [
+        "production health probes: migrations 138, census 258/258 [PROBED: probes/health.json]",
+        "scripts/migrate.ts (WMIG hardening, commit 2659898): ledger content_sha recorded inside the same transaction as the DDL; drift refusal; legacy pin-forward [REPO-FACT]",
+        "package.json vercel:build = 'bun run migrate && next build' — the only production apply path runs the hardened runner [REPO-FACT]",
+        "tests/e2e/platform/schema-reconciliation.test.ts — fresh 27/27 PASS at the certified revision [PROBED: probes/gates-tests-schema-reconciliation.txt]",
+        "fresh embedded ledger re-proof: 138 rows / 138 hashed, both post-WMIG migrations present and hashed [PROBED: probes/gates-migrate-fresh.txt]"
+      ],
+      "honestCaveat": "the production _migrations ledger rows are not exposed by a public read API; the LIVE classification rests on the probed counter (138) + the construction chain (the hardened runner is the only production apply path) + the fresh local re-proof — no stronger external claim is made"
+    }
+  ],
+  "probesRun": [
+    { "probe": "GET /api/health", "at": "2026-09-28T08:19:30Z + 08:26:56Z", "result": "200 ok · production · Vercel · db postgres ok · migrations 138 · census 258/258 · missing [] · 0 refusals · 0 warnings", "raw": "probes/health.json" },
+    { "probe": "GET /api/worker (no token)", "at": "2026-09-28T08:27Z", "result": "401 {worker token required (Authorization: Bearer or x-worker-token)}", "raw": "probes/worker-no-token.txt" },
+    { "probe": "GET /api/worker (bad token)", "at": "2026-09-28T08:27Z", "result": "401 {invalid worker token}", "raw": "probes/worker-bad-token.txt" },
+    { "probe": "POST /api/auth/quick-sign-in {persona:manager}", "at": "2026-09-28T08:27Z", "result": "404 {not_available — quick sign-in is not available in this environment} (demo credentials OFF)", "raw": "probes/quick-sign-in.txt" },
+    { "probe": "POST /api/webhooks/cellular/twilio (empty body)", "at": "2026-09-28T08:27Z", "result": "503 {carrier webhook verification is not configured for 'twilio' (set CELLULAR_TWILIO_AUTH_TOKEN; the edge stays closed until the carrier's requests can be verified)}", "raw": "probes/cellular-webhook-twilio.txt" },
+    { "probe": "DNS api.neon.tech (+ github.com control)", "at": "2026-09-28T08:27:09Z", "result": "api.neon.tech unresolvable (getent exit=2; curl exit 6); github.com resolves", "raw": "probes/neon-dns-w112.txt" },
+    { "probe": "deterministic suites at the certified revision", "at": "2026-09-28T08:27-08:31Z", "result": "vertical-kits+edge-connector 81/81 · cellular 179/179 · realtime 88 passed + 16 live-gated skips · computer 70/70 · migration 56 passed + 1 hosted skip · schema-reconciliation 27/27", "raw": "probes/gates-tests-*.txt" },
+    { "probe": "fresh embedded migration chain + checksum ledger", "at": "2026-09-28T08:31-08:34Z", "result": "apply 138 -> idempotent re-run 0/138 -> ledger 138 rows / 138 hashed", "raw": "probes/gates-migrate-fresh.txt" }
+  ],
+  "recertification": {
+    "governingContract": "scripts/release-certification.ts (W106 program) — two-run same-revision rule: CERTIFIED READY only when BOTH runs are 0 failed/0 blocked/0 flaky/0 unexpected AND agree on the journey matrix and the deployment identity",
+    "w106Precedent": { "verdict": "CERTIFIED READY", "at": "2026-09-27T03:01:57.496Z", "deploymentId": "dpl_BCtojsKXWqF3qsEmczyHfUxaauGJ", "commit": "625a133e22904972394b6e418f2a3b2c9cda676a", "runs": "22 passed / 0 failed / 0 blocked / 0 flaky / 0 unexpected (both runs)", "evidence": "docs/productization-evidence/W106/final-verdict.json" },
+    "status": "BLOCKED",
+    "blockers": [
+      {
+        "id": "deploy-quota",
+        "detail": "the Vercel free tier's 100-deployments/day limit is exhausted — the final tree (main@780b05b = 09fbb6d (W113) + deploy-trigger chore) cannot deploy until the reset or a plan upgrade; production continues serving dpl_GxApj6s3CECE @ c079cab… (pre-W113)",
+        "resetEpochMs": "1790666832593",
+        "resetUtc": "2026-09-29T08:33:53Z",
+        "source": "TRANSMITTED (work-order context; quota error paste not re-included in this worker's dispatch; not independently verifiable — no Vercel token in this sandbox)",
+        "corroboration": "REPO-FACT: empty trigger commit 780b05b (2026-09-28T07:28:27Z, 'chore: trigger production deploy of W113 (final roadmap tree 09fbb6d + LiveKit env + WORKER_TOKEN rotation)') on main; PROBED: production health still shows the post-W111/pre-next-deploy state (migrations 138, census 258/258)"
+      },
+      {
+        "id": "worker-token-rotation",
+        "detail": "the worker seam token was rotated in the Vercel project (env PATCH) but takes effect only on the NEXT deployment; dpl_GxApj6s3CECE still holds the pre-rotation token, which is not recoverable — the cert harness's G1 worker-seam valid-token probe (GET /api/worker with x-worker-token, expecting 200 + environment + queueDepth + metrics) cannot authenticate against the current deployment; the two-run recert necessarily targets the NEXT deployment, which holds the rotated token",
+        "source": "TRANSMITTED (work order); the fail-closed seam itself is PROBED live (401 no-token / 401 bad-token); the harness treats an unusable worker token as BLOCKED (exit 2; its tests assert the gate detail 'worker seam token was not supplied')"
+      }
+    ],
+    "commandsWhenUnblocked": {
+      "runA": "bun run cert:production -- --program w106 --target https://aurum-chat-livid.vercel.app --run a --deployment-id dpl_<new-production-uid> --expect-commit <final-tree-sha> --deployment-created <iso-date> --worker-token-file <path-to-the-rotated-worker-token> --vercel-token-file <path-to-vercel-token>",
+      "runB": "bun run cert:production -- --program w106 --target https://aurum-chat-livid.vercel.app --run b --deployment-id dpl_<new-production-uid> --expect-commit <final-tree-sha> --deployment-created <iso-date> --worker-token-file <path-to-the-rotated-worker-token> --vercel-token-file <path-to-vercel-token>",
+      "finalizer": "bun run cert:production -- --finalize --program w106",
+      "headerVerbatim": "scripts/release-certification.ts lines 1-40 (one certification pass: Run A, then Run B — the SAME deployment revision; the finalizer enforces the two-run same-revision rule)",
+      "exitCodes": { "0": "green", "1": "real failure (FAIL verdict, or the run could not execute)", "2": "BLOCKED (a documented external precondition is missing)" },
+      "secretsDiscipline": "worker seam token and Vercel API token arrive as FILE PATHS, are read once, live in memory only, and never enter any artifact"
+    }
+  },
+  "gates": {
+    "typecheck": { "command": "bun run typecheck", "result": "PASS (exit 0, clean)", "raw": "probes/gates-typecheck.txt" },
+    "lint": { "command": "bun run lint", "result": "PASS (exit 0, 0 problems)", "raw": "probes/gates-lint.txt" },
+    "arch": { "command": "bun run arch", "result": "PASS — module files: 700, app/mcp files: 308, tables checked: 250", "raw": "probes/gates-arch.txt" },
+    "tests": { "command": "bun run test -- release-certification", "result": "PASS — 85/85 (5 files)", "filter": "release-certification", "raw": "probes/gates-tests-release-certification.txt" }
+  },
+  "verdict": {
+    "capabilityMatrix": "DELIVERED",
+    "twoRunReleaseRecertification": "BLOCKED-on-deploy-quota (reset 2026-09-29T08:33:53Z, epoch-ms 1790666832593); secondary prerequisite on the same next deployment: the rotated WORKER_TOKEN takes effect (the current deployment's pre-rotation token is unrecoverable)",
+    "honestyStatement": "no live evidence was manufactured from deterministic doubles anywhere in this certification"
+  }
+}

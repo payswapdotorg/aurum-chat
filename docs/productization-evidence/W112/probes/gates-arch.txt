@@ -1,0 +1,2 @@
+$ tsx scripts/check-architecture.ts
+architecture check passed — module files: 700, app/mcp files: 308, tables checked: 250

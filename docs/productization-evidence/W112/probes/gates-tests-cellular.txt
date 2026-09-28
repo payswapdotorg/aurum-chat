@@ -1,0 +1,24 @@
+$ vitest run cellular
+
+ RUN  v5.0.0 /home/z/aurum
+
+ ✓ src/modules/cellular/tests/cellular-service.test.ts (31 tests) 5873ms
+ ✓ src/modules/cellular/tests/cellular-unit.test.ts (40 tests) 14ms
+ ✓ src/modules/api/tests/api-meetings-cellular.test.ts (18 tests) 5077ms
+ ✓ src/modules/cellular/tests/cellular-transports.test.ts (20 tests) 122ms
+ ✓ src/modules/cellular/tests/cellular-authority.test.ts (11 tests) 5272ms
+ ✓ src/app/api/webhooks/cellular/[provider]/tests/cellular-carrier-webhook.test.ts (14 tests) 4840ms
+ ✓ src/modules/cellular/tests/cellular-live-composition.test.ts (7 tests) 4954ms
+ ✓ tests/tenant-isolation/cellular-sweep.test.ts (4 tests) 5134ms
+ ✓ src/infra/cellular.test.ts (14 tests) 9ms
+ ✓ src/app/(product)/cellular/tests/cellular-integration.test.ts (6 tests) 4887ms
+ ✓ tests/e2e/journeys/meeting-cellular.e2e.test.ts (6 tests) 5572ms
+   ✓ W097 — Meeting and Cellular End-to-End Fixture (6)
+     ✓ scenario 'golden-journey' executes end-to-end against the real module services 387ms
+ ✓ src/app/(product)/cellular/tests/cellular-unit.test.ts (8 tests) 21ms
+
+ Test Files  12 passed (12)
+      Tests  179 passed (179)
+   Start at  08:28:35
+   Duration  45.65s (tests 94%, import 3%, transform 3%)
+

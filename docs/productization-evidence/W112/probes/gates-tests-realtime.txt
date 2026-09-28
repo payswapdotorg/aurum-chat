@@ -1,0 +1,17 @@
+$ vitest run realtime
+
+ RUN  v5.0.0 /home/z/aurum
+
+ ✓ src/modules/realtime/tests/realtime-service.test.ts (31 tests) 5506ms
+ ✓ src/modules/realtime/tests/realtime-unit.test.ts (26 tests) 15ms
+ ✓ src/modules/realtime/tests/realtime-livekit-transport.test.ts (16 tests) 65ms
+ ✓ src/modules/realtime/tests/realtime-provider-failure.test.ts (5 tests) 5238ms
+ ✓ tests/tenant-isolation/realtime-sweep.test.ts (3 tests) 5143ms
+ ✓ src/modules/realtime/tests/realtime-livekit-live.test.ts (17 tests | 16 skipped) 3ms
+ ✓ src/modules/realtime/tests/realtime-wiring.test.ts (6 tests) 7ms
+
+ Test Files  7 passed (7)
+      Tests  88 passed | 16 skipped (104)
+   Start at  08:29:24
+   Duration  18.04s (tests 92%, import 4%, transform 4%)
+

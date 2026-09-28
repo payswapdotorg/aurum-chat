@@ -1,0 +1,31 @@
+$ vitest run release-certification
+
+ RUN  v5.0.0 /home/z/aurum
+
+fatal: not a git repository (or any of the parent directories): .git
+stdout | src/modules/release-certification/tests/driver.test.ts > the certification driver — one full pass over a canned production target > produces a fully green run with the complete evidence tree on disk
+W078 FAILURES: []
+
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+ ✓ src/modules/release-certification/tests/driver.test.ts (7 tests) 129ms
+ ✓ src/modules/release-certification/tests/verdict.test.ts (50 tests) 20ms
+ ✓ src/modules/release-certification/tests/identity-report.test.ts (14 tests) 9ms
+ ✓ src/modules/release-certification/tests/matrix.test.ts (11 tests) 8ms
+ ✓ tests/tenant-isolation/release-certification-sweep.test.ts (3 tests) 4988ms
+   ✓ W044 sweep — release-certification (W079 verification harness) (3)
+     ✓ creates no tables (a fresh migrated schema has none from this module) 4981ms
+
+ Test Files  5 passed (5)
+      Tests  85 passed (85)
+   Start at  08:27:26
+   Duration  8.28s (tests 66%, transform 27%, import 7%)
+
+  Transform  transforming modules took 2.09s · 27% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
