@@ -1,0 +1,1057 @@
+{
+  "workItem": "W110",
+  "title": "Real Browser / Computer-Use Driver Composition — real-run evidence",
+  "executedAt": "2026-09-28T05:15:47.047Z",
+  "environment": {
+    "tenantId": "b37a0678-7cc3-4603-8746-33507f697822",
+    "engine": "143.0.7499.4",
+    "headless": true,
+    "fixtureServer": "http://127.0.0.1:3117",
+    "wiringReport": {
+      "driver": "playwright",
+      "state": "wired",
+      "detail": "real Playwright (chromium) browser driver wired behind the W093 port — BROWSER_CREDENTIALS / BROWSER_ARTIFACT_DIR / BROWSER_PROFILE_DIR / BROWSER_HEADLESS / BROWSER_ACTION_TIMEOUT_MS configure it"
+    },
+    "profileKeyPrefix": "computer-use:tenant:<tenantId>:task:<taskId>",
+    "scenario1ProfileKey": "computer-use:tenant:b37a0678-7cc3-4603-8746-33507f697822:task:96c610d4-c1a9-43cc-85b1-57e71556aa35"
+  },
+  "scenarios": [
+    {
+      "name": "happy-path",
+      "description": "governed login flow (5 verbs) on real chromium → fully verified completion",
+      "taskId": "96c610d4-c1a9-43cc-85b1-57e71556aa35",
+      "status": "completed",
+      "sessions": [
+        {
+          "sequence": 1,
+          "status": "completed",
+          "stepsExecuted": 7,
+          "profileKey": "computer-use:tenant:b37a0678-7cc3-4603-8746-33507f697822:task:96c610d4-c1a9-43cc-85b1-57e71556aa35"
+        }
+      ],
+      "events": [
+        "created",
+        "started",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "completed"
+      ],
+      "steps": [
+        {
+          "key": "open-login",
+          "position": 1,
+          "verb": "goto",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0001",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted password input>",
+              "#username": ""
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/a96fd88dfe396438",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "goto",
+            "typed": null,
+            "selector": null,
+            "navigated": {
+              "to": "http://127.0.0.1:3117/login",
+              "from": "about:blank"
+            },
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/a96fd88dfe396438",
+              "bytes": 7503,
+              "sha256": "a96fd88dfe396438fffc8a5e47354681545bb622dc385774d608be83bb0cbf21"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "type-username",
+          "position": 2,
+          "verb": "type",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0002",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted password input>",
+              "#username": "ops@acme.example"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/3a7b54787b57a7dc",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "type",
+            "typed": {
+              "kind": "literal",
+              "length": 16
+            },
+            "selector": "#username",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/3a7b54787b57a7dc",
+              "bytes": 9469,
+              "sha256": "3a7b54787b57a7dca9dceec32c2ee8c33810227fa9b54a4ba88337d85e979898"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "type-password",
+          "position": 3,
+          "verb": "type",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0003",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted secret field 'password'>",
+              "#username": "ops@acme.example"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/893dd3bfa0d5506c",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "type",
+            "typed": {
+              "kind": "secret-field",
+              "field": "password",
+              "redacted": true
+            },
+            "selector": "#password",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/893dd3bfa0d5506c",
+              "bytes": 9668,
+              "sha256": "893dd3bfa0d5506c5ba9e624449229e281cec833783ced149a86f107ce2a0183"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "submit-login",
+          "position": 4,
+          "verb": "submit",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0004",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/welcome",
+              "title": "Welcome",
+              "heading": "Signed in"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/0a2f74698624dd45",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "submit",
+            "typed": null,
+            "selector": "#submit",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/0a2f74698624dd45",
+              "bytes": 10718,
+              "sha256": "0a2f74698624dd4573a73a1198ec5f69b8ebe4b29d02e9a0e6146b30ded1a580"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/f476f306536da722",
+              "bytes": 174,
+              "sha256": "f476f306536da7223760a16f821d69bf231ef8b93ace804bd68cdcd9576ae8d2"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "goto-app",
+          "position": 5,
+          "verb": "goto",
+          "url": "http://127.0.0.1:3117/app",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0005",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/app",
+              "title": "Dashboard",
+              "heading": "Dashboard",
+              "[name=\"tick\"]": "",
+              "[name=\"loggedIn\"]": "true"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/22d2147fd986fa8c",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/app",
+            "verb": "goto",
+            "typed": null,
+            "selector": null,
+            "navigated": {
+              "to": "http://127.0.0.1:3117/app",
+              "from": "http://127.0.0.1:3117/welcome"
+            },
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/22d2147fd986fa8c",
+              "bytes": 8434,
+              "sha256": "22d2147fd986fa8c95e817327a527a38927756c20aa2b2601bceaa8e362591a6"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/b1ef5bc0e5c273c3",
+              "bytes": 446,
+              "sha256": "b1ef5bc0e5c273c3f65b00cd600d301590bfcec40b4adadb87eb61be0b88cf7d"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "read-dashboard",
+          "position": 6,
+          "verb": "read",
+          "url": "http://127.0.0.1:3117/app",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0006",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/app",
+              "title": "Dashboard",
+              "heading": "Dashboard",
+              "[name=\"tick\"]": "",
+              "[name=\"loggedIn\"]": "true"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/22d2147fd986fa8c",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/app",
+            "verb": "read",
+            "typed": null,
+            "selector": "[name=\"loggedIn\"]",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/22d2147fd986fa8c",
+              "bytes": 8434,
+              "sha256": "22d2147fd986fa8c95e817327a527a38927756c20aa2b2601bceaa8e362591a6"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/b1ef5bc0e5c273c3",
+              "bytes": 446,
+              "sha256": "b1ef5bc0e5c273c3f65b00cd600d301590bfcec40b4adadb87eb61be0b88cf7d"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "refresh",
+          "position": 7,
+          "verb": "click",
+          "url": "http://127.0.0.1:3117/app",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0007",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/app",
+              "title": "Dashboard",
+              "heading": "Dashboard",
+              "[name=\"tick\"]": "refreshed",
+              "[name=\"loggedIn\"]": "true"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/cfd74f05a81270ba",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/app",
+            "verb": "click",
+            "typed": null,
+            "selector": "#refresh",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/cfd74f05a81270ba",
+              "bytes": 8432,
+              "sha256": "cfd74f05a81270baeaaa20d07e9e6ce7d04fd010dec02d343bb8eaaa87cf77af"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/00ddcbcf6903d190",
+              "bytes": 455,
+              "sha256": "00ddcbcf6903d19083a5473d5763e969949a91a8228f5935af09221216d1e438"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        }
+      ],
+      "failureBundle": null,
+      "exactlyOnce": {
+        "open-login": 1,
+        "type-username": 1,
+        "type-password": 1,
+        "submit-login": 1,
+        "goto-app": 1,
+        "read-dashboard": 1,
+        "refresh": 1
+      }
+    },
+    {
+      "name": "transient-failure-resume",
+      "description": "the fixture drops the /app socket once → transient receipt → fresh session resumes from the checkpoint (verified steps never re-executed)",
+      "taskId": "619d2ed8-fe71-4900-b161-9d836c569415",
+      "status": "completed",
+      "sessions": [
+        {
+          "sequence": 1,
+          "status": "failed",
+          "stepsExecuted": 5,
+          "profileKey": "computer-use:tenant:b37a0678-7cc3-4603-8746-33507f697822:task:619d2ed8-fe71-4900-b161-9d836c569415"
+        },
+        {
+          "sequence": 2,
+          "status": "completed",
+          "stepsExecuted": 1,
+          "profileKey": "computer-use:tenant:b37a0678-7cc3-4603-8746-33507f697822:task:619d2ed8-fe71-4900-b161-9d836c569415"
+        }
+      ],
+      "events": [
+        "created",
+        "started",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-failed",
+        "resumed",
+        "step-executed",
+        "step-verified",
+        "completed"
+      ],
+      "steps": [
+        {
+          "key": "open-login",
+          "position": 1,
+          "verb": "goto",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0008",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted password input>",
+              "#username": ""
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/a96fd88dfe396438",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "goto",
+            "typed": null,
+            "selector": null,
+            "navigated": {
+              "to": "http://127.0.0.1:3117/login",
+              "from": "about:blank"
+            },
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/a96fd88dfe396438",
+              "bytes": 7503,
+              "sha256": "a96fd88dfe396438fffc8a5e47354681545bb622dc385774d608be83bb0cbf21"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "type-username",
+          "position": 2,
+          "verb": "type",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0009",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted password input>",
+              "#username": "ops@acme.example"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/3a7b54787b57a7dc",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "type",
+            "typed": {
+              "kind": "literal",
+              "length": 16
+            },
+            "selector": "#username",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/3a7b54787b57a7dc",
+              "bytes": 9469,
+              "sha256": "3a7b54787b57a7dca9dceec32c2ee8c33810227fa9b54a4ba88337d85e979898"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "type-password",
+          "position": 3,
+          "verb": "type",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0010",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted secret field 'password'>",
+              "#username": "ops@acme.example"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/893dd3bfa0d5506c",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "type",
+            "typed": {
+              "kind": "secret-field",
+              "field": "password",
+              "redacted": true
+            },
+            "selector": "#password",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/893dd3bfa0d5506c",
+              "bytes": 9668,
+              "sha256": "893dd3bfa0d5506c5ba9e624449229e281cec833783ced149a86f107ce2a0183"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "submit-login",
+          "position": 4,
+          "verb": "submit",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0011",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/welcome",
+              "title": "Welcome",
+              "heading": "Signed in"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/0a2f74698624dd45",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "submit",
+            "typed": null,
+            "selector": "#submit",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/0a2f74698624dd45",
+              "bytes": 10718,
+              "sha256": "0a2f74698624dd4573a73a1198ec5f69b8ebe4b29d02e9a0e6146b30ded1a580"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/f476f306536da722",
+              "bytes": 174,
+              "sha256": "f476f306536da7223760a16f821d69bf231ef8b93ace804bd68cdcd9576ae8d2"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "goto-app",
+          "position": 5,
+          "verb": "goto",
+          "url": "http://127.0.0.1:3117/app",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0012",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/app",
+              "title": "Dashboard",
+              "heading": "Dashboard",
+              "[name=\"tick\"]": "",
+              "[name=\"loggedIn\"]": "true"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/22d2147fd986fa8c",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/app",
+            "verb": "goto",
+            "typed": null,
+            "selector": null,
+            "navigated": {
+              "to": "http://127.0.0.1:3117/app",
+              "from": "about:blank"
+            },
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/22d2147fd986fa8c",
+              "bytes": 8434,
+              "sha256": "22d2147fd986fa8c95e817327a527a38927756c20aa2b2601bceaa8e362591a6"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/b1ef5bc0e5c273c3",
+              "bytes": 446,
+              "sha256": "b1ef5bc0e5c273c3f65b00cd600d301590bfcec40b4adadb87eb61be0b88cf7d"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        }
+      ],
+      "failureBundle": {
+        "taskId": "619d2ed8-fe71-4900-b161-9d836c569415",
+        "failureKind": "step-failed",
+        "reason": "Step 'goto-app' was transiently failed by the browser driver: the browser action failed (transient — a fresh session may succeed): page.goto: Timeout 15000ms exceeded.\nCall log:\n  - navigating to \"http://127.0.0.1:3117/app\", waiting until \"domcontentloaded\"\n. The task is resumable — a fresh session retries the step.",
+        "step": {
+          "key": "goto-app",
+          "position": 5,
+          "action": {
+            "url": "http://127.0.0.1:3117/app",
+            "verb": "goto",
+            "value": null,
+            "selector": null,
+            "secretField": null
+          },
+          "state": "failed",
+          "allowlistDecision": {
+            "url": "http://127.0.0.1:3117/app",
+            "verb": "goto",
+            "reason": "allowed by glob 'http://127.0.0.1:3117/*' with permitted verb 'goto'",
+            "allowed": true,
+            "matchedGlob": "http://127.0.0.1:3117/*"
+          },
+          "receiptStatus": "failed",
+          "receiptId": null,
+          "receiptDetail": "the browser action failed (transient — a fresh session may succeed): page.goto: Timeout 15000ms exceeded.\nCall log:\n  - navigating to \"http://127.0.0.1:3117/app\", waiting until \"domcontentloaded\"\n",
+          "screenshotRef": null,
+          "actionTrace": null,
+          "observedStateObservationId": null,
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null,
+          "mismatches": [],
+          "stateUnchanged": null
+        },
+        "session": {
+          "id": "cf28c3f0-320a-4c21-bb57-ada7dd94f404",
+          "tenantId": "b37a0678-7cc3-4603-8746-33507f697822",
+          "taskId": "619d2ed8-fe71-4900-b161-9d836c569415",
+          "sequence": 1,
+          "profileKey": "computer-use:tenant:b37a0678-7cc3-4603-8746-33507f697822:task:619d2ed8-fe71-4900-b161-9d836c569415",
+          "status": "failed",
+          "stepsExecuted": 5,
+          "startedAt": "2026-09-28T05:15:31.024Z",
+          "endedAt": "2026-09-28T05:15:46.415Z",
+          "endReason": "step 'goto-app' failed transiently: the browser action failed (transient — a fresh session may succeed): page.goto: Timeout 15000ms exceeded.\nCall log:\n  - navigating to \"http://127.0.0.1:3117/app\", waiting until \"domcontentloaded\"\n — the task is resumable in a fresh session"
+        }
+      },
+      "exactlyOnce": {
+        "open-login": 1,
+        "type-username": 1,
+        "type-password": 1,
+        "submit-login": 1,
+        "goto-app": 1
+      }
+    },
+    {
+      "name": "wrong-credentials-mismatch",
+      "description": "wrong credentials → the submit lands on the sign-in-failed page → observed state diverges → terminal mismatch with the existing evidence shape",
+      "taskId": "d97d2a0c-e587-4119-ba88-bec51110afaa",
+      "status": "mismatched",
+      "sessions": [
+        {
+          "sequence": 1,
+          "status": "mismatched",
+          "stepsExecuted": 4,
+          "profileKey": "computer-use:tenant:b37a0678-7cc3-4603-8746-33507f697822:task:d97d2a0c-e587-4119-ba88-bec51110afaa"
+        }
+      ],
+      "events": [
+        "created",
+        "started",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-executed",
+        "step-verified",
+        "step-mismatch-detected"
+      ],
+      "steps": [
+        {
+          "key": "open-login",
+          "position": 1,
+          "verb": "goto",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0013",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted password input>",
+              "#username": ""
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/a96fd88dfe396438",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "goto",
+            "typed": null,
+            "selector": null,
+            "navigated": {
+              "to": "http://127.0.0.1:3117/login",
+              "from": "about:blank"
+            },
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/a96fd88dfe396438",
+              "bytes": 7503,
+              "sha256": "a96fd88dfe396438fffc8a5e47354681545bb622dc385774d608be83bb0cbf21"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "type-username",
+          "position": 2,
+          "verb": "type",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0014",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted password input>",
+              "#username": "ops@acme.example"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/3a7b54787b57a7dc",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "type",
+            "typed": {
+              "kind": "literal",
+              "length": 16
+            },
+            "selector": "#username",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/3a7b54787b57a7dc",
+              "bytes": 9469,
+              "sha256": "3a7b54787b57a7dca9dceec32c2ee8c33810227fa9b54a4ba88337d85e979898"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "type-password",
+          "position": 3,
+          "verb": "type",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "verified",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0015",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login",
+              "title": "Vendor portal",
+              "heading": "Sign in",
+              "#password": "<redacted secret field 'password'>",
+              "#username": "ops@acme.example"
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/9421f9a27d6f5551",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "type",
+            "typed": {
+              "kind": "secret-field",
+              "field": "password",
+              "redacted": true
+            },
+            "selector": "#password",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/9421f9a27d6f5551",
+              "bytes": 9661,
+              "sha256": "9421f9a27d6f5551861e9841c95f9dd8958ff84d9043bdeeab195eb9f9a5d863"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/507e2468a8c8be05",
+              "bytes": 391,
+              "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83"
+            }
+          },
+          "mismatchEvidenceObservationId": null,
+          "mismatchUnknownId": null
+        },
+        {
+          "key": "submit-login",
+          "position": 4,
+          "verb": "submit",
+          "url": "http://127.0.0.1:3117/login",
+          "state": "mismatched",
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0016",
+          "receiptDetail": null,
+          "observedState": {
+            "found": true,
+            "state": {
+              "url": "http://127.0.0.1:3117/login?error=1",
+              "title": "Vendor portal",
+              "heading": "Sign-in failed",
+              "#password": "<redacted secret field 'password'>",
+              "#username": ""
+            }
+          },
+          "screenshotRef": "computer-use-playwright://screenshot/b9fb155139eb1981",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "submit",
+            "typed": null,
+            "selector": "#submit",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/b9fb155139eb1981",
+              "bytes": 8952,
+              "sha256": "b9fb155139eb19819a9252957ae4d6dab72ccb5bcf8ba8dd7749544749b63013"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/0c8873dfd9f555d4",
+              "bytes": 398,
+              "sha256": "0c8873dfd9f555d44dec552fad57d1e8f64e5c0dfc73342c3ee7f2658bd22e5d"
+            }
+          },
+          "mismatchEvidenceObservationId": "3408cd61-394c-4439-8007-433e494e18b1",
+          "mismatchUnknownId": "ad6f2899-4da1-4d1d-a7fa-d4ffbc95f954"
+        }
+      ],
+      "failureBundle": {
+        "taskId": "d97d2a0c-e587-4119-ba88-bec51110afaa",
+        "failureKind": "mismatch",
+        "reason": "The governed browser task \"W110 evidence — wrong credentials diverge the observed state (real chromium)\" executed, but step 'submit-login' on 'http://127.0.0.1:3117/login' did not observe the expected page state: 'url' (expected \"http://127.0.0.1:3117/welcome\", observed \"http://127.0.0.1:3117/login?error=1\"), 'title' (expected \"Welcome\", observed \"Vendor portal\") and 'heading' (expected \"Signed in\", observed \"Sign-in failed\"). The observed page state changed, but not to what the governed plan promised. The divergence is preserved as evidence with the action trace and screenshot reference; investigate before any retry.",
+        "step": {
+          "key": "submit-login",
+          "position": 4,
+          "action": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "submit",
+            "value": null,
+            "selector": "#submit",
+            "secretField": null
+          },
+          "state": "mismatched",
+          "allowlistDecision": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "submit",
+            "reason": "allowed by glob 'http://127.0.0.1:3117/*' with permitted verb 'submit'",
+            "allowed": true,
+            "matchedGlob": "http://127.0.0.1:3117/*"
+          },
+          "receiptStatus": "accepted",
+          "receiptId": "playwright-rcpt-0016",
+          "receiptDetail": null,
+          "screenshotRef": "computer-use-playwright://screenshot/b9fb155139eb1981",
+          "actionTrace": {
+            "url": "http://127.0.0.1:3117/login",
+            "verb": "submit",
+            "typed": null,
+            "selector": "#submit",
+            "navigated": null,
+            "screenshot": {
+              "ref": "computer-use-playwright://screenshot/b9fb155139eb1981",
+              "bytes": 8952,
+              "sha256": "b9fb155139eb19819a9252957ae4d6dab72ccb5bcf8ba8dd7749544749b63013"
+            },
+            "domSnapshot": {
+              "ref": "computer-use-playwright://dom-snapshot/0c8873dfd9f555d4",
+              "bytes": 398,
+              "sha256": "0c8873dfd9f555d44dec552fad57d1e8f64e5c0dfc73342c3ee7f2658bd22e5d"
+            }
+          },
+          "observedStateObservationId": "3ba83183-d6e1-4b65-b1e0-0dfb8547c653",
+          "mismatchEvidenceObservationId": "3408cd61-394c-4439-8007-433e494e18b1",
+          "mismatchUnknownId": "ad6f2899-4da1-4d1d-a7fa-d4ffbc95f954",
+          "mismatches": [
+            {
+              "path": "url",
+              "expected": "http://127.0.0.1:3117/welcome",
+              "actual": "http://127.0.0.1:3117/login?error=1"
+            },
+            {
+              "path": "title",
+              "expected": "Welcome",
+              "actual": "Vendor portal"
+            },
+            {
+              "path": "heading",
+              "expected": "Signed in",
+              "actual": "Sign-in failed"
+            }
+          ],
+          "stateUnchanged": false
+        },
+        "session": {
+          "id": "0189fdd6-20ee-4921-bd13-019b1bfa4eb7",
+          "tenantId": "b37a0678-7cc3-4603-8746-33507f697822",
+          "taskId": "d97d2a0c-e587-4119-ba88-bec51110afaa",
+          "sequence": 1,
+          "profileKey": "computer-use:tenant:b37a0678-7cc3-4603-8746-33507f697822:task:d97d2a0c-e587-4119-ba88-bec51110afaa",
+          "status": "mismatched",
+          "stepsExecuted": 4,
+          "startedAt": "2026-09-28T05:15:46.624Z",
+          "endedAt": "2026-09-28T05:15:47.013Z",
+          "endReason": "step 'submit-login' executed and accepted, but the observed state diverged (3 field(s)) — mismatch evidence and attention recorded"
+        }
+      },
+      "exactlyOnce": {
+        "open-login": 1,
+        "type-username": 1,
+        "type-password": 1,
+        "submit-login": 1
+      }
+    }
+  ],
+  "sweeps": {
+    "sql": {
+      "fragment": "w110-evidence-materialized…",
+      "tables": [
+        {
+          "table": "browser_tasks",
+          "hits": "0"
+        },
+        {
+          "table": "browser_task_steps",
+          "hits": "0"
+        },
+        {
+          "table": "browser_sessions",
+          "hits": "0"
+        },
+        {
+          "table": "browser_task_events",
+          "hits": "0"
+        },
+        {
+          "table": "browser_task_idempotency",
+          "hits": "0"
+        },
+        {
+          "table": "observations",
+          "hits": "0"
+        }
+      ],
+      "result": "clean — zero hits"
+    },
+    "artifacts": {
+      "files": 13,
+      "secretHits": 0,
+      "result": "clean — zero hits"
+    }
+  },
+  "artifactInventory": [
+    {
+      "file": "dom-snapshot-00ddcbcf6903d190.html",
+      "bytes": 455,
+      "sha256": "00ddcbcf6903d19083a5473d5763e969949a91a8228f5935af09221216d1e438",
+      "secretHit": false
+    },
+    {
+      "file": "dom-snapshot-0c8873dfd9f555d4.html",
+      "bytes": 398,
+      "sha256": "0c8873dfd9f555d44dec552fad57d1e8f64e5c0dfc73342c3ee7f2658bd22e5d",
+      "secretHit": false
+    },
+    {
+      "file": "dom-snapshot-507e2468a8c8be05.html",
+      "bytes": 391,
+      "sha256": "507e2468a8c8be054b984c1494be760e800d2a48d570a1445f7458cd7db92b83",
+      "secretHit": false
+    },
+    {
+      "file": "dom-snapshot-b1ef5bc0e5c273c3.html",
+      "bytes": 446,
+      "sha256": "b1ef5bc0e5c273c3f65b00cd600d301590bfcec40b4adadb87eb61be0b88cf7d",
+      "secretHit": false
+    },
+    {
+      "file": "dom-snapshot-f476f306536da722.html",
+      "bytes": 174,
+      "sha256": "f476f306536da7223760a16f821d69bf231ef8b93ace804bd68cdcd9576ae8d2",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-0a2f74698624dd45.png",
+      "bytes": 10718,
+      "sha256": "0a2f74698624dd4573a73a1198ec5f69b8ebe4b29d02e9a0e6146b30ded1a580",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-22d2147fd986fa8c.png",
+      "bytes": 8434,
+      "sha256": "22d2147fd986fa8c95e817327a527a38927756c20aa2b2601bceaa8e362591a6",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-3a7b54787b57a7dc.png",
+      "bytes": 9469,
+      "sha256": "3a7b54787b57a7dca9dceec32c2ee8c33810227fa9b54a4ba88337d85e979898",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-893dd3bfa0d5506c.png",
+      "bytes": 9668,
+      "sha256": "893dd3bfa0d5506c5ba9e624449229e281cec833783ced149a86f107ce2a0183",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-9421f9a27d6f5551.png",
+      "bytes": 9661,
+      "sha256": "9421f9a27d6f5551861e9841c95f9dd8958ff84d9043bdeeab195eb9f9a5d863",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-a96fd88dfe396438.png",
+      "bytes": 7503,
+      "sha256": "a96fd88dfe396438fffc8a5e47354681545bb622dc385774d608be83bb0cbf21",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-b9fb155139eb1981.png",
+      "bytes": 8952,
+      "sha256": "b9fb155139eb19819a9252957ae4d6dab72ccb5bcf8ba8dd7749544749b63013",
+      "secretHit": false
+    },
+    {
+      "file": "screenshot-cfd74f05a81270ba.png",
+      "bytes": 8432,
+      "sha256": "cfd74f05a81270baeaaa20d07e9e6ce7d04fd010dec02d343bb8eaaa87cf77af",
+      "secretHit": false
+    }
+  ]
+}

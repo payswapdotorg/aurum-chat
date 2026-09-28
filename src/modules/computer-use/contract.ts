@@ -72,6 +72,21 @@
 //     adapter (proven by the module's suite; no edge internals are
 //     imported here).
 //
+//     W110 — the REAL browser adapter: the repository now ships the
+//     Playwright OSS adapter (`createPlaywrightBrowserDriver`, in
+//     adapters/playwright-driver.ts) behind this port — the
+//     already-reviewed browser runtime the W076 journey suite runs on.
+//     Playwright objects never cross the port (the adapter normalizes
+//     everything to the canonical envelopes inside itself); the
+//     deterministic double below remains the default the test suites
+//     wire explicitly. The env-driven production wiring follows the
+//     W108 cellular pattern: `ensureBrowserDriverWired()` (wiring.ts)
+//     reads BROWSER_DRIVER=playwright|deterministic|none, keeps the
+//     default honestly UNWIRED, and never clobbers an explicit
+//     setBrowserDriver. The one-time real-browser execution through
+//     this exact lifecycle is recorded under
+//     docs/productization-evidence/W110/.
+//
 //   THE DETERMINISTIC DOUBLE (fixture — NO live network, NO real
 //     browser; the fixtures/doubles doctrine)
 //     createScriptedBrowserDriver — the in-memory scripted driver the
@@ -79,9 +94,10 @@
 //     per-(tenant,task) profiles with materialized credential stores,
 //     the driver-side allowlist copy, honoring idempotency, and the
 //     scriptable failure modes (transient failure, permanent refusal,
-//     worker crash, observed-state divergence, stale page). A REAL
-//     browser driver is environment-dependent and lives outside this
-//     repository's test suite (customer-side / edge runtime).
+//     worker crash, observed-state divergence, stale page). It remains
+//     the repository's test-suite default (W110 changed nothing here);
+//     the real-browser leg is a RECORDED EVIDENCE RUN, not a test-suite
+//     dependency (see the W110 note under THE DRIVER PORT above).
 //
 // There is deliberately NO operation to update or erase a task's plan or
 // its recorded evidence: the plan is frozen at creation, receipts and
@@ -133,6 +149,37 @@ export {
 
 export { ComputerUseError } from './errors';
 export type { ComputerUseErrorCode } from './errors';
+
+// W110 — the REAL browser adapter (Playwright OSS) behind the port, and
+// the env-driven wiring of the port (the W108 cellular pattern). The
+// adapter is constructed from configuration objects only; Playwright
+// objects never cross the port boundary (lock 16 — the adapter
+// normalizes everything to the canonical envelopes inside itself).
+export {
+  canonicalSelectorKey,
+  createPlaywrightBrowserDriver,
+  envCredentialSource,
+  filesystemArtifactStore,
+  filesystemProfileStore,
+  realChromiumLauncher,
+  type PlaywrightArtifactRecord,
+  type PlaywrightArtifactStore,
+  type PlaywrightBrowserDriver,
+  type PlaywrightBrowserDriverOptions,
+  type PlaywrightBrowserHandle,
+  type PlaywrightContextHandle,
+  type PlaywrightCredentialSource,
+  type PlaywrightLauncher,
+  type PlaywrightLocatorHandle,
+  type PlaywrightPageHandle,
+  type PlaywrightProfileStore,
+} from './adapters/playwright-driver';
+export {
+  ensureBrowserDriverWired,
+  resetBrowserDriverWiring,
+  type BrowserDriverKind,
+  type BrowserDriverWiringReport,
+} from './wiring';
 
 // The W084 reconciliation, re-used verbatim — the module's verification
 // IS the deep-actions reconciliation applied to browser steps (no second
