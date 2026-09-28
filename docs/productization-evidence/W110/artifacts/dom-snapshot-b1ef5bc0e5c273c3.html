@@ -1,0 +1,9 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Dashboard</title></head><body>
+<h1>Dashboard</h1>
+<input type="hidden" name="loggedIn" value="true" style="">
+<input type="hidden" name="tick" value="" style="">
+<button id="refresh" type="button">Refresh</button>
+<script>document.getElementById('refresh').addEventListener('click', function () {
+  document.querySelector('input[name=tick]').value = 'refreshed';
+});</script>
+</body></html>

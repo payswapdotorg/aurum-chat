@@ -50,13 +50,18 @@
 // PROVIDER ISOLATION (lock 16): everything here is provider-neutral BY
 // CONSTRUCTION. The driver port (`BrowserDriver` below) is the exit
 // seam — a real browser automation runtime (an approved edge browser
-// adapter, W088) implements it CUSTOMER-SIDE; the repository ships only
-// the deterministic in-memory double the tests execute against (the
-// fixtures/doubles doctrine, IMPLEMENTATION-STACK §7 — NO live network,
-// NO real browser in the test suite; the real-browser driver is
-// environment-dependent and lives outside this module's tests). Driver
-// results are canonicalized: a provider object (class instance, symbol,
-// cycle, oversized body) is rejected loudly (`invalid_driver_result`).
+// adapter, W088, or a governed in-process browser) implements it
+// CUSTOMER-SIDE; since W110 the repository also ships the first-party
+// Playwright/chromium adapter behind the port
+// (adapters/playwright-driver.ts — constructed from configuration
+// objects, vendor objects never crossing the seam), while the
+// repository's test suites keep executing against the deterministic
+// in-memory double (the fixtures/doubles doctrine, IMPLEMENTATION-STACK
+// §7 — NO live network, NO real browser in the test suite; the
+// real-browser leg is a recorded evidence run under
+// docs/productization-evidence/W110/). Driver results are canonicalized:
+// a provider object (class instance, symbol, cycle, oversized body) is
+// rejected loudly (`invalid_driver_result`).
 //
 // CREDENTIAL ISOLATION (the W082 discipline, sharpened per-task): the
 // task carries only an OPAQUE `credentialRef`. Browser profiles and
@@ -513,10 +518,13 @@ export interface BrowserSessionEndRequest {
  * THE BROWSER DRIVER PORT — the fallback's exit seam. A real browser
  * automation runtime (an approved edge browser adapter, W088, or a
  * governed in-process browser) implements this CUSTOMER-SIDE / in
- * wiring; the repository ships only the deterministic double (see
- * `createScriptedBrowserDriver` through the contract). No driver is
- * wired by default — start/resume then fail explicitly with
- * `driver_unavailable` rather than faking success (the
+ * wiring; since W110 the repository also ships the first-party
+ * Playwright/chromium adapter (`createPlaywrightBrowserDriver`) for
+ * environments that opt in through BROWSER_DRIVER wiring. The
+ * deterministic double (`createScriptedBrowserDriver` through the
+ * contract) remains what the repository's test suites execute against.
+ * No driver is wired by default — start/resume then fail explicitly
+ * with `driver_unavailable` rather than faking success (the
  * sources/destinations discipline).
  *
  * Implementations MUST return canonical values only: a non-canonical
