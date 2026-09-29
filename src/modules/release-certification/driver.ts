@@ -86,6 +86,15 @@ export interface CertificationRunConfig {
    */
   workerTokenFile: string | null;
   /**
+   * W116: the platform-admin credential for the W078 rerun's waitlist
+   * acceptance (a production target has no seeded persona). Read from
+   * files exactly like the worker token — never written to any artifact.
+   * Null leaves the rerun without an admin (the waitlist checks skip
+   * with the documented reason).
+   */
+  platformAdminEmailFile?: string | null;
+  platformAdminPasswordFile?: string | null;
+  /**
    * The Vercel API token's file path (read-only deployment identity
    * verification — never written to any artifact).
    */
@@ -326,12 +335,18 @@ async function runW078(
   runDir: string,
 ): Promise<SmokeReport | null> {
   try {
+    const adminEmail = await readSecret(config.platformAdminEmailFile ?? null);
+    const adminPassword = await readSecret(config.platformAdminPasswordFile ?? null);
     const report = await runDeploymentSmoke({
       target: config.target,
       profile: 'full',
       expectedEnvironment: 'production',
       workerToken,
       expectQuickSignIn: 'off',
+      platformAdmin:
+        adminEmail !== null && adminPassword !== null
+          ? { email: adminEmail, password: adminPassword }
+          : null,
       repoRoot: null,
       label: `production-certification-run-${config.runLabel.toLowerCase()}`,
       fetchImpl: config.fetchImpl,

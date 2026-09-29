@@ -1,8 +1,10 @@
-// Auth surfaces (W058) — /signup.
+// Auth surfaces (W058 → W116) — /signup.
 //
-// Register + sign in (one password transmission). ?invite=<code> from an
-// invitation link pre-fills the bound email and is redeemed server-side
-// after registration. Already-signed-in visitors are routed onward.
+// The waitlist gate: without a usable invitation, requesting access puts
+// the person on the waitlist (no session is issued — the confirmation is
+// a signed-out state). ?invite=<code> from an invitation link pre-fills
+// the bound email and keeps today's immediate-access behavior (an invite
+// is admin-granted trust). Already-signed-in visitors are routed onward.
 
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -43,17 +45,19 @@ export default async function SignUpPage({
 
   return (
     <div className="aurum-auth-card">
-      <AuthBrand tag="Create your account" />
+      <AuthBrand tag="Request your account" />
       <h1 className="aurum-auth-title">Get started with Aurum</h1>
       <p className="aurum-auth-blurb">
-        One account, your company&apos;s workspace. After signing up you
-        create or join a company — then Aurum starts work as your
-        organizational intelligence employee.
+        One account, your company&apos;s workspace. Every request is reviewed
+        by the Aurum team — once approved you sign in, create or join a
+        company, and Aurum starts work as your organizational intelligence
+        employee. Holding an invitation? It skips the queue.
       </p>
       {inviteCode !== null && !inviteUsable ? (
         <p className="aurum-auth-error" role="alert" style={{ marginBottom: 13 }}>
-          The invitation link is no longer usable — you can still create an
-          account; ask your company&apos;s admin for a fresh invitation.
+          The invitation link is no longer usable — you can still request
+          access and the Aurum team will review it, or ask your company&apos;s
+          admin for a fresh invitation.
         </p>
       ) : null}
       <SignUpForm

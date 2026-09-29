@@ -20,7 +20,19 @@
 //   * auth_user_companies — the principal's company directory (the
 //                      switcher's always-re-verified candidate list);
 //   * auth_invites   — tenant-scoped invitations (ADR-0001: every row
-//                      carries tenant_id).
+//                      carries tenant_id);
+//   * auth_waitlist  — W116 platform access requests (a pending request
+//                      is NOT a user; a platform admin accepts or declines
+//                      before any principal exists).
+//
+// W116 — the PUBLIC signup is waitlist-gated: `signUp` records a request
+// (or keeps today's immediate access when a live invitation bound to the
+// same email vouches for it); `registerUser` stays the internal
+// activation primitive behind the admin-granted doors and the demo
+// harness. Platform admins are designated by the persisted
+// `is_platform_admin` flag, granted either by the
+// AURUM_PLATFORM_ADMIN_EMAILS env bootstrap (on sign-in; fails closed
+// when unset) or by the claim-gated `setPlatformAdmin` (the seed path).
 //
 // Tenancy (ADR-0001)
 //   * The organizations module remains the SOLE membership authority —
@@ -48,21 +60,34 @@
 
 export {
   authenticateSession,
+  changePassword,
   createCompanyForSession,
   createInvite,
+  decideWaitlistRequest,
   getInviteByCode,
   listInvites,
   listUserCompanies,
+  listWaitlist,
   redeemInvite,
   registerUser,
+  requestAccountAccess,
   revokeInvite,
   selectCompany,
   selectWorkspace,
+  setPlatformAdmin,
   signIn,
   signOut,
+  signOutEverywhere,
+  signUp,
 } from './service';
 
 export { claimsForRole, MANAGEMENT_CLAIMS } from './claims';
+
+export {
+  AUTH_AUTHORITY_PLATFORM_ADMIN,
+  PLATFORM_ADMIN_EMAILS_ENV,
+  platformAdminEmails,
+} from './platform-admins';
 
 export { AuthError } from './errors';
 export type { AuthErrorCode } from './errors';
@@ -89,20 +114,28 @@ export type {
   AuthInvite,
   AuthenticatedSession,
   AuthPrincipal,
+  ChangePasswordInput,
   CreateCompanyInput,
   CreateInviteInput,
+  DecideWaitlistInput,
   GetInviteByCodeInput,
   InvitePreview,
   IssuedInvite,
   IssuedSession,
   ListInvitesInput,
   ListUserCompaniesInput,
+  ListWaitlistInput,
   RedeemInviteInput,
   RegisterUserInput,
+  RequestAccountAccessInput,
   RevokeInviteInput,
   SelectCompanyInput,
   SelectWorkspaceInput,
   SignInInput,
+  SignOutEverywhereInput,
   SignOutInput,
+  SignUpInput,
+  SignUpOutcome,
   UserCompany,
+  WaitlistRequest,
 } from './types';

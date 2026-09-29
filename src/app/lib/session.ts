@@ -33,11 +33,13 @@ export const SESSION_COOKIE = 'aurum_session';
 
 /** A resolved session as the surfaces consume it. */
 export type SessionResolution =
-  | { status: 'anonymous' }
+  | { status: 'anonymous'; platformAdmin: false }
   | {
       status: 'no-company';
       sessionId: string;
       principal: AuthPrincipal;
+      /** W116: the principal's platform-admin designation. */
+      platformAdmin: boolean;
       /** The principal's verified companies (onboarding picks from these). */
       companies: UserCompany[];
     }
@@ -45,6 +47,8 @@ export type SessionResolution =
       status: 'authenticated';
       sessionId: string;
       principal: AuthPrincipal;
+      /** W116: the principal's platform-admin designation. */
+      platformAdmin: boolean;
       context: TenantContext;
       /** The verified role behind the derived claims. */
       role: string;
@@ -75,7 +79,7 @@ export function sessionTokenFromRequest(request: Request): string | null {
 }
 
 async function resolveSessionToken(token: string | null): Promise<SessionResolution> {
-  if (token === null) return { status: 'anonymous' };
+  if (token === null) return { status: 'anonymous', platformAdmin: false };
   try {
     const session = await authenticateSession({ token });
     if (session.company === null) {
@@ -83,6 +87,7 @@ async function resolveSessionToken(token: string | null): Promise<SessionResolut
         status: 'no-company',
         sessionId: session.sessionId,
         principal: session.principal,
+        platformAdmin: session.platformAdmin,
         companies: await listUserCompanies({ token }).catch(() => []),
       };
     }
@@ -90,6 +95,7 @@ async function resolveSessionToken(token: string | null): Promise<SessionResolut
       status: 'authenticated',
       sessionId: session.sessionId,
       principal: session.principal,
+      platformAdmin: session.platformAdmin,
       context: {
         tenantId: session.company.tenantId,
         principalId: session.principalId,
@@ -100,7 +106,7 @@ async function resolveSessionToken(token: string | null): Promise<SessionResolut
       companies: await listUserCompanies({ token }).catch(() => []),
     };
   } catch {
-    return { status: 'anonymous' };
+    return { status: 'anonymous', platformAdmin: false };
   }
 }
 

@@ -326,6 +326,15 @@ export const ROUTE_CATALOG: readonly RouteSpec[] = [
     mobileArea: 'more',
   },
   {
+    path: '/more/password',
+    kind: 'page',
+    area: 'product',
+    auth: 'required',
+    title: 'Password & sessions — account security',
+    file: 'src/app/(product)/more/password/page.tsx',
+    mobileArea: null,
+  },
+  {
     path: '/people',
     kind: 'page',
     area: 'product',

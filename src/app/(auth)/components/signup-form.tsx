@@ -1,16 +1,20 @@
 'use client';
 
-// Auth surfaces (W058) — the sign-up (registration) form.
+// Auth surfaces (W058 → W116) — the sign-up (registration) form.
 //
-// POST /api/auth/sign-up: register + sign in one operation (the password
-// is transmitted once). The route sets the httpOnly session cookie; the
-// fresh principal has no company yet, so the form routes to onboarding
-// (an invitation code, when present, is redeemed server-side first).
+// POST /api/auth/sign-up. W116 — the waitlist gate: without a usable
+// invitation, signup records an ACCESS REQUEST (no session, no cookie)
+// and the form switches to the WaitlistConfirmation state — the signed-out
+// "You're on the waitlist" view. A signup that carries a live invitation
+// (the admin-granted trust door) keeps today's immediate access: the
+// route sets the httpOnly session cookie and the form routes to
+// onboarding (the invitation is redeemed server-side first).
 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { afterAuthTarget, postAuthJson } from './auth-fetch';
+import { WaitlistConfirmation } from './waitlist-confirmation';
 
 export interface SignUpFormProps {
   inviteCode: string | null;
@@ -30,6 +34,7 @@ export function SignUpForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [waitlisted, setWaitlisted] = useState(false);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,6 +57,13 @@ export function SignUpForm({
       setPending(false);
       return;
     }
+    if (outcome.body['waitlisted'] === true) {
+      // W116: the request is on the waitlist — a signed-out confirmation
+      // state (no session cookie was issued; there is nothing to route to).
+      setWaitlisted(true);
+      setPending(false);
+      return;
+    }
     if (typeof outcome.body['notice'] === 'string') {
       setNotice(outcome.body['notice']);
       setPending(false);
@@ -61,6 +73,10 @@ export function SignUpForm({
     router.replace(afterAuthTarget(outcome.body, null));
   };
 
+  if (waitlisted) {
+    return <WaitlistConfirmation />;
+  }
+
   return (
     <form className="aurum-auth-form" onSubmit={onSubmit} noValidate>
       {inviteCode !== null ? (
@@ -69,7 +85,12 @@ export function SignUpForm({
             ? 'You are creating an account to accept an invitation.'
             : `${inviteCompanyName} invited you — create your account to accept.`}
         </p>
-      ) : null}
+      ) : (
+        <p className="aurum-auth-notice" role="status">
+          Aurum reviews every new account. After you request access, the
+          Aurum team approves it before you can sign in.
+        </p>
+      )}
       <div className="aurum-auth-field">
         <label className="aurum-auth-label" htmlFor="signup-name">
           Your name
@@ -126,7 +147,11 @@ export function SignUpForm({
             setPassword(event.target.value);
           }}
         />
-        <p className="aurum-auth-hint">At least 8 characters.</p>
+        <p className="aurum-auth-hint">
+          {inviteCode === null
+            ? 'At least 8 characters — you will use it to sign in once approved.'
+            : 'At least 8 characters.'}
+        </p>
       </div>
       {error === null ? null : (
         <p className="aurum-auth-error" role="alert">
@@ -139,7 +164,11 @@ export function SignUpForm({
         </p>
       )}
       <button className="aurum-auth-btn" type="submit" disabled={pending}>
-        {pending ? 'Creating account…' : 'Create account'}
+        {pending
+          ? 'Sending…'
+          : inviteCode === null
+            ? 'Request access'
+            : 'Create account'}
       </button>
     </form>
   );

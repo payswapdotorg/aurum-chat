@@ -622,6 +622,24 @@ export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
         icon: 'more',
         note: null,
       },
+      {
+        id: 'password',
+        label: 'Change your password and close sessions',
+        summary:
+          'Your credentials and the sessions holding the account open — update the password or sign out everywhere.',
+        href: '/more/password',
+        keywords: [
+          'password',
+          'change password',
+          'credentials',
+          'sessions',
+          'sign out everywhere',
+          'security',
+          'account',
+        ],
+        icon: 'more',
+        note: null,
+      },
     ],
   },
 ];

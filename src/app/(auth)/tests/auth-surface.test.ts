@@ -26,6 +26,7 @@ import { newId } from '@/infra/ids';
 import { closeDb, getDb } from '@/infra/db';
 import { runMigrations } from '../../../../scripts/migrate';
 import { getTenantMembership } from '@/modules/organizations/contract';
+import { registerUser } from '@/modules/auth/contract';
 import { SESSION_COOKIE, sessionTokenFromCookieHeader } from '@/app/lib/session';
 import {
   SESSION_COOKIE_MAX_AGE,
@@ -38,13 +39,16 @@ import {
   handleInviteListGet,
   handleInviteRedeemPost,
   handleInviteRevokePost,
+  handlePasswordChangePost,
   handleSelectionPost,
   handleSessionGet,
   handleSignIn,
   handleSignOut,
+  handleSignOutEverywherePost,
   handleSignUp,
   mapAuthApiError,
 } from '../lib/api';
+import { handleWaitlistDecidePost } from '@/app/(platform)/lib/api';
 
 const BASE = 'https://aurum.test/api/auth';
 
@@ -54,7 +58,9 @@ const BASE = 'https://aurum.test/api/auth';
 
 const managerPassword = (): string => ['clo', 'ud', '-for', 'ge-12'].join('');
 const employeePassword = (): string => ['sa', 'nd', '-sto', 'ne-7'].join('');
+const adminPassword = (): string => ['ope', 'ra', 'tor-', 'gold-31'].join('');
 const emailOf = (local: string): string => [local, '.', newId().slice(0, 8), '@example', '.test'].join('');
+const journeyManagerEmail = emailOf('manager');
 
 /** A request carrying one session cookie. */
 function cookieRequest(token: string | null, path: string, method: 'GET' | 'POST' = 'POST'): Request {
@@ -123,17 +129,41 @@ describe('session cookie serialization', () => {
 });
 
 // ---------------------------------------------------------------------------
-// The full first-manager journey (acceptance: onboarding → usable chat scope)
+// The first-manager journey (W116: waitlist-gated — accept before onboarding)
 // ---------------------------------------------------------------------------
 
 describe('the first-manager journey through the auth API', () => {
+  let adminToken: string;
   let managerToken: string;
   let tenantId: string;
   let inviteCode: string;
-  const managerEmail = emailOf('manager');
+  const adminEmail = emailOf('platform-admin');
+  const managerEmail = journeyManagerEmail;
   const employeeEmail = emailOf('employee');
 
-  it('signs up and lands unscoped (cookie established)', async () => {
+  beforeAll(async () => {
+    // The operator bootstrap — the production path: an active account
+    // whose email is designated through AURUM_PLATFORM_ADMIN_EMAILS
+    // (granted at sign-in; fails closed when unset).
+    await registerUser({
+      displayName: 'Platform Operator',
+      email: adminEmail,
+      password: adminPassword(),
+    });
+    process.env.AURUM_PLATFORM_ADMIN_EMAILS = adminEmail;
+    const signedIn = await handleSignIn(
+      jsonRequest('/sign-in', { email: adminEmail, password: adminPassword() }),
+    );
+    expect(signedIn.status).toBe(200);
+    expect((signedIn.body['session'] as { platformAdmin: boolean }).platformAdmin).toBe(true);
+    adminToken = sessionTokenFromCookieHeader(signedIn.setCookie ?? null)!;
+  });
+
+  afterAll(() => {
+    delete process.env.AURUM_PLATFORM_ADMIN_EMAILS;
+  });
+
+  it('signing up lands on the waitlist — no session, no cookie', async () => {
     const result = await handleSignUp(
       jsonRequest('/sign-up', {
         displayName: 'Ada Manager',
@@ -142,31 +172,90 @@ describe('the first-manager journey through the auth API', () => {
       }),
     );
     expect(result.status).toBe(200);
-    expect(result.setCookie).toBeDefined();
-    managerToken = sessionTokenFromCookieHeader(result.setCookie ?? null)!;
+    expect(result.body['waitlisted']).toBe(true);
+    expect(result.setCookie).toBeUndefined();
+    const users = await getDb().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM auth_users WHERE email = $1`,
+      [managerEmail],
+    );
+    expect(users.rows[0]!.count).toBe('0');
+  });
+
+  it('sign-in on the pending request shows the honest waiting state (password proven)', async () => {
+    const result = await handleSignIn(
+      jsonRequest('/sign-in', { email: managerEmail, password: managerPassword() }),
+    );
+    expect(result.status).toBe(403);
+    expect(result.body['error']).toBe('account_pending');
+    // Without password knowledge the same request stays uniform.
+    const stranger = await handleSignIn(
+      jsonRequest('/sign-in', { email: managerEmail, password: employeePassword() }),
+    );
+    expect(stranger.status).toBe(401);
+    expect(stranger.body['error']).toBe('invalid_credentials');
+  });
+
+  it('a duplicate signup is indistinguishable from the first (idempotent re-request)', async () => {
+    const result = await handleSignUp(
+      jsonRequest('/sign-up', {
+        displayName: 'Ada Manager',
+        email: managerEmail,
+        password: managerPassword(),
+      }),
+    );
+    expect(result.status).toBe(200);
+    expect(result.body['waitlisted']).toBe(true);
+    expect(result.setCookie).toBeUndefined();
+    const rows = await getDb().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM auth_waitlist WHERE email = $1 AND status = 'pending'`,
+      [managerEmail],
+    );
+    expect(rows.rows[0]!.count).toBe('1');
+  });
+
+  it('the operator accepts the request through the decide endpoint (a POST form action)', async () => {
+    const rows = await getDb().query<{ id: string }>(
+      `SELECT id FROM auth_waitlist WHERE email = $1 AND status = 'pending'`,
+      [managerEmail],
+    );
+    const requestId = rows.rows[0]!.id;
+    const body = new URLSearchParams({ requestId, decision: 'accept' });
+    const result = await handleWaitlistDecidePost(
+      new Request('https://aurum.test/api/platform/waitlist/decide', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          cookie: `${SESSION_COOKIE}=${adminToken}`,
+        },
+        body: body.toString(),
+      }),
+    );
+    expect(result.location).toBe('/platform/waitlist?done=accepted');
+  });
+
+  it('the accepted manager signs in, lands unscoped, and creates the company', async () => {
+    const signedIn = await handleSignIn(
+      jsonRequest('/sign-in', { email: managerEmail, password: managerPassword() }),
+    );
+    expect(signedIn.status).toBe(200);
+    managerToken = sessionTokenFromCookieHeader(signedIn.setCookie ?? null)!;
     expect(managerToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    expect(result.body['session']).toMatchObject({
+    expect(signedIn.body['session']).toMatchObject({
       principal: { email: managerEmail },
       company: null,
     });
-  });
 
-  it('the unscoped session reads as no-company (onboarding pending)', async () => {
-    const result = await handleSessionGet(cookieRequest(managerToken, '/session', 'GET'));
-    expect(result.status).toBe(200);
-    expect(result.body['status']).toBe('no-company');
-    expect(result.body['companies']).toEqual([]);
-  });
+    const unscoped = await handleSessionGet(cookieRequest(managerToken, '/session', 'GET'));
+    expect(unscoped.body['status']).toBe('no-company');
 
-  it('creates the company through onboarding and selects it', async () => {
-    const result = await handleCompanyCreatePost(
+    const created = await handleCompanyCreatePost(
       jsonRequest('/onboarding/company', { name: `Meridian Labs ${newId().slice(0, 6)}` }, managerToken),
     );
-    expect(result.status).toBe(200);
-    expect(result.body['session']).toMatchObject({
+    expect(created.status).toBe(200);
+    expect(created.body['session']).toMatchObject({
       company: { role: 'owner', workspaceId: null },
     });
-    tenantId = (result.body['tenant'] as { id: string }).id;
+    tenantId = (created.body['tenant'] as { id: string }).id;
   });
 
   it('the session view carries the verified company, role, claims and directory', async () => {
@@ -276,17 +365,81 @@ describe('the unauthenticated boundary', () => {
     expect(result.body['error']).toBe('invalid_credentials');
   });
 
-  it('duplicate registration is a 409 email_taken', async () => {
-    const email = emailOf('dupe');
+  it('duplicate registration is a 409 email_taken (an ACTIVE account; a pending re-request is not)', async () => {
+    // A pending request re-submits indistinguishably (the waitlist).
+    const pendingEmail = emailOf('dupe');
     const first = await handleSignUp(
-      jsonRequest('/sign-up', { displayName: 'One', email, password: managerPassword() }),
+      jsonRequest('/sign-up', { displayName: 'One', email: pendingEmail, password: managerPassword() }),
     );
     expect(first.status).toBe(200);
+    expect(first.body['waitlisted']).toBe(true);
     const second = await handleSignUp(
-      jsonRequest('/sign-up', { displayName: 'Two', email, password: managerPassword() }),
+      jsonRequest('/sign-up', { displayName: 'Two', email: pendingEmail, password: managerPassword() }),
     );
-    expect(second.status).toBe(409);
-    expect(second.body['error']).toBe('email_taken');
+    expect(second.status).toBe(200);
+    expect(second.body['waitlisted']).toBe(true);
+    // An ACTIVE account (the accepted manager above) keeps email_taken.
+    const active = await handleSignUp(
+      jsonRequest('/sign-up', {
+        displayName: 'Three',
+        email: journeyManagerEmail,
+        password: managerPassword(),
+      }),
+    );
+    expect(active.status).toBe(409);
+    expect(active.body['error']).toBe('email_taken');
+  });
+
+  it('a declined request reads its state (and the admin note) on sign-in', async () => {
+    const admin = await registerUser({
+      displayName: 'Decline Admin',
+      email: emailOf('decline-admin'),
+      password: adminPassword(),
+    });
+    process.env.AURUM_PLATFORM_ADMIN_EMAILS = admin.session.principal.email;
+    const adminSession = await handleSignIn(
+      jsonRequest('/sign-in', {
+        email: admin.session.principal.email,
+        password: adminPassword(),
+      }),
+    );
+    const adminToken = sessionTokenFromCookieHeader(adminSession.setCookie ?? null)!;
+    delete process.env.AURUM_PLATFORM_ADMIN_EMAILS;
+
+    const declinedEmail = emailOf('declined-request');
+    await handleSignUp(
+      jsonRequest('/sign-up', {
+        displayName: 'Declined Person',
+        email: declinedEmail,
+        password: employeePassword(),
+      }),
+    );
+    const rows = await getDb().query<{ id: string }>(
+      `SELECT id FROM auth_waitlist WHERE email = $1 AND status = 'pending'`,
+      [declinedEmail],
+    );
+    const decided = await handleWaitlistDecidePost(
+      new Request('https://aurum.test/api/platform/waitlist/decide', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          cookie: `${SESSION_COOKIE}=${adminToken}`,
+        },
+        body: new URLSearchParams({
+          requestId: rows.rows[0]!.id,
+          decision: 'decline',
+          note: 'This round is internal only',
+        }).toString(),
+      }),
+    );
+    expect(decided.location).toBe('/platform/waitlist?done=declined');
+
+    const result = await handleSignIn(
+      jsonRequest('/sign-in', { email: declinedEmail, password: employeePassword() }),
+    );
+    expect(result.status).toBe(403);
+    expect(result.body['error']).toBe('account_declined');
+    expect(result.body['message']).toContain('This round is internal only');
   });
 });
 
@@ -300,21 +453,26 @@ describe('scope guarantees through the API', () => {
   let memberToken: string;
 
   beforeAll(async () => {
-    const email = emailOf('scope-owner');
-    const owner = await handleSignUp(
-      jsonRequest('/sign-up', { displayName: 'Scope Owner', email, password: managerPassword() }),
-    );
-    ownerToken = sessionTokenFromCookieHeader(owner.setCookie ?? null)!;
+    // W116: the HTTP fixtures use the contract's activation primitive —
+    // the waitlist gate is journey-tested above; these tests exercise
+    // the session/company API surface itself.
+    const owner = await registerUser({
+      displayName: 'Scope Owner',
+      email: emailOf('scope-owner'),
+      password: managerPassword(),
+    });
+    ownerToken = owner.token;
     const created = await handleCompanyCreatePost(
       jsonRequest('/onboarding/company', { name: `Scope Co ${newId().slice(0, 6)}` }, ownerToken),
     );
     foreignTenantId = (created.body['tenant'] as { id: string }).id;
 
-    const memberEmail = emailOf('scope-member');
-    const member = await handleSignUp(
-      jsonRequest('/sign-up', { displayName: 'Scope Member', email: memberEmail, password: employeePassword() }),
-    );
-    memberToken = sessionTokenFromCookieHeader(member.setCookie ?? null)!;
+    const member = await registerUser({
+      displayName: 'Scope Member',
+      email: emailOf('scope-member'),
+      password: employeePassword(),
+    });
+    memberToken = member.token;
   });
 
   it('switching to a company you are not a member of is a 404 company_not_available', async () => {
@@ -339,11 +497,12 @@ describe('scope guarantees through the API', () => {
   });
 
   it('sign-out revokes; the cookie is cleared and the session is uniformly gone', async () => {
-    const email = emailOf('signout-flow');
-    const issued = await handleSignUp(
-      jsonRequest('/sign-up', { displayName: 'Sign Out Flow', email, password: employeePassword() }),
-    );
-    const token = sessionTokenFromCookieHeader(issued.setCookie ?? null)!;
+    const issued = await registerUser({
+      displayName: 'Sign Out Flow',
+      email: emailOf('signout-flow'),
+      password: employeePassword(),
+    });
+    const token = issued.token;
     const before = await handleSessionGet(cookieRequest(token, '/session', 'GET'));
     expect(before.status).toBe(200);
     const out = await handleSignOut(cookieRequest(token, '/sign-out'));
@@ -356,6 +515,80 @@ describe('scope guarantees through the API', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Account settings through the API (W116) — password change + sign out everywhere
+// ---------------------------------------------------------------------------
+
+describe('account settings through the API', () => {
+  it('password change: wrong current password is a uniform 401; success keeps this session and kills others', async () => {
+    const email = emailOf('pw-change');
+    const first = await registerUser({
+      displayName: 'PW Changer',
+      email,
+      password: managerPassword(),
+    });
+    const second = await handleSignIn(
+      jsonRequest('/sign-in', { email, password: managerPassword() }),
+    );
+    const secondToken = sessionTokenFromCookieHeader(second.setCookie ?? null)!;
+    const newPassword = ['clo', 'ud', '-heron-', '55'].join('');
+
+    const wrong = await handlePasswordChangePost(
+      jsonRequest('/password/change', {
+        currentPassword: employeePassword(),
+        newPassword,
+      }, first.token),
+    );
+    expect(wrong.status).toBe(401);
+    expect(wrong.body['error']).toBe('invalid_credentials');
+
+    const changed = await handlePasswordChangePost(
+      jsonRequest('/password/change', {
+        currentPassword: managerPassword(),
+        newPassword,
+      }, first.token),
+    );
+    expect(changed.status).toBe(200);
+    expect(changed.body['session']).toMatchObject({ principal: { email } });
+
+    const thisOne = await handleSessionGet(cookieRequest(first.token, '/session', 'GET'));
+    expect(thisOne.status).toBe(200);
+    const otherOne = await handleSessionGet(cookieRequest(secondToken, '/session', 'GET'));
+    expect(otherOne.status).toBe(401);
+    const renewed = await handleSignIn(
+      jsonRequest('/sign-in', { email, password: newPassword }),
+    );
+    expect(renewed.status).toBe(200);
+  });
+
+  it('password change refuses anonymous requests uniformly', async () => {
+    const result = await handlePasswordChangePost(
+      jsonRequest('/password/change', { currentPassword: 'x'.repeat(9), newPassword: 'y'.repeat(9) }),
+    );
+    expect(result.status).toBe(401);
+    expect(result.body['error']).toBe('unauthenticated');
+  });
+
+  it('sign-out-everywhere clears the cookie and every session is gone', async () => {
+    const email = emailOf('soe-flow');
+    const first = await registerUser({
+      displayName: 'SOE Flow',
+      email,
+      password: employeePassword(),
+    });
+    const second = await handleSignIn(
+      jsonRequest('/sign-in', { email, password: employeePassword() }),
+    );
+    const secondToken = sessionTokenFromCookieHeader(second.setCookie ?? null)!;
+
+    const out = await handleSignOutEverywherePost(cookieRequest(first.token, '/sign-out-everywhere'));
+    expect(out.status).toBe(200);
+    expect(out.clearCookie).toBe(true);
+    expect((await handleSessionGet(cookieRequest(first.token, '/session', 'GET'))).status).toBe(401);
+    expect((await handleSessionGet(cookieRequest(secondToken, '/session', 'GET'))).status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Error mapping (pure)
 // ---------------------------------------------------------------------------
 
@@ -364,6 +597,8 @@ describe('mapAuthApiError', () => {
     ['unauthenticated', 401],
     ['invalid_credentials', 401],
     ['forbidden', 403],
+    ['account_pending', 403],
+    ['account_declined', 403],
     ['no_active_company', 409],
     ['email_taken', 409],
     ['invite_email_mismatch', 409],
@@ -371,6 +606,7 @@ describe('mapAuthApiError', () => {
     ['company_not_available', 404],
     ['workspace_not_available', 404],
     ['invite_not_found', 404],
+    ['waitlist_not_found', 404],
     ['tenant_member_not_found', 404],
     ['invalid_input', 400],
   ];

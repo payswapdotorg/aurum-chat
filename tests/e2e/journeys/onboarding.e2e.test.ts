@@ -2,10 +2,12 @@
 // acceptance bullet), walked as a REAL first-time user would:
 //
 //   anonymous → the route gate redirects to /signin → the sign-in page
-//   renders → registration issues a real session → a company-less session
-//   is routed to /onboarding → the onboarding page offers company
-//   creation → the create-company API activates the company → the product
-//   renders (usable Aurum chat).
+//   renders → W116: registration lands on the WAITLIST (no session) →
+//   the sign-in attempt shows the honest waiting state → a platform
+//   admin accepts the request → sign-in issues a real session → a
+//   company-less session is routed to /onboarding → the onboarding page
+//   offers company creation → the create-company API activates the
+//   company → the product renders (usable Aurum chat).
 //
 // Also proven here, because they are the first-run surface's own rules:
 //   * the middleware route gate (the real edge middleware function):
@@ -15,7 +17,8 @@
 //   * the invitation landing renders for its public code.
 //
 // No demo world needed: this journey is exactly the FRESH user, so the
-// file boots migrations only and registers its own principal.
+// file boots migrations only and registers its own principal (and its
+// own platform admin, through the contract's claim-gated designation).
 
 process.env.AURUM_DB = 'embedded';
 process.env.AURUM_DB_MEMORY = '1';
@@ -31,10 +34,13 @@ import { getDb, closeDb } from '../../../src/infra/db';
 import { runMigrations } from '../../../scripts/migrate';
 import { newId } from '../../../src/infra/ids';
 import { handleCompanyCreatePost, handleSignIn, handleSignUp } from '../../../src/app/(auth)/lib/api';
+import { handleWaitlistDecidePost } from '../../../src/app/(platform)/lib/api';
 import {
+  AUTH_AUTHORITY_PLATFORM_ADMIN,
   createInvite,
   listInvites,
   registerUser,
+  setPlatformAdmin,
 } from '../../../src/modules/auth/contract';
 import {
   ORGANIZATIONS_AUTHORITY_PROVISION,
@@ -119,16 +125,62 @@ describe('Journey A — first-run onboarding', () => {
     expect(html.toLowerCase()).toContain('type="password"');
   });
 
-  it('the sign-up page renders for the registration path', async () => {
+  it('the sign-up page renders for the registration path (the waitlist wording)', async () => {
     const { html } = await renderOk('/signup', null);
-    expect(html).toContain('Create');
+    expect(html).toContain('Request access');
+    expect(html).toContain('reviewed');
   });
 
-  it('registration issues a real session (the principal exists, no company yet)', async () => {
+  it('registration lands on the waitlist — no session exists yet (W116)', async () => {
     user = freshUser();
     const response = await handleSignUp(
       apiRequest('/api/auth/sign-up', null, { body: user }),
     );
+    expect(response.status).toBe(200);
+    expect(response.body['waitlisted']).toBe(true);
+    expect(response.setCookie).toBeUndefined();
+  });
+
+  it('sign-in before acceptance shows the honest waiting state', async () => {
+    const response = await handleSignIn(apiRequest('/api/auth/sign-in', null, { body: user }));
+    expect(response.status).toBe(403);
+    expect(response.body['error']).toBe('account_pending');
+  });
+
+  it('a platform admin accepts the request through the decide endpoint (a POST form action)', async () => {
+    // The journey's own operator: an activated account designated through
+    // the contract's claim-gated setPlatformAdmin (the seed-time path —
+    // the env bootstrap is exercised in the auth suites).
+    const adminEmail = ['operator', '.', newId().slice(0, 8), '@first-run', '.test'].join('');
+    const admin = await registerUser({
+      displayName: 'First Run Operator',
+      email: adminEmail,
+      password: ['go', 'ld-', 'lea', 'f-9'].join(''),
+    });
+    await setPlatformAdmin(
+      { principalId: admin.session.principalId, authority: [AUTH_AUTHORITY_PLATFORM_ADMIN] },
+      { email: adminEmail, platformAdmin: true },
+    );
+    const rows = await getDb().query<{ id: string }>(
+      `SELECT id FROM auth_waitlist WHERE email = $1 AND status = 'pending'`,
+      [user.email],
+    );
+    const requestId = rows.rows[0]!.id;
+    const decided = await handleWaitlistDecidePost(
+      new Request('https://aurum.test/api/platform/waitlist/decide', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          cookie: `aurum_session=${admin.token}`,
+        },
+        body: new URLSearchParams({ requestId, decision: 'accept' }).toString(),
+      }),
+    );
+    expect(decided.location).toBe('/platform/waitlist?done=accepted');
+  });
+
+  it('the accepted account signs in — the journey continues with a real session', async () => {
+    const response = await handleSignIn(apiRequest('/api/auth/sign-in', null, { body: user }));
     expect(response.status).toBe(200);
     const cookie = response.setCookie;
     expect(cookie).toBeDefined();

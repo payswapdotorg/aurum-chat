@@ -1,0 +1,508 @@
+/* ============================================================================
+   Platform surfaces (W116) — the operator's review desk.
+   Scoped under `.platform` (the root layout stays untouched; the product
+   shell, the tower and the auth surfaces keep their own stylesheets).
+
+   The W114 messenger DNA: dark-ink header bar (#241e19) over the warm
+   cream canvas, gold accent, hairline borders, contact rows with colored
+   initial tiles — the waitlist reads like a conversation list. Flat
+   surfaces + hairlines only: no gradients, no glass, no blur. 44px+
+   touch targets, visible focus, reduced-motion respect.
+   ========================================================================== */
+
+.platform {
+  --bg: #fdfaf6;
+  --surface: #fffefc;
+  --ink: #1f1915;
+  --ink-soft: #241e19;
+  --muted-ink: #69625d;
+  --faint-ink: #8f8880;
+  --line: #e3dfda;
+  --line-strong: #d6d0c8;
+  --fill: #f2f0ec;
+  --aurum: #d9952a;
+  --aurum-soft: #ffeccd;
+  --accent: #d9952a;
+  --accent-soft: #ffeccd;
+  --accent-ink: #432e14;
+  --accent-deep: #6b4a1a;
+  --risk: #e40014;
+  --risk-soft: #ffe9e6;
+  --risk-text: #9f1015;
+  --pos: #029e72;
+  --pos-soft: #d9f2e8;
+  --pos-text: #01604a;
+  --graphite: #241e19;
+  --wa-header: #241e19;
+  --wa-header-fg: #fdfaf6;
+  --wa-header-meta: #b8ab99;
+  --list-row-hover: #f3e6d4;
+
+  --font-display: 'Fraunces', Georgia, 'Times New Roman',
+    'Palatino Linotype', serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+
+  --radius-s: 8px;
+  --radius: 12px;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.platform *,
+.platform *::before,
+.platform *::after {
+  box-sizing: border-box;
+}
+
+html:has(.platform) {
+  background-color: #fdfaf6;
+}
+
+body:has(.platform) {
+  margin: 0;
+}
+
+.platform :focus-visible {
+  outline: 2px solid var(--aurum);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.platform-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.platform-skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.platform-skip:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 90;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-s);
+  padding: 10px 14px;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ---- the dark-ink header bar (the messenger DNA) ---- */
+
+.platform-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  background: var(--wa-header);
+  color: var(--wa-header-fg);
+  border-bottom: 2px solid var(--aurum);
+  flex-wrap: wrap;
+}
+
+.platform-mark {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-s);
+  background: var(--aurum);
+  color: var(--wa-header);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.platform-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.platform-subtitle {
+  margin: 1px 0 0;
+  font-size: 12px;
+  color: var(--wa-header-meta);
+}
+
+.platform-header-meta {
+  margin-left: auto;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--wa-header-meta);
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .platform-header-meta {
+    display: none;
+  }
+}
+
+/* ---- the desk ---- */
+
+.platform-main {
+  flex: 1;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 26px 20px 40px;
+}
+
+.platform-page-head {
+  margin-bottom: 20px;
+}
+
+.platform-page-head h2 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.platform-page-head p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-ink);
+  max-width: 64ch;
+}
+
+.platform-page-meta {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--faint-ink);
+}
+
+/* ---- notices (decision confirmations, honest failures) ---- */
+
+.platform-notice {
+  border: 1px solid var(--accent);
+  background: var(--aurum-soft);
+  color: var(--accent-ink);
+  border-radius: var(--radius-s);
+  padding: 10px 13px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.platform-notice[data-tone="risk"] {
+  border-color: var(--risk);
+  background: var(--risk-soft);
+  color: var(--risk-text);
+}
+
+/* ---- the section cards ---- */
+
+.platform-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 18px 16px;
+  margin-bottom: 18px;
+}
+
+.platform-section-title {
+  margin: 0 0 2px;
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.platform-section-blurb {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--muted-ink);
+}
+
+/* ---- the contact rows (the conversation-list read) ---- */
+
+.platform-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.platform-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--line);
+}
+
+.platform-rows .platform-row:last-child {
+  border-bottom: none;
+}
+
+.platform-row:hover {
+  background: var(--list-row-hover);
+}
+
+.platform-tile {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fdfaf6;
+}
+
+/* The warm deterministic palette (waitlistTileTone picks by name). */
+.platform-tile[data-tone='0'] { background: #b0762c; }
+.platform-tile[data-tone='1'] { background: #7a5c2e; }
+.platform-tile[data-tone='2'] { background: #4f6b4a; }
+.platform-tile[data-tone='3'] { background: #5f7286; }
+.platform-tile[data-tone='4'] { background: #8a5a5a; }
+.platform-tile[data-tone='5'] { background: #6b5f7a; }
+
+.platform-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.platform-row-name {
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.platform-row-email {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-ink);
+  overflow-wrap: anywhere;
+}
+
+.platform-row-meta {
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
+.platform-row-note {
+  font-size: 12px;
+  color: var(--muted-ink);
+  background: var(--fill);
+  border-left: 2px solid var(--line-strong);
+  padding: 4px 9px;
+  border-radius: 0 6px 6px 0;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+/* ---- status pills (dot + label; color never alone) ---- */
+
+.platform-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 650;
+  border: 1px solid var(--line);
+  background: var(--fill);
+  color: var(--muted-ink);
+  white-space: nowrap;
+}
+
+.platform-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.platform-pill[data-tone='pending'] {
+  border-color: var(--aurum);
+  background: var(--aurum-soft);
+  color: var(--accent-ink);
+}
+
+.platform-pill[data-tone='positive'] {
+  border-color: var(--pos);
+  background: var(--pos-soft);
+  color: var(--pos-text);
+}
+
+.platform-pill[data-tone='risk'] {
+  border-color: var(--risk);
+  background: var(--risk-soft);
+  color: var(--risk-text);
+}
+
+/* ---- the decide form (compact gold/ink actions) ---- */
+
+.platform-decide {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.platform-decide-note {
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  padding: 8px 10px;
+  min-height: 40px;
+  min-width: 180px;
+  flex: 1;
+  transition: border-color 120ms ease;
+}
+
+.platform-decide-note:focus-visible {
+  outline: 2px solid var(--aurum);
+  outline-offset: 1px;
+  border-color: var(--aurum);
+}
+
+.platform-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 7px 16px;
+  border-radius: var(--radius-s);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 120ms ease;
+}
+
+.platform-btn:hover {
+  opacity: 0.86;
+}
+
+/* Gold: the accept action — the accent the messenger's send button wears. */
+.platform-btn[data-variant='gold'] {
+  background: var(--aurum);
+  color: var(--wa-header);
+  border-color: var(--aurum);
+}
+
+/* Ink: the decline action — the dark bar's quiet counterpart. */
+.platform-btn[data-variant='ink'] {
+  background: var(--graphite);
+  color: #fdfaf6;
+  border-color: var(--graphite);
+}
+
+.platform-btn[data-variant='quiet'] {
+  background: transparent;
+  color: var(--muted-ink);
+  border-color: var(--line-strong);
+}
+
+.platform-btn[data-variant='quiet']:hover {
+  border-color: var(--aurum);
+  color: var(--accent-deep);
+  opacity: 1;
+}
+
+/* On narrow screens the actions drop under the row content, full width. */
+@media (max-width: 640px) {
+  .platform-row {
+    flex-wrap: wrap;
+  }
+
+  .platform-decide {
+    width: 100%;
+  }
+
+  .platform-decide-note {
+    min-width: 0;
+  }
+}
+
+/* ---- the honest empty state (the messenger's empty bubble) ---- */
+
+.platform-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px 16px 16px 16px;
+  background: var(--aurum-soft);
+  color: var(--accent-ink);
+  padding: 14px 16px;
+  max-width: 46ch;
+}
+
+.platform-empty strong {
+  font-size: 13.5px;
+}
+
+.platform-empty span {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ---- the footer (sticky to the bottom on short pages) ---- */
+
+.platform-footer {
+  margin-top: auto;
+  padding: 16px 22px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform *,
+  .platform *::before,
+  .platform *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

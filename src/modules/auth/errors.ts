@@ -7,6 +7,12 @@
 // `unauthenticated` (a missing, revoked, expired or otherwise unusable
 // session token) — the surface never learns WHY a token failed.
 //
+// W116 waitlist doctrine: the two waitlist states are distinguishable ONLY
+// after the requester proved password knowledge (the verifier matched the
+// stored one): `account_pending` / `account_declined`. Without that proof
+// everything stays `invalid_credentials` — a stranger cannot even learn
+// that an email is queued.
+//
 // Isolation doctrine (ADR-0001, the organizations/identity house style): a
 // company that does not verify (missing, foreign, or non-member) is one
 // uniform `company_not_available`; an invite code that does not resolve to
@@ -36,7 +42,13 @@ export type AuthErrorCode =
   /** The invite was already accepted (terminal state). */
   | 'invite_already_accepted'
   /** The principal is already a member of the invite's company. */
-  | 'already_a_member';
+  | 'already_a_member'
+  /** W116: credentials verified but the signup request awaits admin approval. */
+  | 'account_pending'
+  /** W116: credentials verified but the signup request was declined (message may carry the admin's note). */
+  | 'account_declined'
+  /** W116: no such pending waitlist request (admin-side; settled or unknown id). */
+  | 'waitlist_not_found';
 
 export class AuthError extends Error {
   constructor(

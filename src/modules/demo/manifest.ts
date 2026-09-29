@@ -215,6 +215,10 @@ export const DEMO_KEYS = {
   cellularTwilioAccount: 'twilio-acct-meridian',
   cellularSendingNumber: '+15550100142',
   cellularReachNumber: '+15550100642',
+  /** The W116 waitlist demo literals: one seeded pending access request
+   * the manager persona (a platform admin) reviews at /platform/waitlist. */
+  waitlistEmail: 'dana.whitfield@meridian-roasters.demo',
+  waitlistDisplayName: 'Dana Whitfield',
 } as const;
 
 // ---------------------------------------------------------------------------

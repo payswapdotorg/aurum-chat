@@ -10,6 +10,8 @@
 // The `demo-world` entry is the shared substrate (tenants, personas,
 // memberships, the employee's person/identity records) — not one of the
 // plan's letters, but the foundation every journey composes from.
+// W116 adds the waitlist substrate: the manager persona is a platform
+// admin and one pending access request (Dana) waits on the desk.
 
 import type { DemoJourney, DemoJourneyId } from './types';
 
@@ -19,7 +21,7 @@ export const DEMO_JOURNEYS: readonly DemoJourney[] = [
     ref: '·',
     title: 'The demo world',
     description:
-      'Three seeded tenants (the demo company, a marketplace vendor, the platform review tenant), four sign-in personas mapped to the real tenant-role ladder, the employee\u2019s person/employee/identity records, and the tenant selections that make each persona land in its company on sign-in.',
+      'Three seeded tenants (the demo company, a marketplace vendor, the platform review tenant), four sign-in personas mapped to the real tenant-role ladder, the employee\u2019s person/employee/identity records, the tenant selections that make each persona land in its company on sign-in, and the W116 waitlist substrate: the manager persona holds the platform-admin role and one pending access request waits for review.',
     primaryRole: 'manager',
     alsoExercisedBy: ['employee', 'developer', 'platform-reviewer'],
     anchorKeys: [
@@ -37,6 +39,7 @@ export const DEMO_JOURNEYS: readonly DemoJourney[] = [
       'person-employee',
       'employee-record',
       'identity-web',
+      'waitlist-request-dana',
     ],
   },
   {
