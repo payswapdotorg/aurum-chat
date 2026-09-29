@@ -36,6 +36,8 @@ export interface AuthenticatedSession {
   sessionId: string;
   principalId: string;
   principal: AuthPrincipal;
+  /** W116: the principal's platform-admin designation (the waitlist reviewer). */
+  platformAdmin: boolean;
   /** Login time of the session. */
   createdAt: string;
   /** Idle-sliding expiry (never past the absolute cap). */
@@ -72,6 +74,25 @@ export interface AuthInvite {
   acceptedBy: string | null;
 }
 
+/**
+ * One access request of the platform waitlist (W116) as the admin's roster
+ * sees it: email, display name, requested_at, status, and — once decided —
+ * the decision audit (decided_at + the deciding admin's principal id) and
+ * the optional one-line note.
+ */
+export interface WaitlistRequest {
+  id: string;
+  email: string;
+  displayName: string;
+  status: 'pending' | 'accepted' | 'declined';
+  requestedAt: string;
+  decidedAt: string | null;
+  /** The deciding admin's principal id (null while pending). */
+  decidedBy: string | null;
+  /** The admin's optional one-line note (shown to a declined requester). */
+  note: string | null;
+}
+
 /** The public face of an invitation the code-holder may read (no roster detail). */
 export interface InvitePreview {
   /** The company the invitation belongs to (resolved through the issuer's context). */
@@ -91,6 +112,53 @@ export interface RegisterUserInput {
   displayName: string;
   email: string;
   password: string;
+}
+
+/** W116: the public signup input — an invitation code, when carried by a
+ * live invite bound to the same email, bypasses the waitlist (an invite is
+ * already admin-granted trust). */
+export interface SignUpInput extends RegisterUserInput {
+  /** The invite code from a `?invite=<code>` signup link (optional). */
+  inviteCode?: string | null;
+}
+
+/**
+ * W116: the outcome of the public signup. `waitlisted` — the request was
+ * recorded (or idempotently refreshed) and NO session exists; the person
+ * sees the waitlist confirmation. `session` — the invite path granted
+ * immediate access, exactly like pre-W116 signup.
+ */
+export type SignUpOutcome =
+  | { outcome: 'waitlisted'; email: string; notice: string | null }
+  | { outcome: 'session'; session: AuthenticatedSession; token: string; notice: string | null };
+
+/** W116: record (or idempotently refresh) a waitlist access request. */
+export type RequestAccountAccessInput = RegisterUserInput;
+
+/** W116: the admin's waitlist roster read (session-token scoped). */
+export interface ListWaitlistInput {
+  token: string;
+}
+
+/** W116: one admin decision on a pending request (session-token scoped). */
+export interface DecideWaitlistInput {
+  token: string;
+  requestId: string;
+  decision: 'accept' | 'decline';
+  /** Optional one-line note (shown to a declined requester on sign-in). */
+  note?: string | null;
+}
+
+/** W116: change the password of the session's principal. */
+export interface ChangePasswordInput {
+  token: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+/** W116: revoke every session of the session's principal. */
+export interface SignOutEverywhereInput {
+  token: string;
 }
 
 export interface SignInInput {

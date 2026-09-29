@@ -571,6 +571,7 @@ export function buildShellCommands(): ShellCommand[] {
     ...CELLULAR_DESTINATIONS.map((destination) => destination.href),
     ...towerSurfaceLinks().map((link) => link.href),
     capabilityEntry('company').href,
+    capabilityEntry('password').href,
   ]);
 
   for (const area of PRODUCT_AREAS) {
@@ -736,6 +737,21 @@ export function buildShellCommands(): ShellCommand[] {
       icon: company.icon,
       keywords: company.keywords,
       target: { kind: 'navigate', href: company.href },
+    });
+  }
+
+  // W116 — the account-security destination (password & sessions):
+  // "password" and "sign out everywhere" find it, task-language first.
+  {
+    const password = capabilityEntry('password');
+    commands.push({
+      id: `account:${password.id}`,
+      title: password.label,
+      subtitle: password.summary,
+      group: 'Navigate',
+      icon: password.icon,
+      keywords: password.keywords,
+      target: { kind: 'navigate', href: password.href },
     });
   }
 

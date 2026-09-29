@@ -60,6 +60,9 @@ import {
   retryPolicySurfaceReasons,
   sessionIssuedReasons,
   sessionNoCompanyReasons,
+  waitlistAcceptedReasons,
+  waitlistPendingReasons,
+  waitlistRosterReasons,
   workerAuthFailClosedReasons,
   workerMetricsAdvancedReasons,
   workerOutcomeReasons,
@@ -156,6 +159,7 @@ function evidenceOf(response: SmokeHttpResponse): Record<string, unknown> {
 /** Every check the journey layer can emit (blocked/skipped lists stay exact). */
 const JOURNEY_CHECK_IDS: readonly string[] = [
   'auth.signup',
+  'auth.waitlist-accept',
   'auth.session-no-company',
   'auth.chat-gated-pre-onboarding',
   'auth.onboarding-company',
@@ -390,6 +394,9 @@ export async function runDeploymentSmoke(config: SmokeRunConfig): Promise<SmokeR
       workerToken,
       seamTokenGated,
       workerTokenStep: WORKER_TOKEN_STEP,
+      // W116: the operator's platform-admin credential when configured
+      // (production targets have no seeded persona to fall back on).
+      platformAdmin: config.platformAdmin ?? null,
       // W079 extension: the seeded demo journey checks are INAPPLICABLE
       // to a target that reports itself as the production environment —
       // the demo harness refuses to seed any production runtime by design
@@ -469,6 +476,8 @@ interface JourneyContext {
   /** W079: true when the target reports environment 'production' (the seeded demo checks are inapplicable there). */
   seededInapplicable: boolean;
   seededInapplicableReason: string;
+  /** W116: the operator's platform-admin credential, when configured (null on seeded targets falls back to the manager persona). */
+  platformAdmin: { email: string; password: string } | null;
 }
 
 async function runJourneyLayer(
@@ -478,7 +487,10 @@ async function runJourneyLayer(
 ): Promise<void> {
   const { runId } = context;
 
-  // --- real authentication: a fresh visitor registers ----------------------
+  // --- real authentication: a fresh visitor requests access (W116) ----------
+  // Signup lands on the WAITLIST: no session, no cookie — the signed-out
+  // confirmation state. The journey continues only after a platform admin
+  // accepts the request.
   const signUpEmail = `w078-smoke-${runId}@aurum-smoke.test`;
   const signUpPassword = `smoke-${runId}-operator`;
   const signUp = await client.post('/api/auth/sign-up', {
@@ -486,27 +498,101 @@ async function runJourneyLayer(
     email: signUpEmail,
     password: signUpPassword,
   });
-  recorder.reasons('auth.signup', sessionIssuedReasons(signUp), evidenceOf(signUp));
-  const smokeToken = sessionTokenFromSetCookie(signUp.setCookies);
+  recorder.reasons('auth.signup', waitlistPendingReasons(signUp), evidenceOf(signUp));
 
-  if (smokeToken === null) {
-    // Without a session nothing later can run — fail the rest honestly.
+  // --- the waitlist gate: a platform admin accepts the request --------------
+  const adminCredential =
+    context.platformAdmin ??
+    (context.seededInapplicable
+      ? null
+      : { email: demoPersonaSpec('manager').email, password: demoPersonaPassword() });
+  let adminSignedIn = false;
+  let acceptReasons: string[] = ['the platform admin could not sign in'];
+  if (adminCredential !== null) {
+    const adminSignIn = await client.post('/api/auth/sign-in', {
+      email: adminCredential.email,
+      password: adminCredential.password,
+    });
+    const adminToken = sessionTokenFromSetCookie(adminSignIn.setCookies);
+    if (adminToken !== null) {
+      const adminHeaders = sessionCookieHeader(adminToken);
+      adminSignedIn = true;
+      const roster = await client.get('/api/platform/waitlist', adminHeaders);
+      const rosterOutcome = waitlistRosterReasons(roster, signUpEmail);
+      acceptReasons = [...rosterOutcome.reasons];
+      if (rosterOutcome.requestId !== null) {
+        const decide = await client.post(
+          '/api/platform/waitlist/decide',
+          new URLSearchParams({ requestId: rosterOutcome.requestId, decision: 'accept' }).toString(),
+          { 'content-type': 'application/x-www-form-urlencoded', ...adminHeaders },
+        );
+        acceptReasons = [...acceptReasons, ...waitlistAcceptedReasons(decide)];
+      }
+    } else {
+      acceptReasons = ['the platform admin could not sign in', ...sessionIssuedReasons(adminSignIn)];
+    }
+  }
+
+  // --- the activated account signs in (the journey's session) ----------------
+  const smokeSignIn = await client.post('/api/auth/sign-in', {
+    email: signUpEmail,
+    password: signUpPassword,
+  });
+  const smokeToken = sessionTokenFromSetCookie(smokeSignIn.setCookies);
+  if (!adminSignedIn && adminCredential === null) {
+    // No admin credential exists on this target — the waitlist cannot be
+    // crossed automatically. Skip the rest honestly (the W116 review gate
+    // is doing exactly its job: an operator must accept the request).
     for (const id of JOURNEY_CHECK_IDS) {
-      if (id !== 'auth.signup') recorder.record(id, 'fail', 'sign-up issued no session cookie — the journey cannot continue');
+      if (id !== 'auth.signup') {
+        recorder.skipped(
+          id,
+          'W116: no platform-admin credential is configured for this target (set the smoke platformAdmin email/password, or run against a seeded target whose manager persona is a platform admin) — the waitlist request this run created is waiting for a human decision',
+        );
+      }
     }
     return;
   }
-  const smokeCookie = sessionCookieHeader(smokeToken);
+  recorder.reasons(
+    'auth.waitlist-accept',
+    smokeToken === null
+      ? [...acceptReasons, 'the activated account could not sign in with its signup password']
+      : acceptReasons,
+    { status: smokeSignIn.status },
+  );
+
+  // The smoke-dependent checks all need the activated account's session;
+  // the seeded section below runs independently (its own persona sign-in).
+  const SMOKE_SESSION_CHECK_IDS: readonly string[] = [
+    'auth.session-no-company',
+    'auth.chat-gated-pre-onboarding',
+    'auth.onboarding-company',
+    'auth.signout',
+    'routing.root-authenticated-chat',
+    'chat.state-fresh',
+    'chat.turn',
+    'chat.thread-persists',
+  ];
+  const smokeCookie = smokeToken === null ? null : sessionCookieHeader(smokeToken);
+  let executionId: string | null = null;
+  if (smokeToken === null) {
+    // Without a session the smoke-dependent checks cannot run — fail them
+    // honestly and let the independent sections speak for themselves.
+    for (const id of SMOKE_SESSION_CHECK_IDS) {
+      recorder.record(id, 'fail', 'the activated account could not sign in — the journey cannot continue');
+    }
+  } else {
+  const smokeSession = sessionCookieHeader(smokeToken);
 
   // --- the pre-onboarding state ---------------------------------------------
-  const sessionBefore = await client.get('/api/auth/session', smokeCookie);
+  const sessionBefore = await client.get('/api/auth/session', smokeSession);
   recorder.reasons(
     'auth.session-no-company',
     sessionNoCompanyReasons(sessionBefore),
     evidenceOf(sessionBefore),
   );
 
-  const chatBefore = await client.get('/api/product/chat/state', smokeCookie);
+  const chatBefore = await client.get('/api/product/chat/state', smokeSession);
   recorder.reasons(
     'auth.chat-gated-pre-onboarding',
     chatGatedNoCompanyReasons(chatBefore),
@@ -517,27 +603,28 @@ async function runJourneyLayer(
   const company = await client.post(
     '/api/auth/onboarding/company',
     { name: 'W078 Smoke Roasters', slug: `w078-smoke-${runId.toLowerCase()}` },
-    smokeCookie,
+    smokeSession,
   );
   recorder.reasons('auth.onboarding-company', companyCreatedReasons(company).reasons, evidenceOf(company));
 
   // --- chat is the primary root experience ------------------------------------
-  const rootAuthenticated = await client.get('/', smokeCookie);
+  const rootAuthenticated = await client.get('/', smokeSession);
   recorder.reasons('routing.root-authenticated-chat', authenticatedRootReasons(rootAuthenticated), {
     status: rootAuthenticated.status,
     location: rootAuthenticated.location,
   });
 
   // --- the composer turn (a full durable cognition execution) ------------------
-  const stateFresh = await client.get('/api/product/chat/state', smokeCookie);
+  const stateFresh = await client.get('/api/product/chat/state', smokeSession);
   recorder.reasons('chat.state-fresh', chatStateReasons(stateFresh).reasons, evidenceOf(stateFresh));
 
   const turn = await client.post(
     '/api/product/chat/messages',
     { text: 'What needs my attention?' },
-    smokeCookie,
+    smokeSession,
   );
   const turnOutcome = chatTurnReasons(turn);
+  executionId = turnOutcome.executionId;
   recorder.reasons('chat.turn', turnOutcome.reasons, {
     status: turn.status,
     conversationId: turnOutcome.conversationId,
@@ -547,7 +634,7 @@ async function runJourneyLayer(
   if (turnOutcome.conversationId !== null) {
     const thread = await client.get(
       `/api/product/chat/state?conversationId=${turnOutcome.conversationId}`,
-      smokeCookie,
+      smokeSession,
     );
     recorder.reasons(
       'chat.thread-persists',
@@ -561,6 +648,7 @@ async function runJourneyLayer(
       'the turn produced no conversation id — the thread cannot be re-read',
     );
   }
+  } // (the smoke-session section)
 
   // --- the seeded demo journeys -------------------------------------------------
   if (context.seededInapplicable) {
@@ -662,7 +750,7 @@ async function runJourneyLayer(
       : ({ ok: false, reason: context.workerTokenStep } as const);
   const tokenHeaders = context.workerToken === null ? undefined : { 'x-worker-token': context.workerToken };
 
-  const sessionForExecution = await client.get('/api/auth/session', smokeCookie);
+  const sessionForExecution = await client.get('/api/auth/session', smokeCookie ?? undefined);
   const sessionBody =
     sessionForExecution.status === 200 &&
     typeof sessionForExecution.body === 'object' &&
@@ -683,7 +771,6 @@ async function runJourneyLayer(
   const authority = Array.isArray(companyView['authority'])
     ? companyView['authority'].filter((claim): claim is string => typeof claim === 'string')
     : [];
-  const executionId = turnOutcome.executionId;
 
   const executionRefsReady = tenantId !== null && principalId !== null && executionId !== null;
   const refsReason = 'the chat turn or session did not expose the execution references the worker probes need';
@@ -799,8 +886,8 @@ async function runJourneyLayer(
   }
 
   // --- sign-out revokes the session ---------------------------------------------------
-  const signOut = await client.post('/api/auth/sign-out', undefined, smokeCookie);
-  const sessionAfter = await client.get('/api/auth/session', smokeCookie);
+  const signOut = await client.post('/api/auth/sign-out', undefined, smokeCookie ?? undefined);
+  const sessionAfter = await client.get('/api/auth/session', smokeCookie ?? undefined);
   const signOutReasons: string[] = [];
   if (signOut.status !== 200) signOutReasons.push(`expected HTTP 200 (got ${signOut.status})`);
   if (!signOut.setCookies.some((cookie) => cookie.startsWith('aurum_session=;'))) {

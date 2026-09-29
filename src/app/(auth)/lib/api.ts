@@ -16,16 +16,18 @@
 import { SESSION_COOKIE, resolveSessionRequest, sessionTokenFromCookieHeader } from '@/app/lib/session';
 import {
   authenticateSession,
+  changePassword,
   createCompanyForSession,
   createInvite,
   listInvites,
   redeemInvite,
-  registerUser,
   revokeInvite,
   selectCompany,
   selectWorkspace,
   signIn,
   signOut,
+  signOutEverywhere,
+  signUp,
 } from '@/modules/auth/contract';
 import { AuthError } from '@/modules/auth/contract';
 import type { AuthenticatedSession } from '@/modules/auth/contract';
@@ -73,7 +75,12 @@ export function mapAuthApiError(error: unknown): AuthApiResult {
     case 'unauthenticated':
     case 'invalid_credentials':
       return fail(401, code, message);
+    // W116: the credentials verified but the account is not usable — the
+    // requester proved password knowledge, so the waitlist states are
+    // honest 403s (they leak nothing a stranger could use).
     case 'forbidden':
+    case 'account_pending':
+    case 'account_declined':
       return fail(403, code, message);
     case 'no_active_company':
     case 'email_taken':
@@ -97,6 +104,7 @@ function sessionBody(session: AuthenticatedSession): Record<string, unknown> {
   return {
     principal: session.principal,
     company: session.company,
+    platformAdmin: session.platformAdmin,
     expiresAt: session.expiresAt,
   };
 }
@@ -144,24 +152,37 @@ async function tryRedeem(
 // Handlers
 // ---------------------------------------------------------------------------
 
-/** POST /api/auth/sign-up — register + sign in (+ optional invite redemption). */
+/**
+ * POST /api/auth/sign-up — the W116 public signup. Without a usable
+ * invitation the request lands on the waitlist: NO session, NO cookie —
+ * the body carries `waitlisted: true` so the form can render the signed-
+ * out confirmation state. A live invitation bound to the same email keeps
+ * today's immediate access (register + redeem, cookie attached).
+ */
 export async function handleSignUp(request: Request): Promise<AuthApiResult> {
   const body = await readJson(request);
   try {
     const inviteCode = typeof body['inviteCode'] === 'string' && body['inviteCode'] !== ''
       ? (body['inviteCode'] as string)
       : null;
-    const issued = await registerUser({
+    const outcome = await signUp({
       displayName: requireString(body, 'displayName'),
       email: requireString(body, 'email'),
       password: requireString(body, 'password'),
+      inviteCode,
     });
-    const notice = await tryRedeem(issued.token, inviteCode);
-    // The fresh view (redemption may have selected a company post-issue).
-    const session = await authenticateSession({ token: issued.token });
+    if (outcome.outcome === 'waitlisted') {
+      // A signed-out confirmation state — never a session, never a cookie,
+      // and nothing in the body reveals whether the email was already
+      // queued (the idempotent re-request is indistinguishable).
+      return ok({ waitlisted: true, email: outcome.email });
+    }
     return ok(
-      { session: sessionBody(session), ...(notice === null ? {} : { notice }) },
-      { setCookie: sessionCookieHeader(issued.token) },
+      {
+        session: sessionBody(outcome.session),
+        ...(outcome.notice === null ? {} : { notice: outcome.notice }),
+      },
+      { setCookie: sessionCookieHeader(outcome.token) },
     );
   } catch (error) {
     return mapAuthApiError(error);
@@ -421,6 +442,53 @@ export async function handleInviteRedeemPost(request: Request): Promise<AuthApiR
   } catch (error) {
     return mapAuthApiError(error);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Account settings (W116) — password change + sign out everywhere
+// ---------------------------------------------------------------------------
+
+/**
+ * POST /api/auth/password/change — change the password (current + new).
+ * A wrong current password is the uniform invalid_credentials; a wrong
+ * session is the uniform unauthenticated. On success every OTHER session
+ * of the principal is revoked (the module README documents the doctrine);
+ * the session that performed the change stays signed in.
+ */
+export async function handlePasswordChangePost(request: Request): Promise<AuthApiResult> {
+  const token = sessionTokenFromCookieHeader(request.headers.get('cookie'));
+  if (token === null) {
+    return fail(401, 'unauthenticated', 'no session for this request');
+  }
+  const body = await readJson(request);
+  try {
+    const session = await changePassword({
+      token,
+      currentPassword: requireString(body, 'currentPassword'),
+      newPassword: requireString(body, 'newPassword'),
+    });
+    return ok({ session: sessionBody(session) });
+  } catch (error) {
+    return mapAuthApiError(error);
+  }
+}
+
+/**
+ * POST /api/auth/sign-out-everywhere — revoke EVERY session of the
+ * principal (including the one making the request), then clear the
+ * cookie. Uniformly quiet about session state, exactly like sign-out.
+ */
+export async function handleSignOutEverywherePost(request: Request): Promise<AuthApiResult> {
+  const token = sessionTokenFromCookieHeader(request.headers.get('cookie'));
+  if (token === null) {
+    return fail(401, 'unauthenticated', 'no session for this request');
+  }
+  try {
+    await signOutEverywhere({ token });
+  } catch (error) {
+    return mapAuthApiError(error);
+  }
+  return ok({ signedOut: true }, { clearCookie: true });
 }
 
 /** Exported for route tests: the cookie name (kept in sync with the shell). */

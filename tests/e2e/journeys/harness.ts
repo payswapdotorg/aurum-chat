@@ -296,6 +296,10 @@ const PAGE_MODULES: Record<string, RouteModule> = {
     load: () => import('../../../src/app/(product)/explain/[kind]/[id]/page'),
   },
   '/more': { area: 'product', load: () => import('../../../src/app/(product)/more/page') },
+  '/more/password': {
+    area: 'product',
+    load: () => import('../../../src/app/(product)/more/password/page'),
+  },
   '/people': { area: 'product', load: () => import('../../../src/app/(product)/people/page') },
   // management mode (the tower)
   '/today': { area: 'management', load: () => import('../../../src/app/(tower)/today/page') },

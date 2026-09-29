@@ -21,8 +21,16 @@
 // The organizations module stays the sole membership authority: the auth
 // module never reads tenant_members directly; every grant (invite
 // redemption) and every check goes through its contract.
+//
+// W116 — WAITLIST-GATED SIGNUP: the PUBLIC signup path records an access
+// request on the platform waitlist (`auth_waitlist`) instead of creating a
+// principal; a platform admin accepts or declines it. `registerUser`
+// below is NOT the public signup path anymore — it is the activation
+// primitive behind the two admin-granted doors (a verified invitation, an
+// accepted waitlist request) and the demo harness's seeded personas.
 
 import { now } from '@/infra/clock';
+import { envString } from '@/infra/config';
 import { getDb, type DbRow } from '@/infra/db';
 import type { TenantContext } from '@/infra/tenant';
 import {
@@ -40,8 +48,10 @@ import { claimsForRole } from './claims';
 import { AuthError } from './errors';
 import { assertPasswordPolicy, hashPassword, verifyPassword } from './passwords';
 import { initialExpiry, inviteExpiry, isInviteExpired, isLive, renewal } from './policy';
+import { AUTH_AUTHORITY_PLATFORM_ADMIN, PLATFORM_ADMIN_EMAILS_ENV, platformAdminEmails } from './platform-admins';
 import { hashToken, mintInviteCode, mintToken } from './tokens';
 import {
+  assertDecisionNote,
   assertDisplayName,
   assertEmail,
   assertInvitableRole,
@@ -53,21 +63,29 @@ import type {
   AuthInvite,
   AuthenticatedSession,
   AuthPrincipal,
+  ChangePasswordInput,
   CreateCompanyInput,
   CreateInviteInput,
+  DecideWaitlistInput,
   GetInviteByCodeInput,
   IssuedSession,
   IssuedInvite,
   ListInvitesInput,
   ListUserCompaniesInput,
+  ListWaitlistInput,
   RedeemInviteInput,
   RegisterUserInput,
+  RequestAccountAccessInput,
   RevokeInviteInput,
   SelectCompanyInput,
   SelectWorkspaceInput,
   SignInInput,
+  SignOutEverywhereInput,
   SignOutInput,
+  SignUpInput,
+  SignUpOutcome,
   UserCompany,
+  WaitlistRequest,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -79,6 +97,7 @@ interface UserRow extends DbRow {
   email: string;
   display_name: string;
   password_hash: string;
+  is_platform_admin: boolean;
   created_at: Date | string;
   updated_at: Date | string;
 }
@@ -119,6 +138,17 @@ interface InviteRow extends DbRow {
   accepted_by: string | null;
 }
 
+interface WaitlistRow extends DbRow {
+  id: string;
+  email: string;
+  display_name: string;
+  status: string;
+  requested_at: Date | string;
+  decided_at: Date | string | null;
+  decided_by: string | null;
+  note: string | null;
+}
+
 function toIso(value: Date | string): string {
   return (value instanceof Date ? value : new Date(value)).toISOString();
 }
@@ -154,13 +184,26 @@ function toInvite(row: InviteRow): AuthInvite {
   };
 }
 
+function toWaitlistRequest(row: WaitlistRow): WaitlistRequest {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    status: row.status as WaitlistRequest['status'],
+    requestedAt: toIso(row.requested_at),
+    decidedAt: row.decided_at === null ? null : toIso(row.decided_at),
+    decidedBy: row.decided_by,
+    note: row.note,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Session plumbing (internal)
 // ---------------------------------------------------------------------------
 
 async function findUserByEmail(email: string): Promise<UserRow | null> {
   const rows = await getDb().query<UserRow>(
-    `SELECT id, email, display_name, password_hash, created_at, updated_at FROM auth_users WHERE email = $1`,
+    `SELECT id, email, display_name, password_hash, is_platform_admin, created_at, updated_at FROM auth_users WHERE email = $1`,
     [email],
   );
   return rows.rows[0] ?? null;
@@ -177,7 +220,7 @@ async function findSessionRow(token: string): Promise<SessionRow | null> {
 
 async function findUserById(userId: string): Promise<UserRow | null> {
   const rows = await getDb().query<UserRow>(
-    `SELECT id, email, display_name, password_hash, created_at, updated_at FROM auth_users WHERE id = $1`,
+    `SELECT id, email, display_name, password_hash, is_platform_admin, created_at, updated_at FROM auth_users WHERE id = $1`,
     [userId],
   );
   return rows.rows[0] ?? null;
@@ -284,6 +327,7 @@ async function buildSessionView(
     sessionId: session.id,
     principalId: user.id,
     principal: toPrincipal(user),
+    platformAdmin: user.is_platform_admin === true,
     createdAt: toIso(session.created_at),
     expiresAt: toIso(session.expires_at),
     lastSeenAt: session.last_seen_at === null ? null : toIso(session.last_seen_at),
@@ -361,13 +405,17 @@ async function autoSelectMostRecentCompany(session: SessionRow): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Registration and sign-in
+// Registration, the waitlist, and sign-in
 // ---------------------------------------------------------------------------
 
 /**
- * Register a principal AND sign it in (the product entry flow): the
- * account is created and a fresh session is issued in one operation —
- * the password is transmitted once and never re-sent through sign-in.
+ * The ACTIVATION primitive (W116): create an active principal AND sign it
+ * in. This is NOT the public signup path anymore — public signup is
+ * `signUp`/`requestAccountAccess` (the waitlist). It remains exactly what
+ * it always was for the two admin-granted doors: invitation redemption
+ * (an invite is admin-granted trust) and waitlist acceptance (the accept
+ * path copies the captured verifier, so it does not re-transmit), plus
+ * the demo harness's seeded personas.
  */
 export async function registerUser(input: RegisterUserInput): Promise<IssuedSession> {
   if (input === null || typeof input !== 'object') {
@@ -402,9 +450,310 @@ async function issueSessionFor(email: string): Promise<IssuedSession> {
   return { session: view, token };
 }
 
+// --- the waitlist (W116) ---------------------------------------------------
+
+/**
+ * Record (or idempotently refresh) one waitlist access request. The scrypt
+ * verifier is captured NOW so acceptance never needs a second password
+ * transmission. A duplicate PENDING request for the same email replaces
+ * its own pending row (latest display name, verifier and requested_at
+ * win) — never a crash, never a second row, and nothing in the outcome
+ * reveals whether the email was already queued. An email that already
+ * carries an ACTIVE principal keeps today's honest `email_taken` (the
+ * person has an account; the waitlist is not for them). Returns the
+ * pending request's id.
+ */
+export async function requestAccountAccess(
+  input: RequestAccountAccessInput,
+): Promise<string> {
+  if (input === null || typeof input !== 'object') {
+    throw new AuthError('invalid_input', 'input must be an object');
+  }
+  const displayName = assertDisplayName(input.displayName, 'displayName');
+  const email = assertEmail(input.email, 'email');
+  const password = assertPasswordPolicy(input.password);
+  const passwordHash = hashPassword(password);
+  const timestamp = now().toISOString();
+  if ((await findUserByEmail(email)) !== null) {
+    throw new AuthError('email_taken', `the email '${email}' is already registered`);
+  }
+  const refreshed = await getDb().query<{ id: string }>(
+    `UPDATE auth_waitlist SET display_name = $2, password_hash = $3, requested_at = $4
+       WHERE email = $1 AND status = 'pending' RETURNING id`,
+    [email, displayName, passwordHash, timestamp],
+  );
+  if (refreshed.rows[0] !== undefined) return refreshed.rows[0].id;
+  try {
+    const inserted = await getDb().query<{ id: string }>(
+      `INSERT INTO auth_waitlist (email, display_name, password_hash, requested_at)
+         VALUES ($1, $2, $3, $4) RETURNING id`,
+      [email, displayName, passwordHash, timestamp],
+    );
+    return inserted.rows[0]!.id;
+  } catch (error) {
+    if (isUniqueViolation(error, 'auth_waitlist_pending_email')) {
+      // Raced a concurrent re-request — refresh the winner gracefully.
+      const raced = await getDb().query<{ id: string }>(
+        `UPDATE auth_waitlist SET display_name = $2, password_hash = $3, requested_at = $4
+           WHERE email = $1 AND status = 'pending' RETURNING id`,
+        [email, displayName, passwordHash, timestamp],
+      );
+      if (raced.rows[0] !== undefined) return raced.rows[0].id;
+    }
+    throw error;
+  }
+}
+
+/**
+ * The waitlist state an unregistered email may be in: the pending request
+ * when one exists, else the most recent declined request. Purely internal
+ * — only `signIn` consults it, and only after the password verifier
+ * matched (the no-leak doctrine).
+ */
+async function findWaitlistStateByEmail(
+  email: string,
+): Promise<{ status: 'pending' | 'declined'; password_hash: string; note: string | null } | null> {
+  const rows = await getDb().query<{
+    status: string;
+    password_hash: string;
+    note: string | null;
+  }>(
+    `SELECT status, password_hash, note FROM auth_waitlist
+       WHERE email = $1 AND status IN ('pending', 'declined')
+       ORDER BY (status = 'pending') DESC, requested_at DESC, id
+       LIMIT 1`,
+    [email],
+  );
+  const row = rows.rows[0];
+  if (row === undefined) return null;
+  return {
+    status: row.status === 'pending' ? 'pending' : 'declined',
+    password_hash: row.password_hash,
+    note: row.note,
+  };
+}
+
+/** A live (pending, unexpired) invitation row for a raw code, or null. */
+async function findLiveInviteRow(code: string): Promise<InviteRow | null> {
+  const rows = await getDb().query<InviteRow>(
+    `SELECT id, tenant_id, workspace_id, email, role, token_hash, status, created_by, created_at, expires_at, accepted_at, accepted_by
+       FROM auth_invites WHERE token_hash = $1`,
+    [hashToken(code)],
+  );
+  const invite = rows.rows[0];
+  if (invite === undefined || invite.status !== 'pending') return null;
+  if (isInviteExpired(toDate(invite.expires_at), now())) return null;
+  return invite;
+}
+
+/**
+ * The PUBLIC signup (W116). Without a usable invitation the request lands
+ * on the waitlist — no principal, no session, the person sees the signed-
+ * out waitlist confirmation. A LIVE invitation bound to the same email
+ * bypasses the waitlist (an invite is already admin-granted trust) and
+ * keeps today's immediate-access behavior exactly: register + redeem in
+ * one operation. A live invitation bound to a DIFFERENT email is the
+ * honest mismatch error; a dead code carries no trust and falls through
+ * to the waitlist (the signup page has already said the link is unusable).
+ */
+export async function signUp(input: SignUpInput): Promise<SignUpOutcome> {
+  if (input === null || typeof input !== 'object') {
+    throw new AuthError('invalid_input', 'input must be an object');
+  }
+  const displayName = assertDisplayName(input.displayName, 'displayName');
+  const email = assertEmail(input.email, 'email');
+  const password = assertPasswordPolicy(input.password);
+  const inviteCode =
+    input.inviteCode === undefined || input.inviteCode === null || input.inviteCode === ''
+      ? null
+      : assertTokenShape(input.inviteCode, 'inviteCode');
+  if (inviteCode !== null) {
+    const invite = await findLiveInviteRow(inviteCode);
+    if (invite !== null) {
+      if (invite.email !== email) {
+        throw new AuthError(
+          'invite_email_mismatch',
+          'this invitation was issued to a different email address',
+        );
+      }
+      const issued = await registerUser({ displayName, email, password });
+      let notice: string | null = null;
+      try {
+        await redeemInvite({ token: issued.token, code: inviteCode });
+      } catch (error) {
+        // Same honest semantics as the pre-W116 surface: the session is
+        // live, the redemption failed — the client lands in onboarding
+        // with the notice.
+        notice = error instanceof Error ? error.message : 'the invitation could not be redeemed';
+      }
+      const session = await authenticateSession({ token: issued.token });
+      return { outcome: 'session', session, token: issued.token, notice };
+    }
+  }
+  await requestAccountAccess({ displayName, email, password });
+  return { outcome: 'waitlisted', email, notice: null };
+}
+
+// --- platform admins (W116) ------------------------------------------------
+
+/**
+ * The env bootstrap grant: on SIGN-IN of an active account, a matching
+ * AURUM_PLATFORM_ADMIN_EMAILS entry grants the platform-admin flag (fail
+ * closed when the variable is unset). The write-through persists the
+ * grant; the in-memory row is kept honest for the session view built in
+ * the same sign-in.
+ */
+async function applyPlatformAdminEnvGrant(user: UserRow): Promise<void> {
+  if (user.is_platform_admin === true) return;
+  const emails = platformAdminEmails(envString(PLATFORM_ADMIN_EMAILS_ENV));
+  if (!emails.has(user.email)) return;
+  await getDb().query(
+    `UPDATE auth_users SET is_platform_admin = true, updated_at = $2 WHERE id = $1`,
+    [user.id, now().toISOString()],
+  );
+  user.is_platform_admin = true;
+}
+
+/**
+ * The platform-admin floor for the waitlist operations: a live session
+ * whose principal carries the platform-admin flag, or the uniform
+ * `forbidden` (a signed-in regular user learns only that the operation
+ * is not theirs — the same quiet the tenant role gates keep).
+ */
+async function requirePlatformAdmin(
+  token: string,
+): Promise<{ session: SessionRow; user: UserRow }> {
+  const { session, user } = await requireLiveSession(token);
+  if (user.is_platform_admin !== true) {
+    throw new AuthError('forbidden', 'this operation requires the platform admin role');
+  }
+  return { session, user };
+}
+
+/**
+ * Designate (or undesignate) a platform admin by email — the seed-time
+ * path, claim-gated on 'auth:platform-admin' exactly like the
+ * organizations module's provisioner claim: the claim never rides a
+ * session, it exists only on an explicitly constructed PlatformContext
+ * (the demo harness builds one while seeding). Idempotent per email.
+ */
+export async function setPlatformAdmin(
+  ctx: PlatformContext,
+  input: { email: string; platformAdmin: boolean },
+): Promise<void> {
+  if (ctx === null || typeof ctx !== 'object' || !Array.isArray(ctx.authority)) {
+    throw new AuthError('invalid_input', 'ctx must be a PlatformContext');
+  }
+  assertUuid(ctx.principalId, 'ctx.principalId');
+  if (!ctx.authority.includes(AUTH_AUTHORITY_PLATFORM_ADMIN)) {
+    throw new AuthError(
+      'forbidden',
+      `this operation requires the '${AUTH_AUTHORITY_PLATFORM_ADMIN}' authority claim`,
+    );
+  }
+  if (input === null || typeof input !== 'object') {
+    throw new AuthError('invalid_input', 'input must be an object');
+  }
+  if (typeof input.platformAdmin !== 'boolean') {
+    throw new AuthError('invalid_input', 'platformAdmin must be a boolean');
+  }
+  const email = assertEmail(input.email, 'email');
+  const rows = await getDb().query<{ id: string }>(
+    `UPDATE auth_users SET is_platform_admin = $2, updated_at = $3
+       WHERE email = $1 RETURNING id`,
+    [email, input.platformAdmin, now().toISOString()],
+  );
+  if (rows.rows[0] === undefined) {
+    throw new AuthError('invalid_input', `no principal exists for '${email}'`);
+  }
+}
+
+/** The admin's waitlist roster: every request, pending first (FIFO). */
+export async function listWaitlist(input: ListWaitlistInput): Promise<WaitlistRequest[]> {
+  if (input === null || typeof input !== 'object') {
+    throw new AuthError('invalid_input', 'input must be an object');
+  }
+  await requirePlatformAdmin(input.token);
+  const rows = await getDb().query<WaitlistRow>(
+    `SELECT id, email, display_name, status, requested_at, decided_at, decided_by, note
+       FROM auth_waitlist
+       ORDER BY (status = 'pending') DESC, requested_at ASC, id`,
+  );
+  return rows.rows.map(toWaitlistRequest);
+}
+
+/**
+ * One admin decision on a pending request. ACCEPT creates the principal
+ * from the verifier captured at request time (an email that already
+ * carries an active principal — an invite let the person in first —
+ * settles without a duplicate); DECLINE records the optional one-line
+ * note the requester sees on their next sign-in attempt. Both decisions
+ * are auditable: decided_at + decided_by (the admin's principal id).
+ */
+export async function decideWaitlistRequest(
+  input: DecideWaitlistInput,
+): Promise<WaitlistRequest> {
+  if (input === null || typeof input !== 'object') {
+    throw new AuthError('invalid_input', 'input must be an object');
+  }
+  const { user: admin } = await requirePlatformAdmin(input.token);
+  const requestId = assertUuid(input.requestId, 'requestId');
+  if (input.decision !== 'accept' && input.decision !== 'decline') {
+    throw new AuthError('invalid_input', 'decision must be "accept" or "decline"');
+  }
+  const note = assertDecisionNote(input.note);
+  const pendingRows = await getDb().query<WaitlistRow & { password_hash: string }>(
+    `SELECT id, email, display_name, password_hash, status, requested_at, decided_at, decided_by, note
+       FROM auth_waitlist WHERE id = $1 AND status = 'pending'`,
+    [requestId],
+  );
+  const pending = pendingRows.rows[0];
+  if (pending === undefined) {
+    throw new AuthError('waitlist_not_found', 'no pending access request for this id');
+  }
+  if (input.decision === 'accept' && (await findUserByEmail(pending.email)) === null) {
+    const timestamp = now().toISOString();
+    try {
+      await getDb().query(
+        `INSERT INTO auth_users (email, display_name, password_hash, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $4)`,
+        [pending.email, pending.display_name, pending.password_hash, timestamp],
+      );
+    } catch (error) {
+      if (!isUniqueViolation(error, 'auth_users_email_unique')) throw error;
+      // Raced an invite-path activation — the principal exists; settle.
+    }
+  }
+  const decided = await getDb().query<WaitlistRow>(
+    `UPDATE auth_waitlist
+        SET status = $2, decided_at = $3, decided_by = $4, note = $5
+      WHERE id = $1 AND status = 'pending'
+      RETURNING id, email, display_name, status, requested_at, decided_at, decided_by, note`,
+    [
+      requestId,
+      input.decision === 'accept' ? 'accepted' : 'declined',
+      now().toISOString(),
+      admin.id,
+      note,
+    ],
+  );
+  const row = decided.rows[0];
+  if (row === undefined) {
+    throw new AuthError('waitlist_not_found', 'no pending access request for this id');
+  }
+  return toWaitlistRequest(row);
+}
+
+// --- sign-in (with the W116 waitlist states) --------------------------------
+
 /**
  * Sign in with email + password. Unknown email and wrong password are the
- * SAME error (invalid_credentials) — account existence never leaks.
+ * SAME error (invalid_credentials) — account existence never leaks. The
+ * W116 waitlist states are visible ONLY after the requester proved
+ * password knowledge against the captured verifier: a pending request
+ * reads "awaiting admin approval", a declined one reads "declined" (with
+ * the admin's note when present); without that proof everything stays the
+ * uniform invalid-credentials error.
  */
 export async function signIn(input: SignInInput): Promise<IssuedSession> {
   if (input === null || typeof input !== 'object') {
@@ -413,15 +762,85 @@ export async function signIn(input: SignInInput): Promise<IssuedSession> {
   const email = assertEmail(input.email, 'email');
   const password = assertPasswordPolicy(input.password);
   const user = await findUserByEmail(email);
-  if (user === null || !verifyPassword(password, user.password_hash)) {
-    throw new AuthError('invalid_credentials', 'email or password is incorrect');
+  if (user !== null) {
+    if (!verifyPassword(password, user.password_hash)) {
+      throw new AuthError('invalid_credentials', 'email or password is incorrect');
+    }
+    await applyPlatformAdminEnvGrant(user);
+    const token = await issueSession(user.id);
+    const { session } = await requireLiveSession(token);
+    await autoSelectMostRecentCompany(session);
+    const view = await buildSessionView(session, user);
+    return { session: view, token };
   }
-  const token = await issueSession(user.id);
-  const { session } = await requireLiveSession(token);
-  await autoSelectMostRecentCompany(session);
-  const view = await buildSessionView(session, user);
-  return { session: view, token };
+  const request = await findWaitlistStateByEmail(email);
+  if (request !== null && verifyPassword(password, request.password_hash)) {
+    if (request.status === 'pending') {
+      throw new AuthError(
+        'account_pending',
+        'your access request is awaiting admin approval',
+      );
+    }
+    throw new AuthError(
+      'account_declined',
+      request.note === null
+        ? 'your access request was declined'
+        : `your access request was declined — ${request.note}`,
+    );
+  }
+  throw new AuthError('invalid_credentials', 'email or password is incorrect');
 }
+
+// --- password change + sign out everywhere (W116) ---------------------------
+
+/**
+ * Change the password of the session's principal (current + new; the
+ * current one must verify — a wrong current password is the uniform
+ * invalid_credentials). Session doctrine (documented in the module
+ * README): every OTHER session of the principal is revoked; the session
+ * that performed the change stays signed in — the person is mid-flow,
+ * and everyone else is honestly booted to sign in again.
+ */
+export async function changePassword(
+  input: ChangePasswordInput,
+): Promise<AuthenticatedSession> {
+  if (input === null || typeof input !== 'object') {
+    throw new AuthError('invalid_input', 'input must be an object');
+  }
+  const { session, user } = await requireLiveSession(input.token);
+  const currentPassword = assertPasswordPolicy(input.currentPassword);
+  const newPassword = assertPasswordPolicy(input.newPassword);
+  if (!verifyPassword(currentPassword, user.password_hash)) {
+    throw new AuthError('invalid_credentials', 'the current password is incorrect');
+  }
+  await getDb().query(
+    `UPDATE auth_users SET password_hash = $2, updated_at = $3 WHERE id = $1`,
+    [user.id, hashPassword(newPassword), now().toISOString()],
+  );
+  await getDb().query(
+    `UPDATE auth_sessions SET revoked_at = $3
+       WHERE user_id = $1 AND revoked_at IS NULL AND id <> $2`,
+    [user.id, session.id, now().toISOString()],
+  );
+  return buildSessionView(session, user);
+}
+
+/**
+ * Sign out everywhere: revoke EVERY session of the principal (including
+ * the current one). Deliberately idempotent and uniformly quiet, exactly
+ * like signOut.
+ */
+export async function signOutEverywhere(input: SignOutEverywhereInput): Promise<void> {
+  if (input === null || typeof input !== 'object') {
+    throw new AuthError('invalid_input', 'input must be an object');
+  }
+  const { session } = await requireLiveSession(input.token);
+  await getDb().query(
+    `UPDATE auth_sessions SET revoked_at = $2 WHERE user_id = $1 AND revoked_at IS NULL`,
+    [session.user_id, now().toISOString()],
+  );
+}
+
 
 /**
  * Sign out: revoke the session. Deliberately idempotent and uniformly

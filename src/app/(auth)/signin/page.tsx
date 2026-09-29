@@ -88,11 +88,15 @@ export default async function SignInPage({
       {quickAvailable ? <QuickSignIn personas={quickPersonas} next={next} /> : null}
       <div className="aurum-auth-alt">
         <span>
+          Requested access and waiting? Signing in here shows your
+          request&apos;s status — the Aurum team reviews every one.
+        </span>
+        <span>
           New to Aurum?{' '}
           <Link
             href={inviteCode === null ? '/signup' : `/signup?invite=${encodeURIComponent(inviteCode)}`}
           >
-            Create an account
+            Request an account
           </Link>
         </span>
       </div>

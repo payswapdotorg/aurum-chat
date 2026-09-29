@@ -62,6 +62,9 @@ const {
   handleChatStateGet,
 } = await import('../../../src/app/(product)/chat/lib/chat-api');
 const { sessionTokenFromCookieHeader } = await import('../../../src/app/lib/session');
+const { handleWaitlistDecidePost, handleWaitlistListGet } = await import(
+  '../../../src/app/(platform)/lib/api',
+);
 
 // 3) The module under proof.
 const { runDeploymentSmoke } = await import('../../../src/modules/deployment-smoke/contract');
@@ -170,6 +173,15 @@ describe('W078 deployment smoke — the full matrix over real HTTP', () => {
         if (url.pathname === '/api/auth/sign-up') {
           const result = await handleSignUp(request);
           respond(res, result, result.setCookie === undefined ? {} : { 'set-cookie': result.setCookie });
+          return;
+        }
+        if (url.pathname === '/api/platform/waitlist') {
+          respond(res, await handleWaitlistListGet(request));
+          return;
+        }
+        if (url.pathname === '/api/platform/waitlist/decide') {
+          const result = await handleWaitlistDecidePost(request);
+          res.writeHead(303, { location: result.location }).end();
           return;
         }
         if (url.pathname === '/api/auth/sign-in') {

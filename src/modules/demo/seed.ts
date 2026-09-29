@@ -53,12 +53,16 @@ import { getDb, type DbRow } from '@/infra/db';
 import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import {
+  AUTH_AUTHORITY_PLATFORM_ADMIN,
   AuthError,
   claimsForRole,
   createInvite,
   listUserCompanies,
+  listWaitlist,
   registerUser,
+  requestAccountAccess,
   selectCompany,
+  setPlatformAdmin,
   signIn,
   type IssuedSession,
 } from '@/modules/auth/contract';
@@ -174,6 +178,7 @@ import type {
   DemoSeedPersona,
   DemoSeedReport,
   DemoSeedTenant,
+  DemoSeedWaitlistRequest,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -348,6 +353,16 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
   const employee = personas.get('employee')!;
   const developer = personas.get('developer')!;
   const platformReviewer = personas.get('platform-reviewer')!;
+
+  // W116 — the manager persona is the PLATFORM ADMIN (the access-waitlist
+  // reviewer). The designation goes through the auth contract's
+  // claim-gated setPlatformAdmin with a seed-time PlatformContext — the
+  // same explicit-context discipline the provisioner below follows; the
+  // claim never rides a session, and the call is idempotent per email.
+  await setPlatformAdmin(
+    { principalId: manager.principalId, authority: [AUTH_AUTHORITY_PLATFORM_ADMIN] },
+    { email: demoPersonaSpec('manager').email, platformAdmin: true },
+  );
 
   // The platform provisioner (the one explicit platform operation; scoped
   // to the provisionTenant calls below, never ambient).
@@ -536,6 +551,23 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
   await selectCompany({ token: employee.token, tenantId: companyTenantId });
   await selectCompany({ token: developer.token, tenantId: companyTenantId });
   await selectCompany({ token: platformReviewer.token, tenantId: platformTenantId });
+
+  // --- demo-world (W116): the pending access request ---------------------
+  // One waitlist request the manager (the platform admin) reviews at
+  // /platform/waitlist: accept creates Dana's account and she signs in
+  // with the demo password → onboarding → chat. Seeded through the REAL
+  // auth contract (requestAccountAccess — the public signup path).
+  await ensureAnchor(anchorCtx(), counters, 'demo-world', 'waitlist-request-dana', async () => {
+    const requestId = await requestAccountAccess({
+      displayName: DEMO_KEYS.waitlistDisplayName,
+      email: DEMO_KEYS.waitlistEmail,
+      password: demoPersonaPassword(),
+    });
+    return {
+      recordId: requestId,
+      metadata: { email: DEMO_KEYS.waitlistEmail, displayName: DEMO_KEYS.waitlistDisplayName },
+    };
+  });
 
   // --- demo-world: the employee's people/identity records ----------------
   const employeePerson = await ensureAnchor(
@@ -2095,6 +2127,20 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
     tenantRole: spec.tenantRole,
   }));
 
+  // W116 — the waitlist the demo world leaves for review: the seeded
+  // request's CURRENT state (pending on a fresh world; accepted/declined
+  // after the browser journey decided it). Read through the auth contract
+  // with the manager's session (the platform admin's own roster view).
+  const roster = await listWaitlist({ token: manager.token });
+  const waitlistRequests: DemoSeedWaitlistRequest[] = roster
+    .filter((request) => request.email === DEMO_KEYS.waitlistEmail)
+    .map((request) => ({
+      requestId: request.id,
+      email: request.email,
+      displayName: request.displayName,
+      status: request.status,
+    }));
+
   const anchorRows = await getDb().query<AnchorRow>(
     `SELECT id, tenant_id, journey_id, anchor_key, record_id, metadata, created_at
        FROM demo_journey_anchors WHERE tenant_id = $1 ORDER BY journey_id, anchor_key`,
@@ -2112,6 +2158,7 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
     seededAt: new Date().toISOString(),
     tenants,
     personas: seedPersonas,
+    waitlistRequests,
     journeys: [...journeys.entries()]
       .map(([id, anchors]) => ({
         id,

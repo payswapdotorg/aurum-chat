@@ -154,11 +154,21 @@ export interface DemoSeedPersona {
   tenantRole: DemoPersonaSpec['tenantRole'];
 }
 
+/** One seeded waitlist access request as the seed report carries it (W116). */
+export interface DemoSeedWaitlistRequest {
+  requestId: string;
+  email: string;
+  displayName: string;
+  status: 'pending' | 'accepted' | 'declined';
+}
+
 /** The result of one seeding run (the harness's own directory). */
 export interface DemoSeedReport {
   seededAt: string;
   tenants: DemoSeedTenant[];
   personas: DemoSeedPersona[];
+  /** The waitlist access requests the world leaves for review (W116). */
+  waitlistRequests: DemoSeedWaitlistRequest[];
   /** Every journey with its anchors (only journeys that seeded something). */
   journeys: { id: DemoJourneyId; title: string; anchors: DemoAnchor[] }[];
   /** The pending action requests the demo world leaves for the manager. */

@@ -500,6 +500,69 @@ export function sessionNoCompanyReasons(response: SmokeHttpResponse): string[] {
   return reasons;
 }
 
+/**
+ * W116 — the waitlist signup: 200, `waitlisted: true`, and NO session
+ * cookie (the confirmation is a signed-out state).
+ */
+export function waitlistPendingReasons(response: SmokeHttpResponse): string[] {
+  const reasons: string[] = [];
+  if (response.status !== 200) {
+    reasons.push(
+      `expected HTTP 200 (got ${response.status}: ${clip(response.text, 160)})`,
+    );
+    return reasons;
+  }
+  const body = isRecord(response.body) ? response.body : {};
+  if (body['waitlisted'] !== true) {
+    reasons.push("the body does not carry waitlisted: true — signup did not land on the waitlist");
+  }
+  if (response.setCookies.some((cookie) => cookie.startsWith('aurum_session='))) {
+    reasons.push('a session cookie was issued before admin acceptance (the waitlist gate leaked)');
+  }
+  return reasons;
+}
+
+/**
+ * W116 — the waitlist roster read (the admin's list endpoint): 200 plus
+ * the pending request id for one email, when present.
+ */
+export function waitlistRosterReasons(
+  response: SmokeHttpResponse,
+  email: string,
+): { reasons: string[]; requestId: string | null } {
+  const reasons: string[] = [];
+  if (response.status !== 200) {
+    reasons.push(`expected HTTP 200 (got ${response.status}: ${clip(response.text, 160)})`);
+    return { reasons, requestId: null };
+  }
+  const body = isRecord(response.body) ? response.body : {};
+  const requests = Array.isArray(body['requests']) ? body['requests'] : [];
+  const pending = requests
+    .filter((entry): entry is Record<string, unknown> => isRecord(entry))
+    .find((entry) => entry['email'] === email && entry['status'] === 'pending');
+  if (pending === undefined) {
+    reasons.push(`the roster does not carry a pending request for ${email}`);
+    return { reasons, requestId: null };
+  }
+  const requestId = asString(pending['id']);
+  if (requestId === null) reasons.push('the pending request carries no id');
+  return { reasons, requestId };
+}
+
+/** W116 — the decide endpoint: a redirect back to the desk with done=accepted. */
+export function waitlistAcceptedReasons(response: SmokeHttpResponse): string[] {
+  const reasons: string[] = [];
+  if (response.status !== 303) {
+    reasons.push(`expected HTTP 303 (got ${response.status}: ${clip(response.text, 160)})`);
+    return reasons;
+  }
+  if ((response.location ?? '').includes('done=accepted') !== true) {
+    reasons.push(`the decide redirect does not confirm acceptance (${response.location ?? 'no location'})`);
+  }
+  return reasons;
+}
+
+
 /** Company creation: tenant + selected company in the session view. */
 export function companyCreatedReasons(
   response: SmokeHttpResponse,

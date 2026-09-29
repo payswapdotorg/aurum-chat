@@ -55,6 +55,9 @@ function cannedFetch(): typeof fetch {
   };
   let companyCreated = false;
   let signedOut = false;
+  // W116 waitlist state: the smoke email and its acceptance.
+  let smokeEmail: string | null = null;
+  let accepted = false;
   return (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const method = (init?.method ?? 'GET').toUpperCase();
@@ -156,9 +159,63 @@ function cannedFetch(): typeof fetch {
       });
     }
     if (pathName === '/api/auth/sign-up') {
+      // W116: signup lands on the waitlist — no session, no cookie.
+      const parsed =
+        typeof init?.body === 'string' ? (JSON.parse(init.body) as Record<string, unknown>) : {};
+      smokeEmail = typeof parsed['email'] === 'string' ? parsed['email'] : null;
+      return new Response(JSON.stringify({ waitlisted: true, email: smokeEmail }), {
+        status: 200, headers: { 'content-type': 'application/json' },
+      });
+    }
+    if (pathName === '/api/platform/waitlist' && method === 'GET') {
+      if (!(headers['cookie'] ?? '').includes('aurum_session=')) {
+        return new Response(JSON.stringify({ error: 'unauthenticated' }), {
+          status: 401, headers: { 'content-type': 'application/json' },
+        });
+      }
       return new Response(
-        JSON.stringify({ session: { principal: { id: 'p1' }, company: null } }),
-        { status: 200, headers: { 'content-type': 'application/json', 'set-cookie': SESSION_COOKIE } },
+        JSON.stringify({
+          requests:
+            smokeEmail !== null && !accepted
+              ? [{ id: 'request-1', email: smokeEmail, status: 'pending' }]
+              : [],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (pathName === '/api/platform/waitlist/decide' && method === 'POST') {
+      if (!(headers['cookie'] ?? '').includes('aurum_session=')) {
+        return new Response(JSON.stringify({ error: 'unauthenticated' }), {
+          status: 401, headers: { 'content-type': 'application/json' },
+        });
+      }
+      accepted = true;
+      return new Response(null, {
+        status: 303,
+        headers: { location: '/platform/waitlist?done=accepted' },
+      });
+    }
+    if (pathName === '/api/auth/sign-in') {
+      const parsed =
+        typeof init?.body === 'string' ? (JSON.parse(init.body) as Record<string, unknown>) : {};
+      const email = typeof parsed['email'] === 'string' ? parsed['email'] : '';
+      // The certification operator (the platform admin) signs in.
+      if (email === 'op@cert.example.test') {
+        return new Response(
+          JSON.stringify({ session: { principal: { id: 'p-admin' }, company: null } }),
+          { status: 200, headers: { 'content-type': 'application/json', 'set-cookie': SESSION_COOKIE } },
+        );
+      }
+      // The smoke visitor signs in only after acceptance (W116).
+      if (smokeEmail !== null && email === smokeEmail && accepted) {
+        return new Response(
+          JSON.stringify({ session: { principal: { id: 'p1' }, company: null } }),
+          { status: 200, headers: { 'content-type': 'application/json', 'set-cookie': SESSION_COOKIE } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: 'invalid_credentials', message: 'email or password is incorrect' }),
+        { status: 401, headers: { 'content-type': 'application/json' } },
       );
     }
     if (pathName === '/api/auth/session') {
@@ -302,10 +359,19 @@ function greenW101Digest(): BrowserRunDigest {
 describe('the certification driver — one full pass over a canned production target', () => {
   let evidenceRoot: string;
   let repoRoot: string;
+  let adminEmailFile: string;
+  let adminPasswordFile: string;
 
   beforeAll(async () => {
     evidenceRoot = await mkdtemp(path.join(tmpdir(), 'w079-evidence-'));
     repoRoot = await mkdtemp(path.join(tmpdir(), 'w079-repo-'));
+    // W116: the operator's platform-admin credential — secret files, the
+    // exact worker-token pattern (read once, never written to artifacts).
+    adminEmailFile = path.join(evidenceRoot, 'platform-admin-email');
+    adminPasswordFile = path.join(evidenceRoot, 'platform-admin-password');
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(adminEmailFile, 'op@cert.example.test');
+    await writeFile(adminPasswordFile, 'the-operator-password');
   });
   afterAll(async () => {
     await rm(evidenceRoot, { recursive: true, force: true });
@@ -315,6 +381,7 @@ describe('the certification driver — one full pass over a canned production ta
   async function runPass(options: {
     workerTokenFile?: string | null;
     vercelTokenFile?: string | null;
+    platformAdmin?: boolean;
     expectedDeployment?: { deploymentId: string; commitSha: string; createdAt: string };
     digest?: BrowserRunDigest | null;
     debug?: boolean;
@@ -373,6 +440,11 @@ describe('the certification driver — one full pass over a canned production ta
       },
       workerTokenFile: options.workerTokenFile ?? null,
       vercelTokenFile: options.vercelTokenFile ?? null,
+      // W116: the operator's platform-admin credential (secret files,
+      // exactly the worker-token pattern). Defaulted on for the canned
+      // green pass; the no-admin variants turn it off.
+      platformAdminEmailFile: options.platformAdmin === false ? null : adminEmailFile,
+      platformAdminPasswordFile: options.platformAdmin === false ? null : adminPasswordFile,
       repoRoot,
       evidenceRoot,
       command: 'bun run cert:production -- --run a',

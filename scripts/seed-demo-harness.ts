@@ -76,6 +76,10 @@ async function main(): Promise<void> {
     );
   }
   console.log(`demo password (all personas): ${demoPersonaPassword()}`);
+  console.log('waitlist (the manager reviews these at /platform/waitlist):');
+  for (const request of report.waitlistRequests) {
+    console.log(`  ${request.status.padEnd(8)} ${request.email}  (${request.displayName})`);
+  }
   console.log('journeys:');
   for (const journey of report.journeys) {
     console.log(`  ${journey.id.padEnd(24)} ${String(journey.anchors.length)} anchors`);

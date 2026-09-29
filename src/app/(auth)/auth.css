@@ -298,6 +298,53 @@ body:has(.aurum-auth) {
   text-decoration: underline;
 }
 
+/* ---- W116: the waitlist confirmation (a signed-out state) ---- */
+
+.aurum-auth-waitlist {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.aurum-auth-waitlist-tile {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.aurum-auth-waitlist-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.aurum-auth-waitlist-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-ink);
+  max-width: 48ch;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 4px 14px 14px 14px;
+  padding: 10px 13px;
+}
+
+.aurum-auth-waitlist-hint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--faint-ink);
+}
+
 /* ---- quick access (demo personas) ---- */
 
 .aurum-auth-quick {

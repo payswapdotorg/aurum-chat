@@ -17,11 +17,13 @@
 //
 // Environment fallbacks: AURUM_SMOKE_BASE_URL, AURUM_SMOKE_WORKER_TOKEN,
 // AURUM_SMOKE_PROFILE, AURUM_SMOKE_EXPECT_ENVIRONMENT,
-// AURUM_SMOKE_QUICK_SIGN_IN, AURUM_SMOKE_OUT, AURUM_SMOKE_LABEL.
+// AURUM_SMOKE_QUICK_SIGN_IN, AURUM_SMOKE_OUT, AURUM_SMOKE_LABEL,
+// AURUM_SMOKE_ADMIN_EMAIL + AURUM_SMOKE_ADMIN_PASSWORD.
 //
-// The credentials rule: this script takes the worker seam token from a
-// flag or the environment and NEVER prints it (reports carry counters
-// and verdicts only — the same discipline as every other surface).
+// The credentials rule: this script takes the worker seam token and the
+// platform-admin credential from a flag or the environment and NEVER
+// prints them (reports carry counters and verdicts only — the same
+// discipline as every other surface).
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -48,6 +50,8 @@ interface CliArgs {
   allowBlocked: boolean;
   timeoutMs: number;
   noRepo: boolean;
+  adminEmail: string | null;
+  adminPassword: string | null;
 }
 
 function env(name: string): string | undefined {
@@ -69,6 +73,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
     allowBlocked: false,
     timeoutMs: 30_000,
     noRepo: false,
+    adminEmail: env('AURUM_SMOKE_ADMIN_EMAIL') ?? null,
+    adminPassword: env('AURUM_SMOKE_ADMIN_PASSWORD') ?? null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
@@ -103,6 +109,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
     else if (arg === '--allow-blocked') args.allowBlocked = true;
     else if (arg === '--no-repo') args.noRepo = true;
     else if (arg === '--timeout-ms') args.timeoutMs = Number.parseInt(next(), 10);
+    else if (arg === '--admin-email') args.adminEmail = next();
+    else if (arg === '--admin-password') args.adminPassword = next();
     else if (arg === '--help' || arg === '-h') {
       console.log(
         [
@@ -110,7 +118,12 @@ function parseArgs(argv: readonly string[]): CliArgs {
           '         [--expect-environment production|preview|staging|development]',
           '         [--worker-token <t>] [--quick-sign-in off|on|unchecked]',
           '         [--label <name>] [--out <dir>] [--allow-blocked] [--no-repo]',
-          '         [--timeout-ms <n>]',
+          '         [--timeout-ms <n>] [--admin-email <e> --admin-password <p>]',
+          '',
+          'W116: --admin-email/--admin-password (or AURUM_SMOKE_ADMIN_EMAIL +',
+          'AURUM_SMOKE_ADMIN_PASSWORD) supply the platform-admin credential the',
+          'full profile needs to accept its own waitlist signup on a production',
+          'target (a seeded target uses its manager persona instead).',
         ].join('\n'),
       );
       process.exit(0);
@@ -147,6 +160,10 @@ async function main(): Promise<number> {
     expectedEnvironment: args.expectedEnvironment ?? undefined,
     workerToken: args.workerToken,
     expectQuickSignIn: args.quickSignIn,
+    platformAdmin:
+      args.adminEmail !== null && args.adminPassword !== null
+        ? { email: args.adminEmail, password: args.adminPassword }
+        : null,
     repoRoot: args.noRepo ? null : REPO_ROOT,
     label,
     timeoutMs: args.timeoutMs,

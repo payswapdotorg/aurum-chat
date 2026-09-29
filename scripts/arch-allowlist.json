@@ -4,6 +4,7 @@
     "tenants",
     "auth_users",
     "auth_sessions",
+    "auth_waitlist",
     "marketplace_packages",
     "marketplace_package_verifications",
     "marketplace_package_reviews",

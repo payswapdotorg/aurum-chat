@@ -108,6 +108,9 @@ export default async function MorePage({
           <Link className="aurum-btn" data-variant="quiet" href="/onboarding">
             Company &amp; invitations
           </Link>
+          <Link className="aurum-btn" data-variant="quiet" href="/more/password">
+            Change password
+          </Link>
           <SignOutButton label="Sign out" />
         </div>
       </Panel>

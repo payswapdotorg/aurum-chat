@@ -72,6 +72,10 @@ function cannedTarget(environment: 'production' | 'preview'): {
   log: FetchLog[];
 } {
   const log: FetchLog[] = [];
+  // W116 waitlist state: the smoke email (captured from its sign-up) and
+  // whether the platform admin has accepted the request yet.
+  let smokeEmail: string | null = null;
+  let accepted = false;
   // the one-process worker metrics registry (health and the seam read the same numbers)
   const workerRegistry = {
     jobsEnqueued: 0,
@@ -203,15 +207,52 @@ function cannedTarget(environment: 'production' | 'preview'): {
 
     // auth + chat journey layer
     if (path === '/api/auth/sign-up' && method === 'POST') {
-      return jsonResponse(
-        {
-          session: { principal: { id: 'principal-1' }, company: null, expiresAt: '2099-01-01T00:00:00Z' },
-        },
-        200,
-        { 'set-cookie': SESSION_COOKIE },
-      );
+      // W116: signup lands on the waitlist — no session, no cookie.
+      const parsed = body === null ? {} : (JSON.parse(body) as Record<string, unknown>);
+      smokeEmail = typeof parsed['email'] === 'string' ? parsed['email'] : null;
+      return jsonResponse({ waitlisted: true, email: smokeEmail }, 200);
+    }
+    if (path === '/api/platform/waitlist' && method === 'GET') {
+      if (!(headerRecord['cookie'] ?? '').includes('aurum_session=')) {
+        return jsonResponse({ error: 'unauthenticated' }, 401);
+      }
+      return jsonResponse({
+        requests:
+          smokeEmail !== null && !accepted
+            ? [{ id: 'request-1', email: smokeEmail, status: 'pending' }]
+            : [],
+      });
+    }
+    if (path === '/api/platform/waitlist/decide' && method === 'POST') {
+      if (!(headerRecord['cookie'] ?? '').includes('aurum_session=')) {
+        return jsonResponse({ error: 'unauthenticated' }, 401);
+      }
+      accepted = true;
+      return new Response(null, {
+        status: 303,
+        headers: { location: '/platform/waitlist?done=accepted' },
+      });
     }
     if (path === '/api/auth/sign-in' && method === 'POST') {
+      const parsed = body === null ? {} : (JSON.parse(body) as Record<string, unknown>);
+      const email = typeof parsed['email'] === 'string' ? parsed['email'] : '';
+      // The configured platform-admin operator signs in (W116).
+      if (email === 'op@prod.example.test') {
+        return jsonResponse(
+          { session: { principal: { id: 'principal-admin' }, company: null } },
+          200,
+          { 'set-cookie': SESSION_COOKIE },
+        );
+      }
+      // The smoke visitor signs in only AFTER the admin accepted the
+      // waitlist request (W116: activation before session).
+      if (smokeEmail !== null && email === smokeEmail && accepted) {
+        return jsonResponse(
+          { session: { principal: { id: 'principal-1' }, company: null } },
+          200,
+          { 'set-cookie': SESSION_COOKIE },
+        );
+      }
       // The canned production target has no demo persona — honest 401.
       return jsonResponse({ error: 'invalid_credentials', message: 'email or password is incorrect' }, 401);
     }
@@ -307,6 +348,9 @@ describe('W078 driver × W079 — seeded demo checks on production targets', () 
       repoRoot: null,
       fetchImpl,
       runId: 'prodtest',
+      // W116: the operator's platform-admin credential — the production
+      // target has no seeded persona to accept the smoke waitlist request.
+      platformAdmin: { email: 'op@prod.example.test', password: 'the-operator-password' },
     });
 
     for (const id of [
@@ -327,6 +371,7 @@ describe('W078 driver × W079 — seeded demo checks on production targets', () 
     // canned production target: the production path is NOT weakened.
     for (const id of [
       'auth.signup',
+      'auth.waitlist-accept',
       'auth.session-no-company',
       'auth.chat-gated-pre-onboarding',
       'auth.onboarding-company',

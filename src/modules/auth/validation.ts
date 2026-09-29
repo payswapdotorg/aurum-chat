@@ -77,3 +77,20 @@ export function assertOptionalWorkspaceId(
   if (value === undefined || value === null) return null;
   return assertUuid(value, 'workspaceId');
 }
+
+/**
+ * An optional one-line admin note on a waitlist decision (W116): trimmed,
+ * 1–280 characters, empty becomes null.
+ */
+export function assertDecisionNote(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string') {
+    throw new AuthError('invalid_input', 'note must be a string');
+  }
+  const trimmed = value.trim();
+  if (trimmed === '') return null;
+  if (trimmed.length > 280) {
+    throw new AuthError('invalid_input', 'note must be at most 280 characters after trimming');
+  }
+  return trimmed;
+}

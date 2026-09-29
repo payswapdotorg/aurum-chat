@@ -141,6 +141,15 @@ export interface SmokeRunConfig {
   workerToken?: string | null;
   /** Expected availability of /api/auth/quick-sign-in on this target. */
   expectQuickSignIn?: QuickSignInExpectation;
+  /**
+   * W116: the platform admin the smoke uses to accept its own waitlist
+   * request (the operator's credentials on a production target, where no
+   * seeded persona exists). Optional — non-production targets fall back
+   * to the seeded manager persona (the harness designates it a platform
+   * admin); when neither is available, the post-signup journey checks
+   * skip with the documented reason.
+   */
+  platformAdmin?: { email: string; password: string } | null;
   /** Repository root for the repo-layer checks (null disables them). */
   repoRoot?: string | null;
   /** A short run label for the report (default: the target host). */
