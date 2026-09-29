@@ -32,6 +32,14 @@
 //    writes); the public catalog exposes exactly PUBLISHED/INSTALLABLE
 //    versions to every tenant; publication never implies installation
 //    (lock 26) — this module's chain ends at INSTALLABLE.
+//  * THE CATALOG'S DISPLAY CARDINALITY (W117): the public catalog lists
+//    ONE row per (kind, package_key) — the NEWEST published version —
+//    even when the append-only history holds many published versions of
+//    the same package (the production defect: automated certification
+//    runs re-registered one package nine times and the catalog showed
+//    nine near-identical listings). The collapse is per kind, composes
+//    with the kind filter, and the limit counts collapsed listings, not
+//    underlying rows; the review queue keeps every pending version.
 //  * STORAGE-LEVEL GUARANTEES: package payloads are frozen (only state
 //    and updated_at may move), DELETE/TRUNCATE are forbidden, evidence
 //    tables are append-only, the separation-of-duties trigger and the
@@ -783,6 +791,137 @@ describe('tenant isolation (platform catalog visibility)', () => {
     // pre-publication — listPackages is where their own drafts appear).
     const vendorCatalog = await listCatalogPackages(vendorA(), {});
     expect(vendorCatalog.map((pkg) => pkg.id)).not.toContain(draft.id);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The catalog's display cardinality (W117 — one listing per package)
+// ---------------------------------------------------------------------------
+
+describe('the public catalog collapses to the latest version per (kind, key)', () => {
+  // The production defect this suite pins: automated certification runs
+  // re-registered the same package many times (nine versions of one
+  // listing on /marketplace). The catalog stays append-only — every
+  // published row remains in the table and reachable by id — but the
+  // LISTING is one row per (kind, key): the newest published version.
+
+  /** Create, submit, verify, review and PUBLISH one agent package (the public gate). */
+  async function publishAgentPackage(
+    tenantId: string,
+    packageKey: string,
+    version: string,
+  ): Promise<MarketplacePackage> {
+    const submitted = await submitAgentPackage(tenantId, packageKey, version);
+    await runAutomatedVerification(platformAdmin(), { packageId: submitted.id });
+    await reviewPackage(platformAdmin(), {
+      packageId: submitted.id,
+      decision: 'approve',
+      reason: 'Clean artifact',
+    });
+    const published = await publishPackage(platformAdmin(), { packageId: submitted.id });
+    expect(published.state).toBe('PUBLISHED');
+    return published;
+  }
+
+  /** The same governed chain for an extension package, from a fresh manifest version. */
+  async function publishExtensionPackage(
+    tenantId: string,
+    extensionKey: string,
+    version: string,
+  ): Promise<MarketplacePackage> {
+    const manifestId = await registerManifest(tenantId, extensionKey, version);
+    const created = await createPackage(vendorSubmitter(tenantId), { kind: 'extension', manifestId });
+    const submitted = await submitPackage(vendorSubmitter(tenantId), { packageId: created.id });
+    await runAutomatedVerification(platformAdmin(), { packageId: submitted.id });
+    await reviewPackage(platformAdmin(), {
+      packageId: submitted.id,
+      decision: 'approve',
+      reason: 'Clean artifact',
+    });
+    const published = await publishPackage(platformAdmin(), { packageId: submitted.id });
+    expect(published.state).toBe('PUBLISHED');
+    return published;
+  }
+
+  it('lists ONE row per key — the NEWER published version (numeric semver, never text order)', async () => {
+    // Two versions of one agent key, both through the REAL governed
+    // lifecycle. 1.0.10 > 1.0.9 numerically but sorts BEFORE it as text —
+    // the collapse must follow the parsed version columns, not the string.
+    const older = await publishAgentPackage(tenantVendor, 'collapse-probe', '1.0.9');
+    const newer = await publishAgentPackage(tenantVendor, 'collapse-probe', '1.0.10');
+
+    // The catalog: exactly ONE listing for the key, and it is the newer.
+    const catalog = await listCatalogPackages(member(tenantIso), { kind: 'agent' });
+    const mine = catalog.filter((pkg) => pkg.packageKey === 'collapse-probe');
+    expect(mine).toHaveLength(1);
+    expect(mine[0]!.id).toBe(newer.id);
+    expect(mine[0]!.version).toBe('1.0.10');
+    expect(mine.map((pkg) => pkg.id)).not.toContain(older.id);
+
+    // The older version is untouched append-only history, still reachable
+    // by id (any tenant may deep-link a public row) and still listed in
+    // the vendor's own versioned view — only the CATALOG collapses.
+    const olderStillReadable = await getPackage(member(tenantIso), { packageId: older.id });
+    expect(olderStillReadable.state).toBe('PUBLISHED');
+    const vendorView = await listPackages(vendorA(), { kind: 'agent', states: ['PUBLISHED'] });
+    const mineVendor = vendorView.filter((pkg) => pkg.packageKey === 'collapse-probe');
+    expect(mineVendor.map((pkg) => pkg.id).sort()).toEqual([older.id, newer.id].sort());
+  });
+
+  it('collapses per kind and the kind filter still composes', async () => {
+    // The SAME catalog key under BOTH kinds (separate namespaces, two
+    // packages), each re-registered at a second published version.
+    await publishExtensionPackage(tenantVendor, 'kind-collapse-probe', '1.0.0');
+    const newerExtension = await publishExtensionPackage(tenantVendor, 'kind-collapse-probe', '2.0.0');
+    await publishAgentPackage(tenantVendor, 'kind-collapse-probe', '1.0.0');
+    const newerAgent = await publishAgentPackage(tenantVendor, 'kind-collapse-probe', '1.0.1');
+
+    // The kind filter composes with the collapse: one listing per kind,
+    // each the newest version of ITS kind.
+    const agentCatalog = await listCatalogPackages(member(tenantIso), { kind: 'agent' });
+    const agentMine = agentCatalog.filter((pkg) => pkg.packageKey === 'kind-collapse-probe');
+    expect(agentMine).toHaveLength(1);
+    expect(agentMine[0]!.kind).toBe('agent');
+    expect(agentMine[0]!.id).toBe(newerAgent.id);
+
+    const extensionCatalog = await listCatalogPackages(member(tenantIso), { kind: 'extension' });
+    const extensionMine = extensionCatalog.filter(
+      (pkg) => pkg.packageKey === 'kind-collapse-probe',
+    );
+    expect(extensionMine).toHaveLength(1);
+    expect(extensionMine[0]!.kind).toBe('extension');
+    expect(extensionMine[0]!.id).toBe(newerExtension.id);
+
+    // Unfiltered: both kinds' newest rows — one listing per kind, agents
+    // first (kind ASC).
+    const all = await listCatalogPackages(member(tenantIso), {});
+    const mine = all.filter((pkg) => pkg.packageKey === 'kind-collapse-probe');
+    expect(mine).toHaveLength(2);
+    expect(mine.map((pkg) => pkg.kind)).toEqual(['agent', 'extension']);
+  });
+
+  it('applies the limit AFTER the collapse — the limit counts listings, not underlying rows', async () => {
+    // Three published versions of one key. The key sorts before every
+    // other public agent package in this suite's shared database, so it
+    // deterministically occupies the first listing slot.
+    await publishAgentPackage(tenantVendor, 'aaa-collapse-limit', '1.0.0');
+    await publishAgentPackage(tenantVendor, 'aaa-collapse-limit', '1.0.1');
+    const newest = await publishAgentPackage(tenantVendor, 'aaa-collapse-limit', '1.0.2');
+
+    // limit: 1 → exactly the newest collapsed listing — three underlying
+    // public rows, one listing returned.
+    const only = await listCatalogPackages(member(tenantIso), { kind: 'agent', limit: 1 });
+    expect(only).toHaveLength(1);
+    expect(only[0]!.id).toBe(newest.id);
+    expect(only[0]!.version).toBe('1.0.2');
+
+    // limit: 2 → the SECOND slot goes to a DIFFERENT package: the older
+    // versions were collapsed away and consume no limit slots. (Without
+    // the collapse, the second row would be 'aaa-collapse-limit' 1.0.1.)
+    const page = await listCatalogPackages(member(tenantIso), { kind: 'agent', limit: 2 });
+    expect(page).toHaveLength(2);
+    expect(page[0]!.id).toBe(newest.id);
+    expect(page[1]!.packageKey).not.toBe('aaa-collapse-limit');
   });
 });
 

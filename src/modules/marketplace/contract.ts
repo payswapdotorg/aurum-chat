@@ -61,7 +61,8 @@
 //      packages in any state (nothing of another tenant's pre-publication
 //      work is ever visible — no existence leak).
 //   listCatalogPackages — the public catalog: exactly PUBLISHED and
-//      INSTALLABLE versions, readable by every tenant. Publication never
+//      INSTALLABLE packages, collapsed to the latest version per (kind,
+//      package_key), readable by every tenant. Publication never
 //      implies installation or activation (lock 26): installation
 //      records and the ACTIVE/SUSPENDED/DEPRECATED tail are downstream
 //      scope (W026/W047); this module deliberately stops at INSTALLABLE.
