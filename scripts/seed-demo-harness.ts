@@ -84,6 +84,10 @@ async function main(): Promise<void> {
   for (const approval of report.pendingApprovals) {
     console.log(`  ${approval.actionKind.padEnd(22)} ${approval.requestId}`);
   }
+  console.log('pending access requests (the manager reviews these at /platform/waitlist):');
+  for (const request of report.pendingWaitlist) {
+    console.log(`  ${request.email.padEnd(40)} ${request.displayName}`);
+  }
 }
 
 main()

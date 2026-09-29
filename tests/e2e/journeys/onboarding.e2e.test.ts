@@ -1,11 +1,14 @@
-// W070 — Journey A: first-run onboarding (the "first-run onboarding"
-// acceptance bullet), walked as a REAL first-time user would:
+// W070/W116 — Journey A: first-run onboarding (the "first-run
+// onboarding" acceptance bullet), walked as a REAL first-time user would:
 //
 //   anonymous → the route gate redirects to /signin → the sign-in page
-//   renders → registration issues a real session → a company-less session
-//   is routed to /onboarding → the onboarding page offers company
-//   creation → the create-company API activates the company → the product
-//   renders (usable Aurum chat).
+//   renders → sign-up joins the ACCESS WAITLIST (no session — the Aurum
+//   team reviews the request) → the sign-in attempt reports the pending
+//   state honestly → the platform admin accepts the request → sign-in
+//   issues a real session → a company-less session is routed to
+//   /onboarding → the onboarding page offers company creation → the
+//   create-company API activates the company → the product renders
+//   (usable Aurum chat).
 //
 // Also proven here, because they are the first-run surface's own rules:
 //   * the middleware route gate (the real edge middleware function):
@@ -15,7 +18,8 @@
 //   * the invitation landing renders for its public code.
 //
 // No demo world needed: this journey is exactly the FRESH user, so the
-// file boots migrations only and registers its own principal.
+// file boots migrations only and mints its own reviewer (the platform
+// admin that accepts the fresh request — the harness-style designation).
 
 process.env.AURUM_DB = 'embedded';
 process.env.AURUM_DB_MEMORY = '1';
@@ -32,9 +36,13 @@ import { runMigrations } from '../../../scripts/migrate';
 import { newId } from '../../../src/infra/ids';
 import { handleCompanyCreatePost, handleSignIn, handleSignUp } from '../../../src/app/(auth)/lib/api';
 import {
+  AUTH_AUTHORITY_ADMINISTER,
+  acceptWaitlistRequest,
   createInvite,
   listInvites,
+  listWaitlistRequests,
   registerUser,
+  setPlatformAdminFlag,
 } from '../../../src/modules/auth/contract';
 import {
   ORGANIZATIONS_AUTHORITY_PROVISION,
@@ -96,7 +104,7 @@ describe('the route gate (middleware)', () => {
 // The first-run journey
 // ---------------------------------------------------------------------------
 
-describe('Journey A — first-run onboarding', () => {
+describe('Journey A — first-run onboarding (the waitlist entry)', () => {
   let user: ReturnType<typeof freshUser>;
   let token: string;
 
@@ -119,16 +127,52 @@ describe('Journey A — first-run onboarding', () => {
     expect(html.toLowerCase()).toContain('type="password"');
   });
 
-  it('the sign-up page renders for the registration path', async () => {
+  it('the sign-up page renders for the waitlist request path', async () => {
     const { html } = await renderOk('/signup', null);
-    expect(html).toContain('Create');
+    expect(html).toContain('Join the waitlist');
+    expect(html).toContain('waitlist');
   });
 
-  it('registration issues a real session (the principal exists, no company yet)', async () => {
+  it('sign-up joins the waitlist: no session cookie, the honest confirmation', async () => {
     user = freshUser();
     const response = await handleSignUp(
       apiRequest('/api/auth/sign-up', null, { body: user }),
     );
+    expect(response.status).toBe(200);
+    expect(response.setCookie).toBeUndefined();
+    expect(response.body['result']).toBe('waitlisted');
+    expect(String(response.body['message'])).toContain('waitlist');
+  });
+
+  it('the sign-in attempt reports the pending state honestly (no account yet)', async () => {
+    const response = await handleSignIn(apiRequest('/api/auth/sign-in', null, { body: user }));
+    expect(response.status).toBe(403);
+    expect(response.body['error']).toBe('request_pending');
+  });
+
+  it('the platform admin accepts the request — the account becomes real', async () => {
+    // The reviewer is minted through the contract's harness designation
+    // (the seeded manager persona walks the same surface in the demo
+    // world; a fresh world has none, so the journey mints its own).
+    const adminEmail = ['reviewer', '.', newId().slice(0, 8), '@first-run', '.test'].join('');
+    const admin = await registerUser({
+      displayName: 'Platform Reviewer',
+      email: adminEmail,
+      password: ['ro', 'se-', 'gl', 'ass-5'].join(''),
+    });
+    await setPlatformAdminFlag(
+      { principalId: admin.session.principalId, authority: [AUTH_AUTHORITY_ADMINISTER] },
+      { email: adminEmail, platformAdmin: true },
+    );
+    const queue = await listWaitlistRequests({ token: admin.token });
+    const request = queue.find((entry) => entry.email === user.email);
+    expect(request).toBeDefined();
+    const decided = await acceptWaitlistRequest({ token: admin.token, requestId: request!.id });
+    expect(decided.status).toBe('accepted');
+  });
+
+  it('sign-in issues a real session for the accepted account (no company yet)', async () => {
+    const response = await handleSignIn(apiRequest('/api/auth/sign-in', null, { body: user }));
     expect(response.status).toBe(200);
     const cookie = response.setCookie;
     expect(cookie).toBeDefined();

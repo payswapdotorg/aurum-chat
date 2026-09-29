@@ -124,6 +124,13 @@ export interface DemoPersonaSpec {
   title: string;
   /** The tenant role granted to the persona (mirrors DemoRole.tenantRole). */
   tenantRole: 'owner' | 'admin' | 'member';
+  /**
+   * W116: the persona also carries the PLATFORM-admin flag (the waitlist
+   * review). Defaults to false; only the manager persona of the demo
+   * world is a platform admin, so the whole accept/decline journey is
+   * demonstrable through the real /platform/waitlist surface.
+   */
+  platformAdmin?: boolean;
 }
 
 /** One recorded seed anchor: (journey, key) → the seeded record id. */
@@ -163,6 +170,8 @@ export interface DemoSeedReport {
   journeys: { id: DemoJourneyId; title: string; anchors: DemoAnchor[] }[];
   /** The pending action requests the demo world leaves for the manager. */
   pendingApprovals: { actionKind: string; requestId: string }[];
+  /** W116: the pending waitlist requests the demo world leaves for review. */
+  pendingWaitlist: { email: string; displayName: string; requestId: string }[];
   /** Anchors newly created by this run vs. already present (idempotent re-runs). */
   created: number;
   skipped: number;

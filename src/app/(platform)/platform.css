@@ -1,0 +1,488 @@
+/* ============================================================================
+   Platform admin surface (W116) — /platform/waitlist and the group's shell.
+   Scoped under `.aurum-platform` (the root layout stays untouched; the
+   product shell, the tower and the auth card keep their own stylesheets).
+
+   The W114 messenger language: thread-sand canvas, dark-ink header bar,
+   gold accent, hairline dividers, 44px+ touch targets, visible focus,
+   no gradients, no glass. Reads like a conversation list — request rows
+   are contact rows (colored initial tiles, name + email + date), status
+   pills pair a tone with a label (color never carries meaning alone).
+   ========================================================================== */
+
+.aurum-platform {
+  --wa-bg: #f7ede0;
+  --wa-bubble-in: #fffdf9;
+  --wa-bubble-out: #ffeccd;
+  --wa-bubble-out-fg: #1f1915;
+  --wa-header: #241e19;
+  --wa-header-fg: #fdfaf6;
+  --wa-header-meta: #b8ab99;
+  --wa-online: #d9952a;
+  --wa-panel: #fffefc;
+  --wa-send: #d9952a;
+  --wa-divider: #eadbca;
+  --wa-meta: #8a7a66;
+  --wa-surface: #fffefc;
+  --wa-ink: #1f1915;
+  --wa-ink-soft: #241e19;
+  --wa-line: #e3dfda;
+  --wa-line-strong: #d6d0c8;
+  --wa-fill: #f2f0ec;
+  --wa-muted-ink: #69625d;
+  --wa-faint-ink: #8f8880;
+  --wa-accent: #d9952a;
+  --wa-accent-soft: #ffeccd;
+  --wa-accent-ink: #432e14;
+  --wa-accent-deep: #6b4a1a;
+  --wa-risk: #e40014;
+  --wa-risk-soft: #ffe9e6;
+  --wa-risk-text: #9f1015;
+  --wa-graphite: #241e19;
+  --wa-ring: #d9952a;
+  --wa-radius-s: 8px;
+  --wa-radius: 12px;
+
+  --font-display: 'Fraunces', Georgia, 'Times New Roman',
+    'Palatino Linotype', serif;
+  --font-body: 'Geist', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--wa-bg);
+  color: var(--wa-ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.aurum-platform *,
+.aurum-platform *::before,
+.aurum-platform *::after {
+  box-sizing: border-box;
+}
+
+html:has(.aurum-platform) {
+  background-color: #f7ede0;
+}
+
+body:has(.aurum-platform) {
+  margin: 0;
+}
+
+.aurum-platform :focus-visible {
+  outline: 2px solid var(--wa-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.aurum-platform-skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.aurum-platform-skip:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 90;
+  background: var(--wa-surface);
+  border: 1px solid var(--wa-accent);
+  border-radius: var(--wa-radius-s);
+  padding: 10px 14px;
+  color: var(--wa-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ---- the dark-ink header bar (the thread-header read) ---- */
+
+.aurum-platform-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--wa-header);
+  color: var(--wa-header-fg);
+  padding: 14px 18px;
+  flex-wrap: wrap;
+}
+
+.aurum-platform-mark {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--wa-radius-s);
+  background: var(--wa-send);
+  color: var(--wa-header);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.aurum-platform-heading {
+  flex: 1;
+  min-width: 220px;
+}
+
+.aurum-platform-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.aurum-platform-subtitle {
+  margin: 1px 0 0;
+  font-size: 12px;
+  color: var(--wa-header-meta);
+}
+
+.aurum-platform-back {
+  color: var(--wa-header-fg);
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 650;
+  border: 1px solid rgba(253, 250, 246, 0.28);
+  border-radius: 999px;
+  padding: 8px 14px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.aurum-platform-back:hover {
+  border-color: var(--wa-send);
+  background: rgba(217, 149, 42, 0.16);
+}
+
+/* ---- the main column ---- */
+
+.aurum-platform-main {
+  flex: 1;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 26px 18px 40px;
+}
+
+.aurum-platform-title-block {
+  margin: 0 0 14px;
+}
+
+.aurum-platform-page-title {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.aurum-platform-page-blurb {
+  margin: 0;
+  font-size: 13px;
+  color: var(--wa-muted-ink);
+  max-width: 60ch;
+}
+
+/* ---- the request list: contact rows on a cream panel ---- */
+
+.aurum-waitlist-panel {
+  background: var(--wa-panel);
+  border: 1px solid var(--wa-divider);
+  border-radius: var(--wa-radius);
+  overflow: hidden;
+}
+
+.aurum-waitlist-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aurum-waitlist-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--wa-divider);
+  background: var(--wa-surface);
+}
+
+.aurum-waitlist-row:last-child {
+  border-bottom: none;
+}
+
+.aurum-waitlist-tile {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #fdfaf6;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* One stable warm hue per row (the contact-block pattern; warm family only). */
+.aurum-waitlist-tile[data-hue='0'] { background: #d9952a; }
+.aurum-waitlist-tile[data-hue='1'] { background: #3da35d; }
+.aurum-waitlist-tile[data-hue='2'] { background: #0f766e; }
+.aurum-waitlist-tile[data-hue='3'] { background: #b4571f; }
+.aurum-waitlist-tile[data-hue='4'] { background: #7c4a5e; }
+.aurum-waitlist-tile[data-hue='5'] { background: #c0603a; }
+
+.aurum-waitlist-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.aurum-waitlist-name {
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.aurum-waitlist-email {
+  font-size: 12.5px;
+  color: var(--wa-muted-ink);
+  overflow-wrap: anywhere;
+}
+
+.aurum-waitlist-meta {
+  font-size: 11.5px;
+  color: var(--wa-faint-ink);
+}
+
+.aurum-waitlist-note {
+  font-size: 12px;
+  color: var(--wa-muted-ink);
+  border-left: 3px solid var(--wa-divider);
+  padding: 2px 0 2px 9px;
+  margin-top: 2px;
+  max-width: 56ch;
+}
+
+.aurum-waitlist-side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.aurum-waitlist-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+  border: 1px solid var(--wa-line);
+  background: var(--wa-fill);
+  color: var(--wa-muted-ink);
+}
+
+.aurum-waitlist-pill::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.aurum-waitlist-pill[data-tone='positive'] {
+  border-color: var(--wa-accent);
+  background: var(--wa-accent-soft);
+  color: var(--wa-accent-ink);
+}
+
+.aurum-waitlist-pill[data-tone='neutral'] {
+  border-color: var(--wa-line);
+  background: var(--wa-fill);
+  color: var(--wa-muted-ink);
+}
+
+.aurum-waitlist-pill[data-tone='risk'] {
+  border-color: var(--wa-risk);
+  background: var(--wa-risk-soft);
+  color: var(--wa-risk-text);
+}
+
+/* ---- the decision actions (compact gold/ink buttons) ---- */
+
+.aurum-waitlist-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.aurum-waitlist-accept {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: var(--wa-radius-s);
+  border: 1px solid var(--wa-send);
+  background: var(--wa-send);
+  color: #fffefc;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.aurum-waitlist-accept:hover {
+  opacity: 0.88;
+}
+
+.aurum-waitlist-accept:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.aurum-waitlist-decline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: var(--wa-radius-s);
+  border: 1px solid var(--wa-line-strong);
+  background: transparent;
+  color: var(--wa-muted-ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.aurum-waitlist-decline:hover {
+  border-color: var(--wa-risk);
+  color: var(--wa-risk-text);
+}
+
+.aurum-waitlist-decline:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* The decline-with-note disclosure (one optional line, messenger-plain). */
+.aurum-waitlist-note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  max-width: 380px;
+  margin-left: auto;
+}
+
+.aurum-waitlist-note-input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--wa-ink);
+  background: var(--wa-surface);
+  border: 1px solid var(--wa-line-strong);
+  border-radius: var(--wa-radius-s);
+  padding: 8px 11px;
+  min-height: 40px;
+  width: 100%;
+  transition: border-color 120ms ease;
+}
+
+.aurum-waitlist-note-input:focus-visible {
+  outline: 2px solid var(--wa-accent);
+  outline-offset: 1px;
+  border-color: var(--wa-accent);
+}
+
+.aurum-waitlist-error {
+  border: 1px solid var(--wa-risk);
+  background: var(--wa-risk-soft);
+  color: var(--wa-risk-text);
+  border-radius: var(--wa-radius-s);
+  padding: 9px 11px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 12px 0 0;
+}
+
+/* ---- the honest empty bubble ---- */
+
+.aurum-waitlist-empty {
+  margin: 0;
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 14px 14px 14px 4px;
+  padding: 14px 16px;
+  font-size: 13.5px;
+  color: var(--wa-muted-ink);
+  max-width: 46ch;
+}
+
+/* ---- footer (sticky bottom, the shell contract) ---- */
+
+.aurum-platform-footer {
+  padding: 16px 18px;
+  border-top: 1px solid var(--wa-divider);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--wa-faint-ink);
+  background: var(--wa-bg);
+}
+
+@media (max-width: 640px) {
+  .aurum-waitlist-row {
+    flex-wrap: wrap;
+  }
+
+  .aurum-waitlist-side {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .aurum-waitlist-actions {
+    justify-content: flex-start;
+  }
+
+  .aurum-waitlist-note-form {
+    margin-left: 0;
+  }
+
+  .aurum-platform-header {
+    padding: 12px 14px;
+  }
+
+  .aurum-platform-main {
+    padding: 20px 14px 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurum-platform *,
+  .aurum-platform *::before,
+  .aurum-platform *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -135,7 +135,24 @@ const SMOKE_CHECKS: readonly SmokeCheckSpec[] = [
   // --- authentication / onboarding (bullet 1) ----------------------------
   {
     id: 'auth.signup',
-    title: 'a fresh visitor registers a real account and receives a session cookie',
+    title:
+      'a fresh visitor\u2019s sign-up joins the access waitlist: 200, the confirmation body, and NO session cookie (W116 — an admin accepts accounts before they exist)',
+    category: 'authentication-onboarding',
+    layer: 'journey',
+    acceptance: 'sign-in/onboarding works on the hosted deployment',
+  },
+  {
+    id: 'auth.waitlist-accept',
+    title:
+      'the platform admin reviews the queue and accepts the request through the real API (decisions are auditable)',
+    category: 'authentication-onboarding',
+    layer: 'journey',
+    acceptance: 'sign-in/onboarding works on the hosted deployment',
+  },
+  {
+    id: 'auth.signin-accepted',
+    title:
+      'the accepted account signs in with the password chosen at request time and receives the session cookie',
     category: 'authentication-onboarding',
     layer: 'journey',
     acceptance: 'sign-in/onboarding works on the hosted deployment',

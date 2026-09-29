@@ -48,12 +48,16 @@ describe('capability hub completeness', () => {
   it('every static non-auth page route is a hub entry (nothing is More-missing)', () => {
     // The auth entry flow is reachable by design (route-gate redirects)
     // and /more is the page itself; everything else a user can open
-    // must be findable from the capability hub.
+    // must be findable from the capability hub. The platform area (W116)
+    // is admin-gated — a regular user CANNOT open it, and advertising it
+    // in their hub would leak the admin surface's existence (the /more
+    // Account panel links it only for platform admins).
     const inScope = pageRoutes()
       .filter(
         (route) =>
           route.kind === 'page' &&
           route.area !== 'auth' &&
+          route.area !== 'platform' &&
           !route.path.includes(':') &&
           route.path !== '/more',
       )

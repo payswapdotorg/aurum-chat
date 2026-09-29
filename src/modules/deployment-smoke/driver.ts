@@ -60,6 +60,9 @@ import {
   retryPolicySurfaceReasons,
   sessionIssuedReasons,
   sessionNoCompanyReasons,
+  waitlistAcceptedReasons,
+  waitlistJoinedReasons,
+  waitlistQueueReasons,
   workerAuthFailClosedReasons,
   workerMetricsAdvancedReasons,
   workerOutcomeReasons,
@@ -156,6 +159,8 @@ function evidenceOf(response: SmokeHttpResponse): Record<string, unknown> {
 /** Every check the journey layer can emit (blocked/skipped lists stay exact). */
 const JOURNEY_CHECK_IDS: readonly string[] = [
   'auth.signup',
+  'auth.waitlist-accept',
+  'auth.signin-accepted',
   'auth.session-no-company',
   'auth.chat-gated-pre-onboarding',
   'auth.onboarding-company',
@@ -390,6 +395,8 @@ export async function runDeploymentSmoke(config: SmokeRunConfig): Promise<SmokeR
       workerToken,
       seamTokenGated,
       workerTokenStep: WORKER_TOKEN_STEP,
+      adminEmail: config.adminEmail ?? null,
+      adminPassword: config.adminPassword ?? null,
       // W079 extension: the seeded demo journey checks are INAPPLICABLE
       // to a target that reports itself as the production environment —
       // the demo harness refuses to seed any production runtime by design
@@ -469,6 +476,17 @@ interface JourneyContext {
   /** W079: true when the target reports environment 'production' (the seeded demo checks are inapplicable there). */
   seededInapplicable: boolean;
   seededInapplicableReason: string;
+  /** W116: the operator's platform-admin credentials for an unseeded target (null on seeded targets). */
+  adminEmail: string | null;
+  adminPassword: string | null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function asStringStrict(value: unknown): string {
+  return typeof value === 'string' ? value : '';
 }
 
 async function runJourneyLayer(
@@ -478,7 +496,12 @@ async function runJourneyLayer(
 ): Promise<void> {
   const { runId } = context;
 
-  // --- real authentication: a fresh visitor registers ----------------------
+  // --- real authentication: the W116 waitlist journey -----------------------
+  // A fresh visitor's sign-up joins the ACCESS WAITLIST (no session is
+  // issued — an account exists only after a platform admin accepts the
+  // request). The journey then drives the REAL review surface: the
+  // platform admin reads the queue and accepts the smoke request; the
+  // accepted account signs in with the password chosen at request time.
   const signUpEmail = `w078-smoke-${runId}@aurum-smoke.test`;
   const signUpPassword = `smoke-${runId}-operator`;
   const signUp = await client.post('/api/auth/sign-up', {
@@ -486,13 +509,90 @@ async function runJourneyLayer(
     email: signUpEmail,
     password: signUpPassword,
   });
-  recorder.reasons('auth.signup', sessionIssuedReasons(signUp), evidenceOf(signUp));
-  const smokeToken = sessionTokenFromSetCookie(signUp.setCookies);
+  recorder.reasons('auth.signup', waitlistJoinedReasons(signUp), evidenceOf(signUp));
+
+  // The platform admin who reviews: the SEEDED manager persona (any
+  // seeded target — she carries the flag), or the operator's designated
+  // account on an unseeded production target (adminEmail/adminPassword).
+  let adminCookie: Record<string, string> | null = null;
+  if (!context.seededInapplicable) {
+    const manager = demoPersonaSpec('manager');
+    const managerSignIn = await client.post('/api/auth/sign-in', {
+      email: manager.email,
+      password: demoPersonaPassword(),
+    });
+    const managerToken = sessionTokenFromSetCookie(managerSignIn.setCookies);
+    adminCookie = managerToken === null ? null : sessionCookieHeader(managerToken);
+  } else if (context.adminEmail !== null && context.adminPassword !== null) {
+    const operatorSignIn = await client.post('/api/auth/sign-in', {
+      email: context.adminEmail,
+      password: context.adminPassword,
+    });
+    const operatorToken = sessionTokenFromSetCookie(operatorSignIn.setCookies);
+    adminCookie = operatorToken === null ? null : sessionCookieHeader(operatorToken);
+  }
+
+  if (adminCookie === null) {
+    // No reviewer reachable: the waitlist acceptance, the accepted sign-in
+    // and every smoke-session-dependent check are honestly blocked with
+    // the operator's unblocking path (never a fake pass — the waitlist
+    // gate did its job). The SEEDED persona layer still runs on
+    // non-production targets: it signs its own manager in and fails
+    // honestly on a target without the demo world (the W079 semantics).
+    const reason = context.seededInapplicable
+      ? 'the waitlist acceptance on production requires the operator platform-admin account (AURUM_SMOKE_ADMIN_EMAIL / AURUM_SMOKE_ADMIN_PASSWORD or --admin-email/--admin-password; designate it through AURUM_PLATFORM_ADMIN_EMAILS on the deployment)'
+      : 'no platform admin could sign in — the request cannot be accepted (the seeded manager persona on a demo target, or the operator account via AURUM_SMOKE_ADMIN_EMAIL/AURUM_SMOKE_ADMIN_PASSWORD)';
+    const seededIds = new Set([
+      'seeded.persona-signin',
+      'seeded.conversation-list',
+      'seeded.thread',
+      'seeded.attention-turn',
+      'seeded.approval-decided',
+    ]);
+    for (const id of JOURNEY_CHECK_IDS) {
+      if (id !== 'auth.signup' && !seededIds.has(id)) recorder.record(id, 'blocked', reason);
+    }
+    await runSeededPersonaLayer(recorder, client, context);
+    return;
+  }
+
+  const queue = await client.get('/api/platform/waitlist', adminCookie);
+  const queueReasons = waitlistQueueReasons(queue);
+  const queueBody = isRecord(queue.body) ? queue.body : {};
+  const queueRequests = Array.isArray(queueBody['requests'])
+    ? (queueBody['requests'] as unknown[]).filter(
+        (entry): entry is Record<string, unknown> => isRecord(entry),
+      )
+    : [];
+  const smokeRequest = queueRequests.find((entry) => entry['email'] === signUpEmail);
+  const smokeRequestId = smokeRequest === undefined ? null : asStringStrict(smokeRequest['id']);
+  if (smokeRequest === undefined) queueReasons.push('the smoke request is not in the review queue');
+  if (queueReasons.length > 0 || smokeRequestId === null) {
+    if (queueReasons.length === 0) queueReasons.push('the smoke request id is absent');
+    recorder.record('auth.waitlist-accept', 'fail', queueReasons.join('; '), evidenceOf(queue));
+  } else {
+    const accept = await client.post(
+      '/api/platform/waitlist/accept',
+      { requestId: smokeRequestId },
+      adminCookie,
+    );
+    recorder.reasons('auth.waitlist-accept', waitlistAcceptedReasons(accept), evidenceOf(accept));
+  }
+
+  // The accepted account signs in — the session the journey continues on.
+  const smokeSignIn = await client.post('/api/auth/sign-in', {
+    email: signUpEmail,
+    password: signUpPassword,
+  });
+  recorder.reasons('auth.signin-accepted', sessionIssuedReasons(smokeSignIn), evidenceOf(smokeSignIn));
+  const smokeToken: string | null = sessionTokenFromSetCookie(smokeSignIn.setCookies);
 
   if (smokeToken === null) {
     // Without a session nothing later can run — fail the rest honestly.
     for (const id of JOURNEY_CHECK_IDS) {
-      if (id !== 'auth.signup') recorder.record(id, 'fail', 'sign-up issued no session cookie — the journey cannot continue');
+      if (id !== 'auth.signup' && id !== 'auth.waitlist-accept' && id !== 'auth.signin-accepted') {
+        recorder.record(id, 'fail', 'the accepted account sign-in issued no session cookie — the journey cannot continue');
+      }
     }
     return;
   }
@@ -562,98 +662,8 @@ async function runJourneyLayer(
     );
   }
 
-  // --- the seeded demo journeys -------------------------------------------------
-  if (context.seededInapplicable) {
-    for (const id of [
-      'seeded.persona-signin',
-      'seeded.conversation-list',
-      'seeded.thread',
-      'seeded.attention-turn',
-      'seeded.approval-decided',
-    ]) {
-      recorder.skipped(id, context.seededInapplicableReason, {
-        targetEnvironment: 'production',
-      });
-    }
-  } else {
-  const manager = demoPersonaSpec('manager');
-  const managerSignIn = await client.post('/api/auth/sign-in', {
-    email: manager.email,
-    password: demoPersonaPassword(),
-  });
-  recorder.reasons('seeded.persona-signin', sessionIssuedReasons(managerSignIn), {
-    status: managerSignIn.status,
-    persona: 'manager',
-    email: manager.email,
-  });
-  const managerToken = sessionTokenFromSetCookie(managerSignIn.setCookies);
-
-  if (managerToken === null) {
-    for (const id of ['seeded.conversation-list', 'seeded.thread', 'seeded.attention-turn', 'seeded.approval-decided']) {
-      recorder.record(id, 'fail', 'the seeded manager persona could not sign in');
-    }
-  } else {
-    const managerCookie = sessionCookieHeader(managerToken);
-
-    const seededState = await client.get('/api/product/chat/state', managerCookie);
-    const seededList = chatStateReasons(seededState, { expectTitle: SEEDED_CONVERSATION_TITLE });
-    recorder.reasons('seeded.conversation-list', seededList.reasons, {
-      status: seededState.status,
-      expectedTitle: SEEDED_CONVERSATION_TITLE,
-    });
-
-    if (seededList.conversationId !== null) {
-      const seededThread = await client.get(
-        `/api/product/chat/state?conversationId=${seededList.conversationId}`,
-        managerCookie,
-      );
-      recorder.reasons(
-        'seeded.thread',
-        chatStateReasons(seededThread, { expectThreadMessages: 4 }).reasons,
-        { conversationId: seededList.conversationId, status: seededThread.status },
-      );
-
-      // The attention turn surfaces the seeded pending approval (Journey E).
-      const attention = await client.post(
-        '/api/product/chat/messages',
-        { conversationId: seededList.conversationId, text: 'What needs my attention?' },
-        managerCookie,
-      );
-      const attentionOutcome = approvalCardReasons(attention);
-      recorder.reasons('seeded.attention-turn', attentionOutcome.reasons, {
-        status: attention.status,
-        requestId: attentionOutcome.requestId,
-      });
-
-      if (attentionOutcome.requestId !== null) {
-        const decision = await client.post(
-          `/api/product/chat/approvals/${attentionOutcome.requestId}/decide`,
-          { decision: 'approve', note: 'W078 post-deployment smoke' },
-          managerCookie,
-        );
-        const stateAfter = await client.get(
-          `/api/product/chat/state?conversationId=${seededList.conversationId}`,
-          managerCookie,
-        );
-        recorder.reasons(
-          'seeded.approval-decided',
-          approvalDecidedReasons(decision, stateAfter, attentionOutcome.requestId),
-          { requestId: attentionOutcome.requestId, decisionStatus: decision.status },
-        );
-      } else {
-        recorder.record(
-          'seeded.approval-decided',
-          'fail',
-          'the attention turn surfaced no pending approval card — nothing to decide',
-        );
-      }
-    } else {
-      for (const id of ['seeded.thread', 'seeded.attention-turn', 'seeded.approval-decided']) {
-        recorder.record(id, 'fail', 'the seeded conversation is not in the manager chat list');
-      }
-    }
-  }
-  } // end of the non-production seeded-demo branch (W079 production inapplicability)
+  // --- the seeded demo journeys ---------------------------------------------
+  await runSeededPersonaLayer(recorder, client, context);
 
   // --- durable execution semantics (the worker push seam) ------------------------
   const seamAccess =
@@ -813,4 +823,115 @@ async function runJourneyLayer(
     signOutStatus: signOut.status,
     sessionAfterStatus: sessionAfter.status,
   });
+}
+
+// ---------------------------------------------------------------------------
+// The seeded persona layer (W079 inapplicability + W116 re-entrancy)
+// ---------------------------------------------------------------------------
+
+/**
+ * The seeded demo journey checks: the manager persona signs in through
+ * the real auth API and walks the seeded conversation + approval. Runs
+ * BOTH from the main journey flow and from the waitlist-blocked path (a
+ * target without any reachable platform admin still proves the seeded
+ * layer honestly — the W079 semantics are unchanged). Skipped with the
+ * precise reason on production targets (the demo harness never seeds
+ * one).
+ */
+async function runSeededPersonaLayer(
+  recorder: CheckRecorder,
+  client: SmokeHttpClient,
+  context: JourneyContext,
+): Promise<void> {
+  if (context.seededInapplicable) {
+    for (const id of [
+      'seeded.persona-signin',
+      'seeded.conversation-list',
+      'seeded.thread',
+      'seeded.attention-turn',
+      'seeded.approval-decided',
+    ]) {
+      recorder.skipped(id, context.seededInapplicableReason, {
+        targetEnvironment: 'production',
+      });
+    }
+    return;
+  }
+  const manager = demoPersonaSpec('manager');
+  const managerSignIn = await client.post('/api/auth/sign-in', {
+    email: manager.email,
+    password: demoPersonaPassword(),
+  });
+  recorder.reasons('seeded.persona-signin', sessionIssuedReasons(managerSignIn), {
+    status: managerSignIn.status,
+    persona: 'manager',
+    email: manager.email,
+  });
+  const managerToken = sessionTokenFromSetCookie(managerSignIn.setCookies);
+
+  if (managerToken === null) {
+    for (const id of ['seeded.conversation-list', 'seeded.thread', 'seeded.attention-turn', 'seeded.approval-decided']) {
+      recorder.record(id, 'fail', 'the seeded manager persona could not sign in');
+    }
+    return;
+  }
+  const managerCookie = sessionCookieHeader(managerToken);
+
+  const seededState = await client.get('/api/product/chat/state', managerCookie);
+  const seededList = chatStateReasons(seededState, { expectTitle: SEEDED_CONVERSATION_TITLE });
+  recorder.reasons('seeded.conversation-list', seededList.reasons, {
+    status: seededState.status,
+    expectedTitle: SEEDED_CONVERSATION_TITLE,
+  });
+
+  if (seededList.conversationId !== null) {
+    const seededThread = await client.get(
+      `/api/product/chat/state?conversationId=${seededList.conversationId}`,
+      managerCookie,
+    );
+    recorder.reasons(
+      'seeded.thread',
+      chatStateReasons(seededThread, { expectThreadMessages: 4 }).reasons,
+      { conversationId: seededList.conversationId, status: seededThread.status },
+    );
+
+    // The attention turn surfaces the seeded pending approval (Journey E).
+    const attention = await client.post(
+      '/api/product/chat/messages',
+      { conversationId: seededList.conversationId, text: 'What needs my attention?' },
+      managerCookie,
+    );
+    const attentionOutcome = approvalCardReasons(attention);
+    recorder.reasons('seeded.attention-turn', attentionOutcome.reasons, {
+      status: attention.status,
+      requestId: attentionOutcome.requestId,
+    });
+
+    if (attentionOutcome.requestId !== null) {
+      const decision = await client.post(
+        `/api/product/chat/approvals/${attentionOutcome.requestId}/decide`,
+        { decision: 'approve', note: 'W078 post-deployment smoke' },
+        managerCookie,
+      );
+      const stateAfter = await client.get(
+        `/api/product/chat/state?conversationId=${seededList.conversationId}`,
+        managerCookie,
+      );
+      recorder.reasons(
+        'seeded.approval-decided',
+        approvalDecidedReasons(decision, stateAfter, attentionOutcome.requestId),
+        { requestId: attentionOutcome.requestId, decisionStatus: decision.status },
+      );
+    } else {
+      recorder.record(
+        'seeded.approval-decided',
+        'fail',
+        'the attention turn surfaced no pending approval card — nothing to decide',
+      );
+    }
+  } else {
+    for (const id of ['seeded.thread', 'seeded.attention-turn', 'seeded.approval-decided']) {
+      recorder.record(id, 'fail', 'the seeded conversation is not in the manager chat list');
+    }
+  }
 }

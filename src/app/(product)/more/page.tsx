@@ -29,6 +29,7 @@ import { PageHead, Panel } from '../components/states';
 import { ShellGlyph } from '../components/icons';
 import { CapabilityPromptList } from '../components/capability-prompts';
 import { SignOutButton } from '@/app/(auth)/components/sign-out-button';
+import { PLATFORM_ADMIN_LINK_LABEL } from '../lib/platform-links';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,6 +109,16 @@ export default async function MorePage({
           <Link className="aurum-btn" data-variant="quiet" href="/onboarding">
             Company &amp; invitations
           </Link>
+          {/* W116 — the account settings entries: the password surface and,
+              for platform admins only, the access-request review queue. */}
+          <Link className="aurum-btn" data-variant="quiet" href="/more/password">
+            Change password
+          </Link>
+          {session.platformAdmin ? (
+            <Link className="aurum-btn" data-variant="quiet" href="/platform/waitlist">
+              {PLATFORM_ADMIN_LINK_LABEL}
+            </Link>
+          ) : null}
           <SignOutButton label="Sign out" />
         </div>
       </Panel>

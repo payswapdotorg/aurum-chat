@@ -55,6 +55,7 @@ function cannedFetch(): typeof fetch {
   };
   let companyCreated = false;
   let signedOut = false;
+  let smokeEmail: string | null = null;
   return (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const method = (init?.method ?? 'GET').toUpperCase();
@@ -156,9 +157,74 @@ function cannedFetch(): typeof fetch {
       });
     }
     if (pathName === '/api/auth/sign-up') {
+      // W116: the waitlist-gated sign-up — no account, no session cookie.
+      if (typeof init?.body === 'string') {
+        const parsed = JSON.parse(init.body) as { email?: unknown };
+        if (typeof parsed.email === 'string') smokeEmail = parsed.email;
+      }
       return new Response(
-        JSON.stringify({ session: { principal: { id: 'p1' }, company: null } }),
-        { status: 200, headers: { 'content-type': 'application/json', 'set-cookie': SESSION_COOKIE } },
+        JSON.stringify({
+          result: 'waitlisted',
+          message: "You're on the waitlist — the Aurum team will review your request.",
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (pathName === '/api/auth/sign-in') {
+      const body =
+        typeof init?.body === 'string'
+          ? (JSON.parse(init.body) as { email?: unknown })
+          : {};
+      const email = typeof body.email === 'string' ? body.email : '';
+      // The operator's designated platform-admin account and the accepted
+      // smoke account; everything else fails honestly.
+      if (email === 'operator@prod.example.test' || email === smokeEmail) {
+        return new Response(
+          JSON.stringify({ session: { principal: { id: 'p1' }, company: null } }),
+          { status: 200, headers: { 'content-type': 'application/json', 'set-cookie': SESSION_COOKIE } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: 'invalid_credentials', message: 'email or password is incorrect' }),
+        { status: 401, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (pathName === '/api/platform/waitlist') {
+      return new Response(
+        JSON.stringify({
+          requests: [
+            smokeEmail === null
+              ? {}
+              : {
+                  id: 'waitlist-smoke-1',
+                  email: smokeEmail,
+                  displayName: 'W078 Smoke Operator',
+                  status: 'pending',
+                  note: null,
+                  requestedAt: '2026-09-23T00:00:00.000Z',
+                  decidedAt: null,
+                  decidedBy: null,
+                },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (pathName === '/api/platform/waitlist/accept') {
+      return new Response(
+        JSON.stringify({
+          request: {
+            id: 'waitlist-smoke-1',
+            email: smokeEmail ?? '',
+            displayName: 'W078 Smoke Operator',
+            status: 'accepted',
+            note: null,
+            requestedAt: '2026-09-23T00:00:00.000Z',
+            decidedAt: '2026-09-23T00:00:01.000Z',
+            decidedBy: 'principal-operator',
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
     if (pathName === '/api/auth/session') {
@@ -378,6 +444,10 @@ describe('the certification driver — one full pass over a canned production ta
       command: 'bun run cert:production -- --run a',
       fetchImpl: listingFetch as typeof fetch,
       execImpl,
+      // W116: the operator's designated platform-admin account accepts
+      // the smoke request on the canned production target.
+      adminEmail: 'operator@prod.example.test',
+      adminPassword: 'the-operator-password',
     });
   }
 
@@ -586,6 +656,8 @@ describe('the certification driver — one W106 pass over a canned production ta
       repository: { branch: 'work/w106-four-surface-recertification', baseCommit: '625a133e' },
       fetchImpl: listingFetch as typeof fetch,
       execImpl,
+      adminEmail: 'operator@prod.example.test',
+      adminPassword: 'the-operator-password',
     });
 
     // The W106 gate set is the W101 gate set (the rollback-evidence gate
@@ -729,6 +801,8 @@ describe('the certification driver — one W101 pass over a canned production ta
       repository: { branch: 'work/w101-final-certification', baseCommit: 'a2db98a' },
       fetchImpl: listingFetch as typeof fetch,
       execImpl,
+      adminEmail: 'operator@prod.example.test',
+      adminPassword: 'the-operator-password',
     });
 
     // The W101 gate set: the rollback-evidence gate sits between the
@@ -825,6 +899,8 @@ describe('the certification driver — one W101 pass over a canned production ta
       repository: { branch: 'work/w101-final-certification', baseCommit: 'a2db98a' },
       fetchImpl: listingFetch as typeof fetch,
       execImpl,
+      adminEmail: 'operator@prod.example.test',
+      adminPassword: 'the-operator-password',
     });
     const rollbackGate = run.gates.find((gate) => gate.id === 'rollback.evidence')!;
     expect(rollbackGate.status).toBe('blocked');

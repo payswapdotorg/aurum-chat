@@ -43,6 +43,8 @@ interface CliArgs {
   expectedEnvironment: string | null;
   workerToken: string | null;
   quickSignIn: QuickSignInExpectation;
+  adminEmail: string | null;
+  adminPassword: string | null;
   label: string | null;
   out: string;
   allowBlocked: boolean;
@@ -64,6 +66,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
     expectedEnvironment: env('AURUM_SMOKE_EXPECT_ENVIRONMENT') ?? null,
     workerToken: env('AURUM_SMOKE_WORKER_TOKEN') ?? null,
     quickSignIn: (env('AURUM_SMOKE_QUICK_SIGN_IN') as QuickSignInExpectation | undefined) ?? 'unchecked',
+    adminEmail: env('AURUM_SMOKE_ADMIN_EMAIL') ?? null,
+    adminPassword: env('AURUM_SMOKE_ADMIN_PASSWORD') ?? null,
     label: env('AURUM_SMOKE_LABEL') ?? null,
     out: env('AURUM_SMOKE_OUT') ?? path.join(REPO_ROOT, 'docs', 'productization-evidence', 'W078'),
     allowBlocked: false,
@@ -99,6 +103,8 @@ function parseArgs(argv: readonly string[]): CliArgs {
       }
       args.quickSignIn = value;
     } else if (arg === '--label') args.label = next();
+    else if (arg === '--admin-email') args.adminEmail = next();
+    else if (arg === '--admin-password') args.adminPassword = next();
     else if (arg === '--out') args.out = next();
     else if (arg === '--allow-blocked') args.allowBlocked = true;
     else if (arg === '--no-repo') args.noRepo = true;
@@ -109,8 +115,15 @@ function parseArgs(argv: readonly string[]): CliArgs {
           'usage: bun run smoke:dogfood -- --target <url> [--profile hosted|full]',
           '         [--expect-environment production|preview|staging|development]',
           '         [--worker-token <t>] [--quick-sign-in off|on|unchecked]',
+          '         [--admin-email <e>] [--admin-password <p>]',
           '         [--label <name>] [--out <dir>] [--allow-blocked] [--no-repo]',
           '         [--timeout-ms <n>]',
+          '',
+          'W116: --admin-email/--admin-password designate the platform-admin',
+          'account that accepts the smoke request on an UNSEEDED (production)',
+          'target — the operator account designated on the deployment through',
+          'AURUM_PLATFORM_ADMIN_EMAILS. Seeded targets use the manager persona.',
+          'Environment fallbacks: AURUM_SMOKE_ADMIN_EMAIL / AURUM_SMOKE_ADMIN_PASSWORD.',
         ].join('\n'),
       );
       process.exit(0);
@@ -147,6 +160,8 @@ async function main(): Promise<number> {
     expectedEnvironment: args.expectedEnvironment ?? undefined,
     workerToken: args.workerToken,
     expectQuickSignIn: args.quickSignIn,
+    adminEmail: args.adminEmail,
+    adminPassword: args.adminPassword,
     repoRoot: args.noRepo ? null : REPO_ROOT,
     label,
     timeoutMs: args.timeoutMs,

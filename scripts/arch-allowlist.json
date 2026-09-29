@@ -7,6 +7,7 @@
     "marketplace_packages",
     "marketplace_package_verifications",
     "marketplace_package_reviews",
-    "marketplace_package_lifecycle_events"
+    "marketplace_package_lifecycle_events",
+    "auth_waitlist"
   ]
 }

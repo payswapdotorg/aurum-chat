@@ -485,6 +485,55 @@ export function sessionIssuedReasons(response: SmokeHttpResponse): string[] {
   return reasons;
 }
 
+/** A W116 waitlist sign-up response: 200, the waitlisted body, NO session cookie. */
+export function waitlistJoinedReasons(response: SmokeHttpResponse): string[] {
+  const reasons: string[] = [];
+  if (response.status !== 200) {
+    reasons.push(
+      `expected HTTP 200 (got ${response.status}: ${clip(response.text, 160)})`,
+    );
+    return reasons;
+  }
+  const body = isRecord(response.body) ? response.body : {};
+  if (body['result'] !== 'waitlisted') {
+    reasons.push(`the body does not carry the waitlisted result (got '${String(body['result'])}')`);
+  }
+  if (asString(body['message']) === null) reasons.push('the confirmation message is absent');
+  if (isRecord(body['session'])) reasons.push('a session view rode the waitlist response');
+  if (response.setCookies.some((cookie) => cookie.startsWith('aurum_session='))) {
+    reasons.push('a session cookie was issued for a pending request (the person must stay signed out)');
+  }
+  return reasons;
+}
+
+/** The admin queue read: 200 with the request list. */
+export function waitlistQueueReasons(response: SmokeHttpResponse): string[] {
+  const reasons: string[] = [];
+  if (response.status !== 200) {
+    reasons.push(`expected HTTP 200 (got ${response.status}: ${clip(response.text, 160)})`);
+    return reasons;
+  }
+  const body = isRecord(response.body) ? response.body : {};
+  if (!Array.isArray(body['requests'])) reasons.push('the requests array is absent');
+  return reasons;
+}
+
+/** The acceptance: 200 with the settled request (status accepted). */
+export function waitlistAcceptedReasons(response: SmokeHttpResponse): string[] {
+  const reasons: string[] = [];
+  if (response.status !== 200) {
+    reasons.push(`expected HTTP 200 (got ${response.status}: ${clip(response.text, 160)})`);
+    return reasons;
+  }
+  const body = isRecord(response.body) ? response.body : {};
+  const request = isRecord(body['request']) ? body['request'] : {};
+  if (request['status'] !== 'accepted') {
+    reasons.push(`the request did not settle as accepted (got '${String(request['status'])}')`);
+  }
+  if (asString(request['id']) === null) reasons.push('the settled request id is absent');
+  return reasons;
+}
+
 /** The fresh session view: no active company yet (onboarding state). */
 export function sessionNoCompanyReasons(response: SmokeHttpResponse): string[] {
   const reasons: string[] = [];

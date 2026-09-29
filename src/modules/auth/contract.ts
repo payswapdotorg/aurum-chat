@@ -47,22 +47,36 @@
 // ============================================================================
 
 export {
+  acceptWaitlistRequest,
   authenticateSession,
+  changePassword,
   createCompanyForSession,
   createInvite,
+  declineWaitlistRequest,
   getInviteByCode,
   listInvites,
   listUserCompanies,
+  listWaitlistRequests,
   redeemInvite,
   registerUser,
   revokeInvite,
   selectCompany,
   selectWorkspace,
+  setPlatformAdminFlag,
   signIn,
   signOut,
+  signOutEverywhere,
+  submitWaitlistRequest,
 } from './service';
 
 export { claimsForRole, MANAGEMENT_CLAIMS } from './claims';
+
+export {
+  AUTH_AUTHORITY_ADMINISTER,
+  PLATFORM_ADMIN_EMAILS_ENV,
+  isDesignatedPlatformAdmin,
+  platformAdminEmails,
+} from './platform-admin';
 
 export { AuthError } from './errors';
 export type { AuthErrorCode } from './errors';
@@ -89,20 +103,27 @@ export type {
   AuthInvite,
   AuthenticatedSession,
   AuthPrincipal,
+  ChangePasswordInput,
   CreateCompanyInput,
   CreateInviteInput,
+  DecideWaitlistInput,
   GetInviteByCodeInput,
   InvitePreview,
   IssuedInvite,
   IssuedSession,
   ListInvitesInput,
   ListUserCompaniesInput,
+  ListWaitlistInput,
   RedeemInviteInput,
   RegisterUserInput,
   RevokeInviteInput,
   SelectCompanyInput,
   SelectWorkspaceInput,
+  SetPlatformAdminInput,
   SignInInput,
+  SignOutEverywhereInput,
   SignOutInput,
+  SubmitWaitlistInput,
   UserCompany,
+  WaitlistRequest,
 } from './types';

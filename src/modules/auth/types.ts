@@ -20,6 +20,20 @@ export interface AuthPrincipal {
   displayName: string;
 }
 
+/** A waitlist access request as the admin surface sees it (no verifier material). */
+export interface WaitlistRequest {
+  id: string;
+  email: string;
+  displayName: string;
+  status: 'pending' | 'accepted' | 'declined';
+  /** The deciding admin's one-line note (declines carry it when written). */
+  note: string | null;
+  requestedAt: string;
+  decidedAt: string | null;
+  /** The deciding platform admin's principal id (audit trail). */
+  decidedBy: string | null;
+}
+
 /** The session's active company selection, with the verified role and derived claims. */
 export interface ActiveCompany {
   tenantId: string;
@@ -36,6 +50,8 @@ export interface AuthenticatedSession {
   sessionId: string;
   principalId: string;
   principal: AuthPrincipal;
+  /** W116: the principal may review the access waitlist (platform fact, never a tenant role). */
+  platformAdmin: boolean;
   /** Login time of the session. */
   createdAt: string;
   /** Idle-sliding expiry (never past the absolute cap). */
@@ -91,6 +107,40 @@ export interface RegisterUserInput {
   displayName: string;
   email: string;
   password: string;
+}
+
+/** The public sign-up request (W116): records a waitlist request, never a session. */
+export interface SubmitWaitlistInput {
+  displayName: string;
+  email: string;
+  password: string;
+}
+
+export interface ListWaitlistInput {
+  token: string;
+}
+
+export interface DecideWaitlistInput {
+  token: string;
+  requestId: string;
+  /** Optional one-line note recorded with the decision (declines surface it on sign-in). */
+  note?: string | null;
+}
+
+export interface ChangePasswordInput {
+  token: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface SignOutEverywhereInput {
+  token: string;
+}
+
+/** The demo harness's explicit platform-admin write (never a session operation). */
+export interface SetPlatformAdminInput {
+  email: string;
+  platformAdmin: boolean;
 }
 
 export interface SignInInput {

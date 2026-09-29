@@ -62,7 +62,10 @@ export function demoTenantSpec(key: DemoTenantSpec['key']): DemoTenantSpec {
 /**
  * The four sign-in personas. The employee/developer personas share the
  * company tenant with the manager (one coherent company); the platform
- * reviewer lives in the platform review tenant.
+ * reviewer lives in the platform review tenant. The manager persona
+ * additionally carries the PLATFORM-admin flag (W116): she reviews the
+ * access waitlist at /platform/waitlist — the seeded pending request
+ * (Dana Whitfield) is hers to accept or decline through the real surface.
  */
 export const DEMO_PERSONAS: readonly DemoPersonaSpec[] = [
   {
@@ -72,6 +75,7 @@ export const DEMO_PERSONAS: readonly DemoPersonaSpec[] = [
     email: 'priya.nair@meridian-roasters.demo',
     title: 'Head of Operations',
     tenantRole: 'owner',
+    platformAdmin: true,
   },
   {
     role: 'employee',
@@ -172,6 +176,9 @@ export const DEMO_TIME = {
 export const DEMO_KEYS = {
   /** The pending invite's email (roster data). */
   inviteEmail: 'new.barista@meridian-roasters.demo',
+  /** W116: the seeded pending waitlist request (the manager reviews it). */
+  waitlistEmail: 'dana.whitfield@meridian-roasters.demo',
+  waitlistDisplayName: 'Dana Whitfield',
   /** June's people records. */
   employeePersonEmail: 'june.park@meridian-roasters.demo',
   employeeNumber: 'MR-1042',

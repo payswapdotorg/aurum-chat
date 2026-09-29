@@ -16,8 +16,10 @@
 import { SESSION_COOKIE, resolveSessionRequest, sessionTokenFromCookieHeader } from '@/app/lib/session';
 import {
   authenticateSession,
+  changePassword,
   createCompanyForSession,
   createInvite,
+  getInviteByCode,
   listInvites,
   redeemInvite,
   registerUser,
@@ -26,6 +28,8 @@ import {
   selectWorkspace,
   signIn,
   signOut,
+  signOutEverywhere,
+  submitWaitlistRequest,
 } from '@/modules/auth/contract';
 import { AuthError } from '@/modules/auth/contract';
 import type { AuthenticatedSession } from '@/modules/auth/contract';
@@ -74,6 +78,8 @@ export function mapAuthApiError(error: unknown): AuthApiResult {
     case 'invalid_credentials':
       return fail(401, code, message);
     case 'forbidden':
+    case 'request_pending':
+    case 'request_declined':
       return fail(403, code, message);
     case 'no_active_company':
     case 'email_taken':
@@ -97,6 +103,7 @@ function sessionBody(session: AuthenticatedSession): Record<string, unknown> {
   return {
     principal: session.principal,
     company: session.company,
+    platformAdmin: session.platformAdmin,
     expiresAt: session.expiresAt,
   };
 }
@@ -144,25 +151,70 @@ async function tryRedeem(
 // Handlers
 // ---------------------------------------------------------------------------
 
-/** POST /api/auth/sign-up — register + sign in (+ optional invite redemption). */
+/** The signed-out confirmation state the waitlist signup returns (W116). */
+export const WAITLIST_CONFIRMED_MESSAGE =
+  "You're on the waitlist — the Aurum team will review your request.";
+
+/**
+ * POST /api/auth/sign-up (W116) — the waitlist-gated product entry.
+ *
+ * A LIVE invitation code keeps today's immediate-access behavior exactly
+ * (an invitation is already admin-granted trust): the code is verified
+ * BEFORE anything is recorded; when it resolves, registration + session
+ * + redemption run as before. Without a usable code the request joins the
+ * waitlist: no principal, no session cookie, no company — the signed-out
+ * confirmation body the signup form renders. A dead/unknown code degrades
+ * to the waitlist with a notice (the submitter knows their own code; no
+ * existence leak — the response for a queued email and a fresh email is
+ * byte-identical apart from that notice).
+ */
 export async function handleSignUp(request: Request): Promise<AuthApiResult> {
   const body = await readJson(request);
   try {
     const inviteCode = typeof body['inviteCode'] === 'string' && body['inviteCode'] !== ''
       ? (body['inviteCode'] as string)
       : null;
-    const issued = await registerUser({
+    if (inviteCode !== null) {
+      let inviteUsable = false;
+      try {
+        await getInviteByCode({ code: inviteCode });
+        inviteUsable = true;
+      } catch {
+        inviteUsable = false;
+      }
+      if (inviteUsable) {
+        const issued = await registerUser({
+          displayName: requireString(body, 'displayName'),
+          email: requireString(body, 'email'),
+          password: requireString(body, 'password'),
+        });
+        const notice = await tryRedeem(issued.token, inviteCode);
+        // The fresh view (redemption may have selected a company post-issue).
+        const session = await authenticateSession({ token: issued.token });
+        return ok(
+          { session: sessionBody(session), ...(notice === null ? {} : { notice }) },
+          { setCookie: sessionCookieHeader(issued.token) },
+        );
+      }
+      // The code does not verify — no admin-granted trust to redeem. The
+      // request takes the waitlist path (with the honest notice).
+      await submitWaitlistRequest({
+        displayName: requireString(body, 'displayName'),
+        email: requireString(body, 'email'),
+        password: requireString(body, 'password'),
+      });
+      return ok({
+        result: 'waitlisted',
+        message: WAITLIST_CONFIRMED_MESSAGE,
+        notice: 'The invitation link is no longer usable — your request was added to the waitlist instead.',
+      });
+    }
+    await submitWaitlistRequest({
       displayName: requireString(body, 'displayName'),
       email: requireString(body, 'email'),
       password: requireString(body, 'password'),
     });
-    const notice = await tryRedeem(issued.token, inviteCode);
-    // The fresh view (redemption may have selected a company post-issue).
-    const session = await authenticateSession({ token: issued.token });
-    return ok(
-      { session: sessionBody(session), ...(notice === null ? {} : { notice }) },
-      { setCookie: sessionCookieHeader(issued.token) },
-    );
+    return ok({ result: 'waitlisted', message: WAITLIST_CONFIRMED_MESSAGE });
   } catch (error) {
     return mapAuthApiError(error);
   }
@@ -267,6 +319,48 @@ export async function handleSignOut(request: Request): Promise<AuthApiResult> {
     } catch {
       // Uniformly quiet: an unknown/revoked token is still signed out.
     }
+  }
+  return ok({ signedOut: true }, { clearCookie: true });
+}
+
+/**
+ * POST /api/auth/password (W116) — change the signed-in principal's
+ * password. The current password must verify; every OTHER session of the
+ * principal is revoked (this browser stays signed in — the documented
+ * session policy of the service operation).
+ */
+export async function handlePasswordChangePost(request: Request): Promise<AuthApiResult> {
+  const token = sessionTokenFromCookieHeader(request.headers.get('cookie'));
+  if (token === null) {
+    return fail(401, 'unauthenticated', 'no session for this request');
+  }
+  const body = await readJson(request);
+  try {
+    await changePassword({
+      token,
+      currentPassword: requireString(body, 'currentPassword'),
+      newPassword: requireString(body, 'newPassword'),
+    });
+    return ok({ changed: true });
+  } catch (error) {
+    return mapAuthApiError(error);
+  }
+}
+
+/**
+ * POST /api/auth/sign-out-everywhere (W116) — revoke EVERY live session
+ * of the principal (this browser included) and clear the cookie; the
+ * client routes to /signin.
+ */
+export async function handleSignOutEverywherePost(request: Request): Promise<AuthApiResult> {
+  const token = sessionTokenFromCookieHeader(request.headers.get('cookie'));
+  if (token === null) {
+    return fail(401, 'unauthenticated', 'no session for this request');
+  }
+  try {
+    await signOutEverywhere({ token });
+  } catch {
+    // Uniformly quiet: an unknown/revoked token is still signed out.
   }
   return ok({ signedOut: true }, { clearCookie: true });
 }

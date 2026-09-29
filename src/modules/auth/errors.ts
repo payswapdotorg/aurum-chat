@@ -36,7 +36,15 @@ export type AuthErrorCode =
   /** The invite was already accepted (terminal state). */
   | 'invite_already_accepted'
   /** The principal is already a member of the invite's company. */
-  | 'already_a_member';
+  | 'already_a_member'
+  /** W116: the credentials match a waitlist request that no admin accepted yet. */
+  | 'request_pending'
+  /** W116: the credentials match a waitlist request an admin declined. */
+  | 'request_declined'
+  /** W116: the waitlist request id does not resolve to a pending request (uniform). */
+  | 'waitlist_not_found'
+  /** W116: the harness's platform-admin write named a principal that does not exist. */
+  | 'principal_not_found';
 
 export class AuthError extends Error {
   constructor(

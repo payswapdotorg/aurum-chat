@@ -739,6 +739,22 @@ export function buildShellCommands(): ShellCommand[] {
     });
   }
 
+  // W116 — the password destination (change password, sign out
+  // everywhere): the account settings entry, task-language first
+  // ("password", "security", "devices").
+  {
+    const password = capabilityEntry('password');
+    commands.push({
+      id: `account:${password.id}`,
+      title: password.label,
+      subtitle: password.summary,
+      group: 'Navigate',
+      icon: password.icon,
+      keywords: password.keywords,
+      target: { kind: 'navigate', href: password.href },
+    });
+  }
+
   for (const starter of CHAT_STARTERS) {
     commands.push({
       id: `starter:${starter.id}`,

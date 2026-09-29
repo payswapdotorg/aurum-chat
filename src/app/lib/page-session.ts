@@ -16,6 +16,8 @@ import type { TenantContext } from '@/infra/tenant';
 /** What an authenticated page renders with. */
 export interface AuthenticatedPage {
   principal: AuthPrincipal;
+  /** W116: the principal may review the access waitlist (platform fact). */
+  platformAdmin: boolean;
   context: TenantContext;
   /** The verified tenant role behind the derived claims. */
   role: string;

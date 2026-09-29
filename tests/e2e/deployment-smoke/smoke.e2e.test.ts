@@ -57,6 +57,11 @@ const {
 } = await import('../../../src/app/(auth)/lib/api');
 const { clearSessionCookieHeader } = await import('../../../src/app/(auth)/lib/cookies');
 const {
+  handleWaitlistAcceptPost,
+  handleWaitlistDeclinePost,
+  handleWaitlistListGet,
+} = await import('../../../src/app/(platform)/lib/api');
+const {
   handleChatApprovalDecidePost,
   handleChatSendPost,
   handleChatStateGet,
@@ -195,6 +200,18 @@ describe('W078 deployment smoke — the full matrix over real HTTP', () => {
           respond(res, await handleSessionGet(request));
           return;
         }
+        if (url.pathname === '/api/platform/waitlist') {
+          respond(res, await handleWaitlistListGet(request));
+          return;
+        }
+        if (url.pathname === '/api/platform/waitlist/accept') {
+          respond(res, await handleWaitlistAcceptPost(request));
+          return;
+        }
+        if (url.pathname === '/api/platform/waitlist/decline') {
+          respond(res, await handleWaitlistDeclinePost(request));
+          return;
+        }
         if (url.pathname === '/api/auth/onboarding/company') {
           const result = await handleCompanyCreatePost(request);
           respond(res, result, result.setCookie === undefined ? {} : { 'set-cookie': result.setCookie });
@@ -272,6 +289,8 @@ describe('W078 deployment smoke — the full matrix over real HTTP', () => {
         'env.quick-signin-availability',
         // journey layer
         'auth.signup',
+        'auth.waitlist-accept',
+        'auth.signin-accepted',
         'auth.session-no-company',
         'auth.chat-gated-pre-onboarding',
         'auth.onboarding-company',

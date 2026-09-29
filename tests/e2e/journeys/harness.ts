@@ -206,7 +206,7 @@ export function apiRequest(
 type LoModule = () => Promise<{ default: unknown }>;
 
 interface RouteModule {
-  area: 'auth' | 'product' | 'management';
+  area: 'auth' | 'product' | 'management' | 'platform';
   load: LoModule;
 }
 
@@ -296,7 +296,16 @@ const PAGE_MODULES: Record<string, RouteModule> = {
     load: () => import('../../../src/app/(product)/explain/[kind]/[id]/page'),
   },
   '/more': { area: 'product', load: () => import('../../../src/app/(product)/more/page') },
+  '/more/password': {
+    area: 'product',
+    load: () => import('../../../src/app/(product)/more/password/page'),
+  },
   '/people': { area: 'product', load: () => import('../../../src/app/(product)/people/page') },
+  // platform admin surface (W116 — the access waitlist review)
+  '/platform/waitlist': {
+    area: 'platform',
+    load: () => import('../../../src/app/(platform)/platform/waitlist/page'),
+  },
   // management mode (the tower)
   '/today': { area: 'management', load: () => import('../../../src/app/(tower)/today/page') },
   '/goals': { area: 'management', load: () => import('../../../src/app/(tower)/goals/page') },
@@ -333,6 +342,10 @@ const LAYOUTS: Record<RouteModule['area'], { area: LayoutLoader; root: LayoutLoa
   },
   management: {
     area: () => import('../../../src/app/(tower)/layout'),
+    root: () => import('../../../src/app/layout'),
+  },
+  platform: {
+    area: () => import('../../../src/app/(platform)/layout'),
     root: () => import('../../../src/app/layout'),
   },
 };

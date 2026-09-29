@@ -50,7 +50,7 @@ export type JourneyActor =
 // ---------------------------------------------------------------------------
 
 /** Which shell a route renders in. */
-export type RouteArea = 'auth' | 'product' | 'management' | 'api';
+export type RouteArea = 'auth' | 'product' | 'management' | 'platform' | 'api';
 
 /** What lives at a route. */
 export type RouteKind = 'page' | 'root-redirect' | 'api';

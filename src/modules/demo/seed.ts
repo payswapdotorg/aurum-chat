@@ -54,12 +54,16 @@ import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import {
   AuthError,
+  AUTH_AUTHORITY_ADMINISTER,
   claimsForRole,
   createInvite,
   listUserCompanies,
+  listWaitlistRequests,
   registerUser,
   selectCompany,
+  setPlatformAdminFlag,
   signIn,
+  submitWaitlistRequest,
   type IssuedSession,
 } from '@/modules/auth/contract';
 import {
@@ -349,6 +353,20 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
   const developer = personas.get('developer')!;
   const platformReviewer = personas.get('platform-reviewer')!;
 
+  // --- W116: the platform-admin designation (the manager persona) --------
+  // The explicit, harness-only platform operation (the `auth:administer`
+  // claim NEVER rides a session at this base — exactly like the harness's
+  // `marketplace:administer` contexts). Idempotent by construction: the
+  // write re-applies on every run, so a re-seed self-heals the flag.
+  for (const spec of DEMO_PERSONAS) {
+    if (spec.platformAdmin === true) {
+      await setPlatformAdminFlag(
+        { principalId: manager.principalId, authority: [AUTH_AUTHORITY_ADMINISTER] },
+        { email: spec.email, platformAdmin: true },
+      );
+    }
+  }
+
   // The platform provisioner (the one explicit platform operation; scoped
   // to the provisionTenant calls below, never ambient).
   const provisioner: PlatformContext = {
@@ -581,6 +599,48 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
       metadata: { provider: 'web', account: DEMO_KEYS.webIdentityAccount },
     };
   });
+
+  // --- W116: the pending access waitlist request ---------------------------
+  // Dana Whitfield's sign-up request sits on the platform waitlist for the
+  // manager (a platform admin) to review at /platform/waitlist. Anchored:
+  // once the browser walkthrough decides her request, re-runs must NOT
+  // resurrect it (the anchor skips; the decision stands). The request's
+  // password is the demo persona password, so accepting her through the
+  // real surface makes the whole journey walkable end to end.
+  await ensureAnchor(
+    anchorCtx(),
+    counters,
+    'demo-world',
+    'waitlist-pending',
+    async () => {
+      let requestId: string;
+      try {
+        const request = await submitWaitlistRequest({
+          displayName: DEMO_KEYS.waitlistDisplayName,
+          email: DEMO_KEYS.waitlistEmail,
+          password: demoPersonaPassword(),
+        });
+        requestId = request.id;
+      } catch (error) {
+        if (error instanceof AuthError && error.code === 'email_taken') {
+          // The walkthrough already ACCEPTED the request on a database the
+          // anchor does not know (a reset anchor registry, not a reset
+          // world) — resolve the settled row and record it honestly.
+          const settled = (await listWaitlistRequests({ token: manager.token })).find(
+            (candidate) => candidate.email === DEMO_KEYS.waitlistEmail,
+          );
+          if (settled === undefined) throw error;
+          requestId = settled.id;
+        } else {
+          throw error;
+        }
+      }
+      return {
+        recordId: requestId,
+        metadata: { email: DEMO_KEYS.waitlistEmail, displayName: DEMO_KEYS.waitlistDisplayName },
+      };
+    },
+  );
 
   // --- journey A: the pending invitation ---------------------------------
   await ensureAnchor(anchorCtx(), counters, 'manager-onboarding', 'invite-pending', async () => {
@@ -2108,6 +2168,20 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
     journeys.set(journeyId, list);
   }
 
+  // W116: the waitlist's LIVE state as the review surface leaves it (the
+  // manager's platform-admin session reads it through the real contract —
+  // decided requests are simply not pending anymore, which is the honest
+  // directory for re-runs after a browser walkthrough).
+  let pendingWaitlistView: Awaited<ReturnType<typeof listWaitlistRequests>> = [];
+  try {
+    pendingWaitlistView = (await listWaitlistRequests({ token: manager.token })).filter(
+      (request) => request.status === 'pending',
+    );
+  } catch {
+    // The manager lost the flag mid-flight (a foreign mutation of the
+    // demo world) — the honest report carries no waitlist, not a crash.
+  }
+
   return {
     seededAt: new Date().toISOString(),
     tenants,
@@ -2121,6 +2195,14 @@ export async function seedDemoHarness(): Promise<DemoSeedReport> {
       .sort((a, b) => a.id.localeCompare(b.id)),
     pendingApprovals: pendingRequests.map((request) => ({
       actionKind: request.actionKind,
+      requestId: request.id,
+    })),
+    // W116: the waitlist as the review surface leaves it — the seeded
+    // request stays pending until a platform admin decides it in the
+    // browser (the manager persona's /platform/waitlist walkthrough).
+    pendingWaitlist: pendingWaitlistView.map((request) => ({
+      email: request.email,
+      displayName: request.displayName,
       requestId: request.id,
     })),
     created: counters.created,

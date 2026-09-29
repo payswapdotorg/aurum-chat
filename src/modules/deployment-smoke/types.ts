@@ -141,6 +141,16 @@ export interface SmokeRunConfig {
   workerToken?: string | null;
   /** Expected availability of /api/auth/quick-sign-in on this target. */
   expectQuickSignIn?: QuickSignInExpectation;
+  /**
+   * W116 — the platform-admin account that accepts the smoke operator's
+   * waitlist request on an UNSEEDED target (production: the operator's
+   * AURUM_PLATFORM_ADMIN_EMAILS-designated account). Null on seeded
+   * targets (the seeded manager persona reviews) and when the run leaves
+   * the acceptance to the operator manually.
+   */
+  adminEmail?: string | null;
+  /** The admin account's password (pair with adminEmail). */
+  adminPassword?: string | null;
   /** Repository root for the repo-layer checks (null disables them). */
   repoRoot?: string | null;
   /** A short run label for the report (default: the target host). */

@@ -38,6 +38,8 @@ export type SessionResolution =
       status: 'no-company';
       sessionId: string;
       principal: AuthPrincipal;
+      /** W116: the principal may review the access waitlist. */
+      platformAdmin: boolean;
       /** The principal's verified companies (onboarding picks from these). */
       companies: UserCompany[];
     }
@@ -45,6 +47,8 @@ export type SessionResolution =
       status: 'authenticated';
       sessionId: string;
       principal: AuthPrincipal;
+      /** W116: the principal may review the access waitlist. */
+      platformAdmin: boolean;
       context: TenantContext;
       /** The verified role behind the derived claims. */
       role: string;
@@ -83,6 +87,7 @@ async function resolveSessionToken(token: string | null): Promise<SessionResolut
         status: 'no-company',
         sessionId: session.sessionId,
         principal: session.principal,
+        platformAdmin: session.platformAdmin,
         companies: await listUserCompanies({ token }).catch(() => []),
       };
     }
@@ -90,6 +95,7 @@ async function resolveSessionToken(token: string | null): Promise<SessionResolut
       status: 'authenticated',
       sessionId: session.sessionId,
       principal: session.principal,
+      platformAdmin: session.platformAdmin,
       context: {
         tenantId: session.company.tenantId,
         principalId: session.principalId,
@@ -109,8 +115,13 @@ export async function resolveSessionRequest(request: Request): Promise<SessionRe
   return resolveSessionToken(sessionTokenFromRequest(request));
 }
 
+/** The raw session cookie token for a server component (null when absent). */
+export async function currentSessionToken(): Promise<string | null> {
+  const jar = await cookies();
+  return jar.get(SESSION_COOKIE)?.value ?? null;
+}
+
 /** Resolve the session for a server component: next/headers cookies. */
 export async function resolveSession(): Promise<SessionResolution> {
-  const jar = await cookies();
-  return resolveSessionToken(jar.get(SESSION_COOKIE)?.value ?? null);
+  return resolveSessionToken(await currentSessionToken());
 }

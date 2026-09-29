@@ -115,6 +115,15 @@ export interface CertificationRunConfig {
    * verbatim; missing labels fall back to running the gate in-process.
    */
   repoGateResults?: Record<string, { command: string; exitCode: number | null; summary: string }>;
+  /**
+   * W116 — the operator's platform-admin account for the W078 smoke
+   * waitlist acceptance on the production target (the account designated
+   * on the deployment through AURUM_PLATFORM_ADMIN_EMAILS). Optional:
+   * without it the smoke's waitlist journey blocks honestly.
+   */
+  adminEmail?: string | null;
+  /** The admin account's password (pair with adminEmail). */
+  adminPassword?: string | null;
   /** Injectable fetch for the integration tests. */
   fetchImpl?: typeof fetch;
   /** Injectable child-process runner for the integration tests. */
@@ -332,6 +341,8 @@ async function runW078(
       expectedEnvironment: 'production',
       workerToken,
       expectQuickSignIn: 'off',
+      adminEmail: config.adminEmail ?? null,
+      adminPassword: config.adminPassword ?? null,
       repoRoot: null,
       label: `production-certification-run-${config.runLabel.toLowerCase()}`,
       fetchImpl: config.fetchImpl,

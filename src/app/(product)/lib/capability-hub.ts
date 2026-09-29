@@ -599,7 +599,7 @@ export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
   {
     id: 'account',
     heading: 'Your company and account',
-    blurb: 'The company itself, invitations and your session.',
+    blurb: 'The company itself, invitations, your password and your session.',
     entries: [
       {
         id: 'company',
@@ -618,6 +618,26 @@ export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
           'team',
           'account',
           'setup',
+        ],
+        icon: 'more',
+        note: null,
+      },
+      {
+        id: 'password',
+        label: 'Change your password',
+        summary:
+          'Set a new sign-in password — every other browser signs out — or end all sessions at once.',
+        href: '/more/password',
+        keywords: [
+          'password',
+          'change password',
+          'sign in',
+          'signin',
+          'security',
+          'sessions',
+          'sign out',
+          'sign out everywhere',
+          'devices',
         ],
         icon: 'more',
         note: null,

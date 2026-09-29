@@ -1,0 +1,28 @@
+-- W116 · auth module — platform administrators on `auth_users`.
+--
+-- `is_platform_admin` marks the principals who may review and decide the
+-- access waitlist (005-auth-waitlist.sql) through the platform admin
+-- surface (/platform/waitlist). It is a PLATFORM fact about a principal —
+-- never a tenant role — so it lives on the platform table `auth_users`
+-- itself (which the arch allowlist already exempts from tenant scoping).
+--
+-- DESIGNATION (deterministic, fail-closed):
+--   * AURUM_PLATFORM_ADMIN_EMAILS (comma-separated, case-insensitive):
+--     on sign-in, a matching email is granted the flag. This is the
+--     PRODUCTION bootstrap — the operator designates themselves with an
+--     environment variable, no seed, no database edit. When the variable
+--     is unset (the default), NO email ever matches: the grant fails
+--     closed and only an explicit flag write can make an admin. Fresh
+--     deployments: a PENDING waitlist request for a designated email
+--     self-accepts at sign-in (the password proof keeps it
+--     takeover-proof; decided_by records the principal's own id) —
+--     otherwise the first admin could never exist.
+--   * The demo harness (W068) sets the flag for its manager persona
+--     through the auth contract's explicit platform-admin operation — a
+--     non-production seed, refused in production runtimes by the demo
+--     gate.
+-- The flag is sticky: granting never revokes (removing an email from the
+-- environment variable does not demote a principal already granted; use
+-- the database deliberately for that).
+
+ALTER TABLE auth_users ADD COLUMN is_platform_admin boolean NOT NULL DEFAULT false;

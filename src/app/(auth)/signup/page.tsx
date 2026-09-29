@@ -1,8 +1,11 @@
-// Auth surfaces (W058) — /signup.
+// Auth surfaces (W058/W116) — /signup.
 //
-// Register + sign in (one password transmission). ?invite=<code> from an
-// invitation link pre-fills the bound email and is redeemed server-side
-// after registration. Already-signed-in visitors are routed onward.
+// The waitlist-gated entry (W116): a request without a usable invitation
+// joins the access waitlist — the Aurum team accepts accounts before they
+// exist. ?invite=<code> from an invitation link pre-fills the bound email
+// and keeps today's immediate-access path (an invitation is already
+// admin-granted trust, redeemed server-side after registration).
+// Already-signed-in visitors are routed onward.
 
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -43,16 +46,16 @@ export default async function SignUpPage({
 
   return (
     <div className="aurum-auth-card">
-      <AuthBrand tag="Create your account" />
+      <AuthBrand tag={inviteCode === null ? 'Request an account' : 'Create your account'} />
       <h1 className="aurum-auth-title">Get started with Aurum</h1>
       <p className="aurum-auth-blurb">
-        One account, your company&apos;s workspace. After signing up you
-        create or join a company — then Aurum starts work as your
-        organizational intelligence employee.
+        {inviteCode !== null && inviteUsable
+          ? "One account, your company's workspace. You are creating it now to accept your invitation — then Aurum starts work as your organizational intelligence employee."
+          : 'Sign-up puts your request on a short waitlist — the Aurum team reviews every account before it is created. Once accepted, you sign in and create or join your company.'}
       </p>
       {inviteCode !== null && !inviteUsable ? (
         <p className="aurum-auth-error" role="alert" style={{ marginBottom: 13 }}>
-          The invitation link is no longer usable — you can still create an
+          The invitation link is no longer usable — you can still request an
           account; ask your company&apos;s admin for a fresh invitation.
         </p>
       ) : null}

@@ -203,17 +203,62 @@ function cannedTarget(environment: 'production' | 'preview'): {
 
     // auth + chat journey layer
     if (path === '/api/auth/sign-up' && method === 'POST') {
+      // W116: the waitlist-gated sign-up — no account, no session cookie.
       return jsonResponse(
         {
-          session: { principal: { id: 'principal-1' }, company: null, expiresAt: '2099-01-01T00:00:00Z' },
+          result: 'waitlisted',
+          message: "You're on the waitlist — the Aurum team will review your request.",
         },
         200,
-        { 'set-cookie': SESSION_COOKIE },
       );
     }
     if (path === '/api/auth/sign-in' && method === 'POST') {
-      // The canned production target has no demo persona — honest 401.
+      const email =
+        body === null ? '' : String((JSON.parse(body) as { email?: unknown }).email ?? '');
+      // The operator's designated platform-admin account (the production
+      // bootstrap), and the accepted smoke account after its request was
+      // accepted — everything else (demo personas) fails honestly.
+      if (email === 'operator@prod.example.test' || email.startsWith('w078-smoke-')) {
+        return jsonResponse(
+          {
+            session: { principal: { id: 'principal-1' }, company: null, expiresAt: '2099-01-01T00:00:00Z' },
+          },
+          200,
+          { 'set-cookie': SESSION_COOKIE },
+        );
+      }
       return jsonResponse({ error: 'invalid_credentials', message: 'email or password is incorrect' }, 401);
+    }
+    if (path === '/api/platform/waitlist' && method === 'GET') {
+      // The operator's review queue (the smoke request is waiting).
+      return jsonResponse({
+        requests: [
+          {
+            id: 'waitlist-smoke-1',
+            email: 'w078-smoke-prodtest@aurum-smoke.test',
+            displayName: 'W078 Smoke Operator',
+            status: 'pending',
+            note: null,
+            requestedAt: '2026-09-23T00:00:00.000Z',
+            decidedAt: null,
+            decidedBy: null,
+          },
+        ],
+      });
+    }
+    if (path === '/api/platform/waitlist/accept' && method === 'POST') {
+      return jsonResponse({
+        request: {
+          id: 'waitlist-smoke-1',
+          email: 'w078-smoke-prodtest@aurum-smoke.test',
+          displayName: 'W078 Smoke Operator',
+          status: 'accepted',
+          note: null,
+          requestedAt: '2026-09-23T00:00:00.000Z',
+          decidedAt: '2026-09-23T00:00:01.000Z',
+          decidedBy: 'principal-operator',
+        },
+      });
     }
     if (path === '/api/auth/session' && method === 'GET') {
       const signedOut = log.some((entry) => entry.url.includes('/api/auth/sign-out'));
@@ -304,6 +349,10 @@ describe('W078 driver × W079 — seeded demo checks on production targets', () 
       expectedEnvironment: 'production',
       workerToken: 'the-worker-token',
       expectQuickSignIn: 'off',
+      // W116: the operator's designated platform-admin account accepts
+      // the smoke request on the unseeded production target.
+      adminEmail: 'operator@prod.example.test',
+      adminPassword: 'the-operator-password',
       repoRoot: null,
       fetchImpl,
       runId: 'prodtest',
@@ -327,6 +376,8 @@ describe('W078 driver × W079 — seeded demo checks on production targets', () 
     // canned production target: the production path is NOT weakened.
     for (const id of [
       'auth.signup',
+      'auth.waitlist-accept',
+      'auth.signin-accepted',
       'auth.session-no-company',
       'auth.chat-gated-pre-onboarding',
       'auth.onboarding-company',

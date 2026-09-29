@@ -19,7 +19,7 @@ export const DEMO_JOURNEYS: readonly DemoJourney[] = [
     ref: '·',
     title: 'The demo world',
     description:
-      'Three seeded tenants (the demo company, a marketplace vendor, the platform review tenant), four sign-in personas mapped to the real tenant-role ladder, the employee\u2019s person/employee/identity records, and the tenant selections that make each persona land in its company on sign-in.',
+      'Three seeded tenants (the demo company, a marketplace vendor, the platform review tenant), four sign-in personas mapped to the real tenant-role ladder (the manager is the platform admin of the W116 access waitlist), the employee\u2019s person/employee/identity records, the tenant selections that make each persona land in its company on sign-in, and one pending access waitlist request for the manager to review.',
     primaryRole: 'manager',
     alsoExercisedBy: ['employee', 'developer', 'platform-reviewer'],
     anchorKeys: [
@@ -37,6 +37,7 @@ export const DEMO_JOURNEYS: readonly DemoJourney[] = [
       'person-employee',
       'employee-record',
       'identity-web',
+      'waitlist-pending',
     ],
   },
   {
