@@ -545,7 +545,14 @@ describe('W044 marketplace — vendor packages are tenant-isolated until publica
     expect(installable.state).toBe('INSTALLABLE');
 
     // The mirror chain: B's package reviewed by A's platform principal.
-    const pkgB = await createPackage(vendorB, agentPackageInput());
+    // (W119: the mirror fixture carries its own display name — within a
+    // kind the public catalog lists one package per display name, so two
+    // vendors publishing same-named packages of one kind would be ONE
+    // listing, not two. Distinct products get distinct listing names.)
+    const pkgB = await createPackage(
+      vendorB,
+      agentPackageInput({ displayName: 'Isolation Analyst B' }),
+    );
     await submitPackage(vendorB, { packageId: pkgB.id });
     await runAutomatedVerification(operatorA, { packageId: pkgB.id });
     await reviewPackage(operatorA, { packageId: pkgB.id, decision: 'approve' });

@@ -32,12 +32,16 @@
 //    writes); the public catalog exposes exactly PUBLISHED/INSTALLABLE
 //    versions to every tenant; publication never implies installation
 //    (lock 26) — this module's chain ends at INSTALLABLE.
-//  * THE CATALOG'S DISPLAY CARDINALITY (W117): the public catalog lists
-//    ONE row per (kind, package_key) — the NEWEST published version —
-//    even when the append-only history holds many published versions of
-//    the same package (the production defect: automated certification
-//    runs re-registered one package nine times and the catalog showed
-//    nine near-identical listings). The collapse is per kind, composes
+//  * THE CATALOG'S DISPLAY CARDINALITY (W117/W119): the public catalog
+//    lists ONE row per (kind, display_name) — the NEWEST published
+//    version, then the most recently updated — even when the
+//    append-only history holds many published versions of one package
+//    (version stacking) or same-named re-registrations under DIFFERENT
+//    keys (the production defects: automated certification runs
+//    re-registered one package nine times — nine versions of one key,
+//    then nine distinct keys under one display name — and the catalog
+//    showed nine near-identical listings each time). The collapse is
+//    per kind (an extension and an agent may share a name), composes
 //    with the kind filter, and the limit counts collapsed listings, not
 //    underlying rows; the review queue keeps every pending version.
 //  * STORAGE-LEVEL GUARANTEES: package payloads are frozen (only state
@@ -52,6 +56,7 @@ delete process.env.REDIS_URL;
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { closeDb, getDb } from '@/infra/db';
+import { systemClock } from '@/infra/clock';
 import { newId } from '@/infra/ids';
 import type { TenantContext } from '@/infra/tenant';
 import {
@@ -134,17 +139,22 @@ async function expectDbRejection(fragment: string, fn: () => Promise<unknown>): 
   await expect(fn()).rejects.toThrow(fragment);
 }
 
-/** Register one extension manifest version in the vendor tenant (the artifact source). */
+/**
+ * Register one extension manifest version in the vendor tenant (the
+ * artifact source). The manifest's display name becomes the package's
+ * listing name.
+ */
 async function registerManifest(
   tenantId: string,
   extensionKey: string,
   version: string,
+  displayName: string = 'Probe Extension',
 ): Promise<string> {
   const registered = await registerExtensionManifest(extensionRegistrar(tenantId), {
     extensionKey,
     version,
     manifestSchemaVersion: 1,
-    displayName: 'Probe Extension',
+    displayName,
     hostRuntime: { minVersion: '1.0.0' },
   });
   return registered.manifest.id;
@@ -174,12 +184,13 @@ async function submitAgentPackage(
   tenantId: string,
   packageKey: string,
   version: string,
+  displayName: string = 'Reconciler',
 ): Promise<MarketplacePackage> {
   const created = await createPackage(vendorSubmitter(tenantId), {
     kind: 'agent',
     packageKey,
     version,
-    displayName: 'Reconciler',
+    displayName,
     description: 'Reconciles invoices.',
     role: 'Invoice reconciler',
     instructions: 'Reconcile invoices; flag mismatches.',
@@ -803,7 +814,15 @@ describe('the public catalog collapses to the latest version per (kind, key)', (
   // re-registered the same package many times (nine versions of one
   // listing on /marketplace). The catalog stays append-only — every
   // published row remains in the table and reachable by id — but the
-  // LISTING is one row per (kind, key): the newest published version.
+  // LISTING is one row per package: the newest published version. Since
+  // W119 the collapse key is the listing identity (kind, display_name),
+  // so every probe here derives its display name from its key: versions
+  // of one package share ONE name (they are one listing), and distinct
+  // packages keep distinct names (the governed-catalog invariant —
+  // within a kind a display name identifies exactly one listing).
+
+  /** The listing name for a catalog probe: derived from the key, so versions of one key share it and distinct keys never collide on it. */
+  const catalogName = (key: string): string => `Catalog Probe ${key}`;
 
   /** Create, submit, verify, review and PUBLISH one agent package (the public gate). */
   async function publishAgentPackage(
@@ -811,7 +830,7 @@ describe('the public catalog collapses to the latest version per (kind, key)', (
     packageKey: string,
     version: string,
   ): Promise<MarketplacePackage> {
-    const submitted = await submitAgentPackage(tenantId, packageKey, version);
+    const submitted = await submitAgentPackage(tenantId, packageKey, version, catalogName(packageKey));
     await runAutomatedVerification(platformAdmin(), { packageId: submitted.id });
     await reviewPackage(platformAdmin(), {
       packageId: submitted.id,
@@ -829,7 +848,7 @@ describe('the public catalog collapses to the latest version per (kind, key)', (
     extensionKey: string,
     version: string,
   ): Promise<MarketplacePackage> {
-    const manifestId = await registerManifest(tenantId, extensionKey, version);
+    const manifestId = await registerManifest(tenantId, extensionKey, version, catalogName(extensionKey));
     const created = await createPackage(vendorSubmitter(tenantId), { kind: 'extension', manifestId });
     const submitted = await submitPackage(vendorSubmitter(tenantId), { packageId: created.id });
     await runAutomatedVerification(platformAdmin(), { packageId: submitted.id });
@@ -901,8 +920,9 @@ describe('the public catalog collapses to the latest version per (kind, key)', (
   });
 
   it('applies the limit AFTER the collapse — the limit counts listings, not underlying rows', async () => {
-    // Three published versions of one key. The key sorts before every
-    // other public agent package in this suite's shared database, so it
+    // Three published versions of one key. The derived listing name
+    // ('Catalog Probe aaa-collapse-limit') sorts before every other
+    // public agent listing in this suite's shared database, so it
     // deterministically occupies the first listing slot.
     await publishAgentPackage(tenantVendor, 'aaa-collapse-limit', '1.0.0');
     await publishAgentPackage(tenantVendor, 'aaa-collapse-limit', '1.0.1');
@@ -922,6 +942,180 @@ describe('the public catalog collapses to the latest version per (kind, key)', (
     expect(page).toHaveLength(2);
     expect(page[0]!.id).toBe(newest.id);
     expect(page[1]!.packageKey).not.toBe('aaa-collapse-limit');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The catalog's display cardinality, part two (W119 — same-named
+// re-registrations under different keys collapse too)
+// ---------------------------------------------------------------------------
+
+describe('the public catalog collapses to one listing per (kind, display name)', () => {
+  // The second production defect: repeated registrations through the
+  // developer publish flow produced NINE DIFFERENT KEYS — all v1.0.0,
+  // all the same display name "Cold Chain Watch". W117's version
+  // collapse could not touch them: the (kind, key) identity saw nine
+  // packages. The listing identity is (kind, display_name) — within a
+  // kind a display name identifies exactly one listing (platform review
+  // would never approve two same-named packages of one kind as distinct
+  // listings). Collapsed sibling rows stay append-only history,
+  // reachable by id; only the LISTING collapses.
+
+  /** Create, submit, verify, review and PUBLISH one AGENT package under an EXPLICIT listing name. */
+  async function publishNamedAgentPackage(
+    tenantId: string,
+    packageKey: string,
+    version: string,
+    displayName: string,
+  ): Promise<MarketplacePackage> {
+    const submitted = await submitAgentPackage(tenantId, packageKey, version, displayName);
+    await runAutomatedVerification(platformAdmin(), { packageId: submitted.id });
+    await reviewPackage(platformAdmin(), {
+      packageId: submitted.id,
+      decision: 'approve',
+      reason: 'Clean artifact',
+    });
+    const published = await publishPackage(platformAdmin(), { packageId: submitted.id });
+    expect(published.state).toBe('PUBLISHED');
+    return published;
+  }
+
+  /** The same governed chain for an EXTENSION package under an explicit listing name. */
+  async function publishNamedExtensionPackage(
+    tenantId: string,
+    extensionKey: string,
+    version: string,
+    displayName: string,
+  ): Promise<MarketplacePackage> {
+    const manifestId = await registerManifest(tenantId, extensionKey, version, displayName);
+    const created = await createPackage(vendorSubmitter(tenantId), { kind: 'extension', manifestId });
+    const submitted = await submitPackage(vendorSubmitter(tenantId), { packageId: created.id });
+    await runAutomatedVerification(platformAdmin(), { packageId: submitted.id });
+    await reviewPackage(platformAdmin(), {
+      packageId: submitted.id,
+      decision: 'approve',
+      reason: 'Clean artifact',
+    });
+    const published = await publishPackage(platformAdmin(), { packageId: submitted.id });
+    expect(published.state).toBe('PUBLISHED');
+    return published;
+  }
+
+  it('collapses same-named DIFFERENT-KEY registrations to ONE listing — the newer-updated row when versions tie', async () => {
+    // The production shape: two keys, one display name, one kind, one
+    // version. The injectable clock is pinned around each registration
+    // so the updated_at ordering is deterministic: same-millisecond
+    // writes can tie under the embedded database, and the id tie-break
+    // (random uuids) must not decide which listing a reader sees here.
+    const realNow = systemClock.now;
+    try {
+      systemClock.now = () => new Date('2025-01-01T00:00:00.000Z');
+      const first = await publishNamedAgentPackage(
+        tenantVendor, 'w119-cold-chain-a', '1.0.0', 'Cold Chain Watch',
+      );
+      systemClock.now = () => new Date('2026-01-01T00:00:00.000Z');
+      const second = await publishNamedAgentPackage(
+        tenantVendor, 'w119-cold-chain-b', '1.0.0', 'Cold Chain Watch',
+      );
+
+      // The catalog: exactly ONE listing for the name — the versions
+      // tie, so the most recently updated registration (the 2026 one)
+      // represents it.
+      const catalog = await listCatalogPackages(member(tenantIso), { kind: 'agent' });
+      const mine = catalog.filter((pkg) => pkg.displayName === 'Cold Chain Watch');
+      expect(mine).toHaveLength(1);
+      expect(mine[0]!.id).toBe(second.id);
+      expect(mine[0]!.packageKey).toBe('w119-cold-chain-b');
+      expect(catalog.map((pkg) => pkg.id)).not.toContain(first.id);
+
+      // The collapsed sibling is untouched append-only history, still
+      // reachable by id from any tenant — only the LISTING collapses.
+      const firstStillReadable = await getPackage(member(tenantIso), { packageId: first.id });
+      expect(firstStillReadable.state).toBe('PUBLISHED');
+    } finally {
+      systemClock.now = realNow;
+    }
+  });
+
+  it('does NOT collapse the same display name across kinds — an extension and an agent named alike are BOTH listed', async () => {
+    const sharedName = 'W119 Shared Name Probe';
+    const agent = await publishNamedAgentPackage(
+      tenantVendor, 'w119-shared-name-agent', '1.0.0', sharedName,
+    );
+    const extension = await publishNamedExtensionPackage(
+      tenantVendor, 'w119-shared-name-ext', '1.0.0', sharedName,
+    );
+
+    // Both listings exist: the kind is part of the listing identity, so
+    // one agent and one extension may lawfully share a display name.
+    const all = await listCatalogPackages(member(tenantIso), {});
+    const mine = all.filter((pkg) => pkg.displayName === sharedName);
+    expect(mine).toHaveLength(2);
+    expect(mine.find((pkg) => pkg.kind === 'agent')!.id).toBe(agent.id);
+    expect(mine.find((pkg) => pkg.kind === 'extension')!.id).toBe(extension.id);
+
+    // And the kind filter still composes with the display-level
+    // collapse: one listing per (kind, name) on each side.
+    const agents = await listCatalogPackages(member(tenantIso), { kind: 'agent' });
+    expect(agents.filter((pkg) => pkg.displayName === sharedName).map((pkg) => pkg.id))
+      .toEqual([agent.id]);
+    const extensions = await listCatalogPackages(member(tenantIso), { kind: 'extension' });
+    expect(extensions.filter((pkg) => pkg.displayName === sharedName).map((pkg) => pkg.id))
+      .toEqual([extension.id]);
+  });
+
+  it('keeps newest-version-wins WITHIN a name — two versions of one key (one name) list only the newer', async () => {
+    // The W117 guarantee, re-pinned under the name identity: versions
+    // of one package share the display name, so the (kind, name) group
+    // still resolves to the newest version. 1.0.10 > 1.0.9 numerically
+    // but sorts before it as text — the tie-break must follow the
+    // parsed version columns, not the string.
+    const older = await publishNamedAgentPackage(
+      tenantVendor, 'w119-versioned-name', '1.0.9', 'W119 Versioned Name',
+    );
+    const newer = await publishNamedAgentPackage(
+      tenantVendor, 'w119-versioned-name', '1.0.10', 'W119 Versioned Name',
+    );
+
+    const catalog = await listCatalogPackages(member(tenantIso), { kind: 'agent' });
+    const mine = catalog.filter((pkg) => pkg.displayName === 'W119 Versioned Name');
+    expect(mine).toHaveLength(1);
+    expect(mine[0]!.id).toBe(newer.id);
+    expect(mine[0]!.version).toBe('1.0.10');
+    expect(mine.map((pkg) => pkg.id)).not.toContain(older.id);
+
+    // The vendor's own versioned view keeps both rows — only the
+    // CATALOG collapses.
+    const vendorView = await listPackages(vendorA(), { kind: 'agent', states: ['PUBLISHED'] });
+    const mineVendor = vendorView.filter((pkg) => pkg.packageKey === 'w119-versioned-name');
+    expect(mineVendor.map((pkg) => pkg.id).sort()).toEqual([older.id, newer.id].sort());
+  });
+
+  it('applies the limit AFTER the same-name collapse — three same-named keys, limit 1 → exactly one row', async () => {
+    // Three DIFFERENT keys under ONE display name. The name sorts
+    // before every other public agent listing in this suite's shared
+    // database, so the collapsed group deterministically occupies the
+    // first listing slot.
+    await publishNamedAgentPackage(tenantVendor, 'w119-limit-a', '1.0.0', 'A0 Same Name Limit');
+    await publishNamedAgentPackage(tenantVendor, 'w119-limit-b', '1.0.1', 'A0 Same Name Limit');
+    const highest = await publishNamedAgentPackage(
+      tenantVendor, 'w119-limit-c', '1.0.2', 'A0 Same Name Limit',
+    );
+
+    // limit: 1 → exactly one row: three underlying public rows, one
+    // listing returned, and its representative is the highest-version
+    // row of the group (version-desc decides before updated_at).
+    const only = await listCatalogPackages(member(tenantIso), { kind: 'agent', limit: 1 });
+    expect(only).toHaveLength(1);
+    expect(only[0]!.displayName).toBe('A0 Same Name Limit');
+    expect(only[0]!.id).toBe(highest.id);
+    expect(only[0]!.version).toBe('1.0.2');
+
+    // limit: 2 → the SECOND slot goes to a DIFFERENT listing group: the
+    // two collapsed-away siblings consume no limit slots.
+    const page = await listCatalogPackages(member(tenantIso), { kind: 'agent', limit: 2 });
+    expect(page).toHaveLength(2);
+    expect(page[1]!.displayName).not.toBe('A0 Same Name Limit');
   });
 });
 

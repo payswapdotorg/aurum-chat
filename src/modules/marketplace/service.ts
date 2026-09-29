@@ -851,13 +851,22 @@ export async function listPackages(
 }
 
 /**
- * The public catalog (W117): exactly PUBLISHED and INSTALLABLE packages,
- * collapsed to the latest version per (kind, package_key) — DISTINCT ON
- * keeps the first row of each group under the version-descending ORDER BY
- * (the newest published version), so re-registered versions never stack
- * up as near-identical listings, and the LIMIT applies after the collapse
- * (it counts listings, not underlying rows). Older versions stay reachable
- * by id (detail pages, the installed registry); only the listing collapses.
+ * The public catalog (W117/W119): exactly PUBLISHED and INSTALLABLE
+ * packages, collapsed to ONE listing per (package_kind, display_name) —
+ * within a kind a display name identifies one listing (the
+ * governed-catalog invariant: platform review never approves two
+ * same-named packages of one kind as distinct listings). DISTINCT ON
+ * keeps the first row of each group under the version-descending, then
+ * most-recently-updated, ORDER BY, so neither version stacking (one
+ * package_key re-registered at many versions) nor same-named
+ * re-registrations under DIFFERENT keys (the production pollution: nine
+ * near-identical "Cold Chain Watch" listings) stack up as near-identical
+ * listings. Same-named packages of DIFFERENT kinds stay distinct (kind is
+ * part of the listing identity). The trailing id tie-break makes the
+ * output byte-stable, and the LIMIT applies after the collapse (it
+ * counts listings, not underlying rows). Older versions and collapsed
+ * same-named siblings stay reachable by id (detail pages, the installed
+ * registry); only the listing collapses.
  */
 export async function listCatalogPackages(
   ctx: TenantContext,
@@ -866,11 +875,12 @@ export async function listCatalogPackages(
   assertMarketplaceTenantContext(ctx);
   const valid = validateListKindQuery(query);
   const rows = await getDb().query<PackageRow>(
-    `SELECT DISTINCT ON (package_kind, package_key) ${PACKAGE_COLUMNS} FROM marketplace_packages
+    `SELECT DISTINCT ON (package_kind, display_name) ${PACKAGE_COLUMNS} FROM marketplace_packages
        WHERE state = ANY($1::text[])
          AND ($2::text IS NULL OR package_kind = $2::text)
-       ORDER BY package_kind ASC, package_key ASC,
-         version_major DESC, version_minor DESC, version_patch DESC
+       ORDER BY package_kind ASC, display_name ASC,
+         version_major DESC, version_minor DESC, version_patch DESC,
+         updated_at DESC, id ASC
        LIMIT $3`,
     [[...MARKETPLACE_PUBLIC_STATES], valid.kind, valid.limit],
   );
