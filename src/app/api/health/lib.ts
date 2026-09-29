@@ -57,6 +57,7 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'agent_team_versions', 'agent_teams', 'ai_provider_accounts', 'api_keys',
   'api_webhook_deliveries', 'api_webhook_delivery_attempts', 'api_webhook_subscriptions',
   'audit_records', 'auth_invites', 'auth_sessions', 'auth_user_companies', 'auth_users',
+  'auth_waitlist', // W116 — the access waitlist (platform table)
   'automation_measurements', 'automation_opportunities', 'automation_opportunity_versions',
   'beliefs', 'briefing_policies', 'briefing_sections', 'briefings', 'broker_checkpoint_history',
   'broker_checkpoints', 'broker_connection_events', 'broker_connections',

@@ -40,10 +40,20 @@
 -- race-proof backstop for "one pending request per email", exactly like
 -- auth_invites_pending_email.
 
-ALTER TABLE auth_users
-  ADD COLUMN is_platform_admin boolean NOT NULL DEFAULT false;
+-- IDEMPOTENT GUARDS (W118 production reality): a `auth_waitlist` table
+-- already exists in the production database (created outside repo
+-- history while the first implementation attempt was in flight — the
+-- W118 health diagnostic named it). If the production _migrations
+-- ledger does not carry this migration's name, the runner will apply
+-- this file against that database: the IF NOT EXISTS guards make every
+-- statement a no-op against the pre-existing table/column/indexes
+-- instead of a fatal deploy. On a fresh database the guards are equally
+-- inert — the statements create exactly what they declare.
 
-CREATE TABLE auth_waitlist (
+ALTER TABLE auth_users
+  ADD COLUMN IF NOT EXISTS is_platform_admin boolean NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS auth_waitlist (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text NOT NULL CHECK (email = lower(email) AND char_length(email) BETWEEN 3 AND 254
     AND email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'),
@@ -56,8 +66,8 @@ CREATE TABLE auth_waitlist (
   note text CHECK (char_length(note) BETWEEN 1 AND 280)
 );
 
-CREATE INDEX auth_waitlist_email_idx ON auth_waitlist (email);
+CREATE INDEX IF NOT EXISTS auth_waitlist_email_idx ON auth_waitlist (email);
 
 -- Only one PENDING request per email (see above).
-CREATE UNIQUE INDEX auth_waitlist_pending_email
+CREATE UNIQUE INDEX IF NOT EXISTS auth_waitlist_pending_email
   ON auth_waitlist (email) WHERE status = 'pending';
