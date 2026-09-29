@@ -850,6 +850,15 @@ export async function listPackages(
   return rows.rows.map(mapPackage);
 }
 
+/**
+ * The public catalog (W117): exactly PUBLISHED and INSTALLABLE packages,
+ * collapsed to the latest version per (kind, package_key) — DISTINCT ON
+ * keeps the first row of each group under the version-descending ORDER BY
+ * (the newest published version), so re-registered versions never stack
+ * up as near-identical listings, and the LIMIT applies after the collapse
+ * (it counts listings, not underlying rows). Older versions stay reachable
+ * by id (detail pages, the installed registry); only the listing collapses.
+ */
 export async function listCatalogPackages(
   ctx: TenantContext,
   query: ListCatalogPackagesQuery,
@@ -857,7 +866,7 @@ export async function listCatalogPackages(
   assertMarketplaceTenantContext(ctx);
   const valid = validateListKindQuery(query);
   const rows = await getDb().query<PackageRow>(
-    `SELECT ${PACKAGE_COLUMNS} FROM marketplace_packages
+    `SELECT DISTINCT ON (package_kind, package_key) ${PACKAGE_COLUMNS} FROM marketplace_packages
        WHERE state = ANY($1::text[])
          AND ($2::text IS NULL OR package_kind = $2::text)
        ORDER BY package_kind ASC, package_key ASC,
