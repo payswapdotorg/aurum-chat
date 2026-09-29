@@ -18,13 +18,52 @@ import { NotificationEntry } from './notification-entry';
 import { useProductShell } from './product-shell-provider';
 import { useShellState } from './shell-state-context';
 import { ShellGlyph } from './icons';
-import { activeAreaId, productArea, railNavAreas } from '../lib/navigation';
+import {
+  activeAreaId,
+  productArea,
+  railNavAreas,
+  type ProductAreaId,
+} from '../lib/navigation';
+
+// W114 — the rail reads as a chat list: every area row carries its
+// colored icon tile (the hue lives in product.css, keyed by data-area)
+// and a one-line messenger-voice subtitle. Display strings only — the
+// navigation registry (hrefs, labels, semantics) is untouched.
+const RAIL_SUBTITLE: Record<ProductAreaId, string> = {
+  chat: 'Aurum — on duty, always',
+  today: 'Your daily briefing',
+  intelligence: 'What Aurum found on its own',
+  people: 'Who does the work',
+  connections: 'Channels & systems',
+  marketplace: 'Add capabilities',
+  more: 'Settings & everything else',
+};
+
+function RailLink({ areaId }: { areaId: ProductAreaId }): ReactNode {
+  const pathname = usePathname() ?? '/';
+  const active = activeAreaId(pathname);
+  const area = productArea(areaId);
+  return (
+    <Link
+      href={area.href}
+      className="aurum-rail-link"
+      data-area={area.id}
+      aria-current={active === area.id ? 'page' : undefined}
+    >
+      <span className="aurum-rail-tile" aria-hidden="true">
+        <ShellGlyph name={area.icon} />
+      </span>
+      <span className="aurum-rail-text">
+        <span className="aurum-rail-label">{area.label}</span>
+        <span className="aurum-rail-sub">{RAIL_SUBTITLE[area.id]}</span>
+      </span>
+    </Link>
+  );
+}
 
 export function DesktopRail(): ReactNode {
-  const pathname = usePathname() ?? '/';
   const { openCommandSearch } = useProductShell();
   const { status } = useShellState();
-  const active = activeAreaId(pathname);
   const scoped =
     status.phase === 'ready' && status.view.company.ok
       ? status.view.company.tenant.name
@@ -53,31 +92,26 @@ export function DesktopRail(): ReactNode {
         {railNavAreas()
           .filter((area) => area.mode === 'product')
           .map((area) => (
-            <Link
-              key={area.id}
-              href={area.href}
-              className="aurum-rail-link"
-              aria-current={active === area.id ? 'page' : undefined}
-            >
-              <ShellGlyph name={area.icon} />
-              <span>{area.label}</span>
-            </Link>
+            <RailLink key={area.id} areaId={area.id} />
           ))}
 
         <p className="aurum-rail-heading">Management mode</p>
         <Link
           href="/today"
           className="aurum-rail-link"
+          data-area="today"
           aria-current={undefined}
         >
-          <ShellGlyph name={productArea('today').icon} />
-          <span>{productArea('today').label}</span>
+          <span className="aurum-rail-tile" aria-hidden="true">
+            <ShellGlyph name={productArea('today').icon} />
+          </span>
+          <span className="aurum-rail-text">
+            <span className="aurum-rail-label">{productArea('today').label}</span>
+            <span className="aurum-rail-sub">{RAIL_SUBTITLE.today}</span>
+          </span>
           <span className="aurum-nav-note">tower</span>
         </Link>
-        <Link href="/more" className="aurum-rail-link" aria-current={active === 'more' ? 'page' : undefined}>
-          <ShellGlyph name={productArea('more').icon} />
-          <span>{productArea('more').label}</span>
-        </Link>
+        <RailLink areaId="more" />
       </nav>
 
       <div className="aurum-rail-foot">

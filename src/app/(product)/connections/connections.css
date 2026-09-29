@@ -5,6 +5,13 @@
    cream canvas, warm near-black typography, hairline borders, brand
    gold interactive accent (focus ring, actions), green/amber/red semantic
    status families, generous whitespace, quiet states, restrained motion.
+   W114 "everything is a conversation": the surface becomes the CHANNELS
+   view of the messenger — the body rides the thread sand (--wa-bg, the
+   tokens defined on .aurum-shell in product.css and inherited here), the
+   header is the dark-ink thread bar (gold left edge, cream Fraunces title),
+   section nav is a segmented control, stats are compact chips, and every
+   channel/source/destination row is a channel card (colored tile + status
+   dot) while identity rows read as contacts (plum initials avatars).
    No glassmorphism, no heavy gradients, no dashboard noise.
    Mobile-first; interactive targets are 44px+.
    ========================================================================== */
@@ -56,12 +63,24 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--canvas);
+  /* W114: the wrapper is transparent — the thread sand is painted on the
+     product shell's main canvas (the rule right below), exactly like every
+     other conversation surface (.aurum-page-head pages get it from
+     product.css; /connections carries its own header, so it opts in here). */
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+}
+
+/* W114 — the channels surface rides the thread sand: the shell's main
+   canvas turns --wa-bg for this surface only (scoped by :has(.conn), the
+   same opt-in pattern product.css uses for page-head surfaces; the --wa-*
+   tokens are defined on .aurum-shell and inherit down to everything here). */
+.aurum-shell:has(.conn) .aurum-main {
+  background: var(--wa-bg);
 }
 
 .conn * {
@@ -90,25 +109,43 @@
   padding: 10px 14px;
 }
 
-/* ---- header ---- */
+/* ---- header (the dark-ink thread bar) ---- */
 
+/* W114 — the same bar every conversation opens with (the .aurum-page-head
+   pattern): dark ink, gold 4px left edge, cream Fraunces title, muted-cream
+   status line. Rounded like the product page heads. */
 .conn-header {
-  border-bottom: 1px solid var(--line);
-  background: var(--card);
-  padding: 14px 20px;
+  border-bottom: none;
+  background: var(--wa-header);
+  color: var(--wa-header-fg);
+  border-radius: 16px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.conn-header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: var(--wa-send);
 }
 
 .conn-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--primary);
-  color: var(--primary-ink);
-  font-weight: 650;
-  font-size: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--wa-send);
+  color: #241e19;
+  font-weight: 700;
+  font-size: 16px;
   display: grid;
   place-items: center;
   flex: none;
@@ -117,28 +154,29 @@
 .conn-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--wa-header-fg);
 }
 
 .conn-sub {
   margin: 2px 0 0;
-  color: var(--muted);
+  color: var(--wa-header-meta);
   font-size: 12.5px;
 }
 
 .conn-header-meta {
   margin-left: auto;
   text-align: right;
-  color: var(--muted);
+  color: var(--wa-header-meta);
   font-size: 12px;
   display: none;
 }
 
 @media (min-width: 860px) {
   .conn-header {
-    padding: 16px 28px;
+    padding: 18px 24px;
   }
   .conn-header-meta {
     display: block;
@@ -164,27 +202,36 @@
   }
 }
 
+/* ---- section nav: a segmented control on the sand ---- */
+
 .conn-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
+/* W114 — the anchor chips read as one pill cluster (bubble-in segments,
+   warm hairlines, full-round ends, quiet hover — the same control the
+   marketplace kind filter uses). */
 .chip {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 6px 13px;
+  min-height: 34px;
+  padding: 5px 14px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--card);
+  border: 1px solid var(--wa-divider);
+  background: var(--wa-bubble-in);
   color: var(--ink-soft);
   text-decoration: none;
-  font-size: 13.5px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 120ms ease, color 120ms ease;
 }
 
 .chip:hover {
-  border-color: var(--line-strong);
+  border-color: var(--wa-divider);
+  background: var(--list-row-hover);
+  color: var(--ink);
 }
 
 .chip[aria-current="true"] {
@@ -199,12 +246,14 @@
   outline-offset: 2px;
 }
 
-/* ---- section cards ---- */
+/* ---- section cards (bubble-in panels on sand) ---- */
 
+/* W114 — the .aurum-panel language: incoming-bubble tone, warm divider
+   hairline, the messenger radius. */
 .conn-section {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 16px;
   padding: 18px;
 }
 
@@ -240,47 +289,54 @@
   max-width: 70ch;
 }
 
-/* ---- stats ---- */
+/* ---- stats: compact chips (strong number + label + hint per pill) ---- */
 
+/* W114 — the metric tiles become messenger stat chips: one pill per stat,
+   bubble-in on sand, warm hairline, number leading. */
 .stat-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 14px 0;
-}
-
-@media (min-width: 720px) {
-  .stat-row {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
 }
 
 .stat {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 12px 14px;
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 999px;
+  padding: 7px 14px;
 }
 
 .stat-value {
-  font-size: 20px;
-  font-weight: 650;
+  font-size: 15px;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
 .stat-label {
-  color: var(--ink-soft);
-  font-size: 12.5px;
-  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
 }
 
 .stat-hint {
   color: var(--muted);
-  font-size: 11.5px;
-  margin-top: 3px;
+  font-size: 11px;
+  margin: 0;
 }
 
-/* ---- pills ---- */
+.stat-hint::before {
+  content: "·";
+  margin-right: 5px;
+  color: var(--line-strong);
+}
+
+/* ---- pills (the health pill doubles as a status dot) ---- */
 
 .pill {
   display: inline-flex;
@@ -326,14 +382,34 @@
 }
 
 .pill .dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: currentColor;
   flex: none;
 }
 
-/* ---- item rows ---- */
+/* W114 — the HealthPill's dot speaks the messenger status language:
+   --status-on for healthy, --status-warn for needs-attention, the warm
+   risk red for degraded (hard failures keep their distinct signal),
+   --status-off for disconnected. (StatusPill renders no dot — unchanged.) */
+.pill-ok .dot {
+  background: var(--status-on);
+}
+
+.pill-warn .dot {
+  background: var(--status-warn);
+}
+
+.pill-risk .dot {
+  background: var(--risk);
+}
+
+.pill-muted .dot {
+  background: var(--status-off);
+}
+
+/* ---- item rows: channel cards / contact rows ---- */
 
 .rows {
   list-style: none;
@@ -344,7 +420,7 @@
 }
 
 .row {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--wa-divider);
   padding: 14px 2px 12px;
   display: flex;
   flex-direction: column;
@@ -363,6 +439,15 @@
   flex-wrap: wrap;
 }
 
+/* W114 — the lead of a row is tile + title as one unbreakable unit, so the
+   colored avatar never wraps away from the name it belongs to. */
+.row-lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .row-title {
   font-weight: 620;
   font-size: 14.5px;
@@ -379,6 +464,55 @@
   flex-wrap: wrap;
   color: var(--muted);
   font-size: 11.5px;
+}
+
+/* W114 — every connectable system is a CHANNEL CARD: a colored icon tile
+   (rounded square, cream initial, one stable warm hue per family — gold
+   channels, teal sources, rust destinations) leading the row title. */
+.conn-tile {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--primary);
+  color: #fdfaf6;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  flex: none;
+  user-select: none;
+}
+
+#channels .conn-tile {
+  background: #d9952a;
+}
+
+#sources .conn-tile {
+  background: #0f766e;
+}
+
+#destinations .conn-tile {
+  background: #b4571f;
+}
+
+/* Channel identities are CONTACTS: a plum initials avatar, round like the
+   contacts in a chat list. */
+.conn-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #7c4a5e;
+  color: #fdfaf6;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  flex: none;
+  user-select: none;
 }
 
 .reasons {
@@ -422,11 +556,20 @@
 
 /* ---- detail grids (progressive disclosure) ---- */
 
+/* W114 — disclosures keep the quiet hairline frame, now in the warm
+   divider tone; the section-level forms (connect a channel / source /
+   destination, create a person) are framed as YOUR outgoing message —
+   the bubble-out tone — "start a conversation with your systems". */
 details.disclose {
-  border: 1px solid var(--line);
+  border: 1px solid var(--wa-divider);
   border-radius: 8px;
-  background: var(--canvas);
+  background: transparent;
   margin-top: 8px;
+}
+
+.conn-section > details.disclose {
+  background: var(--wa-bubble-out);
+  border-color: #f0dcb4;
 }
 
 details.disclose > summary {
@@ -449,7 +592,7 @@ details.disclose > summary::before {
   content: "+";
   margin-right: 8px;
   font-weight: 650;
-  color: var(--muted);
+  color: var(--aurum);
 }
 
 details.disclose[open] > summary::before {
@@ -458,7 +601,11 @@ details.disclose[open] > summary::before {
 
 details.disclose > .disclose-body {
   padding: 4px 12px 14px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--wa-divider);
+}
+
+.conn-section > details.disclose > .disclose-body {
+  border-top-color: #f0dcb4;
 }
 
 .detail-grid {
@@ -643,7 +790,7 @@ details.disclose > .disclose-body {
 /* ---- empty / notice states (quiet) ---- */
 
 .empty {
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--wa-divider);
   border-radius: var(--radius);
   padding: 22px 18px;
   color: var(--muted);
@@ -659,9 +806,9 @@ details.disclose > .disclose-body {
 }
 
 .notice {
-  border: 1px solid var(--line);
+  border: 1px solid var(--wa-divider);
   border-left: 3px solid var(--teal);
-  background: var(--card);
+  background: var(--wa-bubble-in);
   border-radius: 8px;
   padding: 11px 14px;
   font-size: 12.5px;
@@ -680,10 +827,12 @@ details.disclose > .disclose-body {
 
 /* ---- footer (sticky bottom) ---- */
 
+/* W114 — the footer rides the sand quietly (no card slab): a warm
+   hairline and meta ink, the thread's closing line. */
 .conn-footer {
   margin-top: auto;
-  border-top: 1px solid var(--line);
-  background: var(--card);
+  border-top: 1px solid var(--wa-divider);
+  background: transparent;
   padding: 12px 20px 14px;
   display: flex;
   flex-wrap: wrap;

@@ -69,6 +69,9 @@ export function TowerNav(): ReactNode {
               <Link
                 key={item.href}
                 href={item.href}
+                // W114 — the channel-list read: the row's initial tile
+                // (purely presentational; the label span carries the name).
+                data-initial={item.label.charAt(0)}
                 aria-current={active ? 'page' : undefined}
               >
                 <span>{item.label}</span>

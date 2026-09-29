@@ -1,0 +1,200 @@
+/* ============================================================================
+   Marketplace (W064) — W114 "everything is a conversation": the DIRECTORY.
+   Loaded by the marketplace pages AFTER product.css (page import order), so
+   these are additive overrides that reframe the catalog surface into the
+   messenger language WITHOUT touching product.css:
+   - the kind filter becomes a segmented control on the thread sand;
+   - catalog / kit / installed-registry rows become directory cards — a
+     colored initial tile (one stable warm hue per row position, the same
+     6-hue cycle the shell rail and hub lists use) beside the existing
+     title link, pills, mono package key and description;
+   - the Installed / Developer area links become the same row language
+     (colored tile + title + one-line subtitle) the hub lists speak;
+   - the registry stat row becomes compact stat chips;
+   - the anonymous-visitor notice gets the bubble-in treatment on sand.
+   The --wa-* tokens inherit from product.css (.aurum-shell defines them);
+  selectors are scoped one level deeper than product.css so they win the
+   cascade regardless of chunk order. Flat surfaces + hairlines only.
+   ========================================================================== */
+
+/* ---- kind filter: a segmented control (gold active segment) -------------- */
+
+.aurum-shell .aurum-panel-title:has(.aurum-mkt-tabs) {
+  flex-wrap: wrap;
+}
+
+.aurum-shell .aurum-mkt-tabs {
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.aurum-shell .aurum-mkt-tab {
+  border: none;
+  background: transparent;
+  color: var(--muted-ink);
+  border-radius: 999px;
+  padding: 4px 12px;
+  min-height: 28px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.aurum-shell .aurum-mkt-tab:hover {
+  background: var(--list-row-hover);
+  color: var(--ink);
+  border-color: transparent;
+}
+
+.aurum-shell .aurum-mkt-tab[aria-current='page'] {
+  background: var(--wa-send);
+  border-color: transparent;
+  color: #241e19;
+  font-weight: 650;
+}
+
+/* ---- directory cards: initial tile + the existing row content ------------ */
+
+/* The li keeps its wa-divider hairline (product.css) and gains the tile
+   column; the JSX wraps the untouched head/foot/text in .aurum-dir-body. */
+.aurum-shell .aurum-item-list > li.aurum-dir-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+}
+
+.aurum-shell .aurum-dir-tile {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--graphite);
+  color: #fdfaf6;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+/* One stable warm hue per row position — the same cycle the rail, the hub
+   lists and the intelligence timeline use (warm family only). */
+.aurum-item-list > li.aurum-dir-row:nth-child(6n + 1) .aurum-dir-tile {
+  background: #d9952a;
+}
+
+.aurum-item-list > li.aurum-dir-row:nth-child(6n + 2) .aurum-dir-tile {
+  background: #3da35d;
+}
+
+.aurum-item-list > li.aurum-dir-row:nth-child(6n + 3) .aurum-dir-tile {
+  background: #0f766e;
+}
+
+.aurum-item-list > li.aurum-dir-row:nth-child(6n + 4) .aurum-dir-tile {
+  background: #b4571f;
+}
+
+.aurum-item-list > li.aurum-dir-row:nth-child(6n + 5) .aurum-dir-tile {
+  background: #7c4a5e;
+}
+
+.aurum-item-list > li.aurum-dir-row:nth-child(6n + 6) .aurum-dir-tile {
+  background: #c0603a;
+}
+
+.aurum-shell .aurum-dir-body {
+  min-width: 0;
+}
+
+/* ---- area links (Installed / Developer): the hub row language ------------ */
+
+.aurum-shell .aurum-mkt-area-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aurum-shell .aurum-mkt-area-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--wa-divider);
+  border-radius: 12px;
+  background: var(--wa-bubble-in);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.aurum-shell .aurum-mkt-area-link:hover {
+  background: var(--list-row-hover);
+  border-color: var(--wa-divider);
+}
+
+/* The glyph rides as the colored tile (gold for the registry, teal for the
+   developer surface — the lead's per-area tile hues). */
+.aurum-shell .aurum-mkt-area-link .aurum-icon {
+  width: 36px;
+  height: 36px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #d9952a;
+  color: #fdfaf6;
+  margin-top: 0;
+  flex: none;
+}
+
+.aurum-shell .aurum-mkt-area-link:nth-child(2) .aurum-icon {
+  background: #0f766e;
+}
+
+.aurum-shell .aurum-mkt-area-link strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.aurum-shell .aurum-mkt-area-link span span {
+  display: block;
+  font-size: 12px;
+  color: var(--wa-meta);
+  margin-top: 1px;
+}
+
+/* ---- registry stats: compact chips ---------------------------------------- */
+
+.aurum-shell .aurum-mkt-stat-row {
+  gap: 8px;
+}
+
+.aurum-shell .aurum-mkt-stat {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 7px;
+  border: 1px solid var(--wa-divider);
+  border-radius: 999px;
+  background: var(--wa-bubble-in);
+  padding: 6px 13px;
+  min-width: 0;
+}
+
+.aurum-shell .aurum-mkt-stat strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.aurum-shell .aurum-mkt-stat span {
+  font-size: 11.5px;
+  color: var(--wa-meta);
+}
+
+/* ---- the anonymous-visitor notice on the sand canvas ---------------------- */
+
+.aurum-shell .aurum-notice {
+  background: var(--wa-bubble-in);
+  border-color: var(--wa-divider);
+}

@@ -13,6 +13,7 @@
 // working parts of the pages below.
 
 import Link from 'next/link';
+import './marketplace.css';
 import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
 import { resolveSession } from '@/app/lib/session';
@@ -176,24 +177,29 @@ export default async function MarketplacePage({
         ) : (
           <ul className="aurum-item-list">
             {view.items.map((item) => (
-              <li key={item.id}>
-                <div className="aurum-item-head">
-                  <Link
-                    className="aurum-mkt-item-title"
-                    href={`/marketplace/package/${item.id}${scopeQuery}`}
-                  >
-                    {item.displayName}
-                  </Link>
-                  <StatusPill tone={item.stateTone}>{item.stateLabel}</StatusPill>
+              <li key={item.id} className="aurum-dir-row">
+                <span className="aurum-dir-tile" aria-hidden="true">
+                  {item.displayName.charAt(0).toUpperCase()}
+                </span>
+                <div className="aurum-dir-body">
+                  <div className="aurum-item-head">
+                    <Link
+                      className="aurum-mkt-item-title"
+                      href={`/marketplace/package/${item.id}${scopeQuery}`}
+                    >
+                      {item.displayName}
+                    </Link>
+                    <StatusPill tone={item.stateTone}>{item.stateLabel}</StatusPill>
+                  </div>
+                  <div className="aurum-item-foot">
+                    <span className="aurum-mono">{item.packageKey} · v{item.version}</span>
+                    <Tag>{item.kindLabel}</Tag>
+                    <Tag>{item.permissionCount} permission{item.permissionCount === 1 ? '' : 's'}</Tag>
+                  </div>
+                  {item.description === null || item.description === '' ? null : (
+                    <p className="aurum-item-text">{item.description}</p>
+                  )}
                 </div>
-                <div className="aurum-item-foot">
-                  <span className="aurum-mono">{item.packageKey} · v{item.version}</span>
-                  <Tag>{item.kindLabel}</Tag>
-                  <Tag>{item.permissionCount} permission{item.permissionCount === 1 ? '' : 's'}</Tag>
-                </div>
-                {item.description === null || item.description === '' ? null : (
-                  <p className="aurum-item-text">{item.description}</p>
-                )}
               </li>
             ))}
           </ul>
@@ -232,32 +238,37 @@ export default async function MarketplacePage({
           <>
             <ul className="aurum-item-list">
               {kits.items.map((kit) => (
-                <li key={kit.kitKey}>
-                  <div className="aurum-item-head">
-                    <Link
-                      className="aurum-mkt-item-title"
-                      href={`/marketplace/kit/${kit.kitKey}${scopeQuery}`}
-                    >
-                      {kit.displayName}
-                    </Link>
-                    <StatusPill tone={kit.stateTone}>{kit.stateLabel}</StatusPill>
+                <li key={kit.kitKey} className="aurum-dir-row">
+                  <span className="aurum-dir-tile" aria-hidden="true">
+                    {kit.displayName.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="aurum-dir-body">
+                    <div className="aurum-item-head">
+                      <Link
+                        className="aurum-mkt-item-title"
+                        href={`/marketplace/kit/${kit.kitKey}${scopeQuery}`}
+                      >
+                        {kit.displayName}
+                      </Link>
+                      <StatusPill tone={kit.stateTone}>{kit.stateLabel}</StatusPill>
+                    </div>
+                    <div className="aurum-item-foot">
+                      <span className="aurum-mono">{kit.kitKey} · v{kit.version}</span>
+                      <Tag>Vertical starter kit · {kit.verticalKey}</Tag>
+                      <Tag>{kit.capabilityCount} capabilit{kit.capabilityCount === 1 ? 'y' : 'ies'}</Tag>
+                      <Tag>digest {kit.manifestDigest.slice(0, 10)}…</Tag>
+                      {kits.tenantScoped && kit.tenant !== null ? (
+                        kit.tenant.registered === null ? (
+                          <Tag>not registered in your company</Tag>
+                        ) : (
+                          <Tag>v{kit.tenant.registered.version} · {kit.tenant.registered.verificationState}</Tag>
+                        )
+                      ) : null}
+                    </div>
+                    {kit.description === '' ? null : (
+                      <p className="aurum-item-text">{kit.description}</p>
+                    )}
                   </div>
-                  <div className="aurum-item-foot">
-                    <span className="aurum-mono">{kit.kitKey} · v{kit.version}</span>
-                    <Tag>Vertical starter kit · {kit.verticalKey}</Tag>
-                    <Tag>{kit.capabilityCount} capabilit{kit.capabilityCount === 1 ? 'y' : 'ies'}</Tag>
-                    <Tag>digest {kit.manifestDigest.slice(0, 10)}…</Tag>
-                    {kits.tenantScoped && kit.tenant !== null ? (
-                      kit.tenant.registered === null ? (
-                        <Tag>not registered in your company</Tag>
-                      ) : (
-                        <Tag>v{kit.tenant.registered.version} · {kit.tenant.registered.verificationState}</Tag>
-                      )
-                    ) : null}
-                  </div>
-                  {kit.description === '' ? null : (
-                    <p className="aurum-item-text">{kit.description}</p>
-                  )}
                 </li>
               ))}
             </ul>

@@ -1,0 +1,403 @@
+/* ============================================================================
+   Intelligence (W114 — "Everything Is a Conversation") — the intelligence
+   channel's messenger stylesheet.
+
+   The /intelligence page becomes a MESSAGE TIMELINE (the WhatsApp-channel
+   read): the PageHead stays the dark channel header; each Panel becomes a
+   thread SECTION opened by a centered date-separator pill; every finding,
+   decision, goal, mission and capability entry becomes a chat message —
+   a left-aligned avatar tile (one stable hue per entry TYPE) beside an
+   incoming bubble (16px radius, one sharper bottom-left corner — the
+   messenger signature) — and the drill-down actions become reply-style
+   chips under the bubble ("Deliver to chat" carries the gold).
+
+   LOADING CONTRACT: this file is imported by the intelligence PAGE and by
+   components/chain-ui.tsx (shared with the goals/unknowns/missions chain
+   pages), so it always loads AFTER product.css — the overrides below win
+   the cascade at equal specificity without touching product.css. The
+   aurum-intel-* base styles in product.css stay (untouched) so surfaces
+   that never load this file keep their current rendering.
+
+   Scope: the new scaffolding classes (.aurum-intel-msg / -avatar / -bubble
+   / -replies / -chip) only ever render from the intelligence components;
+   the .aurum-channel overrides apply only inside the page's wrapper.
+   Warm family only — no blue/indigo, no gradients, no glass: flat
+   surfaces + hairlines.
+   ========================================================================== */
+
+/* ---- the channel frame ------------------------------------------------- */
+
+/* The page content (below the dark channel header) becomes the thread. */
+.aurum-channel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Panels stop being boxes: each becomes a thread SECTION whose title is
+   the WhatsApp-style date separator (a small centered pill) with the
+   blurb riding under it as a meta line. Scoped to the channel wrapper —
+   the chain pages keep the lead's bubble-in panels. */
+.aurum-channel .aurum-panel {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.aurum-channel .aurum-panel-title {
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 2px;
+}
+
+.aurum-channel .aurum-panel-title > span:first-child {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4a443d;
+  background: var(--wa-divider);
+  border-radius: 999px;
+  padding: 3px 12px;
+  line-height: 1.5;
+}
+
+.aurum-channel .aurum-panel-title .aurum-meta {
+  font-size: 11px;
+  color: var(--wa-meta);
+}
+
+.aurum-channel .aurum-panel-blurb {
+  margin: 4px 0 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--wa-meta);
+  max-width: 64ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---- the message scaffolding -------------------------------------------
+   Emitted only by the intelligence components (page.tsx + chain-ui.tsx):
+   a message row = avatar tile + bubble; the reply chips ride under the
+   bubble's content. The raw .aurum-intel-row lists on the chain pages
+   (not restrucurable from here) keep product.css's quiet row look. */
+
+.aurum-intel-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+
+.aurum-intel-msg:last-child {
+  margin-bottom: 0;
+}
+
+/* The list-borne messages neutralize product.css's separator rows. */
+.aurum-intel-list > li.aurum-intel-msg {
+  border-top: none;
+  padding: 0;
+}
+
+/* One stable hue per entry TYPE (warm family only; the glyph is the
+   type's initial). Color never carries meaning alone — the glyph and
+   the row's own labels pair with it. */
+.aurum-intel-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #d9952a;              /* findings — gold */
+  color: #fdfaf6;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  margin-top: 2px;
+}
+
+.aurum-intel-avatar[data-hue='decision'] { background: #3da35d; }   /* approvals — green */
+.aurum-intel-avatar[data-hue='goal'] { background: #0f766e; }       /* goals — teal */
+.aurum-intel-avatar[data-hue='unknown'],
+.aurum-intel-avatar[data-hue='mission'] { background: #b4571f; }    /* unknowns/missions — rust */
+.aurum-intel-avatar[data-hue='capability'] { background: #7c4a5e; } /* capability gaps — plum */
+.aurum-intel-avatar[data-hue='contradiction'] { background: #c0603a; } /* contradictions — terracotta */
+.aurum-intel-avatar[data-hue='system'] { background: #241e19; }     /* evidence/beliefs — ink */
+
+/* The incoming bubble: bubble-in tone on the thread sand, one sharper
+   corner bottom-left (Aurum speaks on the left). */
+.aurum-intel-bubble {
+  min-width: 0;
+  flex: 1;
+  max-width: min(100%, 78ch);
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 16px 16px 16px 4px;
+  padding: 12px 14px;
+}
+
+/* Meta text inside a bubble reads as the message timestamp. */
+.aurum-intel-bubble .aurum-intel-row-foot,
+.aurum-intel-bubble .aurum-intel-finding-foot {
+  color: var(--wa-meta);
+  font-size: 11.5px;
+}
+
+.aurum-intel-bubble .aurum-intel-row-foot a,
+.aurum-intel-bubble .aurum-intel-finding-foot a {
+  color: var(--wa-meta);
+}
+
+/* The why/next reading aids become quiet inset blocks inside the bubble. */
+.aurum-intel-bubble .aurum-intel-why,
+.aurum-intel-bubble .aurum-intel-next {
+  background: var(--bg);
+  border: 1px solid var(--wa-divider);
+}
+
+.aurum-intel-bubble .aurum-intel-aid-label {
+  color: var(--wa-meta);
+}
+
+.aurum-intel-bubble .aurum-intel-next .aurum-intel-aid-label {
+  color: var(--accent-deep);
+}
+
+/* ---- reply-style chips -------------------------------------------------- */
+
+.aurum-intel-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.aurum-intel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  border: 1px solid var(--wa-divider);
+  background: #fffefc;
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.aurum-intel-chip:hover {
+  border-color: var(--wa-send);
+  background: var(--wa-bubble-out);
+  color: var(--accent-deep);
+}
+
+.aurum-intel-chip:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+/* The primary action of a message carries the gold. */
+.aurum-intel-chip-primary,
+.aurum-intel-chip-primary:hover {
+  background: var(--wa-send);
+  border-color: var(--wa-send);
+  color: #241e19;
+}
+
+.aurum-intel-chip-primary:hover {
+  background: #c07f1d;
+  border-color: #c07f1d;
+}
+
+/* ---- the findings feed (the channel's main timeline) -------------------- */
+
+/* The finding stops being a card: it is a message row now. These rules
+   override the product.css card at equal-or-higher specificity (this
+   file loads later). */
+.aurum-intel-finding {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.aurum-intel-finding[data-kind='risk'],
+.aurum-intel-finding[data-kind='capability-gap'],
+.aurum-intel-finding[data-kind='contradiction'],
+.aurum-intel-finding[data-kind='unknown'],
+.aurum-intel-finding[data-kind='opportunity'] {
+  border-left: none;
+}
+
+.aurum-intel-finding-head {
+  margin-bottom: 2px;
+}
+
+.aurum-intel-finding-when {
+  color: var(--wa-meta);
+}
+
+.aurum-intel-finding-title {
+  margin: 2px 0 0;
+}
+
+.aurum-intel-finding-foot {
+  margin: 10px 0 0;
+}
+
+/* ---- the chain rail: compact chips -------------------------------------- */
+
+.aurum-intel-chain {
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.aurum-intel-chain-step {
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 999px;
+  padding: 3px 10px 3px 4px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.aurum-intel-chain-step[data-active='true'] {
+  border-color: var(--wa-send);
+  background: var(--wa-bubble-out);
+  color: #241e19;
+}
+
+.aurum-intel-chain-index {
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  background: var(--wa-divider);
+  color: #4a443d;
+}
+
+.aurum-intel-chain-step[data-active='true'] .aurum-intel-chain-index {
+  background: var(--wa-send);
+  color: #241e19;
+}
+
+.aurum-intel-chain-count {
+  font-size: 10.5px;
+  color: var(--wa-meta);
+}
+
+.aurum-intel-chain-step[data-active='true'] .aurum-intel-chain-count {
+  color: #6b4a1a;
+}
+
+/* ---- the situation counts: compact chips -------------------------------- */
+
+.aurum-intel-stats {
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.aurum-intel-stat {
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  color: var(--wa-meta);
+}
+
+.aurum-intel-stat strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+/* The goal metric lines ride as chips too. */
+.aurum-intel-metrics > li {
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+}
+
+/* ---- empty states: honest chat bubbles from Aurum ------------------------
+   The EmptyState component (semantics kept) renders inside the message
+   scaffolding; strip its dashed card so only the bubble speaks. */
+
+.aurum-intel-bubble .aurum-empty {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  text-align: left;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.aurum-intel-bubble .aurum-empty strong {
+  display: block;
+  color: var(--ink);
+  font-size: 13.5px;
+  margin-bottom: 3px;
+}
+
+.aurum-intel-bubble .aurum-empty .aurum-empty-hint {
+  display: block;
+  margin: 0;
+  max-width: none;
+  font-size: 12.5px;
+  color: var(--wa-meta);
+}
+
+/* ---- the deliver affordance: the gold reply ------------------------------ */
+
+.aurum-intel-deliver {
+  border-top: 1px solid var(--wa-divider);
+  margin-top: 14px;
+}
+
+.aurum-intel-deliver .aurum-btn {
+  background: var(--wa-send);
+  border-color: var(--wa-send);
+  color: #241e19;
+  border-radius: 999px;
+  padding: 10px 20px;
+}
+
+.aurum-intel-deliver .aurum-btn:hover {
+  opacity: 0.88;
+}
+
+.aurum-intel-deliver-hint {
+  color: var(--wa-meta);
+}
+
+.aurum-intel-degraded {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--wa-divider);
+}
+
+/* ---- small screens: the thread tightens --------------------------------- */
+
+@media (max-width: 560px) {
+  .aurum-intel-msg {
+    gap: 8px;
+  }
+
+  .aurum-intel-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    font-size: 12.5px;
+  }
+
+  .aurum-intel-bubble {
+    padding: 10px 12px;
+    border-radius: 14px 14px 14px 4px;
+  }
+}
