@@ -16,6 +16,7 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import './intelligence.css';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
@@ -25,7 +26,7 @@ import { ShellGlyph } from '../components/icons';
 import { ChatReturnLink, chatReturnFromSearchParams } from '../chat/components/chat-return-link';
 import { buildIntelligenceView } from './lib/views';
 import type { IntelligenceView } from './lib/views';
-import { ChainRail, FindingRow, MissionLinkRow } from './components/chain-ui';
+import { ChainRail, FindingRow, MessageAvatar, MissionLinkRow } from './components/chain-ui';
 import { DeliverToChatButton } from './components/deliver-button';
 
 export const dynamic = 'force-dynamic';
@@ -67,198 +68,240 @@ export default async function IntelligencePage({
         </>}
       />
 
-      {/* The product-mode Today: the proactive findings briefing. */}
-      <Panel
-        title="What Aurum found on its own"
-        blurb="Proactive findings, worst first: goal-gap discoveries, analysis findings and retained conflicting evidence — severity legible, why and next always visible."
-        meta={<>{view.findings.length} finding(s)</>}
-      >
-        {view.findings.length === 0 ? (
-          <EmptyState
-            title="Nothing proactive right now"
-            hint="When Aurum notices a material goal gap, a risk, an opportunity or conflicting evidence, it lands here — and can be delivered into the chat."
-          />
-        ) : (
-          <div className="aurum-intel-findings">
-            {view.findings.map((finding) => (
-              <FindingRow key={`${finding.source}-${finding.id}`} finding={finding} back={back} />
-            ))}
-          </div>
-        )}
-        <DeliverToChatButton />
-        {view.degraded.length === 0 ? null : (
-          <p className="aurum-intel-degraded" role="note">
-            Some reads were unavailable just now ({view.degraded.join(', ')}) — this briefing may
-            be incomplete.
-          </p>
-        )}
-      </Panel>
+      {/* W114 — the intelligence CHANNEL: below the dark channel header
+          (the PageHead) the page reads as a message timeline. Each Panel
+          becomes a thread section (the title renders as the centered
+          date-separator pill); every entry renders as a chat message —
+          avatar tile + bubble + reply chips. Everything below is the same
+          data, links and actions as before, re-framed. */}
+      <div className="aurum-channel">
+        {/* The product-mode Today: the proactive findings briefing. */}
+        <Panel
+          title="What Aurum found on its own"
+          blurb="Proactive findings, worst first: goal-gap discoveries, analysis findings and retained conflicting evidence — severity legible, why and next always visible."
+          meta={<>{view.findings.length} finding(s)</>}
+        >
+          {view.findings.length === 0 ? (
+            <div className="aurum-intel-msg">
+              <MessageAvatar hue="aurum" glyph="A" />
+              <div className="aurum-intel-bubble">
+                <EmptyState
+                  title="Nothing proactive right now"
+                  hint="When I notice a material goal gap, a risk, an opportunity or conflicting evidence, it lands here — and can be delivered into the chat."
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="aurum-intel-findings">
+              {view.findings.map((finding) => (
+                <FindingRow key={`${finding.source}-${finding.id}`} finding={finding} back={back} />
+              ))}
+            </div>
+          )}
+          <DeliverToChatButton />
+          {view.degraded.length === 0 ? null : (
+            <p className="aurum-intel-degraded" role="note">
+              Some reads were unavailable just now ({view.degraded.join(', ')}) — this briefing may
+              be incomplete.
+            </p>
+          )}
+        </Panel>
 
-      {/* The attention few (decisions and urgent learning). */}
-      <Panel
-        title="What needs a decision or is running urgently"
-        blurb="The authority gate and the critical/high-urgency learning missions — the rest of Today."
-      >
-        <div className="aurum-intel-attention">
-          <div className="aurum-intel-attention-block">
-            <h3 className="aurum-intel-subhead">
-              Pending approvals{' '}
-              <StatusPill tone={view.attention.pendingApprovals.count > 0 ? 'warning' : 'positive'}>
-                {view.attention.pendingApprovals.count}
-              </StatusPill>
-            </h3>
-            {view.attention.pendingApprovals.latest.length === 0 ? (
-              <p className="aurum-intel-row-foot">No approvals are waiting for a human decision.</p>
-            ) : (
-              <ul className="aurum-intel-list">
-                {view.attention.pendingApprovals.latest.map((request) => (
-                  <li key={request.id} className="aurum-intel-row">
+        {/* The attention few (decisions and urgent learning). */}
+        <Panel
+          title="What needs a decision or is running urgently"
+          blurb="The authority gate and the critical/high-urgency learning missions — the rest of Today."
+        >
+          <div className="aurum-intel-attention">
+            <div className="aurum-intel-attention-block">
+              <h3 className="aurum-intel-subhead">
+                Pending approvals{' '}
+                <StatusPill tone={view.attention.pendingApprovals.count > 0 ? 'warning' : 'positive'}>
+                  {view.attention.pendingApprovals.count}
+                </StatusPill>
+              </h3>
+              {view.attention.pendingApprovals.latest.length === 0 ? (
+                <p className="aurum-intel-row-foot">No approvals are waiting for a human decision.</p>
+              ) : (
+                <ul className="aurum-intel-list">
+                  {view.attention.pendingApprovals.latest.map((request) => (
+                    <li key={request.id} className="aurum-intel-msg">
+                      <MessageAvatar hue="decision" glyph="D" />
+                      <div className="aurum-intel-bubble">
+                        <div className="aurum-intel-row-head">
+                          <span className="aurum-intel-row-title">{request.actionKind}</span>
+                          <span className="aurum-intel-row-meta">{request.authorityLevel}</span>
+                        </div>
+                        <p className="aurum-intel-row-foot">Requested {dateLabel(request.requestedAt)}</p>
+                        <div className="aurum-intel-replies">
+                          <Link className="aurum-intel-chip aurum-intel-chip-primary" href="/approvals">
+                            decide it in Approvals
+                          </Link>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="aurum-intel-attention-block">
+              <h3 className="aurum-intel-subhead">Urgent learning missions</h3>
+              {view.attention.urgentMissions.length === 0 ? (
+                <p className="aurum-intel-row-foot">No missions at critical/high urgency.</p>
+              ) : (
+                <ul className="aurum-intel-list">
+                  {view.attention.urgentMissions.map((mission) => (
+                    <MissionLinkRow key={mission.id} mission={mission} back={back} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </Panel>
+
+        {/* The chain entries: active goals with their gap/unknown/mission counts. */}
+        <Panel
+          title="Goals — the chain entries"
+          blurb="Every active goal is the first step of the navigable chain: gap → unknown → mission → evidence → belief."
+        >
+          <ChainRail
+            activeStep="Goal"
+            counts={{
+              Unknown: view.situation.openUnknowns,
+              Mission: view.situation.activeMissions,
+            }}
+          />
+          {view.goals.length === 0 ? (
+            <div className="aurum-intel-msg">
+              <MessageAvatar hue="aurum" glyph="A" />
+              <div className="aurum-intel-bubble">
+                <EmptyState
+                  title="No active goals"
+                  hint="Goals are the company's declared direction — define one and Aurum starts evaluating what stands between it and the desired state."
+                />
+              </div>
+            </div>
+          ) : (
+            <ul className="aurum-intel-list">
+              {view.goals.map((goal) => (
+                <li key={goal.id} className="aurum-intel-msg">
+                  <MessageAvatar hue="goal" glyph="G" />
+                  <div className="aurum-intel-bubble">
                     <div className="aurum-intel-row-head">
-                      <span className="aurum-intel-row-title">{request.actionKind}</span>
-                      <span className="aurum-intel-row-meta">{request.authorityLevel}</span>
+                      <Link className="aurum-intel-row-title" href={goal.href}>
+                        {goal.title}
+                      </Link>
+                      <StatusPill
+                        tone={
+                          goal.priority === 'critical'
+                            ? 'error'
+                            : goal.priority === 'high'
+                              ? 'warning'
+                              : 'info'
+                        }
+                      >
+                        {goal.priority} priority
+                      </StatusPill>
                     </div>
+                    <p className="aurum-intel-row-text">{goal.objective}</p>
                     <p className="aurum-intel-row-foot">
-                      Requested {dateLabel(request.requestedAt)} ·{' '}
-                      <Link href="/approvals">decide it in Approvals</Link>
+                      Horizon ends {dateLabel(goal.horizonEnd)} · {goal.openUnknownIds.length} open
+                      unknown(s) · {goal.activeMissionIds.length} active mission(s) ·{' '}
+                      {goal.activeBeliefCount} active belief(s)
                     </p>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    <div className="aurum-intel-replies">
+                      <Link
+                        className="aurum-intel-chip aurum-intel-chip-primary"
+                        href={`${goal.href}${scopeQuery}`}
+                      >
+                        open the chain
+                      </Link>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+
+        {/* The situation counts + capability gaps (the workflow's context). */}
+        <Panel
+          title="Situation and capabilities"
+          blurb="Where the company is: the open knowledge gaps, the learning underway, retained conflicts — and whether the capabilities exist to act."
+        >
+          <div className="aurum-intel-stats">
+            <span className="aurum-intel-stat">
+              <strong>{view.situation.activeGoals}</strong> active goal(s)
+            </span>
+            <span className="aurum-intel-stat">
+              <strong>{view.situation.openUnknowns}</strong> open unknown(s)
+            </span>
+            <span className="aurum-intel-stat">
+              <strong>{view.situation.activeMissions}</strong> active mission(s)
+            </span>
+            <span className="aurum-intel-stat">
+              <strong>{view.situation.openContradictions}</strong> retained contradiction(s)
+            </span>
           </div>
-          <div className="aurum-intel-attention-block">
-            <h3 className="aurum-intel-subhead">Urgent learning missions</h3>
-            {view.attention.urgentMissions.length === 0 ? (
-              <p className="aurum-intel-row-foot">No missions at critical/high urgency.</p>
-            ) : (
-              <ul className="aurum-intel-list">
-                {view.attention.urgentMissions.map((mission) => (
-                  <MissionLinkRow key={mission.id} mission={mission} back={back} />
-                ))}
-              </ul>
-            )}
+          {view.capabilityGaps.length === 0 ? (
+            <div className="aurum-intel-msg">
+              <MessageAvatar hue="aurum" glyph="A" />
+              <div className="aurum-intel-bubble">
+                <EmptyState
+                  title="No capability gaps detected"
+                  hint="Capability analysis compares the demand your goals imply with the supply you have."
+                />
+              </div>
+            </div>
+          ) : (
+            <ul className="aurum-intel-list">
+              {view.capabilityGaps.map((gap) => (
+                <li key={gap.capabilityId} className="aurum-intel-msg">
+                  <MessageAvatar hue="capability" glyph="C" />
+                  <div className="aurum-intel-bubble">
+                    <div className="aurum-intel-row-head">
+                      <span className="aurum-intel-row-title">{gap.name}</span>
+                      <StatusPill tone="warning">{gap.statusLabel}</StatusPill>
+                    </div>
+                    <p className="aurum-intel-row-text">
+                      {gap.unmetCount} unmet requirement(s) · {gap.requirementCount} active
+                      requirement(s) · {gap.supplyCount} active supply(ies)
+                    </p>
+                    <div className="aurum-intel-replies">
+                      <Link className="aurum-intel-chip aurum-intel-chip-primary" href="/capabilities">
+                        compare alternatives in Capabilities
+                      </Link>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+
+        {/* Management mode drill-downs (the tower surfaces, plan §3). */}
+        <Panel
+          title="Management mode"
+          blurb="The Control Tower surfaces stay one click away — these are the drill-down destinations of the workflow, not its entry."
+        >
+          <div className="aurum-hub-grid">
+            {surfaces.map((surface) => (
+              <Link
+                key={surface.surface}
+                href={`${surface.href}${scopeQuery}`}
+                className="aurum-hub-card"
+              >
+                <span className="aurum-hub-label">
+                  <ShellGlyph name="tower" size={16} />
+                  {surface.label}
+                </span>
+                <span className="aurum-hub-tagline">{surface.tagline}</span>
+                <span className="aurum-hub-note">management mode</span>
+              </Link>
+            ))}
           </div>
-        </div>
-      </Panel>
-
-      {/* The chain entries: active goals with their gap/unknown/mission counts. */}
-      <Panel
-        title="Goals — the chain entries"
-        blurb="Every active goal is the first step of the navigable chain: gap → unknown → mission → evidence → belief."
-      >
-        <ChainRail
-          activeStep="Goal"
-          counts={{
-            Unknown: view.situation.openUnknowns,
-            Mission: view.situation.activeMissions,
-          }}
-        />
-        {view.goals.length === 0 ? (
-          <EmptyState
-            title="No active goals"
-            hint="Goals are the company's declared direction — define one and Aurum starts evaluating what stands between it and the desired state."
-          />
-        ) : (
-          <ul className="aurum-intel-list">
-            {view.goals.map((goal) => (
-              <li key={goal.id} className="aurum-intel-row">
-                <div className="aurum-intel-row-head">
-                  <Link className="aurum-intel-row-title" href={goal.href}>
-                    {goal.title}
-                  </Link>
-                  <StatusPill
-                    tone={
-                      goal.priority === 'critical'
-                        ? 'error'
-                        : goal.priority === 'high'
-                          ? 'warning'
-                          : 'info'
-                    }
-                  >
-                    {goal.priority} priority
-                  </StatusPill>
-                </div>
-                <p className="aurum-intel-row-text">{goal.objective}</p>
-                <p className="aurum-intel-row-foot">
-                  Horizon ends {dateLabel(goal.horizonEnd)} ·{' '}
-                  <Link href={`${goal.href}${scopeQuery}`}>open the chain</Link> ·{' '}
-                  {goal.openUnknownIds.length} open unknown(s) ·{' '}
-                  {goal.activeMissionIds.length} active mission(s) ·{' '}
-                  {goal.activeBeliefCount} active belief(s)
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
-
-      {/* The situation counts + capability gaps (the workflow's context). */}
-      <Panel
-        title="Situation and capabilities"
-        blurb="Where the company is: the open knowledge gaps, the learning underway, retained conflicts — and whether the capabilities exist to act."
-      >
-        <div className="aurum-intel-stats">
-          <span className="aurum-intel-stat">
-            <strong>{view.situation.activeGoals}</strong> active goal(s)
-          </span>
-          <span className="aurum-intel-stat">
-            <strong>{view.situation.openUnknowns}</strong> open unknown(s)
-          </span>
-          <span className="aurum-intel-stat">
-            <strong>{view.situation.activeMissions}</strong> active mission(s)
-          </span>
-          <span className="aurum-intel-stat">
-            <strong>{view.situation.openContradictions}</strong> retained contradiction(s)
-          </span>
-        </div>
-        {view.capabilityGaps.length === 0 ? (
-          <EmptyState
-            title="No capability gaps detected"
-            hint="Capability analysis compares the demand your goals imply with the supply you have."
-          />
-        ) : (
-          <ul className="aurum-intel-list">
-            {view.capabilityGaps.map((gap) => (
-              <li key={gap.capabilityId} className="aurum-intel-row">
-                <div className="aurum-intel-row-head">
-                  <span className="aurum-intel-row-title">{gap.name}</span>
-                  <StatusPill tone="warning">{gap.statusLabel}</StatusPill>
-                </div>
-                <p className="aurum-intel-row-text">
-                  {gap.unmetCount} unmet requirement(s) · {gap.requirementCount} active
-                  requirement(s) · {gap.supplyCount} active supply(ies)
-                </p>
-                <p className="aurum-intel-row-foot">
-                  <Link href="/capabilities">compare alternatives in Capabilities</Link>
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
-
-      {/* Management mode drill-downs (the tower surfaces, plan §3). */}
-      <Panel
-        title="Management mode"
-        blurb="The Control Tower surfaces stay one click away — these are the drill-down destinations of the workflow, not its entry."
-      >
-        <div className="aurum-hub-grid">
-          {surfaces.map((surface) => (
-            <Link
-              key={surface.surface}
-              href={`${surface.href}${scopeQuery}`}
-              className="aurum-hub-card"
-            >
-              <span className="aurum-hub-label">
-                <ShellGlyph name="tower" size={16} />
-                {surface.label}
-              </span>
-              <span className="aurum-hub-tagline">{surface.tagline}</span>
-              <span className="aurum-hub-note">management mode</span>
-            </Link>
-          ))}
-        </div>
-      </Panel>
+        </Panel>
+      </div>
     </>
   );
 }

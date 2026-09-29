@@ -46,6 +46,7 @@ export default async function MorePage({
       <PageHead
         title="More"
         description="Everything Aurum does, grouped by what you came here to do — and the paths that unblock it when something is missing."
+        tone="settings"
       />
 
       {/* The intent families: the capability hub. One registry

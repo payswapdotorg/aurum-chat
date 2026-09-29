@@ -153,13 +153,17 @@ export function PageHead({
   title,
   description,
   meta,
+  tone = 'thread',
 }: {
   title: string;
   description: string;
   meta?: ReactNode;
+  /** W114 — 'thread' rides the sand canvas (the conversation read);
+   *  'settings' stays on cream (the WhatsApp-settings read). */
+  tone?: 'thread' | 'settings';
 }): ReactNode {
   return (
-    <header className="aurum-page-head">
+    <header className="aurum-page-head" data-tone={tone}>
       <h1>{title}</h1>
       <p>{description}</p>
       {meta === undefined ? null : <div className="aurum-page-meta">{meta}</div>}

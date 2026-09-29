@@ -133,7 +133,12 @@ export default async function ConnectionsPage({
             {connectedChannels.map((card) => (
               <li className="row" key={card.provider}>
                 <div className="row-head">
-                  <span className="row-title">{card.label}</span>
+                  <span className="row-lead">
+                    <span className="conn-tile" aria-hidden="true">
+                      {card.label.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="row-title">{card.label}</span>
+                  </span>
                   <HealthPill health={card.health} />
                   <Pill tone="muted">{card.connection?.providerAccountId}</Pill>
                   {card.connection?.displayName ? (
@@ -225,7 +230,12 @@ export default async function ConnectionsPage({
             {view.sources.cards.map((card) => (
               <li className="row" key={card.id}>
                 <div className="row-head">
-                  <span className="row-title">{card.label}</span>
+                  <span className="row-lead">
+                    <span className="conn-tile" aria-hidden="true">
+                      {card.label.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="row-title">{card.label}</span>
+                  </span>
                   <HealthPill health={card.health} />
                   <StatusPill status={card.status} />
                   <Pill tone={card.freshness.status === 'current' ? 'ok' : card.freshness.status === 'unknown' ? 'muted' : 'warn'}>
@@ -392,7 +402,12 @@ export default async function ConnectionsPage({
             {view.destinations.cards.map((card) => (
               <li className="row" key={card.id}>
                 <div className="row-head">
-                  <span className="row-title">{card.label}</span>
+                  <span className="row-lead">
+                    <span className="conn-tile" aria-hidden="true">
+                      {card.label.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="row-title">{card.label}</span>
+                  </span>
                   <HealthPill health={card.health} />
                   <StatusPill status={card.status} />
                   <Pill tone="muted">{card.category}</Pill>
@@ -609,10 +624,18 @@ export default async function ConnectionsPage({
 // ---------------------------------------------------------------------------
 
 function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; now: string }): ReactNode {
+  // W114 — the identity's display name leads the row (contact read); the
+  // initials avatar is pure presentation derived from that same name.
+  const identityName = card.displayName ?? card.providerAccountId;
   return (
     <li className="row" id={`identity-${card.id}`}>
       <div className="row-head">
-        <span className="row-title">{card.displayName ?? card.providerAccountId}</span>
+        <span className="row-lead">
+          <span className="conn-avatar" aria-hidden="true">
+            {identityName.charAt(0).toUpperCase()}
+          </span>
+          <span className="row-title">{identityName}</span>
+        </span>
         <StatusPill status={card.status} />
         <Pill tone="muted">{card.label}</Pill>
         <Pill tone="muted">{card.providerAccountId}</Pill>

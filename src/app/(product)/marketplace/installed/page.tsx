@@ -8,6 +8,7 @@
 // recorded superseded deployment.
 
 import Link from 'next/link';
+import '../marketplace.css';
 import { withProductScope } from '../../lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import type { PageSearchParams } from '../../lib/context';
@@ -67,34 +68,39 @@ export default async function InstalledPage({
       ) : (
         <ul className="aurum-item-list">
           {view.items.map((item) => (
-            <li key={item.id}>
-              <div className="aurum-item-head">
-                <Link
-                  className="aurum-mkt-item-title"
-                  href={`/marketplace/installed/${item.extensionKey}${scopeQuery}`}
-                >
-                  {item.extensionKey}
-                </Link>
-                <StatusPill tone={item.stateTone}>{item.stateLabel}</StatusPill>
-              </div>
-              <div className="aurum-item-foot">
-                <span className="aurum-mono">
-                  {item.latestVersion === null ? 'no versions' : `latest v${item.latestVersion}`}
-                </span>
-                {item.verificationState === null ? null : (
-                  <Tag>
-                    <StatusPill tone={verificationTone(item.verificationState as never)}>
-                      {item.verificationState.toLowerCase()}
-                    </StatusPill>
-                  </Tag>
-                )}
-                {item.deployment === null ? (
-                  <Tag>not deployed</Tag>
-                ) : (
-                  <Tag>
-                    serving v{item.deployment.version} · {item.deployment.grantedCount} granted
-                  </Tag>
-                )}
+            <li key={item.id} className="aurum-dir-row">
+              <span className="aurum-dir-tile" aria-hidden="true">
+                {item.extensionKey.charAt(0).toUpperCase()}
+              </span>
+              <div className="aurum-dir-body">
+                <div className="aurum-item-head">
+                  <Link
+                    className="aurum-mkt-item-title"
+                    href={`/marketplace/installed/${item.extensionKey}${scopeQuery}`}
+                  >
+                    {item.extensionKey}
+                  </Link>
+                  <StatusPill tone={item.stateTone}>{item.stateLabel}</StatusPill>
+                </div>
+                <div className="aurum-item-foot">
+                  <span className="aurum-mono">
+                    {item.latestVersion === null ? 'no versions' : `latest v${item.latestVersion}`}
+                  </span>
+                  {item.verificationState === null ? null : (
+                    <Tag>
+                      <StatusPill tone={verificationTone(item.verificationState as never)}>
+                        {item.verificationState.toLowerCase()}
+                      </StatusPill>
+                    </Tag>
+                  )}
+                  {item.deployment === null ? (
+                    <Tag>not deployed</Tag>
+                  ) : (
+                    <Tag>
+                      serving v{item.deployment.version} · {item.deployment.grantedCount} granted
+                    </Tag>
+                  )}
+                </div>
               </div>
             </li>
           ))}
@@ -139,31 +145,36 @@ export default async function InstalledPage({
         ) : (
           <ul className="aurum-item-list">
             {kits.items.map((kit) => (
-              <li key={kit.id}>
-                <div className="aurum-item-head">
-                  <Link
-                    className="aurum-mkt-item-title"
-                    href={`/marketplace/kit/${kit.kitKey}${scopeQuery}`}
-                  >
-                    {kit.kitKey}
-                  </Link>
-                  <StatusPill tone={kit.stateTone}>{kit.stateLabel}</StatusPill>
+              <li key={kit.id} className="aurum-dir-row">
+                <span className="aurum-dir-tile" aria-hidden="true">
+                  {kit.kitKey.charAt(0).toUpperCase()}
+                </span>
+                <div className="aurum-dir-body">
+                  <div className="aurum-item-head">
+                    <Link
+                      className="aurum-mkt-item-title"
+                      href={`/marketplace/kit/${kit.kitKey}${scopeQuery}`}
+                    >
+                      {kit.kitKey}
+                    </Link>
+                    <StatusPill tone={kit.stateTone}>{kit.stateLabel}</StatusPill>
+                  </div>
+                  <div className="aurum-item-foot">
+                    <span className="aurum-mono">v{kit.kitVersion} · installed {kit.installedAt.slice(0, 10)}</span>
+                    {kit.grants === null ? (
+                      <Tag>grant counts unavailable</Tag>
+                    ) : (
+                      <Tag>{kit.grants.active} active grant{kit.grants.active === 1 ? '' : 's'}{kit.grants.revoked > 0 ? ` · ${kit.grants.revoked} revoked` : ''}</Tag>
+                    )}
+                    {kit.invocations === null ? (
+                      <Tag>ledger counts unavailable</Tag>
+                    ) : (
+                      <Tag>{kit.invocations.allowed} allowed · {kit.invocations.denied} denied</Tag>
+                    )}
+                    {!kit.live ? <Tag>history — terminal</Tag> : null}
+                  </div>
+                  <p className="aurum-item-text">{kit.stateExplanation}</p>
                 </div>
-                <div className="aurum-item-foot">
-                  <span className="aurum-mono">v{kit.kitVersion} · installed {kit.installedAt.slice(0, 10)}</span>
-                  {kit.grants === null ? (
-                    <Tag>grant counts unavailable</Tag>
-                  ) : (
-                    <Tag>{kit.grants.active} active grant{kit.grants.active === 1 ? '' : 's'}{kit.grants.revoked > 0 ? ` · ${kit.grants.revoked} revoked` : ''}</Tag>
-                  )}
-                  {kit.invocations === null ? (
-                    <Tag>ledger counts unavailable</Tag>
-                  ) : (
-                    <Tag>{kit.invocations.allowed} allowed · {kit.invocations.denied} denied</Tag>
-                  )}
-                  {!kit.live ? <Tag>history — terminal</Tag> : null}
-                </div>
-                <p className="aurum-item-text">{kit.stateExplanation}</p>
               </li>
             ))}
           </ul>

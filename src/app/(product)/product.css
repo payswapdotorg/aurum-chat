@@ -53,16 +53,28 @@
   --ring: #d9952a;          /* keyboard focus (old-site --ring) */
 
   /* WhatsApp-flavored conversation surfaces (W113) — the signature look.
-     Consumed by chat/chat.css; defined here so the shell owns the tokens. */
-  --wa-bubble-in: #ffffff;
+     Consumed by chat/chat.css; defined here so the shell owns the tokens.
+     W114 — the messenger set is HOISTED and completed so EVERY product
+     surface (not just /chat) can speak the same language: thread sand,
+     bubble tones, divider hairlines, meta ink, list-row hover, and the
+     status dots (on/warn/off) that channels and contacts carry. */
+  --wa-bg: #f7ede0;            /* thread background (warm sand) */
+  --wa-bubble-in: #fffdf9;     /* incoming/AI/system bubbles + panels */
   --wa-bubble-out: #ffeccb;
   --wa-bubble-out-fg: #1f1915;
   --wa-chat-bg: #f7ede0;
   --wa-header: #241e19;
   --wa-header-fg: #fdfaf6;
+  --wa-header-meta: #b8ab99;   /* meta text on the dark ink bar */
   --wa-online: #d9952a;
   --wa-panel: #fffefc;
   --wa-send: #d9952a;
+  --wa-divider: #eadbca;       /* date/section separators, hairlines */
+  --wa-meta: #8a7a66;          /* timestamps, meta text on sand */
+  --list-row-hover: #f3e6d4;   /* chat-list row hover on cream */
+  --status-on: #3da35d;        /* connected/available dot */
+  --status-warn: #d9952a;      /* attention dot */
+  --status-off: #b9a999;       /* inactive dot */
 
   /* Old-site dark block (verified values, NOT wired — see W113 report):
      --aurum #f0ba59, --aurum-soft/--accent #382409, --accent-foreground
@@ -173,6 +185,18 @@ body:has(.aurum-shell) {
   padding: 28px 28px 48px;
 }
 
+/* W114 — everything is a conversation: surfaces that carry a page head
+   ride the thread sand (the WhatsApp canvas). Settings-like surfaces
+   (data-tone="settings") stay on the cream canvas. /chat is untouched
+   (it renders no page head — its messenger window owns its canvas). */
+.aurum-shell:has(.aurum-page-head) .aurum-main {
+  background: var(--wa-bg);
+}
+
+.aurum-shell:has(.aurum-page-head[data-tone='settings']) .aurum-main {
+  background: var(--bg);
+}
+
 .aurum-main-inner {
   max-width: 1040px;
   margin: 0 auto;
@@ -268,34 +292,116 @@ body:has(.aurum-shell) {
   font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--faint-ink);
+  color: var(--wa-meta);
   font-weight: 600;
-  padding: 14px 10px 6px;
+  padding: 16px 10px 6px;
 }
 
+/* W114 — the rail IS the chat list: every area row carries a colored
+   icon tile (one stable hue per area, the reference's contact-block
+   pattern), a bold label and a one-line messenger-voice subtitle. The
+   active row reads as the open conversation: bubble-out cream + the
+   gold left edge. */
 .aurum-rail-link {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 8px 10px;
-  border-radius: var(--radius-s);
+  border-radius: 12px;
   color: var(--ink-soft);
   text-decoration: none;
   font-size: 13.5px;
-  font-weight: 500;
   border: 1px solid transparent;
+  position: relative;
   transition: background-color 120ms ease, color 120ms ease;
 }
 
 .aurum-rail-link:hover {
-  background: var(--fill);
+  background: var(--list-row-hover);
   color: var(--ink);
 }
 
 .aurum-rail-link[aria-current="page"] {
-  background: var(--accent-soft);
+  background: var(--wa-bubble-out);
   color: var(--accent-deep);
   font-weight: 600;
+}
+
+.aurum-rail-link[aria-current="page"]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--wa-send);
+}
+
+.aurum-rail-tile {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--graphite);
+  color: #fdfaf6;
+}
+
+.aurum-rail-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.aurum-rail-label {
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+.aurum-rail-sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--wa-meta);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aurum-rail-link[aria-current="page"] .aurum-rail-sub {
+  color: var(--accent-deep);
+}
+
+/* One stable hue per area (never blue/indigo — the warm family). */
+.aurum-rail-link[data-area='chat'] .aurum-rail-tile {
+  background: #d9952a;
+}
+
+.aurum-rail-link[data-area='today'] .aurum-rail-tile {
+  background: #3da35d;
+}
+
+.aurum-rail-link[data-area='intelligence'] .aurum-rail-tile {
+  background: #0f766e;
+}
+
+.aurum-rail-link[data-area='people'] .aurum-rail-tile {
+  background: #b4571f;
+}
+
+.aurum-rail-link[data-area='connections'] .aurum-rail-tile {
+  background: #7c4a5e;
+}
+
+.aurum-rail-link[data-area='marketplace'] .aurum-rail-tile {
+  background: #c0603a;
+}
+
+.aurum-rail-link[data-area='more'] .aurum-rail-tile {
+  background: #241e19;
 }
 
 .aurum-rail-link .aurum-icon {
@@ -432,8 +538,10 @@ body:has(.aurum-shell) {
   min-height: 56px;
   padding: 8px 14px;
   padding-top: max(8px, env(safe-area-inset-top, 0px));
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
+  /* W114 — the mobile chrome rides the thread sand (one warm canvas with
+     the surface content; the dark ink header bar lives in the page head). */
+  background: var(--wa-bg);
+  border-bottom: 1px solid var(--wa-divider);
 }
 
 @media (min-width: 920px) {
@@ -546,38 +654,75 @@ body:has(.aurum-shell) {
 
 /* ---- page header ---- */
 
+/* W114 — the surface header bar: every product surface opens like a
+   conversation with Aurum — a dark ink bar (the WhatsApp thread-header
+   pattern) carrying the surface title (Fraunces), the one-line "status
+   line" (the description, in muted cream), and the meta/actions row.
+   The gold left edge ties it to the active rail row. */
 .aurum-page-head {
   margin-bottom: 22px;
+  background: var(--wa-header);
+  color: var(--wa-header-fg);
+  border-radius: var(--radius-l);
+  padding: 18px 22px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.aurum-page-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: var(--wa-send);
 }
 
 .aurum-page-head h1 {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
   font-family: var(--font-display);
   font-size: 26px;
   letter-spacing: -0.02em;
   font-weight: 700;
+  color: var(--wa-header-fg);
 }
 
 .aurum-page-head p {
   margin: 0;
-  color: var(--muted-ink);
+  color: var(--wa-header-meta);
   max-width: 72ch;
   font-size: 14px;
 }
 
 .aurum-page-head .aurum-page-meta {
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 12px;
-  color: var(--faint-ink);
+  color: var(--wa-header-meta);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.aurum-page-head .aurum-page-meta a {
+  color: #f0c877;
+}
+
+.aurum-page-head .aurum-page-meta a:hover {
+  color: #ffe4ad;
 }
 
 /* ---- panels, cards, sections ---- */
 
+/* W114 — panels speak the bubble language: the incoming-bubble tone on
+   the thread sand, warm divider hairlines, the messenger radius. */
 .aurum-panel {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 18px;
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: var(--radius-l);
+  padding: 18px 20px;
   margin-bottom: 16px;
 }
 
@@ -611,7 +756,7 @@ body:has(.aurum-shell) {
 }
 
 .aurum-item-list > li {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--wa-divider);
   padding: 12px 0;
 }
 
@@ -836,52 +981,105 @@ body:has(.aurum-shell) {
 
 /* ---- hub grids (Intelligence / People / Connections / Marketplace / More) ---- */
 
+/* W114 — the hub is a LIST now (the WhatsApp settings/contacts read):
+   each entry is one row — colored icon tile, title, one-line subtitle,
+   trailing note chip — stacked vertically like contacts in a chat list.
+   The class names stay (the browser journeys locate .aurum-hub-card). */
 .aurum-hub-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
+  display: block;
 }
 
 .aurum-hub-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  row-gap: 1px;
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 10px;
   text-decoration: none;
   color: var(--ink);
-  transition: border-color 120ms ease, background-color 120ms ease;
+  transition: background-color 120ms ease;
 }
 
 .aurum-hub-card:hover {
-  border-color: var(--accent);
-  background: #fffefc;
+  background: var(--list-row-hover);
 }
 
 .aurum-hub-card .aurum-hub-label {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 650;
+  font-weight: 600;
   font-size: 14px;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+/* The glyph rides as the colored tile (one stable hue per row position —
+   the reference's contact-block pattern; warm family only). */
+.aurum-hub-card .aurum-hub-label .aurum-icon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--graphite);
+  color: #fdfaf6;
+  margin-right: 12px;
+}
+
+.aurum-hub-card:nth-child(6n + 1) .aurum-hub-label .aurum-icon {
+  background: #d9952a;
+}
+
+.aurum-hub-card:nth-child(6n + 2) .aurum-hub-label .aurum-icon {
+  background: #3da35d;
+}
+
+.aurum-hub-card:nth-child(6n + 3) .aurum-hub-label .aurum-icon {
+  background: #0f766e;
+}
+
+.aurum-hub-card:nth-child(6n + 4) .aurum-hub-label .aurum-icon {
+  background: #b4571f;
+}
+
+.aurum-hub-card:nth-child(6n + 5) .aurum-hub-label .aurum-icon {
+  background: #7c4a5e;
+}
+
+.aurum-hub-card:nth-child(6n + 6) .aurum-hub-label .aurum-icon {
+  background: #c0603a;
 }
 
 .aurum-hub-card .aurum-hub-tagline {
-  color: var(--muted-ink);
-  font-size: 12.5px;
-  line-height: 1.45;
+  grid-column: 1;
+  grid-row: 2;
+  padding-left: 48px;
+  color: var(--wa-meta);
+  font-size: 12px;
+  line-height: 1.4;
+  min-width: 0;
 }
 
 .aurum-hub-card .aurum-hub-note {
-  margin-top: auto;
-  padding-top: 8px;
-  font-size: 10.5px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--faint-ink);
+  border: 1px solid var(--wa-divider);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--wa-bubble-in);
+  white-space: nowrap;
 }
 
 /* ---- intelligence workflow (W061: Today briefing + the navigable chain) ---- */

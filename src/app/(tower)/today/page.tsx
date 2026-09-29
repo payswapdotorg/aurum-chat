@@ -9,6 +9,13 @@
 // and discovery rows now drill DOWN into the product intelligence
 // workflow's chain pages (goal → gap → unknown → mission → evidence →
 // belief), so Today is a workflow entry, not a dead-end report.
+//
+// W114 — "everything is a conversation": Today is the DAILY BRIEFING
+// CHAT — a thread of messages from Aurum. The wrapper below rides the
+// messenger sand; the surface header is the channel header; the stat
+// chips are the first briefing message; each card is a thread section
+// and each item a chat message (tower.css, shared by every tower
+// surface). Presentation only — data, links and actions unchanged.
 
 import { buildTodayView } from '../lib/views/today';
 import { resolvePageContext } from '../lib/page-context';
@@ -34,12 +41,17 @@ export default async function TodayPage() {
   const view = await buildTodayView(resolution.context);
 
   return (
-    <>
+    <div className="tower-briefing">
       <SurfaceHeader
         title="Today"
         description="What needs your attention right now: pending decisions, urgent knowledge missions, open unknowns and the live intelligence loop."
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
+      {/* The thread's date chip (decorative — the channel header above
+          already carries "Today" as the surface title). */}
+      <div className="tower-daysep" aria-hidden="true">
+        <span>Today</span>
+      </div>
       <StatTiles
         items={[
           {
@@ -81,7 +93,7 @@ export default async function TodayPage() {
         meta={`${formatCount(view.approvals.pending.count, view.approvals.pending.capped)} pending`}
       >
         {view.approvals.latest.length === 0 ? (
-          <Empty title="No pending approvals" hint="The authority gate holds nothing for you right now." />
+          <Empty title="No pending approvals" hint="Nothing needs you right now — the authority gate holds no decisions." />
         ) : (
           <ul className="item-list">
             {view.approvals.latest.map((item) => (
@@ -255,6 +267,6 @@ export default async function TodayPage() {
           </ul>
         )}
       </Card>
-    </>
+    </div>
   );
 }

@@ -3,6 +3,16 @@
    Scoped under `.tower` (the root layout is W000's and stays untouched).
    W113: warm cream canvas + the Aurum brand gold accent; no blue/indigo.
    The dark sidebar carries the WhatsApp header tone (#241e19).
+   W114 — "everything is a conversation": the Tower is the OFFICE
+   CHANNEL. The shared surface scaffolding speaks the messenger language
+   — the surface header is the dark channel bar (gold left edge, cream
+   Fraunces title), the stat tiles are Aurum's first briefing message
+   (an avatar tile + a bubble of compact chips), each card is a thread
+   section opened by a centered date-separator pill, and every item row
+   is a chat message (avatar + incoming bubble, the ItemFoot links as
+   reply-style chips — gold for the first action). All fifteen tower
+   surfaces lift together; the classes stay GENERIC (no surface-specific
+   hacks). Flat surfaces + hairlines only — no gradients, no glass.
    ========================================================================== */
 
 .tower {
@@ -29,6 +39,19 @@
   --sidebar: #241e19;
   --sidebar-ink: #f2f0ec;
   --sidebar-muted: #b3aaa0;
+
+  /* W114 — the messenger set, mirrored from the product shell's --wa-*
+     hoist (the tower does not live inside .aurum-shell, so the tokens
+     are defined here at the same values). The bubble-in and divider are
+     a half-step stronger here: the tower's briefing rows are denser, so
+     their bubbles need a touch more separation from the sand to read as
+     MESSAGES (the perceptual anchor of the whole reframe). */
+  --wa-bg: #f7ede0;         /* thread sand */
+  --wa-bubble-in: #fffefc;  /* incoming/Aurum bubbles (brighter than sand) */
+  --wa-bubble-out: #ffeccb; /* the reply/active tone */
+  --wa-divider: #e3d2bd;    /* separators + hairlines (a half-step stronger) */
+  --wa-meta: #8a7a66;       /* timestamps/meta on sand */
+  --wa-send: #d9952a;       /* the gold accent */
 
   /* Typography (W113): Fraunces display, Geist Sans body, Geist Mono —
      served by the Google Fonts stylesheet the root layout links; each
@@ -144,17 +167,56 @@
   padding: 0 10px 6px;
 }
 
+/* W114 — the tower sidebar is the OFFICE CHANNEL LIST: every surface
+   row carries its initial tile (data-initial, one stable hue per
+   group), the active row reads as the open channel (gold-wash + gold
+   left edge + cream bold), and hovers are quiet rounded rows. */
 .tower-nav a {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   color: var(--sidebar-ink);
   text-decoration: none;
-  padding: 7px 10px;
-  border-radius: 7px;
-  font-size: 13.5px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  font-size: 13px;
   border: 1px solid transparent;
+  position: relative;
+}
+
+.tower-nav a::before {
+  content: attr(data-initial);
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #4a443d;
+  color: #f2f0ec;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tower-nav-group:nth-of-type(1) a::before {
+  background: #a9761f;
+}
+
+.tower-nav-group:nth-of-type(2) a::before {
+  background: #2e7d4f;
+}
+
+.tower-nav-group:nth-of-type(3) a::before {
+  background: #0d5f59;
+}
+
+.tower-nav-group:nth-of-type(4) a::before {
+  background: #96491c;
+}
+
+.tower-nav-group:nth-of-type(5) a::before {
+  background: #6a4052;
 }
 
 .tower-nav a:hover {
@@ -162,10 +224,15 @@
 }
 
 .tower-nav a[aria-current="page"] {
-  background: rgba(217, 149, 42, 0.24);
-  border-color: rgba(240, 186, 89, 0.4);
+  background: rgba(217, 149, 42, 0.18);
+  border-color: rgba(240, 186, 89, 0.35);
   color: #f0ba59;
   font-weight: 600;
+}
+
+.tower-nav a[aria-current="page"]::before {
+  outline: 2px solid rgba(240, 186, 89, 0.55);
+  outline-offset: 1px;
 }
 
 /* ---- main ---- */
@@ -194,8 +261,28 @@
 
 /* ---- surface scaffolding ---- */
 
+/* W114 — the surface header is the CHANNEL HEADER: the same dark-ink
+   bar the product surfaces carry (gold left edge, cream Fraunces title,
+   muted-cream description) — every tower surface opens like a channel. */
 .surface-header {
+  position: relative;
+  overflow: hidden;
   margin-bottom: 20px;
+  background: var(--sidebar);
+  color: var(--sidebar-ink);
+  border-radius: 16px;
+  padding: 18px 22px 16px;
+}
+
+.surface-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: var(--wa-send);
 }
 
 .surface-header h2 {
@@ -203,78 +290,141 @@
   font-family: var(--font-display);
   font-size: 24px;
   letter-spacing: -0.02em;
+  color: #fdfaf6;
 }
 
 .surface-header p {
   margin: 0;
-  color: var(--muted);
+  color: #b8ab99;
   max-width: 78ch;
+  font-size: 13.5px;
 }
 
 .surface-meta {
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 12px;
-  color: var(--muted);
+  color: #b8ab99;
 }
 
+/* W114 — the stat tiles are AURUM'S FIRST BRIEFING MESSAGE: an avatar
+   tile beside one incoming bubble that carries the situation counts as
+   compact chips (strong number + label + hint). The bubble is painted
+   by ::after (z-index -1 inside the row's own stacking context) so the
+   chips and the avatar read as one message. */
 .stat-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 20px;
+  padding: 12px 14px 12px 60px;
+  max-width: min(100%, calc(78ch + 60px));
+}
+
+.stat-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background-color: var(--wa-send);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='12' y='17' font-family='Georgia, serif' font-size='16' font-weight='700' fill='%23fdfaf6' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E");
+  background-position: center;
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+}
+
+.stat-row::after {
+  content: '';
+  position: absolute;
+  left: 44px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 16px 16px 16px 4px;
+  z-index: -1;
 }
 
 .stat {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px 14px;
+  background: #fffefc;
+  border: 1px solid var(--wa-divider);
+  border-radius: 12px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  margin-top: 1px;
+  line-height: 1.35;
 }
 
 .stat-hint {
-  font-size: 11.5px;
-  color: var(--muted);
-  margin-top: 4px;
+  font-size: 11px;
+  color: var(--wa-meta);
+  margin-top: 2px;
+  line-height: 1.35;
 }
 
+/* W114 — a card is a THREAD SECTION: the box disappears, the title
+   renders as the centered date-separator pill (the WhatsApp pattern)
+   with the meta riding beside it, and the content flows onto the
+   canvas as the section's messages. */
 .card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 18px;
-  margin-bottom: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 24px;
 }
 
 .card-title {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin: 0 0 12px;
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 650;
 }
 
+.card-title > span:first-child {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4a443d;
+  background: var(--wa-divider);
+  border-radius: 999px;
+  padding: 3px 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .card-meta {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 11px;
+  color: var(--wa-meta);
   font-weight: 400;
 }
 
 .card-section {
-  border-top: 1px dashed var(--line);
+  border-top: 1px dashed var(--wa-divider);
   margin-top: 16px;
   padding-top: 12px;
 }
@@ -284,7 +434,7 @@
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--muted);
+  color: var(--wa-meta);
 }
 
 /* ---- badges ---- */
@@ -314,14 +464,75 @@
   padding: 0;
 }
 
+/* W114 — every top-level item is a MESSAGE from Aurum: the avatar tile
+   (::before, gold with the A glyph as a background image — decorative,
+   never announced) sits in the left gutter, and the bubble is painted
+   by ::after (z-index -1 inside the item's own stacking context) so the
+   whole row's content rides in one incoming bubble. Nested lists (the
+   decision trails, sub-groups) stay quiet hairline rows — quoted
+   history inside the message. */
 .item-list > li {
-  border-top: 1px solid var(--line);
-  padding: 12px 0;
+  position: relative;
+  z-index: 0;
+  border-top: none;
+  padding: 12px 14px 12px 60px;
+  margin-bottom: 10px;
+  max-width: min(100%, calc(78ch + 60px));
 }
 
 .item-list > li:first-child {
   border-top: none;
-  padding-top: 0;
+  padding-top: 12px;
+}
+
+.item-list > li:last-child {
+  margin-bottom: 0;
+}
+
+.item-list > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background-color: var(--wa-send);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='12' y='17' font-family='Georgia, serif' font-size='16' font-weight='700' fill='%23fdfaf6' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E");
+  background-position: center;
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+}
+
+.item-list > li::after {
+  content: '';
+  position: absolute;
+  left: 44px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 16px 16px 16px 4px;
+  z-index: -1;
+}
+
+/* Nested lists: quiet meta rows inside the parent message. */
+.item-list .item-list > li {
+  position: static;
+  z-index: auto;
+  padding: 6px 0;
+  margin: 0;
+  max-width: none;
+}
+
+.item-list .item-list > li::before,
+.item-list .item-list > li::after {
+  content: none;
+}
+
+.item-list .item-list > li + li {
+  border-top: 1px dashed var(--wa-divider);
 }
 
 .item-head {
@@ -343,12 +554,48 @@
 }
 
 .item-foot {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--wa-meta);
   display: flex;
-  gap: 14px;
+  gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+/* The ItemFoot links are the message's REPLIES: small chips, the first
+   action of a row carrying the gold. */
+.item-foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border: 1px solid var(--wa-divider);
+  background: #fffefc;
+  color: var(--ink-soft);
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.item-foot a:hover {
+  border-color: var(--wa-send);
+  background: var(--wa-bubble-out);
+  color: var(--accent);
+}
+
+.item-foot a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.item-foot a:first-of-type {
+  border-color: var(--wa-send);
+  background: var(--accent-soft);
+  color: #432e14;
 }
 
 .tt {
@@ -407,21 +654,95 @@
   color: var(--ink-soft);
 }
 
+/* W114 — an empty state is an honest MESSAGE FROM AURUM: the same
+   avatar + bubble treatment as the item rows (the dashed box is gone —
+   the bubble carries the honesty). */
 .empty {
-  border: 1px dashed var(--line-strong);
+  position: relative;
+  z-index: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 12px 14px 12px 60px;
+  text-align: left;
+  color: var(--ink-soft);
+  font-size: 13px;
+  max-width: min(100%, calc(78ch + 60px));
+  margin-bottom: 10px;
+}
+
+.empty::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
-  padding: 22px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 13.5px;
+  background-color: var(--wa-send);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ctext x='12' y='17' font-family='Georgia, serif' font-size='16' font-weight='700' fill='%23fdfaf6' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E");
+  background-position: center;
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+}
+
+.empty::after {
+  content: '';
+  position: absolute;
+  left: 44px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--wa-bubble-in);
+  border: 1px solid var(--wa-divider);
+  border-radius: 16px 16px 16px 4px;
+  z-index: -1;
 }
 
 .empty strong {
-  color: var(--ink-soft);
+  display: block;
+  color: var(--ink);
+  font-size: 13.5px;
+}
+
+/* ---- W114: the daily-briefing channel ------------------------------------
+
+   A tower surface that wraps its thread in .tower-briefing rides the
+   messenger sand (the WhatsApp canvas) and narrows to a thread column.
+   The wrapper is a GENERIC pattern: any briefing-style surface may use
+   it; nothing here is specific to one route. */
+
+.tower-main:has(.tower-briefing) {
+  background: var(--wa-bg);
+}
+
+.tower-briefing {
+  max-width: min(100%, 880px);
+}
+
+/* The WhatsApp date chip that opens a briefing thread (decorative: the
+   surface header above already carries the day as its title). */
+.tower-daysep {
+  display: flex;
+  justify-content: center;
+  margin: 2px 0 14px;
+}
+
+.tower-daysep span {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #4a443d;
+  background: var(--wa-divider);
+  border-radius: 999px;
+  padding: 3px 12px;
 }
 
 /* ---- approvals decision form ---- */
 
+/* W114 — the decision controls are the message's QUICK REPLIES: pill
+   chips, the approve action keeping its green, the reject its outline. */
 .decide {
   display: flex;
   gap: 8px;
@@ -431,11 +752,11 @@
 }
 
 .decide button {
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px solid transparent;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 6px 16px;
+  font-size: 12.5px;
+  font-weight: 650;
   cursor: pointer;
 }
 
@@ -511,6 +832,27 @@
 
   .tower-main {
     padding: 16px;
+  }
+
+  /* W114 — the messenger rows tighten on small screens. */
+  .item-list > li,
+  .empty,
+  .stat-row {
+    padding-left: 52px;
+  }
+
+  .item-list > li::before,
+  .empty::before,
+  .stat-row::before {
+    width: 30px;
+    height: 30px;
+    background-size: 18px 18px;
+  }
+
+  .item-list > li::after,
+  .empty::after,
+  .stat-row::after {
+    left: 38px;
   }
 
   .tower-header {
