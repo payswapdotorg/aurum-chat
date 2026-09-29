@@ -58,7 +58,7 @@ describe('health/readiness — the ok shape', () => {
           backend: string;
           ok: boolean;
           migrations: number | null;
-          tables: { census: number; expected: number; missing: string[] } | null;
+          tables: { census: number; expected: number; missing: string[]; extra: string[] } | null;
         };
         queue: { backend: string };
         email: { backend: string };
@@ -78,6 +78,7 @@ describe('health/readiness — the ok shape', () => {
       census: EXPECTED_TABLE_CENSUS,
       expected: EXPECTED_TABLE_CENSUS,
       missing: [],
+      extra: [],
     });
     expect(body.components.queue.backend).toBe('memory');
     expect(body.components.email.backend).toBe('memory');
@@ -187,7 +188,7 @@ describe('health/readiness — error (fail closed)', () => {
           db: {
             ok: boolean;
             migrations: number | null;
-            tables: { census: number; expected: number; missing: string[] } | null;
+            tables: { census: number; expected: number; missing: string[]; extra: string[] } | null;
             error: string | null;
           };
         };
@@ -201,6 +202,7 @@ describe('health/readiness — error (fail closed)', () => {
         census: EXPECTED_TABLE_CENSUS - 1,
         expected: EXPECTED_TABLE_CENSUS,
         missing: ['provider_preference_settings'],
+        extra: [],
       });
       expect(body.components.db.error).toContain('schema drift');
     } finally {
