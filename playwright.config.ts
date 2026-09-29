@@ -27,6 +27,12 @@ const PORT = Number(process.env.W076_PORT ?? 3105);
 
 export default defineConfig({
   testDir: './tests/browser',
+  // W115 — the production certification specs (tests/browser/production/,
+  // run exclusively by playwright.certification.config.ts — they throw
+  // without W079_BASE_URL) must NOT leak into the default journey run:
+  // the projects' /.*-desktop\.spec\.ts/ patterns match them too. Only
+  // the seeded-world desktop+mobile journeys belong here.
+  testIgnore: /tests[\\/]browser[\\/]production[\\/]/,
   outputDir: './test-results',
   timeout: 180_000,
   expect: { timeout: 15_000 },

@@ -16,7 +16,9 @@ import {
   technologyRegistryReviewSummary,
   validateTechnologyRegistryEntry,
 } from '../contract';
-import rawRegistry from '../registry/technologies.json';
+// W115 — the import attribute keeps this spec-loadable under Node's ESM
+// loader (same fix as registry.ts).
+import rawRegistry from '../registry/technologies.json' with { type: 'json' };
 
 describe('provider-sdk registry — committed data is schema-valid', () => {
   it('carries the current schema version and a seed source', () => {

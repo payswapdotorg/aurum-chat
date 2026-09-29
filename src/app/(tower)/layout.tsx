@@ -7,8 +7,12 @@
 // untouched — the tower's styling is fully scoped under `.tower`.
 
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import './tower.css';
 import { TowerNav } from './components/nav';
+
+/** The tower's way home (W115): the control's stable accessible name. */
+export const TOWER_BACK_LABEL = 'Back to Aurum Chat';
 
 export default function TowerLayout({ children }: { children: ReactNode }) {
   return (
@@ -20,7 +24,7 @@ export default function TowerLayout({ children }: { children: ReactNode }) {
         <div className="tower-mark" aria-hidden="true">
           A
         </div>
-        <div>
+        <div className="tower-heading">
           <h1 className="tower-title">Aurum — Management Control Tower</h1>
           <p className="tower-subtitle">
             Goals · Situation · Unknowns · Missions · Risks · Opportunities ·
@@ -33,6 +37,29 @@ export default function TowerLayout({ children }: { children: ReactNode }) {
           <br />
           Management surface W033 (lock 33/34)
         </div>
+        {/* W115 — the way home: the shell owns the chrome, so every one of
+            the fifteen surfaces inherits this control. A real link to the
+            employee app's /chat (keyboard focusable, named for assistive
+            tech, styled as the tower's dark-ink channel bar in tower.css)
+            — the journey back never depends on hand-editing the URL. */}
+        <Link className="tower-back" href="/chat" aria-label={TOWER_BACK_LABEL}>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+            role="presentation"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          {TOWER_BACK_LABEL}
+        </Link>
       </header>
       <div className="tower-body">
         <TowerNav />

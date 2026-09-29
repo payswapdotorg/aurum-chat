@@ -29,7 +29,11 @@
 // communication-kernel technology; the CommOS fusion section of the
 // research record is therefore NOT seeded as a registry entry.
 
-import registryData from './registry/technologies.json';
+// W115 — the import attribute is REQUIRED under Node's ESM loader (the
+// Playwright spec loading path): without `with { type: 'json' }` every
+// browser spec dies with "TypeError: Module ... needs an import
+// attribute of type: json". Vitest and the Next build accept it.
+import registryData from './registry/technologies.json' with { type: 'json' };
 import { ProviderSdkError } from './errors';
 
 // ---------------------------------------------------------------------------
