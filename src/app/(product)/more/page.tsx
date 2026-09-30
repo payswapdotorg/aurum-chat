@@ -17,6 +17,7 @@
 // W058: the account section — who is signed in, the company switch
 // entry, invitations, and sign-out.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
@@ -31,6 +32,11 @@ import { CapabilityPromptList } from '../components/capability-prompts';
 import { SignOutButton } from '@/app/(auth)/components/sign-out-button';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "More — Aurum",
+  description: "Your account, accessibility, and what Aurum is.",
+};
 
 export default async function MorePage({
   searchParams,

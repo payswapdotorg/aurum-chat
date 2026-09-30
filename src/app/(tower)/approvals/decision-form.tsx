@@ -11,6 +11,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { calmFailureText } from '@/app/lib/calm-errors';
 
 export interface DecisionFormProps {
   requestId: string;
@@ -56,13 +57,15 @@ export function DecisionForm({
           error?: string;
           message?: string;
         } | null;
-        throw new Error(
-          body?.message ?? body?.error ?? `decision failed (HTTP ${response.status})`,
-        );
+        throw new Error(calmFailureText(body));
       }
       router.refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'decision failed');
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'That didn’t go through — please try again.',
+      );
     } finally {
       setPending(false);
     }

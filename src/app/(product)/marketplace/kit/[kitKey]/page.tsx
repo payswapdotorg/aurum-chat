@@ -17,6 +17,7 @@
 // → the W009 grant review → activate), rendered here with the
 // marketplace's own vocabulary.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../../../lib/context';
 import { resolveSession } from '@/app/lib/session';
@@ -34,6 +35,11 @@ import {
 import { ActionForm } from '../../components/action-form';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "One kit — Aurum",
+  description: "One marketplace kit: versions, verification evidence, reviews and installation.",
+};
 
 export default async function KitPage({
   params,
@@ -249,7 +255,7 @@ export default async function KitPage({
         {/* --- verification: the shipped posture + the recorded runs --- */}
         <Panel
           title="Verification"
-          blurb="The same deterministic checks registration enforces. The shipped checks are computed over the shipped bytes now; your registry's recorded runs are append-only evidence (drift appears as a new run, never a rewrite)."
+          blurb="The same deterministic checks registration enforces. The shipped checks are computed over the shipped bytes now; your registry's recorded runs are permanent evidence (drift appears as a new run, never a rewrite)."
           meta={
             <StatusPill tone={view.shippedChecksOutcome === 'verified' ? 'positive' : 'error'}>
               {view.shippedChecksOutcome === 'verified' ? 'Shipped checks pass' : 'Shipped checks fail'}
@@ -359,7 +365,7 @@ export default async function KitPage({
         {installation !== null ? (
           <Panel
             title="Invocation ledger"
-            blurb="Every capability-invocation verdict, allowed or denied — append-only evidence with the deterministic denial reason."
+            blurb="Every capability-invocation verdict, allowed or denied — permanently recorded, with the deterministic denial reason."
             meta={
               <span>
                 {installation.invocations.allowed} allowed · {installation.invocations.denied} denied
@@ -450,7 +456,7 @@ export default async function KitPage({
                   fields={[]}
                   hidden={latestRegistered === null ? {} : { kitVersionId: latestRegistered.id }}
                   submitLabel="Record a verification run"
-                  note="Append-only: the deterministic checks re-examine the STORED bytes (the digest is re-derived — an edited row fails loudly)."
+                  note="Checks re-run against the exact bytes that were published — any later change is caught and recorded."
                 />
               </div>
             ) : null}
@@ -510,7 +516,7 @@ export default async function KitPage({
                   hidden={installation === null ? {} : { installationId: installation.id }}
                   submitLabel="Record the review decision"
                   confirmPrompt="I am deciding the grant review, and I am not the principal who requested this install."
-                  note="The human decision behind the authority gate — separation of duties is enforced by the actions contract; the decision is append-only evidence."
+                  note="The approval is recorded by a person, not the vendor — decisions are permanent."
                 />
               </div>
             ) : null}
@@ -589,7 +595,7 @@ export default async function KitPage({
                   hidden={{ installationId: installation.id }}
                   submitLabel="Remove the kit"
                   confirmPrompt="Removal is terminal: every active grant is revoked with the kit and a fresh install starts a new lifecycle."
-                  note="Every grant is revoked (no orphaned authority); the append-only audit trail is retained."
+                  note="Every grant is revoked (no orphaned authority); the audit trail is retained permanently."
                 />
               </div>
             ) : null}

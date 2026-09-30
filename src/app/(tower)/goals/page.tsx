@@ -5,6 +5,7 @@
 // The tower reads current views through the goals contract; the audit
 // trail lives in the module (every version records who/when/what/why).
 
+import type { Metadata } from 'next';
 import { buildGoalsView } from '../lib/views/goals';
 import { resolvePageContext, withScope } from '../lib/page-context';
 import {
@@ -23,6 +24,11 @@ import { formatCount, formatInstant, titleCase } from '../lib/format';
 import type { GoalStatus } from '@/modules/goals/contract';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Goals — Management Tower — Aurum",
+  description: "Company goals with their horizons, priorities and the evidence chains behind them.",
+};
 
 export default async function GoalsPage({
   searchParams,
@@ -105,7 +111,9 @@ export default async function GoalsPage({
                     {formatInstant(goal.content.horizon.end)}
                   </span>
                   <span>updated {formatInstant(goal.updatedAt)}</span>
-                  <span className="mono">{goal.id}</span>
+                  <span>
+                    goal <span className="mono">{goal.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

@@ -160,8 +160,7 @@ describe('the waitlist roster markup (W116)', () => {
     expect(html).toContain('Accepted');
     expect(html).toContain('Declined');
     expect(html).toContain('Oct 9, 2026');
-    expect(html).toContain('by principal');
-    expect(html).toContain('1a2b3c4d');
+    expect(html).toContain('by an admin');
     expect(html).toContain('This round is internal only');
     // Settled rows carry no decision form — history is read-only.
     expect(html).not.toContain('method="post"');

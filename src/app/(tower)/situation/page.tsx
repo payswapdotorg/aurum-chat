@@ -5,6 +5,7 @@
 // with provenance (versioned working understanding, lock 11), recent
 // claims and the open contradictions deliberately retained (lock 12).
 
+import type { Metadata } from 'next';
 import { buildSituationView } from '../lib/views/situation';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -21,6 +22,11 @@ import {
 import { formatConfidence, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Situation — Management Tower — Aurum",
+  description: "The company's current working picture: entities, beliefs with their provenance, and retained conflicting evidence.",
+};
 
 export default async function SituationPage() {
   const resolution = await resolvePageContext();
@@ -101,7 +107,9 @@ export default async function SituationPage() {
                 <ItemFoot>
                   <span>valid from {formatInstant(belief.validFrom)}</span>
                   <span>{belief.provenanceCount} supporting observations</span>
-                  <span className="mono">{belief.id}</span>
+                  <span>
+                    belief <span className="mono">{belief.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -147,7 +155,9 @@ export default async function SituationPage() {
                 </ItemText>
                 <ItemFoot>
                   <span>detected {formatInstant(contradiction.detectedAt)}</span>
-                  <span className="mono">{contradiction.id}</span>
+                  <span>
+                    record <span className="mono">{contradiction.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

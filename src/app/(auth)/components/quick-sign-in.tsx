@@ -71,8 +71,7 @@ export function QuickSignIn({ personas, next }: QuickSignInProps): ReactNode {
         Quick access
       </h2>
       <p className="aurum-auth-quick-blurb">
-        One tap signs you in as a seeded demo persona — each enters through
-        the real auth flow with the permissions of their role.
+        One tap signs you in as a demo user with that role's permissions.
       </p>
       <ul className="aurum-auth-quick-list">
         {personas.map((persona) => {

@@ -9,6 +9,7 @@
 // quick-access panel: one-tap sign-in as a seeded demo persona (the W068
 // harness directory — server-side, credentials never reach the client).
 
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getInviteByCode } from '@/modules/auth/contract';
@@ -21,6 +22,11 @@ import { QuickSignIn } from '../components/quick-sign-in';
 import type { QuickSignInPersona } from '../components/quick-sign-in';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Sign in — Aurum",
+  description: "Sign in to Aurum, your organizational intelligence employee.",
+};
 
 export default async function SignInPage({
   searchParams,

@@ -53,7 +53,7 @@ export function notificationContextPayload(
     title: item.subject,
     subtitle: item.kind,
     tone: item.tone,
-    source: 'notifications module (W031 contract read)',
+    source: 'Aurum notifications',
     sections: [
       {
         kind: 'summary',

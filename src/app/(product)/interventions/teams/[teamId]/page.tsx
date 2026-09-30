@@ -236,7 +236,7 @@ export default async function TeamPage({
       {/* Outcome tracking. */}
       <Panel
         title="Outcome timeline"
-        blurb="The team’s recorded outcomes — headline, the assessment against a shared objective, and cited evidence. Append-only: nothing rewrites or erases an outcome."
+        blurb="The team’s recorded outcomes — headline, the assessment against a shared objective, and cited evidence. Outcomes are recorded, never rewritten or erased."
         meta={<>{view.outcomes.length} outcome{view.outcomes.length === 1 ? '' : 's'}</>}
       >
         {view.outcomes.length === 0 ? (
@@ -274,7 +274,7 @@ export default async function TeamPage({
       {/* The version audit chain. */}
       <Panel
         title="Version chain"
-        blurb="Every composition change and every gated transition, as append-only versions — the auditable history of what this team is."
+        blurb="Every composition change and every gated transition, as permanent versions — the auditable history of what this team is."
         meta={<>{view.versions.length} version{view.versions.length === 1 ? '' : 's'}</>}
       >
         <ul className="aurum-intel-list">

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Aurum mark (W123 / B-TL-03): the tower mark aesthetic — a rounded
+       gold square with a cream "A". -->
+  <rect width="64" height="64" rx="14" fill="#d9952a"/>
+  <text x="32" y="45" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="700" fill="#fdfaf6">A</text>
+</svg>

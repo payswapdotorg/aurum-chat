@@ -10,6 +10,7 @@
 // the manifest ceiling — least privilege as a redeploy, never a
 // mutation of history.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../../../lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
@@ -27,6 +28,11 @@ import { ActionForm } from '../../components/action-form';
 import { EXTENSION_PERMISSION_COPY, verificationTone } from '../../lib/labels';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "One installed extension — Aurum",
+  description: "One installed extension: its grant, deployment history and invocation ledger.",
+};
 
 export default async function InstalledExtensionPage({
   params,
@@ -110,8 +116,8 @@ export default async function InstalledExtensionPage({
       >
         {!view.canGovern ? (
           <div className="aurum-notice">
-            Governing extensions needs the <code>extensions:administer</code> authority claim.
-            The state below stays readable for every member.
+            Governing extensions needs admin permission. The state below stays
+            readable for every member.
           </div>
         ) : view.availableTransitions.length === 0 ? (
           <EmptyState
@@ -265,7 +271,7 @@ export default async function InstalledExtensionPage({
       {/* --- deployment history + rollback --- */}
       <Panel
         title="Deployment history & rollback"
-        blurb="Every recorded deployment of the default install, append-only. Rollback restores a superseded deployment's exact recorded grant — never a fresh negotiation."
+        blurb="Every recorded deployment of the default install, permanently retained. Rollback restores a superseded deployment's exact recorded grant — never a fresh negotiation."
       >
         {view.deployments.length === 0 ? (
           <EmptyState

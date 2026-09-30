@@ -5,6 +5,7 @@
 // persisted — lock 10). Supplies come from the six supplier kinds —
 // employee, team, agent, software, supplier, partner.
 
+import type { Metadata } from 'next';
 import { buildCapabilitiesView } from '../lib/views/capabilities';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -19,6 +20,11 @@ import {
 import { formatCount, formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Capabilities — Management Tower — Aurum",
+  description: "What the company can do today: capability supply, demand, and the gaps between them.",
+};
 
 export default async function CapabilitiesPage() {
   const resolution = await resolvePageContext();
@@ -90,8 +96,8 @@ export default async function CapabilitiesPage() {
           <h4>Gap legend</h4>
           <p className="item-text">
             <Badge kind="risk">uncovered</Badge> demanded, no active supply ·{' '}
-            <Badge kind="warn">level_shortfall</Badge> best supply below a required level ·{' '}
-            <Badge kind="warn">capacity_shortfall</Badge> declared capacity below a required
+            <Badge kind="warn">level shortfall</Badge> best supply below a required level ·{' '}
+            <Badge kind="warn">capacity shortfall</Badge> declared capacity below a required
             capacity · <Badge kind="ok">covered</Badge> demand met ·{' '}
             <Badge kind="muted">no demand</Badge> nothing actively requires it
           </p>
@@ -112,7 +118,9 @@ export default async function CapabilitiesPage() {
                     {capability.unmetCount === 1 ? '' : 's'}
                   </span>
                   <span>{capability.activeSupplyCount} active supplies</span>
-                  <span className="mono">{capability.id}</span>
+                  <span>
+                    capability <span className="mono">{capability.id.slice(0, 8)}</span>
+                  </span>
                 </div>
               </li>
             ))}

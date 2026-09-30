@@ -377,7 +377,7 @@ describe('W059 — connect, disconnect and health for channels', () => {
     expect(card!.connection!.providerAccountId).toBe('+15550100001');
     expect(card!.connection!.credentialRef).toBe(`${storePath()}tenantA/whatsapp`);
     expect(card!.health.level).toBe('degraded');
-    expect(card!.health.reasons.some((r) => r.text.includes('No delivery transport wired'))).toBe(true);
+    expect(card!.health.reasons.some((r) => r.text.includes('Sending is not connected yet'))).toBe(true);
     expect(view.channels.connected).toBe(1);
     expect(view.channels.active).toBe(1);
   });

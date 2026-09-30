@@ -278,7 +278,7 @@ export default async function MissionPage({
         <>
           <Panel
             title="Knowledge requests and contributions"
-            blurb="The people this mission asked, what they answered, and how the evidence was assessed — employees are first-class knowledge sources (the learning surface owns the full experience)."
+            blurb="The people this mission asked, what they answered, and how the evidence was assessed — employees are knowledge sources in their own right (the learning surface owns the full experience)."
             meta={
               <>
                 <Link href="/learning">Open Learning</Link>

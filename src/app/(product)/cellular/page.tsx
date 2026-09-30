@@ -111,7 +111,7 @@ export default async function CellularPage() {
 
       <Panel
         title="Sending connections"
-        blurb="The tenant-owned telecom accounts: one per vendor account with its E.164 sending number, the credential itself behind an opaque secret-store reference."
+        blurb="Your company's telecom accounts: one per vendor account with its E.164 sending number, the credential itself stored securely — never displayed."
         meta={<>{view.connections.length} connection(s)</>}
       >
         {view.connections.length === 0 ? (
@@ -155,8 +155,8 @@ export default async function CellularPage() {
       >
         {view.policies.length === 0 ? (
           <EmptyState
-            title="No tenant policy rows — the built-in floor governs"
-            hint="Until an administrator sets one, every reach resolves to the module's built-in floor: no voice fallback, three SMS attempts, a modest cost cap. The numbers in the note below are that floor."
+            title="No custom policy set — the built-in defaults apply"
+            hint="Until an administrator sets one, every reach uses the built-in defaults: no voice fallback, three SMS attempts, a modest cost cap. The numbers in the note below are those defaults."
           />
         ) : (
           <ul className="aurum-intel-list">

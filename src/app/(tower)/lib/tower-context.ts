@@ -87,14 +87,14 @@ export function resolveTowerContext(
     return {
       ok: false,
       failure: 'missing_tenant',
-      detail: `name a tenant via the '${TENANT_HEADER}' header or the '?tenant=' query parameter`,
+      detail: 'no company is selected for this request',
     };
   }
   if (!isUuid(tenant)) {
     return {
       ok: false,
       failure: 'invalid_tenant',
-      detail: `'${tenant}' is not a tenant id (uuid)`,
+      detail: `'${tenant}' is not a valid company id`,
     };
   }
   const principal = (input.principal ?? '').trim();
@@ -107,7 +107,7 @@ export function resolveTowerContext(
     return {
       ok: false,
       failure: 'invalid_principal',
-      detail: `'${principal}' is not a principal id (uuid)`,
+      detail: `'${principal}' is not a valid member id`,
     };
   } else {
     principalId = principal;

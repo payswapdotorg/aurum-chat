@@ -447,7 +447,7 @@ export async function handlePackageAction(
           return apiError(
             409,
             'not_installable',
-            `package '${packageId}' is ${pkg.state} — only INSTALLABLE packages can be installed`,
+            `package '${packageId}' is not yet cleared for installation — only packages the platform has cleared can be installed`,
           );
         }
         const report: InstallReport = await installPackage(ctx, pkg, granted);

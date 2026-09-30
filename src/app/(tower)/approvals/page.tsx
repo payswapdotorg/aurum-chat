@@ -6,6 +6,7 @@
 // (decideApproval) via the tower API route — claim-gated, separation of
 // duties enforced by the module, first decision wins, never un-decidable.
 
+import type { Metadata } from 'next';
 import { buildApprovalsView } from '../lib/views/approvals';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -26,6 +27,11 @@ import { DecisionForm } from './decision-form';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata: Metadata = {
+  title: "Approvals — Management Tower — Aurum",
+  description: "Consequential actions waiting for an explicit human decision, and the recently decided.",
+};
+
 export default async function ApprovalsPage() {
   const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
@@ -41,16 +47,13 @@ export default async function ApprovalsPage() {
     <>
       <SurfaceHeader
         title="Approvals"
-        description="Consequential actions the authority matrix holds for an explicit human decision. First decision wins; approved and rejected are terminal; the decision trail is append-only — decisions can never be rewritten or un-made."
+        description="Consequential actions the authority matrix holds for an explicit human decision. First decision wins; approved and rejected are final; the decision trail is permanent — decisions can never be rewritten or un-made."
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
       {canDecide ? null : (
         <Notice>
-          Deciding requires the <code>actions:approve</code> authority claim, which
-          the session derives from your verified company role (owner or admin).
-          Your current role carries it neither way — a company admin can invite
-          or promote you, or another approver decides. The actions contract
-          checks the claim itself; the tower never bypasses it.
+          Decisions need an owner or admin role. Ask an admin to promote you, or
+          let another approver decide.
         </Notice>
       )}
       <StatTiles
@@ -66,7 +69,7 @@ export default async function ApprovalsPage() {
         {view.pending.length === 0 ? (
           <Empty
             title="Nothing awaits your decision"
-            hint="Requests become pending when the matrix evaluates a consequential action as approval-required."
+            hint="Requests become pending when a consequential action needs an explicit human decision."
           />
         ) : (
           <ul className="item-list">
@@ -89,9 +92,8 @@ export default async function ApprovalsPage() {
                   <ItemFoot>
                     <span>requested {formatInstant(request.requestedAt)}</span>
                     <span>
-                      by <span className="mono">{request.requestedBy}</span>
+                      by <span className="mono">{request.requestedBy.slice(0, 8)}</span>
                     </span>
-                    <span>routed via {request.evaluation.resolvedVia}</span>
                   </ItemFoot>
                   <DecisionForm
                     requestId={request.id}
@@ -101,7 +103,7 @@ export default async function ApprovalsPage() {
                     disabled={selfRequested}
                     disabledReason={
                       selfRequested
-                        ? 'the requesting principal may not decide its own request (separation of duties)'
+                        ? 'you may not decide your own request (separation of duties)'
                         : null
                     }
                   />
@@ -118,7 +120,7 @@ export default async function ApprovalsPage() {
                                 <StatusBadge status={decision.decision} /> by{' '}
                                 {decision.decidedBy === 'policy'
                                   ? 'policy'
-                                  : `principal ${decision.principalId?.slice(0, 8) ?? '…'}`}
+                                  : `approver ${decision.principalId?.slice(0, 8) ?? '…'}`}
                               </span>
                               <span>{formatInstant(decision.decidedAt)}</span>
                               {decision.note === null ? null : <span>“{decision.note}”</span>}
@@ -134,7 +136,7 @@ export default async function ApprovalsPage() {
           </ul>
         )}
       </Card>
-      <Card title="Recently decided" meta="terminal — append-only history">
+      <Card title="Recently decided" meta="final — permanent history">
         {view.recentlyDecided.length === 0 ? (
           <Empty title="No decided requests yet" />
         ) : (
@@ -153,7 +155,9 @@ export default async function ApprovalsPage() {
                 <ItemFoot>
                   <span>requested {formatInstant(request.requestedAt)}</span>
                   <span>decided {formatInstant(request.decidedAt ?? request.requestedAt)}</span>
-                  <span className="mono">{request.id}</span>
+                  <span>
+                    request <span className="mono">{request.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

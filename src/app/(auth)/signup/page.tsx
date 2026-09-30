@@ -6,6 +6,7 @@
 // the bound email and keeps today's immediate-access behavior (an invite
 // is admin-granted trust). Already-signed-in visitors are routed onward.
 
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getInviteByCode } from '@/modules/auth/contract';
@@ -14,6 +15,11 @@ import { AuthBrand } from '../components/brand';
 import { SignUpForm } from '../components/signup-form';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Create your account — Aurum",
+  description: "Start with Aurum: create your account and request access for your company.",
+};
 
 export default async function SignUpPage({
   searchParams,

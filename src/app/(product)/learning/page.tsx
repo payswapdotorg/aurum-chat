@@ -365,7 +365,7 @@ export default async function LearningPage() {
         {view.contributions.length === 0 ? (
           <EmptyState
             title="No contributions yet"
-            hint="The first answered knowledge request records the first contribution — employees are first-class knowledge sources."
+            hint="The first answered knowledge request records the first contribution — employees are knowledge sources in their own right."
           />
         ) : (
           <ul className="aurum-intel-list">

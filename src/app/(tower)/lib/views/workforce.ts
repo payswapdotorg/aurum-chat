@@ -104,7 +104,7 @@ export async function buildWorkforceView(ctx: TenantContext): Promise<WorkforceV
         ? {
             readable: false,
             reason:
-              'tenant membership is readable only by a member principal — pass ?principal=<member uuid>',
+              'The member list is available to company admins. Ask an admin if you need the roster.',
             items: [],
           }
         : {
@@ -117,8 +117,8 @@ export async function buildWorkforceView(ctx: TenantContext): Promise<WorkforceV
             })),
           },
     notices: [
-      'Workforce intelligence (W019 — workload, fit, performance signals with alternative explanations) is not delivered at this base; this surface presents facts only, no assessments.',
-      'The people contract (W002) exposes no employee roster listing — reported as a contract gap for the architect.',
+      'This page lists facts only — who supplies which skills, and each person’s role. It does not judge workload, fit, or performance.',
+      'A full employee directory is coming; for now, people appear as they are recorded in company data.',
     ],
   };
 }

@@ -227,7 +227,7 @@ export function goalCard(goal: Goal): ChatCard {
           links: [],
         },
       ],
-      'Goal (W008 record — management defines direction; Aurum evaluates progress)',
+      'Goal — set by management; Aurum tracks progress',
     ),
   };
 }
@@ -261,7 +261,7 @@ export function unknownCard(unknown: Unknown): ChatCard {
           links: [{ label: 'Open the Evidence surface', href: '/evidence' }],
         },
       ],
-      'First-class unknown (W007) — a consequential question, not a TODO',
+      'Unknown — a consequential question, not a to-do list',
     ),
   };
 }
@@ -302,7 +302,7 @@ export function missionCard(mission: Mission): ChatCard {
           links: [],
         },
       ],
-      'Learning mission (W011) — goal-driven, budget-bounded',
+      'Learning mission — goal-driven, budget-bounded',
     ),
   };
 }
@@ -316,7 +316,7 @@ export function riskContradictionCard(contradiction: Contradiction): ChatCard {
     tone: 'warning',
     meta: [
       `Detected ${dateLabel(contradiction.detectedAt)}`,
-      'Two pieces of evidence disagree — both are retained (lock 12)',
+      'Two pieces of evidence disagree — both are kept',
     ],
     href: CARD_HREFS.risk,
     decision: null,
@@ -338,7 +338,7 @@ export function riskContradictionCard(contradiction: Contradiction): ChatCard {
           links: [{ label: 'Open the Evidence surface', href: '/evidence' }],
         },
       ],
-      'Retained contradiction (W007) — conflicting evidence is never discarded',
+      'Retained contradiction — conflicting evidence is never discarded',
     ),
   };
 }
@@ -384,7 +384,7 @@ export function riskGapCard(gap: CapabilityGap): ChatCard {
           ],
         },
       ],
-      'Capability gap (W017) — supply and demand, with alternatives',
+      'Capability gap — supply and demand, with alternatives',
     ),
   };
 }
@@ -439,7 +439,7 @@ export function capabilityCard(gap: CapabilityGap): ChatCard {
           ],
         },
       ],
-      'Capability (W017) — what the company can do today, supply and demand',
+      'Capability — what the company can do today, supply and demand',
     ),
   };
 }
@@ -474,7 +474,7 @@ export function evidenceCard(observation: Observation): ChatCard {
           title: 'The record',
           lines: [
             clip(`${observation.kind} from ${sourceLabel}, observed ${dateLabel(observation.observedAt)} via ${observation.channel}.`, 400),
-            'Observations are immutable (W004) — this record cannot be edited after the fact, only superseded by newer evidence.',
+            'Observations are immutable — this record cannot be edited after the fact, only superseded by newer evidence.',
           ],
           links: [],
         },
@@ -487,7 +487,7 @@ export function evidenceCard(observation: Observation): ChatCard {
           links: [{ label: 'Open the Evidence surface', href: '/evidence' }],
         },
       ],
-      'Evidence (W004) — the immutable observation record every answer rests on',
+      'Evidence — the immutable record every answer rests on',
     ),
   };
 }
@@ -546,7 +546,7 @@ export function traceFindingCard(finding: TraceFindingLite): ChatCard {
           ],
         },
       ],
-      'Analysis finding recorded on a cognition trace (W013) — derived intelligence',
+      'Analysis finding — derived intelligence',
     ),
   };
 }
@@ -587,7 +587,7 @@ export function recommendationCard(request: ActionRequest): ChatCard {
           links: [{ label: 'Open Recommendations', href: '/recommendations' }],
         },
       ],
-      'Routed action request (W009) — consequential actions pass the human gate',
+      'Action request — consequential actions pass the human gate',
     ),
   };
 }
@@ -625,13 +625,17 @@ export function approvalCard(request: ActionRequest): ChatCard {
           kind: 'policy',
           title: 'Policy evaluation',
           lines: [
-            `Gate outcome: ${request.evaluation.outcome} (via ${request.evaluation.resolvedVia})`,
-            'Aurum proposes; the authority matrix disposes. Humans decide.',
+            request.evaluation.outcome === 'approval_required'
+              ? 'This action needs an explicit human approval before it runs.'
+              : request.evaluation.outcome === 'forbidden'
+                ? 'This action is not permitted by company policy.'
+                : 'This action was allowed by company policy.',
+            'Aurum proposes; humans decide.',
           ],
           links: [{ label: 'Open Approvals (management mode)', href: '/approvals' }],
         },
       ],
-      'Pending action request (W009) — the human authority gate',
+      'Pending action request — waiting for a human decision',
     ),
   };
 }
@@ -851,9 +855,9 @@ export function composeAnswerParts(
         intent,
         headline: 'Here’s the evidence behind Aurum’s answers.',
         bullets: [
-          'Every consequential answer runs a recorded cognition execution: observation → evidence → analysis → recommendation → approval → outcome → learning.',
+          'Every consequential answer runs a recorded analysis: observation → evidence → analysis → recommendation → approval → outcome → learning.',
           `${plural(data.observations.length, 'recent observation')} — the immutable evidence feed.`,
-          `${plural(data.contradictions.length, 'retained contradiction')} — conflicting evidence is kept, never discarded (lock 12).`,
+          `${plural(data.contradictions.length, 'retained contradiction')} — conflicting evidence is kept, never discarded.`,
           'Ask “Show me why” about any card to open its context: evidence, related goals, policy.',
         ],
         note: degradedNote,

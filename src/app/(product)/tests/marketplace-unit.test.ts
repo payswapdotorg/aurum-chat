@@ -311,16 +311,16 @@ describe('derivePackageActions', () => {
         { ...installer, authority: ['agents:administer'] },
         package_({ state: 'INSTALLABLE' }),
       ).installBlockedReason,
-    ).toContain('extensions:administer');
+    ).toContain('admin permission');
     expect(
       derivePackageActions(
         { ...installer, authority: [] },
         package_({ kind: 'agent', state: 'INSTALLABLE' }),
       ).installBlockedReason,
-    ).toContain('agents:administer');
+    ).toContain('admin permission');
     expect(
       derivePackageActions(installer, package_({ state: 'PUBLISHED' })).installBlockedReason,
-    ).toContain('only INSTALLABLE');
+    ).toContain('cleared for installation');
     // The vendor may install its own published package like anyone else.
     expect(
       derivePackageActions(vendor, package_({ state: 'INSTALLABLE' })).canInstall,

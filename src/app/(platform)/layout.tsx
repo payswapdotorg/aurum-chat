@@ -42,7 +42,7 @@ export default function PlatformLayout({ children }: { children: ReactNode }) {
           begins as a request the platform team reviews.
         </span>
         <span>
-          Access requests are platform records · decisions are append-only
+          Access requests are platform records · decisions are permanent
           · invitations skip the queue
         </span>
       </footer>

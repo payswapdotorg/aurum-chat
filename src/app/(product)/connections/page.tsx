@@ -14,6 +14,7 @@
 // auth module re-verifies the active company's membership per request) —
 // the query-parameter seam is gone.
 
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { firstValue, scopeParamsOf } from './lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
@@ -40,6 +41,11 @@ import {
 } from './components/hub-ui';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Connections — Aurum",
+  description: "Channels, source systems, destinations and identity verification — your company’s links in and out of Aurum.",
+};
 
 export default async function ConnectionsPage({
   searchParams,
@@ -120,7 +126,7 @@ export default async function ConnectionsPage({
       <SectionCard
         id="channels"
         title="Channels"
-        description="The tenant's sending endpoints: one WhatsApp business number, one Telegram bot, one Slack workspace app… Disconnecting disables the endpoint; channel endpoints are otherwise immutable (re-registering an existing endpoint changes nothing)."
+        description="Your company's sending endpoints: one WhatsApp business number, one Telegram bot, one Slack workspace app… Disconnecting disables the endpoint; channel endpoints are otherwise immutable (re-registering an existing endpoint changes nothing)."
         meta={`generated ${now}`}
       >
         {connectedChannels.length === 0 ? (
@@ -153,7 +159,9 @@ export default async function ConnectionsPage({
                   <span>
                     {card.identitiesSeen} identit{card.identitiesSeen === 1 ? 'y' : 'ies'} seen recently
                   </span>
-                  <span className="mono">{card.connection?.id}</span>
+                  <span>
+                    connection <span className="mono">{card.connection?.id?.slice(0, 8)}</span>
+                  </span>
                 </div>
                 <details className="disclose">
                   <summary>Details &amp; controls</summary>
@@ -166,8 +174,8 @@ export default async function ConnectionsPage({
                           value: <span className="mono">{card.connection?.credentialRef}</span>,
                         },
                         {
-                          key: 'Delivery transport',
-                          value: card.transportWired ? 'wired' : 'not wired (sends fail provider_unavailable)',
+                          key: 'Sending',
+                          value: card.transportWired ? 'connected' : 'not connected yet — messages cannot be sent',
                         },
                         {
                           key: 'Connected',
@@ -217,7 +225,7 @@ export default async function ConnectionsPage({
       <SectionCard
         id="sources"
         title="Source systems"
-        description="Inbound connectors the tenant ingests evidence from (polling or webhooks). Freshness is the canonical W006 classification; the checkpoint is the opaque cursor the next poll resumes from. Re-registering a source is its re-authorization path."
+        description="Systems Aurum pulls your company's evidence from. Each source shows how fresh its data is and where the next check resumes; reconnecting renews its authorization."
         meta={`generated ${now}`}
       >
         {view.sources.cards.length === 0 ? (
@@ -264,7 +272,9 @@ export default async function ConnectionsPage({
                       : `${card.freshness.ageSeconds ?? '—'}s old`}
                   </span>
                   <span>{card.modes.join(' + ')}</span>
-                  <span className="mono">{card.id}</span>
+                  <span>
+                    source <span className="mono">{card.id.slice(0, 8)}</span>
+                  </span>
                 </div>
                 <details className="disclose">
                   <summary>Checkpoint, freshness &amp; controls</summary>
@@ -285,11 +295,11 @@ export default async function ConnectionsPage({
                             card.checkpoint === null
                               ? 'none (never polled, or rewound to start)'
                               : card.checkpoint.cursor === null
-                                ? 'start of history (cursor null)'
+                                ? 'start of history'
                                 : <span className="mono">{card.checkpoint.cursor}</span>,
                         },
                         {
-                          key: 'Freshness (W006)',
+                          key: 'Freshness',
                           value: `${card.freshness.status} · ${card.freshness.observationsConsidered} observations considered${
                             card.freshness.maxLatencySeconds === null
                               ? ''
@@ -361,7 +371,7 @@ export default async function ConnectionsPage({
                               name: 'credentialRef',
                               label: 'New credential reference',
                               required: true,
-                              hint: 'Opaque secret-store reference — never a credential value.',
+                              hint: 'A reference to the stored secret — never the secret itself.',
                             },
                             { name: 'displayName', label: 'Display name (optional)' },
                           ]}
@@ -389,7 +399,7 @@ export default async function ConnectionsPage({
       <SectionCard
         id="destinations"
         title="Destinations"
-        description="Outbound connectors Aurum publishes authorized findings to. Delivery state is the append-only outbound ledger: pending deliveries wait for the data-export authority gate (or a wired transport); failed deliveries retry; replay re-delivers as a new gated delivery. Re-registering a destination is its re-authorization path."
+        description="Systems Aurum delivers authorized findings to. Every delivery is recorded permanently: pending ones wait for export approval, failed ones retry, and re-delivery sends a new approved delivery. Reconnecting renews authorization."
         meta={`generated ${now}`}
       >
         {view.destinations.cards.length === 0 ? (
@@ -426,7 +436,9 @@ export default async function ConnectionsPage({
                       <When at={card.deliveries.latest.updatedAt} now={now} />)
                     </span>
                   ) : null}
-                  <span className="mono">{card.id}</span>
+                  <span>
+                    destination <span className="mono">{card.id.slice(0, 8)}</span>
+                  </span>
                 </div>
                 <details className="disclose">
                   <summary>Delivery state &amp; controls</summary>
@@ -517,7 +529,7 @@ export default async function ConnectionsPage({
                               name: 'credentialRef',
                               label: 'New credential reference',
                               required: true,
-                              hint: 'Opaque secret-store reference — never a credential value.',
+                              hint: 'A reference to the stored secret — never the secret itself.',
                             },
                             { name: 'displayName', label: 'Display name (optional)' },
                           ]}
@@ -545,7 +557,7 @@ export default async function ConnectionsPage({
       <SectionCard
         id="identities"
         title="Identity &amp; verification"
-        description="Channel accounts seen by Aurum, with their explicit verification state. Verification proves the account holder controls the account (challenge over their own channel, or an admin attestation); linking attaches a verified identity to a person — unverified accounts stay external and never become pseudo-employees (lock 15)."
+        description="Channel accounts seen by Aurum, with their explicit verification state. Verification proves the account holder controls the account (challenge over their own channel, or an admin attestation); linking attaches a verified identity to a person — unverified accounts stay external and are never treated as employees."
         meta={`discovery window: newest ${view.identities.discoveryWindow} turns per channel`}
       >
         <form className="form-stack" method="get" action="/connections#identities">
@@ -581,8 +593,8 @@ export default async function ConnectionsPage({
               </button>
             </div>
             <span className="hint">
-              The identity contract exposes no tenant-wide listing — identities surface from recent
-              channel activity; use this lookup for accounts outside that window.
+              Identities appear as people message your connected channels. Use this lookup to
+              find accounts outside that window.
             </span>
           </div>
         </form>
@@ -644,7 +656,7 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
         {card.subject !== null ? (
           <span>
             linked to {card.subject.fullName}
-            {card.subject.resolvable ? '' : ' (person record unavailable — opaque id)'}
+            {card.subject.resolvable ? '' : ' (person record unavailable)'}
           </span>
         ) : (
           <span>not linked to a person</span>
@@ -661,7 +673,9 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
         ) : (
           <span>found by lookup</span>
         )}
-        <span className="mono">{card.id}</span>
+        <span>
+          identity <span className="mono">{card.id.slice(0, 8)}</span>
+        </span>
       </div>
 
       <details className="disclose">
@@ -677,8 +691,8 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
                 tone="primary"
               />
               <span className="hint" style={{ fontSize: 12 }}>
-                Delivered over the identity&apos;s own channel (needs an active connection + wired
-                transport). The code never appears in transcripts or here.
+                Delivered over the identity&apos;s own channel (needs an active connection with
+                sending enabled). The code never appears in transcripts or here.
               </span>
             </div>
           ) : null}
@@ -710,7 +724,7 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
                   name: 'evidence',
                   label: 'Attestation evidence',
                   required: true,
-                  hint: 'Why you attest this account belongs to this person (requires the identity:attest claim).',
+                  hint: 'Why you attest this account belongs to this person (requires admin permission).',
                 },
               ]}
               submitLabel="Attest (admin verification)"
@@ -725,9 +739,9 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
               fields={[
                 {
                   name: 'personId',
-                  label: 'Person id (uuid)',
+                  label: 'Person',
                   required: true,
-                  hint: 'people.persons.id — create a person record below if none exists yet (requires the identity:link claim).',
+                  hint: 'Pick the person you created below if none exists yet (requires admin permission).',
                 },
               ]}
               submitLabel="Link to person"
@@ -756,7 +770,7 @@ function IdentityRow({ card, scope, now }: { card: IdentityCard; scope: Scope; n
                   name: 'reason',
                   label: 'Revocation reason',
                   required: true,
-                  hint: 'Revocation also detaches — the identity resolves to nothing until re-attested (requires the identity:attest claim).',
+                  hint: 'Revocation also detaches — the identity resolves to nothing until re-attested (requires admin permission).',
                 },
               ]}
               submitLabel="Revoke verification"

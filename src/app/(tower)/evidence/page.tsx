@@ -6,6 +6,7 @@
 // mutation, no promotion, no verification (lock 10: observations are
 // never authoritative truth).
 
+import type { Metadata } from 'next';
 import { buildEvidenceView } from '../lib/views/evidence';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -19,6 +20,11 @@ import {
 import { formatConfidence, formatCount, formatInstant, joinList, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Evidence — Management Tower — Aurum",
+  description: "The immutable observation record: every business datum Aurum has perceived, with its source and lineage.",
+};
 
 export default async function EvidencePage() {
   const resolution = await resolvePageContext();

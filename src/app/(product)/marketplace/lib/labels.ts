@@ -441,12 +441,12 @@ export function derivePackageActions(
 
   let installBlockedReason: string | null = null;
   if (pkg.state !== 'INSTALLABLE') {
-    installBlockedReason = 'only INSTALLABLE packages can be installed';
+    installBlockedReason = 'only packages cleared for installation can be installed';
   }
   const neededClaim =
     pkg.kind === 'extension' ? CLAIM_EXTENSIONS_ADMINISTER : CLAIM_AGENTS_ADMINISTER;
   if (installBlockedReason === null && !claims.includes(neededClaim)) {
-    installBlockedReason = `installing ${pkg.kind === 'extension' ? 'an extension' : 'an agent'} package requires the '${neededClaim}' authority claim`;
+    installBlockedReason = `installing ${pkg.kind === 'extension' ? 'an extension' : 'an agent'} package requires admin permission`;
   }
 
   return {

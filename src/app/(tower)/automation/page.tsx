@@ -6,6 +6,7 @@
 // delivered at this base; this surface presents the W016 process
 // findings automation candidates are built from, with their evidence.
 
+import type { Metadata } from 'next';
 import { buildAutomationView } from '../lib/views/automation';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -24,6 +25,11 @@ import { formatConfidence, formatInstant, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata: Metadata = {
+  title: "Automation — Management Tower — Aurum",
+  description: "Where work is manual, duplicated or slow — automation candidates, each citing its evidence.",
+};
+
 export default async function AutomationPage() {
   const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
@@ -33,7 +39,7 @@ export default async function AutomationPage() {
     <>
       <SurfaceHeader
         title="Automation"
-        description="Automation candidates from process intelligence: manual effort, duplication and bottlenecks observed in reconstructed flows — the evidence the automation module builds opportunity records from."
+        description="Automation candidates from process intelligence: manual effort, duplication and bottlenecks observed in reconstructed flows — the evidence automation candidates are built from."
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
       {view.notices.map((notice) => (
@@ -48,7 +54,7 @@ export default async function AutomationPage() {
           { label: 'Uncovered capabilities', value: view.capabilityGaps.length, hint: 'potential automation demand' },
         ]}
       />
-      <Card title="Automation candidates" meta="W016 findings — evidence-cited">
+      <Card title="Automation candidates" meta="Process findings — each cites its evidence">
         {view.candidates.length === 0 ? (
           <Empty
             title="No automation candidates"

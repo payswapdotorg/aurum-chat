@@ -9,6 +9,7 @@
 // platform's verification/review/publish/installable decisions, and
 // tenant installation.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../../../lib/context';
 import { resolveSession } from '@/app/lib/session';
@@ -27,6 +28,11 @@ import { ActionForm } from '../../components/action-form';
 import { verificationTone } from '../../lib/labels';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "One package — Aurum",
+  description: "One published package: its versions, review decisions and installation posture.",
+};
 
 function ChainView({ chain }: { chain: { state: string; label: string; reached: boolean; isRejected: boolean }[] }) {
   return (
@@ -230,7 +236,7 @@ export default async function PackagePage({
         {/* --- automated verification evidence --- */}
         <Panel
           title="Automated verification"
-          blurb="Append-only runs of the deterministic checks — the same rules the registry and the builder run. The latest run decides the posture; drift appears as a new run, never a rewrite."
+          blurb="Permanently recorded runs of the deterministic checks — the same rules the registry and the builder run. The latest run decides the posture; drift appears as a new run, never a rewrite."
           meta={
             <StatusPill tone={verificationTone(evidence.verification.outcome)}>
               {evidence.verification.outcome === 'verified'
@@ -357,7 +363,7 @@ export default async function PackagePage({
                   scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel="Run the deterministic checks"
-                  note="SUBMITTED → PENDING_REVIEW or REJECTED. A failed check rejects the package with the evidence recorded."
+                  note="A submitted package waits for platform review; a failed check rejects it with the evidence recorded."
                 />
               </div>
             ) : null}
@@ -387,7 +393,7 @@ export default async function PackagePage({
                   ]}
                   submitLabel="Record the review decision"
                   confirmPrompt="I am deciding on the platform's behalf, and I am not this package's vendor."
-                  note="PENDING_REVIEW → APPROVED or REJECTED. The decision is append-only evidence; rejection is terminal for this version."
+                  note="Review moves a version from waiting to approved or rejected; rejection is final for that version. The decision is recorded permanently."
                 />
               </div>
             ) : null}
@@ -425,7 +431,7 @@ export default async function PackagePage({
                   fields={[]}
                   submitLabel="Clear for installation"
                   confirmPrompt="Tenants will be able to install this version."
-                  note="PUBLISHED → INSTALLABLE — the platform's installation-gating decision."
+                  note="Publication is the platform's installation-gating decision — cleared versions become installable."
                 />
               </div>
             ) : null}

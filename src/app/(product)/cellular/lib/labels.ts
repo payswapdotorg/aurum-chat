@@ -197,7 +197,7 @@ export function minorUnitsLabel(minor: number, currency: string): string {
  * the words are the product.
  */
 export const CELLULAR_TRANSPORT_NOTE =
-  'No telecom transport is wired by default in this environment: every delivery attempt fails explicitly with provider_unavailable — a retryable state the module records on the reach and on each attempt row. This surface reports that state exactly as the module records it; it never fakes a delivery.';
+  'Sending is not connected yet in this environment: every delivery attempt reports a clear failure — a retryable state recorded on the reach and on each attempt. This surface reports that state exactly as recorded; it never fakes a delivery.';
 
 /** What the reach feed is, in plain words. */
 export const REACH_FEED_NOTE =

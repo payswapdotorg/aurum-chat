@@ -52,8 +52,7 @@ export default async function ProductLayout({ children }: { children: ReactNode 
           the company intelligence loop is the product core.
         </span>
         <span>
-          Tenant-scoped reads · evidence-backed findings · approval-gated
-          actions · PostgreSQL is domain truth
+          Findings cite their evidence · consequential actions need your approval
         </span>
       </footer>
     </div>

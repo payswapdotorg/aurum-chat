@@ -6,7 +6,13 @@
 // root now forwards to the conversation entry point. The Control Tower
 // remains one click away (rail "Today", Intelligence hub, More, ⌘K).
 
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+
+export const metadata: Metadata = {
+  title: "Aurum",
+  description: "Aurum — the organizational intelligence employee.",
+};
 
 export default function ProductRootPage() {
   redirect('/chat');

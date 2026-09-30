@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { CatalogEntry } from '../lib/catalog';
+import { calmFailureText } from '@/app/lib/calm-errors';
 
 export interface Scope {
   tenant: string | null;
@@ -50,9 +51,7 @@ async function postAction(scope: Scope, body: Record<string, unknown>): Promise<
   const parsed = (await response.json().catch(() => null)) as ApiSuccess | ApiFailure | null;
   if (!response.ok) {
     const failure = parsed as ApiFailure | null;
-    throw new Error(
-      failure?.message ?? failure?.error ?? `request failed (HTTP ${response.status})`,
-    );
+    throw new Error(calmFailureText(failure));
   }
   return (parsed ?? {}) as ApiSuccess;
 }
@@ -75,7 +74,11 @@ function useAction() {
         router.refresh();
         return true;
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'request failed');
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'Something went wrong. Please try again.',
+        );
         return false;
       } finally {
         setPending(false);
@@ -330,7 +333,7 @@ export function ConnectForm({ scope, kind, providers, title }: ConnectFormProps)
               placeholder="secret-store://…"
             />
             <span className="hint">
-              Opaque reference to the tenant&apos;s secret-store entry — never a credential value.
+              A reference to your company&apos;s stored secret — never the secret itself.
               Aurum stores the reference only.
             </span>
           </div>

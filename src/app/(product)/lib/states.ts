@@ -60,7 +60,7 @@ export function errorSummary(error: unknown): { title: string; detail: string } 
       return {
         title: 'Not allowed here',
         detail:
-          'The acting principal lacks the authority for this operation. Membership and authority claims come from your company scope.',
+          'You do not have permission for this operation. Membership and permissions come from your company role.',
       };
     case 'tenant_not_found':
       return {

@@ -124,9 +124,9 @@ export function kitInstallationStateTone(state: KitInstallationStatus): PillTone
 export function kitInstallationStateExplanation(state: KitInstallationStatus): string {
   switch (state) {
     case 'pending-review':
-      return 'Installed but the grant review is waiting for a human decision — the W009 authority gate holds the kit until an authorized principal (not the requester) approves or rejects it.';
+      return 'Installed, awaiting approval — an authorized approver (not the requester) must approve or reject the kit’s access grant.';
     case 'rejected':
-      return 'The grant review (or the tenant policy) refused the kit — terminal for this install; denial minted no grant. A fresh install lifecycle may be started.';
+      return 'The grant review (or your company’s policy) refused the kit — final for this install; denial minted no grant. A fresh install lifecycle may be started.';
     case 'granted':
       return 'The grant review approved; exactly the declared capabilities are minted as kit grants. The kit is not yet switched on.';
     case 'active':
@@ -134,7 +134,7 @@ export function kitInstallationStateExplanation(state: KitInstallationStatus): s
     case 'suspended':
       return 'Temporarily disabled — every invocation is denied while suspended; resuming returns the kit to active.';
     case 'removed':
-      return 'Removed — terminal. Every grant was revoked with the kit (no orphaned authority); the append-only audit trail is retained.';
+      return 'Removed — final. Every grant was revoked with the kit (no orphaned authority); the audit trail is retained permanently.';
   }
 }
 
@@ -427,7 +427,7 @@ export function deriveKitActions(
   if (!scoped) {
     registerBlockedReason = 'registering a kit needs your company scope — sign in first';
   } else if (!canAdminister) {
-    registerBlockedReason = `registering a kit version requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`;
+    registerBlockedReason = 'registering a kit version requires admin permission';
   } else if (facts.shippedVersion === null) {
     registerBlockedReason = 'this kit is not shipped starter content';
   } else if (shippedVersionRegistered(facts)) {
@@ -439,7 +439,7 @@ export function deriveKitActions(
   if (!scoped) {
     verificationBlockedReason = 'running verification needs your company scope — sign in first';
   } else if (!canAdminister) {
-    verificationBlockedReason = `running kit verification requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`;
+    verificationBlockedReason = 'running kit verification requires admin permission';
   } else if (facts.registeredVersions.length === 0) {
     verificationBlockedReason = 'no version of this kit is registered in your registry yet';
   }
@@ -449,7 +449,7 @@ export function deriveKitActions(
   if (!scoped) {
     installBlockedReason = 'installing a kit needs your company scope — sign in first';
   } else if (!canAdminister) {
-    installBlockedReason = `installing a kit requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`;
+    installBlockedReason = 'installing a kit requires admin permission';
   } else if (!isVerified(facts)) {
     installBlockedReason =
       facts.registeredVersions.length === 0
@@ -466,10 +466,10 @@ export function deriveKitActions(
   } else if (installation === null || installation.status !== 'pending-review') {
     decideBlockedReason = 'no pending grant review on this kit right now';
   } else if (!canApprove) {
-    decideBlockedReason = `deciding the grant review requires the '${CLAIM_ACTIONS_APPROVE}' authority claim`;
+    decideBlockedReason = 'deciding the grant review requires owner or admin permission';
   } else if (installation.installedBy === caller.principalId) {
     decideBlockedReason =
-      'separation of duties: the principal who requested this install never decides its own grant review — another authorized principal decides it';
+      'separation of duties: the person who requested this install never decides its own grant review — another authorized approver decides it';
   }
 
   // --- the administrative lifecycle transitions (claim-gated, state-gated)

@@ -33,9 +33,10 @@ export default function TowerLayout({ children }: { children: ReactNode }) {
           </p>
         </div>
         <div className="tower-header-meta">
-          Derived intelligence — never authoritative source state
+          Summaries of your records — the source systems remain the record of
+          truth
           <br />
-          Management surface W033 (lock 33/34)
+          Management briefing — assembled live from your company's records
         </div>
         {/* W115 — the way home: the shell owns the chrome, so every one of
             the fifteen surfaces inherits this control. A real link to the
@@ -70,11 +71,12 @@ export default function TowerLayout({ children }: { children: ReactNode }) {
       <footer className="tower-footer">
         <span>
           Aurum — the organizational intelligence employee. Management briefings
-          are derived intelligence, not authoritative source state.
+          summarize your company's records — the source systems remain the
+          record of truth.
         </span>
         <span>
-          PostgreSQL is domain truth · tenant-scoped reads · policy-gated
-          actions · append-only evidence
+          Every finding cites its evidence · changes are recorded, never
+          rewritten
         </span>
       </footer>
     </div>

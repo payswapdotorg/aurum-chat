@@ -87,7 +87,7 @@ export function WaitlistSettledRow({ request }: { request: WaitlistRequest }): R
             : ` · decided ${formatWaitlistInstant(request.decidedAt)}`}
           {request.decidedBy === null
             ? ''
-            : ` · by principal ${request.decidedBy.slice(0, 8)}`}
+            : ` · by an admin`}
         </span>
         {request.note === null ? null : (
           <span className="platform-row-note">{request.note}</span>
@@ -146,7 +146,7 @@ export function WaitlistList({ requests }: { requests: WaitlistRequest[] }): Rea
             Decided
           </h3>
           <p className="platform-section-blurb">
-            The audit trail — decisions are terminal and append-only.
+            The audit trail — decisions are final and permanently recorded.
           </p>
           <ul className="platform-rows">
             {settled.map((request) => (

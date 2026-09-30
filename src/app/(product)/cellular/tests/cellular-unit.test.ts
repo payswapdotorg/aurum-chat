@@ -94,9 +94,9 @@ describe('the cellular label vocabulary', () => {
 // ---------------------------------------------------------------------------
 
 describe('the cellular honesty notes', () => {
-  it('the transport note reports the environment limit exactly as the module records it', () => {
-    expect(CELLULAR_TRANSPORT_NOTE).toContain('No telecom transport is wired by default');
-    expect(CELLULAR_TRANSPORT_NOTE).toContain('provider_unavailable');
+  it('the transport note reports the environment limit exactly as recorded', () => {
+    expect(CELLULAR_TRANSPORT_NOTE).toContain('Sending is not connected yet');
+    expect(CELLULAR_TRANSPORT_NOTE).toContain('reports a clear failure');
     expect(CELLULAR_TRANSPORT_NOTE).toContain('retryable');
     expect(CELLULAR_TRANSPORT_NOTE).toContain('never fakes a delivery');
   });

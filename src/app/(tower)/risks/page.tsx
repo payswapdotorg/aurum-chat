@@ -6,6 +6,7 @@
 // unmet capability demand. Derived intelligence — never authoritative
 // state (lock 34).
 
+import type { Metadata } from 'next';
 import { buildRisksView } from '../lib/views/risks';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -24,6 +25,11 @@ import { formatInstant, joinList, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata: Metadata = {
+  title: "Risks — Management Tower — Aurum",
+  description: "Recorded risk findings, open contradictions between evidence, and unmet capability demand.",
+};
+
 export default async function RisksPage() {
   const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
@@ -38,16 +44,16 @@ export default async function RisksPage() {
       />
       <StatTiles
         items={[
-          { label: 'Risk findings', value: view.findings.length, hint: 'cognition traces' },
-          { label: 'Open contradictions', value: view.contradictions.length, hint: 'epistemics' },
+          { label: 'Risk findings', value: view.findings.length, hint: 'analysis runs' },
+          { label: 'Open contradictions', value: view.contradictions.length, hint: 'evidence analysis' },
           { label: 'Unmet capability demand', value: view.capabilityGaps.length, hint: 'capability graph' },
         ]}
       />
-      <Card title="Risk findings" meta="source: cognitive executions (risk/opportunity/capability stage)">
+      <Card title="Risk findings" meta="source: analysis runs — risk, opportunity and capability findings">
         {view.findings.length === 0 ? (
           <Empty
             title="No risk findings recorded"
-            hint="The loop records findings with their evidence and affected goals; first-class risk objects arrive with the environment/opportunity modules."
+            hint="The loop records risk findings with their evidence and affected goals."
           />
         ) : (
           <ul className="item-list">
@@ -63,14 +69,16 @@ export default async function RisksPage() {
                     {finding.affectedGoalIds.length === 0 ? '—' : joinList(finding.affectedGoalIds.map((id) => id.slice(0, 8)), 3)}
                   </span>
                   <span>detected {formatInstant(finding.detectedAt)}</span>
-                  <span className="mono">{finding.executionId}</span>
+                  <span>
+                    run <span className="mono">{finding.executionId.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
           </ul>
         )}
       </Card>
-      <Card title="Open contradictions" meta="source: epistemics — conflicting evidence is retained (lock 12)">
+      <Card title="Open contradictions" meta="source: evidence analysis — conflicting evidence is kept, not merged">
         {view.contradictions.length === 0 ? (
           <Empty title="No open contradictions" />
         ) : (
@@ -84,7 +92,9 @@ export default async function RisksPage() {
                 </ItemText>
                 <ItemFoot>
                   <span>detected {formatInstant(contradiction.detectedAt)}</span>
-                  <span className="mono">{contradiction.id}</span>
+                  <span>
+                    record <span className="mono">{contradiction.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -126,8 +136,8 @@ export default async function RisksPage() {
           <h4>Gap legend</h4>
           <p className="item-text">
             <Badge kind="risk">uncovered</Badge> no active supply ·{' '}
-            <Badge kind="warn">level_shortfall</Badge> best supply below required level ·{' '}
-            <Badge kind="warn">capacity_shortfall</Badge> declared capacity below required
+            <Badge kind="warn">level shortfall</Badge> best supply below required level ·{' '}
+            <Badge kind="warn">capacity shortfall</Badge> declared capacity below required
           </p>
         </div>
       </Card>

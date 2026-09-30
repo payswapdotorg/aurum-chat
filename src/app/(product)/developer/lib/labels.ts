@@ -80,7 +80,7 @@ const SCOPE_COPY: Record<ApiScope, { label: string; explanation: string }> = {
   'epistemics:read': {
     label: 'Unknowns & beliefs · read',
     explanation:
-      'Inspect the epistemic state — unknowns, beliefs and claims (GET /unknowns, /beliefs).',
+      'Inspect unknowns, beliefs and claims (GET /unknowns, /beliefs).',
   },
   'knowledge:read': {
     label: 'Knowledge · read',
@@ -293,13 +293,13 @@ export const KEY_SHOWN_ONCE_NOTE =
   'The raw key is shown exactly once, here. Aurum persists only its SHA-256 hash — it cannot be shown again, and nobody (including Aurum) can recover it. Store it now.';
 
 export const KEY_MANAGEMENT_CLAIM_NOTE =
-  "Creating, listing and revoking keys requires the 'api:administer' authority claim (owners and admins carry it; members read the vocabulary but manage nothing).";
+  "Creating, listing and revoking keys requires an admin role (owners and admins carry it; members read the vocabulary but manage nothing).";
 
 export const SECRET_REF_NOTE =
-  'Webhook signing secrets never enter Aurum as values: give the opaque secret-store reference, and the delivery transport resolves it. HMAC-SHA256 signs `${timestamp}.${rawBody}` into the aurum-webhook-signature header.';
+  'Webhook signing secrets never enter Aurum as values: give the stored secret’s reference, and the delivery transport resolves it. HMAC-SHA256 signs `${timestamp}.${rawBody}` into the aurum-webhook-signature header.';
 
 export const NO_RAW_PERSISTENCE_NOTE =
-  'The public API exposes capabilities, never tables: every operation is a named, versioned, tenant-scoped, permission-checked and audited capability call (locks 31/32).';
+  'The public API exposes capabilities, never raw tables: every operation is a named, versioned, permission-checked and audited call.';
 
 export const REVOKE_NOTE =
   'Revoking a key keeps the record and its audit history — evidence is immutable; the credential simply stops authenticating.';

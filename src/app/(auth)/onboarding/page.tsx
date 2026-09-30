@@ -15,6 +15,7 @@
 // Both modes resolve EVERYTHING from the session — no tenant query
 // parameter exists anywhere in this surface.
 
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { listInvites } from '@/modules/auth/contract';
@@ -28,6 +29,11 @@ import { InviteManager } from '../components/invite-manager';
 import { SignOutButton } from '../components/sign-out-button';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Choose your company — Aurum",
+  description: "Complete onboarding: select or create the company you want to work in.",
+};
 
 export default async function OnboardingPage(): Promise<ReactNode> {
   const session = await resolveSession();

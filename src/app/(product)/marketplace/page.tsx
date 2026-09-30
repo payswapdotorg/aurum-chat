@@ -12,6 +12,7 @@
 // replaced by this real surface — the facts it stated are now the
 // working parts of the pages below.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import './marketplace.css';
 import { withProductScope } from '../lib/context';
@@ -34,6 +35,11 @@ import {
 import { ShellGlyph } from '../components/icons';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Marketplace — Aurum",
+  description: "The extension marketplace: capability kits and packages for your company.",
+};
 
 const KIND_TABS: { value: 'all' | 'extension' | 'agent'; label: string }[] = [
   { value: 'all', label: 'Everything' },
@@ -101,7 +107,7 @@ export default async function MarketplacePage({
       {view.installed !== null ? (
         <Panel
           title="What your company runs"
-          blurb="Your tenant registry — extensions installed from here or registered directly. Install, activation, suspension and rollback are governed from the Installed surface."
+          blurb="Your company's registry — extensions installed from here or registered directly. Install, activation, suspension and rollback are governed from the Installed surface."
           meta={
             view.installed.ok ? (
               <span>{view.installed.total} extension{view.installed.total === 1 ? '' : 's'}</span>

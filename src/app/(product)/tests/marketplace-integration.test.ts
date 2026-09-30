@@ -638,7 +638,7 @@ describe('browse and permission inspection (views)', () => {
     expect(actions.canReview).toBe(false); // not PENDING_REVIEW anymore
     expect(actions.canPublish).toBe(false); // not APPROVED anymore
     expect(actions.canInstall).toBe(false); // no extensions:administer claim
-    expect(actions.installBlockedReason).toContain('extensions:administer');
+    expect(actions.installBlockedReason).toContain('admin permission');
   });
 });
 

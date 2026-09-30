@@ -560,8 +560,8 @@ export default async function ExplainDecisionPage({
                   <p className="aurum-explain-row-text">{decision.note}</p>
                 )}
                 <p className="aurum-explain-row-foot">
-                  {dateTimeLabel(decision.decidedAt)} — the append-only decision trail;
-                  decisions are never overwritten.
+                  {dateTimeLabel(decision.decidedAt)} — the decision trail, recorded
+                  permanently; decisions are never overwritten.
                 </p>
               </li>
             ))}
@@ -740,7 +740,7 @@ export default async function ExplainDecisionPage({
       {/* 15 — The audit history of this decision */}
       <Panel
         title="The audit history of this decision"
-        blurb="Every consequential event recorded about this decision's executions, action request or flow — the append-only trail beneath the chain."
+        blurb="Every consequential event recorded about this decision's executions, action request or flow — the permanent trail beneath the chain."
       >
         {view.auditRecords.length === 0 ? (
           <EmptyState
