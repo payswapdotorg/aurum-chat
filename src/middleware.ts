@@ -46,7 +46,9 @@ export function middleware(request: NextRequest): NextResponse {
 export const config = {
   matcher: [
     // All pages except Next internals, the API (self-authenticating via
-    // session/bearer), and static assets.
-    '/((?!_next/static|_next/image|api/|favicon.ico).*)',
+    // session/bearer), and static assets. robots.txt and icon.svg are
+    // crawlable metadata files (W123): they must serve plainly to anonymous
+    // visitors and search engines, like favicon.ico before them.
+    '/((?!_next/static|_next/image|api/|favicon.ico|robots.txt|icon.svg).*)',
   ],
 };
