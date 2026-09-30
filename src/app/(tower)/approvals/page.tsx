@@ -6,6 +6,7 @@
 // (decideApproval) via the tower API route — claim-gated, separation of
 // duties enforced by the module, first decision wins, never un-decidable.
 
+import type { Metadata } from 'next';
 import { buildApprovalsView } from '../lib/views/approvals';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -25,6 +26,11 @@ import { formatCount, formatInstant, titleCase } from '../lib/format';
 import { DecisionForm } from './decision-form';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Approvals — Management Tower — Aurum",
+  description: "Consequential actions waiting for an explicit human decision, and the recently decided.",
+};
 
 export default async function ApprovalsPage() {
   const resolution = await resolvePageContext();

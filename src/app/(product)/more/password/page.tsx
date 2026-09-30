@@ -6,6 +6,7 @@
 // the settings tone, quiet panels, the marketplace form classes — and
 // restructures nothing.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
 import { PageHead, Panel } from '../../components/states';
@@ -13,6 +14,11 @@ import { ChangePasswordForm } from '../components/change-password-form';
 import { SignOutEverywhereButton } from '../components/sign-out-everywhere-button';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Change your password — Aurum",
+  description: "Change the password you sign in with.",
+};
 
 export default async function PasswordSettingsPage() {
   const session = await requireAuthenticatedPage();

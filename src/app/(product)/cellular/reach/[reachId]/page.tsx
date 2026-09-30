@@ -107,7 +107,7 @@ export default async function ReachPage({
             <strong>Failed:</strong> {failureCodeLabel(reach.failureCode) ?? reach.failureCode}
             {' — '}
             {reach.failureCode === 'provider_unavailable'
-              ? 'the module-recorded environment limit (retryable)'
+              ? 'the environment limit (retryable)'
               : 'see the attempt audit below for the per-leg evidence'}
           </p>
         )}

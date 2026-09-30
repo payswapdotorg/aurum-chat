@@ -6,6 +6,7 @@
 // evaluation snapshot that routed it. Requests are immutable history;
 // decisions happen on the Approvals surface.
 
+import type { Metadata } from 'next';
 import { buildRecommendationsView } from '../lib/views/recommendations';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -23,6 +24,11 @@ import {
 import { formatCount, formatInstant, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Recommendations — Management Tower — Aurum",
+  description: "Action requests the intelligence loop proposed, with their outcomes.",
+};
 
 export default async function RecommendationsPage() {
   const resolution = await resolvePageContext();

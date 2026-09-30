@@ -9,6 +9,7 @@
 // platform's verification/review/publish/installable decisions, and
 // tenant installation.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../../../lib/context';
 import { resolveSession } from '@/app/lib/session';
@@ -27,6 +28,11 @@ import { ActionForm } from '../../components/action-form';
 import { verificationTone } from '../../lib/labels';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "One package — Aurum",
+  description: "One published package: its versions, review decisions and installation posture.",
+};
 
 function ChainView({ chain }: { chain: { state: string; label: string; reached: boolean; isRejected: boolean }[] }) {
   return (
@@ -357,7 +363,7 @@ export default async function PackagePage({
                   scopeQuery={scopeQuery}
                   fields={[]}
                   submitLabel="Run the deterministic checks"
-                  note="SUBMITTED → PENDING_REVIEW or REJECTED. A failed check rejects the package with the evidence recorded."
+                  note="A submitted package waits for platform review; a failed check rejects it with the evidence recorded."
                 />
               </div>
             ) : null}

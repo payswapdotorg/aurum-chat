@@ -7,6 +7,7 @@
 // construction (lock 24). Recruitment (W022), teams (W023) and
 // evaluation (W024) are not delivered at this base.
 
+import type { Metadata } from 'next';
 import { buildAgentsView } from '../lib/views/agents';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -24,6 +25,11 @@ import {
 import { formatInstant, formatMinorUnits, joinList, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Agents — Management Tower — Aurum",
+  description: "The agent workforce: definitions, permissions, providers and recent executions.",
+};
 
 // Display-level phrasing for execution error codes — words, never raw enums.
 const ERROR_CODE_PHRASES: Record<string, string> = {

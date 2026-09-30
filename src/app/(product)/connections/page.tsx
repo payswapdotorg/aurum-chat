@@ -14,6 +14,7 @@
 // auth module re-verifies the active company's membership per request) —
 // the query-parameter seam is gone.
 
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { firstValue, scopeParamsOf } from './lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
@@ -40,6 +41,11 @@ import {
 } from './components/hub-ui';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Connections — Aurum",
+  description: "Channels, source systems, destinations and identity verification — your company’s links in and out of Aurum.",
+};
 
 export default async function ConnectionsPage({
   searchParams,

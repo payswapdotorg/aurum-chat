@@ -7,6 +7,7 @@
 // email can accept immediately; everyone else is routed through sign-in
 // / sign-up with the code riding along (?invite=<code>).
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { getInviteByCode } from '@/modules/auth/contract';
@@ -15,6 +16,11 @@ import { AuthBrand } from '../../components/brand';
 import { AcceptInviteButton } from '../../components/accept-invite-button';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Your invitation — Aurum",
+  description: "Accept your invitation to join a company on Aurum.",
+};
 
 export default async function InvitePage({
   params,

@@ -4,6 +4,7 @@
 // the consequence of the gap. The tower lists the open knowledge debt
 // and recently resolved gaps, through the epistemics contract only.
 
+import type { Metadata } from 'next';
 import { buildUnknownsView } from '../lib/views/unknowns';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -20,6 +21,11 @@ import {
 import { formatCount, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Unknowns — Management Tower — Aurum",
+  description: "Consequential gaps in knowledge: the questions Aurum cannot answer, and why not knowing them matters.",
+};
 
 export default async function UnknownsPage() {
   const resolution = await resolvePageContext();

@@ -7,11 +7,17 @@
 // actions — and every decision is a native POST form to
 // /api/platform/waitlist/decide (never a GET mutation).
 
+import type { Metadata } from 'next';
 import { listWaitlist } from '@/modules/auth/contract';
 import { requirePlatformAdminPage } from '../../lib/page-context';
 import { WaitlistList } from './components/waitlist-views';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Access requests — Aurum",
+  description: "The platform desk: review access requests, accept or decline, and invite members.",
+};
 
 type PageSearchParams = Record<string, string | string[] | undefined>;
 

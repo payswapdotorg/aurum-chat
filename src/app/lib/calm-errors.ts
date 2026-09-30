@@ -23,6 +23,7 @@ const CODE_PHRASES: Record<string, string> = {
   no_active_company:
     'Choose a company before continuing — complete onboarding first.',
   invalid_text: 'Please write a message before sending.',
+  provider_unavailable: 'That provider is not connected yet — nothing was sent.',
   not_pending: 'This request was already decided.',
   conflict:
     'That didn’t go through — the record changed. Refresh and try again.',

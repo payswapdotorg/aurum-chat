@@ -5,6 +5,7 @@
 // urgency, confidence gap, budgets, candidate sources and completion
 // criteria. Active missions are ordered by urgency rank by the contract.
 
+import type { Metadata } from 'next';
 import { buildMissionsView } from '../lib/views/missions';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -27,6 +28,11 @@ import {
 } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Missions — Management Tower — Aurum",
+  description: "Learning missions: what knowledge is missing, why it matters, and what it may cost to acquire.",
+};
 
 export default async function MissionsPage() {
   const resolution = await resolvePageContext();

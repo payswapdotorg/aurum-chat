@@ -5,6 +5,7 @@
 // with provenance (versioned working understanding, lock 11), recent
 // claims and the open contradictions deliberately retained (lock 12).
 
+import type { Metadata } from 'next';
 import { buildSituationView } from '../lib/views/situation';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -21,6 +22,11 @@ import {
 import { formatConfidence, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Situation — Management Tower — Aurum",
+  description: "The company's current working picture: entities, beliefs with their provenance, and retained conflicting evidence.",
+};
 
 export default async function SituationPage() {
   const resolution = await resolvePageContext();

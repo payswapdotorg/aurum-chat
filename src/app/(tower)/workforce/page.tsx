@@ -7,6 +7,7 @@
 // membership roles. Workforce intelligence (W019) is not delivered at
 // this base — the surface says so.
 
+import type { Metadata } from 'next';
 import { buildWorkforceView } from '../lib/views/workforce';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -24,6 +25,11 @@ import {
 import { formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Workforce — Management Tower — Aurum",
+  description: "The human side of the capability graph: who supplies which skills, and company membership roles.",
+};
 
 export default async function WorkforcePage() {
   const resolution = await resolvePageContext();

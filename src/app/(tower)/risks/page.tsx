@@ -6,6 +6,7 @@
 // unmet capability demand. Derived intelligence — never authoritative
 // state (lock 34).
 
+import type { Metadata } from 'next';
 import { buildRisksView } from '../lib/views/risks';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -23,6 +24,11 @@ import {
 import { formatInstant, joinList, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Risks — Management Tower — Aurum",
+  description: "Recorded risk findings, open contradictions between evidence, and unmet capability demand.",
+};
 
 export default async function RisksPage() {
   const resolution = await resolvePageContext();

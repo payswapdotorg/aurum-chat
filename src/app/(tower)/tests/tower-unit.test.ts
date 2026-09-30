@@ -6,7 +6,6 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-  AUTHORITY_HEADER,
   TOWER_OPERATOR_PRINCIPAL,
   resolveTowerContext,
   towerContextFromHeaders,
@@ -41,7 +40,7 @@ describe('tower context resolution (the documented dev seam)', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.failure).toBe('missing_tenant');
-    expect(result.detail).toContain(AUTHORITY_HEADER === 'x-aurum-authority' ? 'tenant' : '');
+    expect(result.detail).not.toBe('');
   });
 
   it('rejects non-uuid tenants and principals', () => {

@@ -10,6 +10,7 @@
 // the manifest ceiling — least privilege as a redeploy, never a
 // mutation of history.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../../../lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
@@ -27,6 +28,11 @@ import { ActionForm } from '../../components/action-form';
 import { EXTENSION_PERMISSION_COPY, verificationTone } from '../../lib/labels';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "One installed extension — Aurum",
+  description: "One installed extension: its grant, deployment history and invocation ledger.",
+};
 
 export default async function InstalledExtensionPage({
   params,

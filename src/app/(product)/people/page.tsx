@@ -5,6 +5,7 @@
 // surface) and the capability/agent interventions surface (W063).
 // Honest structural hub — no invented data.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../lib/context';
 import type { PageSearchParams } from '../lib/context';
@@ -14,6 +15,11 @@ import { PageHead, Panel } from '../components/states';
 import { ShellGlyph } from '../components/icons';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "People — Aurum",
+  description: "The people recorded in your company's data.",
+};
 
 export default async function PeoplePage({
   searchParams,

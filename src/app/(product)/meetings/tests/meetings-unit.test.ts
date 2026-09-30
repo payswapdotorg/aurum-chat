@@ -107,8 +107,8 @@ describe('the meetings label vocabulary', () => {
 // ---------------------------------------------------------------------------
 
 describe('the meetings honesty notes', () => {
-  it('the capture-transport note reports the provider_unavailable limit as the module does', () => {
-    expect(CAPTURE_TRANSPORT_NOTE).toContain('provider_unavailable');
+  it('the capture-transport note reports the not-connected limit calmly', () => {
+    expect(CAPTURE_TRANSPORT_NOTE).toContain('Fetching is not connected yet');
     expect(CAPTURE_TRANSPORT_NOTE).toContain('retryable');
     expect(CAPTURE_TRANSPORT_NOTE).toContain('webhook capture is unaffected');
     expect(CAPTURE_TRANSPORT_NOTE).toContain('fakes a capture');

@@ -6,6 +6,7 @@
 // delivered at this base; this surface presents the W016 process
 // findings automation candidates are built from, with their evidence.
 
+import type { Metadata } from 'next';
 import { buildAutomationView } from '../lib/views/automation';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -23,6 +24,11 @@ import {
 import { formatConfidence, formatInstant, titleCase } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Automation — Management Tower — Aurum",
+  description: "Where work is manual, duplicated or slow — automation candidates, each citing its evidence.",
+};
 
 export default async function AutomationPage() {
   const resolution = await resolvePageContext();

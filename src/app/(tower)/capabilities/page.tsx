@@ -5,6 +5,7 @@
 // persisted — lock 10). Supplies come from the six supplier kinds —
 // employee, team, agent, software, supplier, partner.
 
+import type { Metadata } from 'next';
 import { buildCapabilitiesView } from '../lib/views/capabilities';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -19,6 +20,11 @@ import {
 import { formatCount, formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Capabilities — Management Tower — Aurum",
+  description: "What the company can do today: capability supply, demand, and the gaps between them.",
+};
 
 export default async function CapabilitiesPage() {
   const resolution = await resolvePageContext();

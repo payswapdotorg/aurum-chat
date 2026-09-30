@@ -80,7 +80,7 @@ const SCOPE_COPY: Record<ApiScope, { label: string; explanation: string }> = {
   'epistemics:read': {
     label: 'Unknowns & beliefs · read',
     explanation:
-      'Inspect the epistemic state — unknowns, beliefs and claims (GET /unknowns, /beliefs).',
+      'Inspect unknowns, beliefs and claims (GET /unknowns, /beliefs).',
   },
   'knowledge:read': {
     label: 'Knowledge · read',

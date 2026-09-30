@@ -57,8 +57,8 @@ export function ContextDrawer(): ReactNode {
       }
       footer={
         payload.source === null
-          ? 'Context is derived intelligence — never authoritative source state.'
-          : `Source: ${payload.source} · derived intelligence, never authoritative source state.`
+          ? 'Context summarizes your records — the source systems remain the record of truth.'
+          : `Source: ${payload.source} · summarized from your records — the source systems remain the record of truth.`
       }
     >
       {payload.sections.map((section, index) => (

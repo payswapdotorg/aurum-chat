@@ -17,6 +17,7 @@
 // and each item a chat message (tower.css, shared by every tower
 // surface). Presentation only — data, links and actions unchanged.
 
+import type { Metadata } from 'next';
 import { buildTodayView } from '../lib/views/today';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -34,6 +35,11 @@ import {
 import { formatCount, formatConfidence, formatInstant } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Today — Management Tower — Aurum",
+  description: "What needs your attention right now: pending decisions, urgent learning missions, open unknowns and the live intelligence loop.",
+};
 
 export default async function TodayPage() {
   const resolution = await resolvePageContext();

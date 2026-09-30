@@ -17,6 +17,7 @@
 // → the W009 grant review → activate), rendered here with the
 // marketplace's own vocabulary.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../../../lib/context';
 import { resolveSession } from '@/app/lib/session';
@@ -34,6 +35,11 @@ import {
 import { ActionForm } from '../../components/action-form';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "One kit — Aurum",
+  description: "One marketplace kit: versions, verification evidence, reviews and installation.",
+};
 
 export default async function KitPage({
   params,

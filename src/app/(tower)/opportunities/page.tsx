@@ -7,6 +7,7 @@
 // capabilities) is not delivered yet; this surface presents the evidence
 // it will be built from.
 
+import type { Metadata } from 'next';
 import { buildOpportunitiesView } from '../lib/views/opportunities';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -23,6 +24,11 @@ import {
 import { formatInstant, joinList } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Opportunities — Management Tower — Aurum",
+  description: "Evidence-backed opportunities and the available alternatives for unmet capability demand.",
+};
 
 export default async function OpportunitiesPage() {
   const resolution = await resolvePageContext();

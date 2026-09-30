@@ -7,6 +7,7 @@
 // version deployments with permission grants, and rollback to any
 // recorded superseded deployment.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import '../marketplace.css';
 import { withProductScope } from '../../lib/context';
@@ -25,6 +26,11 @@ import {
 import { verificationTone } from '../lib/labels';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Installed extensions — Aurum",
+  description: "Your company's installed extensions: grants, activation, suspension and rollback.",
+};
 
 export default async function InstalledPage({
   searchParams,

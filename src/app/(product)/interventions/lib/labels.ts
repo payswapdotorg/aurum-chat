@@ -478,7 +478,7 @@ export function decisionStatusExplanation(status: AgentDecisionStatus): string {
     case 'recorded':
       return 'A retain or modify decision — recorded management evidence; the actual mutation flows through the agents module’s own claim-gated controls.';
     case 'awaiting_approval':
-      return 'The termination sits at the authority gate — no agent is terminated without an explicit human decision (lock 23).';
+      return 'The termination sits at the approval gate — no agent is terminated without an explicit human decision.';
     case 'approved':
       return 'The termination is authorized but not yet applied — the settle step applies it (the pump is idempotent and retryable).';
     case 'applied':

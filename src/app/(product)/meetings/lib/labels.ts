@@ -141,4 +141,4 @@ export const MEETING_INTELLIGENCE_NOTE =
  * working. Mirrored in the unit tests so the words are the product.
  */
 export const CAPTURE_TRANSPORT_NOTE =
-  'No fetch transport is wired by default: scheduled polling fails explicitly with provider_unavailable (retryable, recorded as an access event) until an operator wires one — provider webhook capture is unaffected. Nothing here fakes a capture.';
+  'Fetching is not connected yet: scheduled polling reports a clear failure (retryable, recorded as an access event) until your administrator connects a source — provider webhook capture is unaffected. Nothing here fakes a capture.';

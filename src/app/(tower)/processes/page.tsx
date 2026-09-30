@@ -4,6 +4,7 @@
 // findings — bottlenecks, duplication, handoffs, manual effort, errors —
 // each citing the event/observation evidence that justifies it.
 
+import type { Metadata } from 'next';
 import { buildProcessesView } from '../lib/views/processes';
 import { resolvePageContext } from '../lib/page-context';
 import {
@@ -20,6 +21,11 @@ import {
 import { formatConfidence, formatCount, formatDuration, formatInstant, formatShare } from '../lib/format';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Processes — Management Tower — Aurum",
+  description: "How work actually happens, reconstructed from events and observations, with the findings each flow justifies.",
+};
 
 export default async function ProcessesPage() {
   const resolution = await resolvePageContext();

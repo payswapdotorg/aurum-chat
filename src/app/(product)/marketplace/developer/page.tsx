@@ -16,6 +16,7 @@
 // server on refresh. No claims, no surface: the page says exactly which
 // claim the developer experience needs instead of pretending.
 
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { withProductScope } from '../../lib/context';
 import { requireAuthenticatedPage } from '@/app/lib/page-session';
@@ -37,6 +38,11 @@ import {
 } from '@/modules/agents/contract';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: "Marketplace developer — Aurum",
+  description: "Build extensions, submit packages for platform review, and publish to the marketplace.",
+};
 
 export default async function DeveloperPage({
   searchParams,
