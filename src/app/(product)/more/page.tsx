@@ -134,7 +134,7 @@ export default async function MorePage({
           </li>
           <li>
             <p className="aurum-item-text">
-              <strong>Unknown is first-class</strong> — a question plus the
+              <strong>Unknowns carry weight</strong> — each is a question plus the
               consequence of not knowing it.
             </p>
           </li>

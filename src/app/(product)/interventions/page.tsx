@@ -465,7 +465,7 @@ export default async function InterventionsPage({
         {view.assessments.length === 0 ? (
           <EmptyState
             title="No workforce assessments"
-            hint="An assessment is the §14 chain — evidence → interpretation → alternatives → recommendation → the authorized human decision."
+            hint="An assessment follows a fixed chain — evidence → interpretation → alternatives → recommendation → the authorized human decision."
           />
         ) : (
           <ul className="aurum-intel-list">

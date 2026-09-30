@@ -387,7 +387,7 @@ describe('summarizeActionResult', () => {
         dispatched: [],
         transportWired: false,
       }),
-    ).toContain('No webhook transport is wired');
+    ).toContain('Webhook sending is not connected');
   });
 });
 

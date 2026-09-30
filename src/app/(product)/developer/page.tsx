@@ -339,10 +339,9 @@ export default async function DeveloperConsolePage({
 
       {view.transportWired ? null : (
         <div className="aurum-notice" role="note">
-          <strong>No webhook transport is wired in this environment.</strong> Test pings and
-          deliveries queue as pending and the dispatch pump says so honestly — subscriptions,
-          evidence and redelivery remain fully manageable. The transport is infrastructure wiring
-          (setApiWebhookTransport at process start), never domain state.
+          <strong>Webhook sending is not connected in this environment.</strong> Test pings and
+          deliveries queue as pending and say so clearly — subscriptions, evidence and redelivery
+          remain fully manageable.
         </div>
       )}
 

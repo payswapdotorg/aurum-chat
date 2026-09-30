@@ -613,7 +613,7 @@ export function fallbackCardContext(kind: ChatCardKind): ChatCardContext {
 /** The kind's one-line semantics (the fallback context's "why" line). */
 const KIND_WHY_LINES: Record<ChatCardKind, string> = {
   goal: 'A goal is management\u2019s declared direction — Aurum evaluates progress against it from live evidence.',
-  unknown: 'An unknown is a consequential question the company cannot yet answer — closing it is first-class work.',
+  unknown: 'An unknown is a consequential question the company cannot yet answer — closing it is real work.',
   mission: 'A learning mission is the goal-driven, budget-bounded effort that closes a knowledge gap.',
   risk: 'A risk is an exposure the analysis stage recorded against affected goals, with its evidence retained.',
   opportunity: 'An opportunity is an evidence-backed chance to advance a goal, with value and confidence estimates.',

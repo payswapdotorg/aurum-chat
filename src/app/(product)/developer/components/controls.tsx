@@ -624,9 +624,8 @@ export function DispatchPumpControl(): ReactNode {
       </div>
       {result !== null && typeof result === 'object' && 'transportWired' in result && result['transportWired'] === false ? (
         <div className="aurum-notice" role="status">
-          <strong>No webhook transport is wired in this process.</strong> Test pings and deliveries
-          queue as pending and dispatch honestly refuses to fake success — wire a transport
-          (setApiWebhookTransport at process start) to send them. Subscriptions, evidence and
+          <strong>Webhook sending is not connected in this environment.</strong> Test pings and deliveries
+          queue as pending — nothing is ever faked as sent. Subscriptions, evidence and
           redelivery remain fully manageable.
         </div>
       ) : null}
