@@ -319,8 +319,8 @@ export function ActionForm({
         )}
         {gate === null ? null : (
           <div className="aurum-notice" style={{ marginTop: 10 }}>
-            <strong>Waiting for the human approval gate.</strong> Nothing was applied — the
-            authority matrix holds this operation until an authorized principal decides it.
+            <strong>Waiting for the human approval gate.</strong> Nothing was applied — an
+            authorized person decides this operation before anything changes.
             <span style={{ display: 'block', marginTop: 6 }}>
               <Link className="aurum-mkt-link" href={approvalsHref}>
                 Decide it in Approvals (management mode)

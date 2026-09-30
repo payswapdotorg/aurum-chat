@@ -821,11 +821,11 @@ export async function buildMissionView(
 
   // The acquisitions the loop ran for this mission (W013 traces).
   const acquisitions: AcquisitionRow[] = [];
-  const executions: CognitiveExecution[] | null = await safe('cognition', degraded, () =>
+  const executions: CognitiveExecution[] | null = await safe('analysis', degraded, () =>
     listExecutions(ctx, { limit: MISSION_SCAN_EXECUTIONS }),
   );
   for (const execution of executions ?? []) {
-    const trace = await safe('cognition', degraded, () =>
+    const trace = await safe('analysis', degraded, () =>
       getExecution(ctx, { executionId: execution.id }),
     );
     if (trace === null) continue;

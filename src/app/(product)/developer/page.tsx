@@ -358,7 +358,7 @@ export default async function DeveloperConsolePage({
             title={view.canAdministerKeys ? 'No API keys yet' : 'No API keys visible to you'}
             hint={
               view.canAdministerKeys
-                ? 'Create the first one below: a label, the capability scopes it may use, and any authority claims it must carry downstream.'
+                ? 'Create the first one below: a label, the capability scopes it may use, and the permissions it must carry downstream.'
                 : KEY_MANAGEMENT_CLAIM_NOTE
             }
           />

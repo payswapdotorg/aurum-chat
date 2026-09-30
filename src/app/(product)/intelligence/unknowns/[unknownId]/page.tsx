@@ -74,7 +74,7 @@ export default async function UnknownPage({
     <>
       <PageHead
         title={unknown.question}
-        description={`A first-class unknown — recorded ${dateLabel(unknown.recordedAt)}${
+        description={`An unknown — recorded ${dateLabel(unknown.recordedAt)}${
           unknown.resolvedAt === null ? '' : `, resolved ${dateLabel(unknown.resolvedAt)}`
         }.`}
         meta={
@@ -93,7 +93,7 @@ export default async function UnknownPage({
 
       <Panel
         title="The question and its consequence"
-        blurb="An unknown is first-class only when not knowing has a recorded cost — that consequence is the why of the whole chain."
+        blurb="An unknown matters only when not knowing has a recorded cost — that consequence is the why of the whole chain."
         meta={
           <StatusPill tone={unknown.status === 'open' ? 'warning' : 'positive'}>
             {unknown.status === 'open' ? 'Open' : 'Resolved'}

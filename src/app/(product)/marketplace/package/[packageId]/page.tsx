@@ -431,7 +431,7 @@ export default async function PackagePage({
                   fields={[]}
                   submitLabel="Clear for installation"
                   confirmPrompt="Tenants will be able to install this version."
-                  note="PUBLISHED → INSTALLABLE — the platform's installation-gating decision."
+                  note="Publication is the platform's installation-gating decision — cleared versions become installable."
                 />
               </div>
             ) : null}

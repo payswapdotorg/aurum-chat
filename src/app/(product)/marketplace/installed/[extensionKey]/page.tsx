@@ -116,8 +116,8 @@ export default async function InstalledExtensionPage({
       >
         {!view.canGovern ? (
           <div className="aurum-notice">
-            Governing extensions needs the <code>extensions:administer</code> authority claim.
-            The state below stays readable for every member.
+            Governing extensions needs admin permission. The state below stays
+            readable for every member.
           </div>
         ) : view.availableTransitions.length === 0 ? (
           <EmptyState

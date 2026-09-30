@@ -427,7 +427,7 @@ export function deriveKitActions(
   if (!scoped) {
     registerBlockedReason = 'registering a kit needs your company scope — sign in first';
   } else if (!canAdminister) {
-    registerBlockedReason = `registering a kit version requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`;
+    registerBlockedReason = 'registering a kit version requires admin permission';
   } else if (facts.shippedVersion === null) {
     registerBlockedReason = 'this kit is not shipped starter content';
   } else if (shippedVersionRegistered(facts)) {
@@ -439,7 +439,7 @@ export function deriveKitActions(
   if (!scoped) {
     verificationBlockedReason = 'running verification needs your company scope — sign in first';
   } else if (!canAdminister) {
-    verificationBlockedReason = `running kit verification requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`;
+    verificationBlockedReason = 'running kit verification requires admin permission';
   } else if (facts.registeredVersions.length === 0) {
     verificationBlockedReason = 'no version of this kit is registered in your registry yet';
   }
@@ -449,7 +449,7 @@ export function deriveKitActions(
   if (!scoped) {
     installBlockedReason = 'installing a kit needs your company scope — sign in first';
   } else if (!canAdminister) {
-    installBlockedReason = `installing a kit requires the '${VERTICAL_KITS_AUTHORITY_ADMINISTER}' authority claim`;
+    installBlockedReason = 'installing a kit requires admin permission';
   } else if (!isVerified(facts)) {
     installBlockedReason =
       facts.registeredVersions.length === 0
@@ -466,10 +466,10 @@ export function deriveKitActions(
   } else if (installation === null || installation.status !== 'pending-review') {
     decideBlockedReason = 'no pending grant review on this kit right now';
   } else if (!canApprove) {
-    decideBlockedReason = `deciding the grant review requires the '${CLAIM_ACTIONS_APPROVE}' authority claim`;
+    decideBlockedReason = 'deciding the grant review requires owner or admin permission';
   } else if (installation.installedBy === caller.principalId) {
     decideBlockedReason =
-      'separation of duties: the principal who requested this install never decides its own grant review — another authorized principal decides it';
+      'separation of duties: the person who requested this install never decides its own grant review — another authorized approver decides it';
   }
 
   // --- the administrative lifecycle transitions (claim-gated, state-gated)

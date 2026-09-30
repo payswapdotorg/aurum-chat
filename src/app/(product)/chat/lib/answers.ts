@@ -625,8 +625,12 @@ export function approvalCard(request: ActionRequest): ChatCard {
           kind: 'policy',
           title: 'Policy evaluation',
           lines: [
-            `Gate outcome: ${request.evaluation.outcome} (via ${request.evaluation.resolvedVia})`,
-            'Aurum proposes; the authority matrix disposes. Humans decide.',
+            request.evaluation.outcome === 'approval_required'
+              ? 'This action needs an explicit human approval before it runs.'
+              : request.evaluation.outcome === 'forbidden'
+                ? 'This action is not permitted by company policy.'
+                : 'This action was allowed by company policy.',
+            'Aurum proposes; humans decide.',
           ],
           links: [{ label: 'Open Approvals (management mode)', href: '/approvals' }],
         },
