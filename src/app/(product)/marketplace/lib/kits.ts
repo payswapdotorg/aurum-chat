@@ -124,9 +124,9 @@ export function kitInstallationStateTone(state: KitInstallationStatus): PillTone
 export function kitInstallationStateExplanation(state: KitInstallationStatus): string {
   switch (state) {
     case 'pending-review':
-      return 'Installed but the grant review is waiting for a human decision — the W009 authority gate holds the kit until an authorized principal (not the requester) approves or rejects it.';
+      return 'Installed, awaiting approval — an authorized approver (not the requester) must approve or reject the kit’s access grant.';
     case 'rejected':
-      return 'The grant review (or the tenant policy) refused the kit — terminal for this install; denial minted no grant. A fresh install lifecycle may be started.';
+      return 'The grant review (or your company’s policy) refused the kit — final for this install; denial minted no grant. A fresh install lifecycle may be started.';
     case 'granted':
       return 'The grant review approved; exactly the declared capabilities are minted as kit grants. The kit is not yet switched on.';
     case 'active':
@@ -134,7 +134,7 @@ export function kitInstallationStateExplanation(state: KitInstallationStatus): s
     case 'suspended':
       return 'Temporarily disabled — every invocation is denied while suspended; resuming returns the kit to active.';
     case 'removed':
-      return 'Removed — terminal. Every grant was revoked with the kit (no orphaned authority); the append-only audit trail is retained.';
+      return 'Removed — final. Every grant was revoked with the kit (no orphaned authority); the audit trail is retained permanently.';
   }
 }
 

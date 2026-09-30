@@ -145,7 +145,7 @@ export default async function GoalChainPage({
 
       <Panel
         title="Step 2 — the gaps discovery found"
-        blurb="Unprompted goal-gap discovery (ADR-0017): material gaps between this goal and its evidence, decided through the materiality gate."
+        blurb="Aurum proposes new questions where this goal's evidence falls short — only the material gaps become unknowns."
       >
         {view.gaps.length === 0 ? (
           <ChainEmpty

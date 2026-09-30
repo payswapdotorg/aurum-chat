@@ -38,7 +38,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'One reach request — Aurum Cellular',
   description:
-    'One SMS/voice reach request: the intent, the policy snapshot that governs it, the append-only attempt audit and any replies.',
+    'One SMS/voice reach request: the intent, the policy snapshot that governs it, the full attempt history and any replies.',
 };
 
 export default async function ReachPage({
@@ -133,7 +133,7 @@ export default async function ReachPage({
 
       <Panel
         title="The attempt audit"
-        blurb="Append-only, one row per leg ever placed: what was sent, through which connection, at what estimated cost, and the carrier's receipts. A failed row with no connection is an honest placement failure — nothing was sent."
+        blurb="One row per leg ever placed, permanently recorded: what was sent, through which connection, at what estimated cost, and the carrier's receipts. A failed row with no connection is an honest placement failure — nothing was sent."
         meta={<>{view.attempts.length} attempt(s)</>}
       >
         {view.attempts.length === 0 ? (

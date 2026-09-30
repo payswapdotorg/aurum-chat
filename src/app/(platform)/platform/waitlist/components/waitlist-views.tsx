@@ -146,7 +146,7 @@ export function WaitlistList({ requests }: { requests: WaitlistRequest[] }): Rea
             Decided
           </h3>
           <p className="platform-section-blurb">
-            The audit trail — decisions are terminal and append-only.
+            The audit trail — decisions are final and permanently recorded.
           </p>
           <ul className="platform-rows">
             {settled.map((request) => (

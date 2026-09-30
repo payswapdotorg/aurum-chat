@@ -259,7 +259,7 @@ export const CAUSAL_STEP_HINTS: Record<CausalStage, string> = {
   'model-provider':
     'Which providers and models extracted the evidence — AI output is evidence with lineage, never authority.',
   recommendation: 'The consequential action Aurum proposed, with its justification.',
-  approval: 'Who decided — the append-only trail of policy and human decisions.',
+  approval: 'Who decided — the permanent trail of policy and human decisions.',
   execution: 'The decision cycle(s) that carried the decision, and how far each ran.',
   result: 'What the authority gate produced: allowed, forbidden, or a human decision.',
   outcome: 'What the cycle recorded as its result.',

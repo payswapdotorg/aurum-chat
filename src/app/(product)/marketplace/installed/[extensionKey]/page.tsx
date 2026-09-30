@@ -265,7 +265,7 @@ export default async function InstalledExtensionPage({
       {/* --- deployment history + rollback --- */}
       <Panel
         title="Deployment history & rollback"
-        blurb="Every recorded deployment of the default install, append-only. Rollback restores a superseded deployment's exact recorded grant — never a fresh negotiation."
+        blurb="Every recorded deployment of the default install, permanently retained. Rollback restores a superseded deployment's exact recorded grant — never a fresh negotiation."
       >
         {view.deployments.length === 0 ? (
           <EmptyState

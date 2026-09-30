@@ -234,7 +234,7 @@ function AnswerExtras({
         {answer.mode === 'llm'
           ? 'Answer composed with your connected AI provider · grounded in the cited records'
           : 'Answer composed from live company records'}
-        {answer.executionId === null ? '' : ' · full reasoning on the cognition trace'}
+        {answer.executionId === null ? '' : ' · full reasoning on the recorded analysis'}
       </span>
       {explainHref === null ? null : (
         <Link

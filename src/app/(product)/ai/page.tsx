@@ -461,7 +461,7 @@ export default async function AiProvidersPage({
 
       <Panel
         title="Cost & latency"
-        blurb="Deterministic cost in integer minor units from recorded evidence, and measured latency — per provider, model and capability; plus the append-only execution feed behind them."
+        blurb="Deterministic cost in integer minor units from recorded evidence, and measured latency — per provider, model and capability; plus the permanent execution feed behind them."
       >
         <UsageTable view={view} />
         {view.executions.length === 0 ? null : (
@@ -506,7 +506,7 @@ export default async function AiProvidersPage({
         {view.hotSwapExecutions.length === 0 ? (
           <EmptyState
             title="No hot-swap runs recorded yet"
-            hint="Each run records two pinned executions (plus the comparison record) as append-only evidence — they appear here."
+            hint="Each run records two pinned executions (plus the comparison record) as permanent evidence — they appear here."
           />
         ) : (
           <details className="aurum-learn-disclose" style={{ marginTop: 12 }} open>

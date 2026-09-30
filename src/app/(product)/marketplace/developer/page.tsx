@@ -60,13 +60,9 @@ export default async function DeveloperPage({
 
       {!view.usable ? (
         <div className="aurum-notice">
-          The developer surface needs one of the authority claims{' '}
-          <code>marketplace:submit</code> (publish),{' '}
-          <code>extensions:administer</code> (build) or{' '}
-          <code>marketplace:administer</code> (platform review). Add one with{' '}
-          <code>?authority=marketplace:submit</code> in the development seam — claims arrive
-          with the authentication experience (W058). The review queue and forms below stay
-          honest about what your scope can do.
+          You need permission to use the developer console. Ask a company admin for
+          publisher, builder, or platform-review access — the sections below will
+          unlock with it.
         </div>
       ) : null}
 
@@ -132,7 +128,7 @@ export default async function DeveloperPage({
               <div style={{ marginTop: 14 }}>
                 <EmptyState
                   title="No build sessions yet"
-                  hint="Request one above; the agent's raw design and build outputs are retained as append-only artifact custody."
+                  hint="Request one above; the agent's raw design and build outputs are retained permanently."
                 />
               </div>
             ) : (

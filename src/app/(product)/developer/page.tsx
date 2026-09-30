@@ -407,7 +407,7 @@ export default async function DeveloperConsolePage({
 
       <Panel
         title="Webhooks"
-        blurb="The outbound event surface: subscribe https endpoints to event-type patterns and Aurum enqueues a signed delivery for every matching event — with append-only attempt evidence and explicit redelivery."
+        blurb="The outbound event surface: subscribe https endpoints to event-type patterns and Aurum enqueues a signed delivery for every matching event — with permanently recorded attempt evidence and explicit redelivery."
         meta={<>{view.subscriptions.length} subscription{view.subscriptions.length === 1 ? '' : 's'}</>}
       >
         {view.subscriptions.length === 0 ? (
@@ -431,7 +431,7 @@ export default async function DeveloperConsolePage({
 
       <Panel
         title="Webhook deliveries"
-        blurb="The delivery queue and its evidence: every enqueued delivery, its attempt budget, its last outcome — and the append-only attempt trail behind each one."
+        blurb="The delivery queue and its evidence: every enqueued delivery, its attempt budget, its last outcome — and the permanent attempt trail behind each one."
         meta={<>{view.deliveries.length} recent</>}
       >
         <DispatchPumpControl />
@@ -522,8 +522,8 @@ export default async function DeveloperConsolePage({
             </pre>
             <p className="aurum-ai-execution-meta">
               Startup is fail-closed: the configured principal must be a member of the configured
-              tenant before the transport serves. Every tool call carries this explicit context —
-              tenant-scoped, permission-checked and audited (locks 32).
+              tenant before the transport serves. Every tool call carries this context —
+              permission-checked and audited.
             </p>
           </div>
         </div>

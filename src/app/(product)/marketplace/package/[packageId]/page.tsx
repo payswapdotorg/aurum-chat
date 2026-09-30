@@ -230,7 +230,7 @@ export default async function PackagePage({
         {/* --- automated verification evidence --- */}
         <Panel
           title="Automated verification"
-          blurb="Append-only runs of the deterministic checks — the same rules the registry and the builder run. The latest run decides the posture; drift appears as a new run, never a rewrite."
+          blurb="Permanently recorded runs of the deterministic checks — the same rules the registry and the builder run. The latest run decides the posture; drift appears as a new run, never a rewrite."
           meta={
             <StatusPill tone={verificationTone(evidence.verification.outcome)}>
               {evidence.verification.outcome === 'verified'
@@ -387,7 +387,7 @@ export default async function PackagePage({
                   ]}
                   submitLabel="Record the review decision"
                   confirmPrompt="I am deciding on the platform's behalf, and I am not this package's vendor."
-                  note="PENDING_REVIEW → APPROVED or REJECTED. The decision is append-only evidence; rejection is terminal for this version."
+                  note="Review moves a version from waiting to approved or rejected; rejection is final for that version. The decision is recorded permanently."
                 />
               </div>
             ) : null}

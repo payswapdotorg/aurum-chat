@@ -91,7 +91,7 @@ export default async function ExplainHomePage({
 
       <Panel
         title="The audit trail"
-        blurb="The append-only record of consequential events — each entry states where it sits on the causal chain. Audit records are never rewritten; corrections are new records."
+        blurb="The permanent record of consequential events — each entry states where it sits on the causal chain. Audit records are never rewritten; corrections are new records."
       >
         {view.auditEvents.length === 0 ? (
           <EmptyState
@@ -116,7 +116,7 @@ export default async function ExplainHomePage({
 
       <Panel
         title="What this view is"
-        blurb="The explainability promise the architecture freezes (§24):"
+        blurb="What this view guarantees:"
       >
         <ul className="aurum-item-list">
           <li>
