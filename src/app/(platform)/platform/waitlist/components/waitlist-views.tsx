@@ -87,7 +87,7 @@ export function WaitlistSettledRow({ request }: { request: WaitlistRequest }): R
             : ` · decided ${formatWaitlistInstant(request.decidedAt)}`}
           {request.decidedBy === null
             ? ''
-            : ` · by principal ${request.decidedBy.slice(0, 8)}`}
+            : ` · by an admin`}
         </span>
         {request.note === null ? null : (
           <span className="platform-row-note">{request.note}</span>

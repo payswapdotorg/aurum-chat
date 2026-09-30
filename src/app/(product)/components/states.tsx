@@ -171,24 +171,4 @@ export function PageHead({
   );
 }
 
-/** The honest not-scoped state (the documented development seam). */
-export function NotScoped({ detail }: { detail: string }): ReactNode {
-  return (
-    <>
-      <PageHead
-        title="Choose your company"
-        description="Aurum reads tenant-scoped state through module contracts, and every contract call carries an explicit TenantContext — there is no ambient global and no cross-company view."
-      />
-      <div className="aurum-notice">
-        {detail}. Example: append <code>?tenant=&lt;tenant uuid&gt;</code> to
-        the URL. Signed-in company selection arrives with the authentication
-        experience; until then the shell resolves its scope from explicit
-        query parameters (<code>?tenant=</code>, optional{' '}
-        <code>?principal=</code>, optional <code>?authority=</code> claims,
-        optional <code>?workspace=</code>).
-      </div>
-    </>
-  );
-}
-
 /** A quiet scope notice rendered on hub pages that work without a tenant. */
