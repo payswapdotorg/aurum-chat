@@ -538,7 +538,7 @@ export async function buildConnectionsView(
       null,
     );
     if (found === null) {
-      lookupMiss = 'No identity found for that provider account in this tenant.';
+      lookupMiss = 'No identity found for that provider account in this company.';
     } else {
       lookup = await identityCard(ctx, found, null, false);
     }
@@ -553,9 +553,8 @@ export async function buildConnectionsView(
   for (const card of discoveredIdentities) byStatus[card.status] += 1;
 
   const notices: string[] = [
-    'Authentication lands with W058 — until then this surface resolves its tenant context from explicit headers/query parameters (documented dev seam).',
-    'No channel/source/destination transports are wired by default (provider isolation): polls, outbound sends and challenge deliveries fail explicitly with provider_unavailable until infrastructure wires them.',
-    `Channel identities are discovered from the newest ${IDENTITY_DISCOVERY_WINDOW} transcript turns per channel; the identity contract exposes no tenant-wide enumeration, so use the provider+account lookup for accounts outside that window.`,
+    'Deliveries are off by default: sending, polling and verification codes will report a clear failure until your provider connection is activated.',
+    `Identities appear as people message your connected channels — Aurum discovers them from the newest ${IDENTITY_DISCOVERY_WINDOW} turns per channel; use the provider+account lookup for accounts outside that window.`,
     'Re-registering a source or destination is its re-authorization path ("configure"); channel endpoints are immutable after registration — only their status moves.',
   ];
 

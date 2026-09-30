@@ -84,7 +84,7 @@ export function channelHealth(input: ChannelHealthInput): Health {
     level = 'degraded';
     reasons.push({
       level: 'degraded',
-      text: 'No delivery transport wired — outbound messages and verification codes cannot leave (they fail with provider_unavailable).',
+      text: 'Sending is not connected yet — outbound messages and verification codes will not go out until it is.',
     });
   }
   const age = ageSeconds(input.lastActivityAt, input.now);
@@ -164,20 +164,20 @@ export function sourceHealth(input: SourceHealthInput): Health {
       level = worstLevel(level, 'degraded');
       reasons.push({
         level: 'degraded',
-        text: 'Evidence stream is stale against the tenant freshness policy.',
+        text: "Evidence stream is stale against your company's freshness policy.",
       });
       break;
     case 'aging':
       level = worstLevel(level, 'attention');
       reasons.push({
         level: 'attention',
-        text: 'Evidence stream is aging against the tenant freshness policy.',
+        text: "Evidence stream is aging against your company's freshness policy.",
       });
       break;
     case 'unknown':
       reasons.push({
         level: 'info',
-        text: 'No freshness policy resolves for this source — classification is unknown (W006).',
+        text: 'No freshness policy is set for this source, so its status shows as unknown.',
       });
       break;
     case 'current':

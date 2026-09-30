@@ -40,6 +40,7 @@ import {
 } from 'react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { calmFailureText } from '@/app/lib/calm-errors';
 import { useProductShell } from '../../components/product-shell-provider';
 import type { ChatStarter } from '../../lib/chat-starters';
 import type {
@@ -386,13 +387,10 @@ export function ChatWorkspace({
               typeof body?.conversationId === 'string' ? body.conversationId : null;
             await refresh(conflictId ?? selectedRef.current);
             throw new Error(
-              body?.message ??
-                'this knowledge request was already answered — showing its recorded state',
+              'This knowledge request was already answered — showing its recorded state.',
             );
           }
-          throw new Error(
-            body?.message ?? body?.error ?? `the answer failed (HTTP ${response.status})`,
-          );
+          throw new Error(calmFailureText(body));
         }
         const body = (await response.json()) as TurnResponse;
         const conversationId = body.conversationId;
@@ -452,7 +450,7 @@ export function ChatWorkspace({
         const body = (await response.json().catch(() => null)) as
           | { message?: string; error?: string }
           | null;
-        throw new Error(body?.message ?? body?.error ?? `send failed (HTTP ${response.status})`);
+        throw new Error(calmFailureText(body));
       }
       const body = (await response.json()) as TurnResponse;
       const conversationId = body.conversationId;
@@ -464,7 +462,11 @@ export function ChatWorkspace({
     } catch (cause) {
       setPendingMessage(null);
       setDraft(text);
-      setSendError(cause instanceof Error ? cause.message : 'send failed');
+      setSendError(
+        cause instanceof Error
+          ? cause.message
+          : 'That didn’t go through — please try again.',
+      );
     } finally {
       setSending(false);
     }
@@ -504,16 +506,18 @@ export function ChatWorkspace({
           const body = (await response.json().catch(() => null)) as
             | { message?: string; error?: string }
             | null;
-          throw new Error(
-            body?.message ?? body?.error ?? `decision failed (HTTP ${response.status})`,
-          );
+          throw new Error(calmFailureText(body));
         }
         setDecided((current) => ({
           ...current,
           [requestId]: decision === 'approve' ? 'approved' : 'rejected',
         }));
       } catch (cause) {
-        setSendError(cause instanceof Error ? cause.message : 'decision failed');
+        setSendError(
+          cause instanceof Error
+            ? cause.message
+            : 'That didn’t go through — please try again.',
+        );
       } finally {
         setDeciding(null);
       }
@@ -546,9 +550,7 @@ export function ChatWorkspace({
           const body = (await response.json().catch(() => null)) as
             | { message?: string; error?: string }
             | null;
-          throw new Error(
-            body?.message ?? body?.error ?? `decision failed (HTTP ${response.status})`,
-          );
+          throw new Error(calmFailureText(body));
         }
         setDecided((current) => ({
           ...current,
@@ -558,7 +560,11 @@ export function ChatWorkspace({
         // the refreshed timeline so it lands in view.
         await refresh(conversationId);
       } catch (cause) {
-        setSendError(cause instanceof Error ? cause.message : 'decision failed');
+        setSendError(
+          cause instanceof Error
+            ? cause.message
+            : 'That didn’t go through — please try again.',
+        );
       } finally {
         setDeciding(null);
       }
@@ -587,15 +593,17 @@ export function ChatWorkspace({
           const body = (await response.json().catch(() => null)) as
             | { message?: string; error?: string }
             | null;
-          throw new Error(
-            body?.message ?? body?.error ?? `activation failed (HTTP ${response.status})`,
-          );
+          throw new Error(calmFailureText(body));
         }
         // The activation outcome returns to the originating thread —
         // pull the refreshed timeline so the agent card lands in view.
         await refresh(conversationId);
       } catch (cause) {
-        setSendError(cause instanceof Error ? cause.message : 'activation failed');
+        setSendError(
+          cause instanceof Error
+            ? cause.message
+            : 'That didn’t go through — please try again.',
+        );
       } finally {
         setIntervening(null);
       }

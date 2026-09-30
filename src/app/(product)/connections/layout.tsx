@@ -30,7 +30,7 @@ export default function ConnectionsLayout({ children }: { children: ReactNode })
         <div className="conn-header-meta">
           Aurum — the organizational intelligence employee
           <br />
-          Composed from domain contracts — never a second source of truth
+          Assembled live from your connected systems — always current
         </div>
       </header>
       <main id="conn-main" className="conn-body">
@@ -38,12 +38,12 @@ export default function ConnectionsLayout({ children }: { children: ReactNode })
       </main>
       <footer className="conn-footer">
         <span>
-          Tenant-owned connectors · opaque credential references only ·
-          provider isolation enforced
+          Your company's connectors · credentials stay sealed — Aurum never
+          displays them · providers stay isolated
         </span>
         <span>
-          Connection health is derived from contract state — PostgreSQL is
-          domain truth
+          Connection health is computed from live connector state — your source
+          systems remain the record of truth
         </span>
       </footer>
     </div>
