@@ -429,7 +429,7 @@ export function summarizeActionResult(result: DeveloperActionResult): string {
       return `Delivery ${result.delivery?.id.slice(0, 8) ?? ''} cloned as a fresh pending redelivery.`;
     case 'webhook.dispatch':
       if (result.transportWired === false) {
-        return 'No webhook transport is wired in this process — deliveries stay pending until one is.';
+        return 'Webhook sending is not connected — deliveries stay pending until it is.';
       }
       return `Delivery pump ran: ${result.dispatched?.length ?? 0} due deliver${(result.dispatched?.length ?? 0) === 1 ? 'y' : 'ies'} attempted.`;
   }

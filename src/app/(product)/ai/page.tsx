@@ -376,10 +376,9 @@ export default async function AiProvidersPage({
 
       {view.transportWired ? null : (
         <div className="aurum-notice" role="note">
-          <strong>No provider transport is wired in this environment.</strong> Connection tests and
-          hot-swap runs will fail honestly with <code className="aurum-mono">provider_unavailable</code> —
-          accounts, routing, policy and recorded evidence remain fully manageable. The transport is
-          infrastructure wiring (setLlmTransport at process start), never domain state.
+          <strong>AI providers are not connected in this environment.</strong> Connection tests and
+          hot-swap runs will report a clear failure and change nothing — accounts, routing, policy
+          and recorded evidence remain fully manageable.
         </div>
       )}
 
