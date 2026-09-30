@@ -33,12 +33,12 @@ export default async function OpportunitiesPage() {
     <>
       <SurfaceHeader
         title="Opportunities"
-        description="Evidence-backed opportunities recorded by the intelligence loop, plus the capability graph's available alternatives for unmet demand. First-class opportunity objects (estimated value, confidence, required capabilities) arrive with the opportunity engine."
+        description="Evidence-backed opportunities recorded by the intelligence loop, plus the capability graph's available alternatives for unmet demand. Each opportunity cites its evidence and affected goals."
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
       <StatTiles
         items={[
-          { label: 'Opportunity findings', value: view.findings.length, hint: 'cognition traces' },
+          { label: 'Opportunity findings', value: view.findings.length, hint: 'analysis runs' },
           {
             label: 'Gap-filling alternatives',
             value: view.alternatives.reduce((sum, item) => sum + item.activeSupplies.length, 0),
@@ -46,7 +46,7 @@ export default async function OpportunitiesPage() {
           },
         ]}
       />
-      <Card title="Opportunity findings" meta="source: cognitive executions">
+      <Card title="Opportunity findings" meta="source: analysis runs">
         {view.findings.length === 0 ? (
           <Empty
             title="No opportunity findings recorded"
@@ -68,7 +68,9 @@ export default async function OpportunitiesPage() {
                       : joinList(finding.affectedGoalIds.map((id) => id.slice(0, 8)), 3)}
                   </span>
                   <span>detected {formatInstant(finding.detectedAt)}</span>
-                  <span className="mono">{finding.executionId}</span>
+                  <span>
+                    run <span className="mono">{finding.executionId.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -111,7 +113,9 @@ export default async function OpportunitiesPage() {
                       {item.retiredSupplies.length} retired (reactivation candidates)
                     </span>
                   )}
-                  <span className="mono">{item.capability.id}</span>
+                  <span>
+                    capability <span className="mono">{item.capability.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

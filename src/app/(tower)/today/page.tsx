@@ -73,7 +73,7 @@ export default async function TodayPage() {
             hint: 'consequential knowledge gaps',
           },
           {
-            label: 'Live cognition',
+            label: 'Live analysis',
             value: formatCount(view.cognition.live.count, view.cognition.live.capped),
             hint: `${formatCount(view.cognition.awaitingApproval.count, view.cognition.awaitingApproval.capped)} awaiting approval`,
           },
@@ -110,7 +110,9 @@ export default async function TodayPage() {
                 {item.justification === null ? null : <ItemText>{item.justification}</ItemText>}
                 <ItemFoot>
                   <span>requested {formatInstant(item.requestedAt)}</span>
-                  <span className="mono">{item.id}</span>
+                  <span>
+                    request <span className="mono">{item.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -143,7 +145,9 @@ export default async function TodayPage() {
                     {formatConfidence(mission.targetConfidence)}
                   </span>
                   <a href={`/intelligence/missions/${mission.id}`}>open the mission in the workflow</a>
-                  <span className="mono">{mission.id}</span>
+                  <span>
+                    mission <span className="mono">{mission.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -153,7 +157,7 @@ export default async function TodayPage() {
 
       <Card title="Open unknowns" meta={`${formatCount(view.unknowns.open.count, view.unknowns.open.capped)} open`}>
         {view.unknowns.latest.length === 0 ? (
-          <Empty title="No open unknowns" hint="Unknown is first-class: a question plus the consequence of not knowing." />
+          <Empty title="No open unknowns" hint="An unknown is a question plus the consequence of not knowing." />
         ) : (
           <ul className="item-list">
             {view.unknowns.latest.map((unknown) => (
@@ -162,7 +166,9 @@ export default async function TodayPage() {
                 <ItemFoot>
                   <span>recorded {formatInstant(unknown.recordedAt)}</span>
                   <a href={`/intelligence/unknowns/${unknown.id}`}>open the unknown in the workflow</a>
-                  <span className="mono">{unknown.id}</span>
+                  <span>
+                    unknown <span className="mono">{unknown.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -171,14 +177,14 @@ export default async function TodayPage() {
       </Card>
 
       <Card
-        title="Live cognitive executions"
+        title="Live analysis runs"
         meta={`${formatCount(view.cognition.live.count, view.cognition.live.capped)} running · ${formatCount(
           view.cognition.awaitingApproval.count,
           view.cognition.awaitingApproval.capped,
-        )} gated`}
+        )} awaiting approval`}
       >
         {view.cognition.latest.length === 0 ? (
-          <Empty title="No live executions" hint="The intelligence loop is idle: explicit, asynchronous, resumable." />
+          <Empty title="No live analysis" hint="Aurum is not running any analysis right now." />
         ) : (
           <ul className="item-list">
             {view.cognition.latest.map((execution) => (
@@ -190,7 +196,9 @@ export default async function TodayPage() {
                 <ItemFoot>
                   <span>next: {execution.nextStage ?? '—'}</span>
                   <span>updated {formatInstant(execution.updatedAt)}</span>
-                  <span className="mono">{execution.id}</span>
+                  <span>
+                    run <span className="mono">{execution.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -198,9 +206,9 @@ export default async function TodayPage() {
         )}
       </Card>
 
-      <Card title="Latest analysis findings" meta="from the risk/opportunity/capability stage">
+      <Card title="Latest analysis findings" meta="from the analysis stage">
         {view.findings.length === 0 ? (
-          <Empty title="No findings recorded yet" hint="Findings are derived intelligence on cognition traces." />
+          <Empty title="No findings recorded yet" hint="Findings come from Aurum's analysis of your company's evidence." />
         ) : (
           <ul className="item-list">
             {view.findings.map((finding, index) => (
@@ -215,7 +223,9 @@ export default async function TodayPage() {
                       open the affected goal's chain
                     </a>
                   )}
-                  <span className="mono">{finding.executionId}</span>
+                  <span>
+                    run <span className="mono">{finding.executionId.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -230,7 +240,7 @@ export default async function TodayPage() {
         {view.discovery === null ? (
           <Empty
             title="No discovery runs"
-            hint="Unprompted unknown discovery derives candidates from active goals and their evidence (ADR-0017)."
+            hint="Aurum proposes new questions from your active goals and their evidence."
           />
         ) : (
           <>
@@ -242,7 +252,9 @@ export default async function TodayPage() {
             <ItemFoot>
               <span>run {formatInstant(view.discovery.recordedAt)}</span>
               <a href="/intelligence">open Today's briefing in the workflow</a>
-              <span className="mono">{view.discovery.runId}</span>
+              <span>
+                run <span className="mono">{view.discovery.runId.slice(0, 8)}</span>
+              </span>
             </ItemFoot>
           </>
         )}

@@ -48,7 +48,7 @@ export default async function RecommendationsPage() {
         {view.items.length === 0 ? (
           <Empty
             title="No action requests"
-            hint="The loop's recommendation stage proposes one consequential action per cycle; the matrix routes it."
+            hint="The loop's recommendation stage proposes one consequential action per cycle for your approval."
           />
         ) : (
           <ul className="item-list">
@@ -66,15 +66,11 @@ export default async function RecommendationsPage() {
                 />
                 {item.justification === null ? null : <ItemText>{item.justification}</ItemText>}
                 <ItemFoot>
-                  <span>
-                    routed via {item.evaluation.resolvedVia}
-                    {item.evaluation.policy === null || item.evaluation.policy.actionKind === null
-                      ? ''
-                      : ` (${item.evaluation.policy.actionKind})`}
-                  </span>
                   <span>requested {formatInstant(item.requestedAt)}</span>
                   {item.decidedAt === null ? null : <span>decided {formatInstant(item.decidedAt)}</span>}
-                  <span className="mono">{item.id}</span>
+                  <span>
+                    request <span className="mono">{item.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

@@ -25,6 +25,23 @@ import { formatInstant, formatMinorUnits, joinList, titleCase } from '../lib/for
 
 export const dynamic = 'force-dynamic';
 
+// Display-level phrasing for execution error codes — words, never raw enums.
+const ERROR_CODE_PHRASES: Record<string, string> = {
+  provider_unavailable: 'provider unavailable — nothing was sent',
+  dispatch_failed: 'could not reach the runtime',
+  dispatch_rejected: 'the runtime refused the call',
+  result_invalid: 'the runtime returned an unusable result',
+  execution_forbidden: 'not permitted for this agent',
+  approval_rejected: 'a required approval was rejected',
+  account_disabled: 'the account is disabled',
+  bad_input: 'the request was invalid',
+  cancelled: 'cancelled',
+};
+
+function describeErrorCode(code: string): string {
+  return ERROR_CODE_PHRASES[code] ?? code.replaceAll('_', ' ');
+}
+
 export default async function AgentsPage() {
   const resolution = await resolvePageContext();
   if (!resolution.ok) return <NotScoped detail={resolution.detail} />;
@@ -38,10 +55,8 @@ export default async function AgentsPage() {
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
       <Notice neutral>
-        Agent definitions are registered under the{' '}
-        <code>agents:administer</code> authority claim; every execution routes through the
-        actions authority matrix at the level its permission scopes imply. Recruitment,
-        teams and lifecycle evaluation are later work items.
+        Agent registration requires admin permission, and every run passes the approval
+        gates its permissions require. Recruiting, teams and evaluation tools are planned.
       </Notice>
       <StatTiles
         items={[
@@ -83,7 +98,9 @@ export default async function AgentsPage() {
                 <ItemFoot>
                   <span>permissions: {joinList(agent.permissions, 6)}</span>
                   <span>updated {formatInstant(agent.updatedAt)}</span>
-                  <span className="mono">{agent.id}</span>
+                  <span>
+                    agent <span className="mono">{agent.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -115,7 +132,7 @@ export default async function AgentsPage() {
                       {execution.errorCode === null ? null : (
                         <>
                           {' '}
-                          <span className="mono">{execution.errorCode}</span>
+                          <span>{describeErrorCode(execution.errorCode)}</span>
                         </>
                       )}
                     </td>

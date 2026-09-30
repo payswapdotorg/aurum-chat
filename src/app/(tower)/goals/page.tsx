@@ -105,7 +105,9 @@ export default async function GoalsPage({
                     {formatInstant(goal.content.horizon.end)}
                   </span>
                   <span>updated {formatInstant(goal.updatedAt)}</span>
-                  <span className="mono">{goal.id}</span>
+                  <span>
+                    goal <span className="mono">{goal.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

@@ -30,7 +30,7 @@ export default async function UnknownsPage() {
     <>
       <SurfaceHeader
         title="Unknowns"
-        description="Consequential gaps in knowledge: the question Aurum cannot answer, and why not knowing it matters. Open unknowns are the tenant's knowledge debt; material ones become learning missions."
+        description="Consequential gaps in knowledge: the question Aurum cannot answer, and why not knowing it matters. Open unknowns are your company's knowledge debt; material ones become learning missions."
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
       <StatTiles
@@ -44,7 +44,7 @@ export default async function UnknownsPage() {
       />
       <Card title="Open unknowns" meta={`${formatCount(view.open.total, view.open.capped)} open`}>
         {view.open.items.length === 0 ? (
-          <Empty title="No open unknowns" hint="A gap without consequence is not first-class — these all have one." />
+          <Empty title="No open unknowns" hint="Every unknown here has a stated consequence." />
         ) : (
           <ul className="item-list">
             {view.open.items.map((unknown) => (
@@ -66,7 +66,9 @@ export default async function UnknownsPage() {
                     {unknown.related.claims} claims · {unknown.related.beliefs} beliefs
                   </span>
                   <span>recorded {formatInstant(unknown.recordedAt)}</span>
-                  <span className="mono">{unknown.id}</span>
+                  <span>
+                    unknown <span className="mono">{unknown.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -86,7 +88,9 @@ export default async function UnknownsPage() {
                 )}
                 <ItemFoot>
                   <span>resolved {formatInstant(unknown.resolvedAt ?? unknown.recordedAt)}</span>
-                  <span className="mono">{unknown.id}</span>
+                  <span>
+                    unknown <span className="mono">{unknown.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

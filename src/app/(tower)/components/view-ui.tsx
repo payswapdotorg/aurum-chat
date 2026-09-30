@@ -165,7 +165,7 @@ export function NotScoped({ detail }: { detail: string }): ReactNode {
     <>
       <SurfaceHeader
         title="Not scoped to a company"
-        description="The Control Tower reads tenant-scoped state through module contracts, and every contract call carries an explicit TenantContext (no ambient global)."
+        description="This view needs a company. Sign in and choose your company to continue."
       />
       <Notice>
         {detail}. Company scope comes from your signed-in session — sign in

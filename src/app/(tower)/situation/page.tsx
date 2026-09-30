@@ -101,7 +101,9 @@ export default async function SituationPage() {
                 <ItemFoot>
                   <span>valid from {formatInstant(belief.validFrom)}</span>
                   <span>{belief.provenanceCount} supporting observations</span>
-                  <span className="mono">{belief.id}</span>
+                  <span>
+                    belief <span className="mono">{belief.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -147,7 +149,9 @@ export default async function SituationPage() {
                 </ItemText>
                 <ItemFoot>
                   <span>detected {formatInstant(contradiction.detectedAt)}</span>
-                  <span className="mono">{contradiction.id}</span>
+                  <span>
+                    record <span className="mono">{contradiction.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}

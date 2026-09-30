@@ -37,7 +37,7 @@ export default async function MissionsPage() {
     <>
       <SurfaceHeader
         title="Missions"
-        description="First-class learning missions: what knowledge is missing, why it matters, how sure it must become, what it may cost and where it may come from. Missions are versioned and auditable; completion and abandonment are terminal by design."
+        description="Learning missions: what knowledge is missing, why it matters, how sure it must become, what it may cost and where it may come from. Missions are versioned and auditable; completion and abandonment are final by design."
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
       <StatTiles
@@ -89,7 +89,9 @@ export default async function MissionsPage() {
                   </span>
                   <span>{mission.candidateCount} candidate sources</span>
                   <span>updated {formatInstant(mission.updatedAt)}</span>
-                  <span className="mono">{mission.id}</span>
+                  <span>
+                    mission <span className="mono">{mission.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -112,7 +114,9 @@ export default async function MissionsPage() {
                 )}
                 <ItemFoot>
                   <span>updated {formatInstant(mission.updatedAt)}</span>
-                  <span className="mono">{mission.id}</span>
+                  <span>
+                    mission <span className="mono">{mission.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
@@ -129,7 +133,9 @@ export default async function MissionsPage() {
                 <ItemHead title={mission.title} badges={<StatusBadge status="abandoned" />} />
                 <ItemFoot>
                   <span>updated {formatInstant(mission.updatedAt)}</span>
-                  <span className="mono">{mission.id}</span>
+                  <span>
+                    mission <span className="mono">{mission.id.slice(0, 8)}</span>
+                  </span>
                 </ItemFoot>
               </li>
             ))}
