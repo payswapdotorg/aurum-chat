@@ -34,7 +34,7 @@ export default async function WorkforcePage() {
     <>
       <SurfaceHeader
         title="Workforce"
-        description="The human side of the capability graph: who supplies which capabilities at which level, the organizational picture as the world model understands it, and tenant membership roles. Facts only — workload, fit and performance assessment is workforce intelligence's scope, with alternative explanations preserved."
+        description="The human side of the capability graph: who supplies which capabilities at which level, the organizational picture as the world model understands it, and company membership roles. Facts only — workload, fit and performance assessment is workforce intelligence's scope, with alternative explanations preserved."
         meta={<>Generated {formatInstant(view.generatedAt)}</>}
       />
       {view.notices.map((notice) => (
@@ -47,9 +47,9 @@ export default async function WorkforcePage() {
           { label: 'Employee capability supplies', value: view.employeeSupplies.total },
           { label: 'People entities (world model)', value: view.peopleEntities.length },
           {
-            label: 'Tenant members',
+            label: 'Company members',
             value: view.members.readable ? view.members.items.length : '—',
-            hint: view.members.readable ? undefined : 'member principal required',
+            hint: view.members.readable ? undefined : 'admin access required',
           },
         ]}
       />
@@ -112,7 +112,7 @@ export default async function WorkforcePage() {
           </ul>
         )}
       </Card>
-      <Card title="Tenant membership" meta="roles: owner · admin · member">
+      <Card title="Company membership" meta="roles: owner · admin · member">
         {view.members.readable ? (
           view.members.items.length === 0 ? (
             <Empty title="No members" />
@@ -121,7 +121,7 @@ export default async function WorkforcePage() {
               {view.members.items.map((member) => (
                 <li key={member.principalId}>
                   <ItemHead
-                    title={<span className="mono">{member.principalId}</span>}
+                    title="Team member"
                     badges={
                       member.role === 'owner' ? (
                         <Badge kind="accent">owner</Badge>
@@ -132,6 +132,9 @@ export default async function WorkforcePage() {
                   />
                   <ItemFoot>
                     <span>member since {formatInstant(member.createdAt)}</span>
+                    <span>
+                      id <span className="mono">{member.principalId.slice(0, 8)}</span>
+                    </span>
                   </ItemFoot>
                 </li>
               ))}

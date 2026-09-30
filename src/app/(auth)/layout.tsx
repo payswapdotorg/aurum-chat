@@ -19,7 +19,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </main>
       <footer className="aurum-auth-footer">
         <span>Aurum — the organizational intelligence employee.</span>
-        <span>Sessions are httpOnly · companies re-verify membership on every request</span>
+        <span>Sign-in sessions are securely stored · company membership is re-checked on every request</span>
       </footer>
     </div>
   );

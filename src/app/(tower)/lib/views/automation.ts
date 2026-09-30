@@ -111,7 +111,7 @@ export async function buildAutomationView(ctx: TenantContext): Promise<Automatio
         unmetCount: gap.unmet.length,
       })),
     notices: [
-      'AutomationOpportunity records (W018 — candidate solution types, expected ROI, outcome measurement) are not delivered at this base; these are the W016 process findings they are built from, with their evidence.',
+      'Today this page shows where work is manual, duplicated, or slow — each finding cites its evidence. Estimated savings and solution options for each candidate are coming.',
     ],
   };
 }
