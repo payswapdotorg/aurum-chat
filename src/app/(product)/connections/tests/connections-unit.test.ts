@@ -75,7 +75,7 @@ describe('channel health', () => {
       now: NOW,
     });
     expect(health.level).toBe('degraded');
-    expect(health.reasons.some((reason) => reason.text.includes('provider_unavailable'))).toBe(true);
+    expect(health.reasons.some((reason) => reason.text.includes('Sending is not connected yet'))).toBe(true);
   });
 
   it('reports healthy when active, wired and recently active', () => {

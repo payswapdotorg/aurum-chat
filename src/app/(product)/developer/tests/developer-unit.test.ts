@@ -146,8 +146,8 @@ describe('formats', () => {
 describe('the honesty notes are the product (non-empty, on-topic)', () => {
   it('carries the shown-once, claim-gate, secret-ref and rotation notes', () => {
     expect(KEY_SHOWN_ONCE_NOTE).toContain('exactly once');
-    expect(KEY_MANAGEMENT_CLAIM_NOTE).toContain('api:administer');
-    expect(SECRET_REF_NOTE).toContain('opaque secret-store reference');
+    expect(KEY_MANAGEMENT_CLAIM_NOTE).toContain('admin role');
+    expect(SECRET_REF_NOTE).toContain('stored secret');
     expect(ROTATION_NOTE).toContain('same grant');
     expect(ACTIVITY_NOTE).toContain('immutable');
     expect(EVENT_TYPE_EXAMPLES.length).toBeGreaterThan(0);

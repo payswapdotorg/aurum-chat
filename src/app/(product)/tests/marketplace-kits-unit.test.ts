@@ -168,9 +168,9 @@ describe('deriveKitActions', () => {
     );
     expect(actions.canAdminister).toBe(false);
     expect(actions.canRegister).toBe(false);
-    expect(actions.registerBlockedReason).toContain('vertical-kits:administer');
+    expect(actions.registerBlockedReason).toContain('admin permission');
     expect(actions.canInstall).toBe(false);
-    expect(actions.installBlockedReason).toContain('vertical-kits:administer');
+    expect(actions.installBlockedReason).toContain('admin permission');
   });
 
   it('an admin with nothing registered may register, but not install yet', () => {
@@ -262,7 +262,7 @@ describe('deriveKitActions', () => {
       pending,
     );
     expect(noApprove.canDecideReview).toBe(false);
-    expect(noApprove.decideBlockedReason).toContain('actions:approve');
+    expect(noApprove.decideBlockedReason).toContain('owner or admin permission');
   });
 
   it('a removed installation is terminal history — no transitions offered', () => {
