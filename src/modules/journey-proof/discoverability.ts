@@ -219,15 +219,6 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
   },
   // --- L3 Organizational Intelligence ----------------------------------------
   {
-    module: 'coverage',
-    label: 'Company coverage registry & measurement',
-    layer: 'L3',
-    routes: ['/intelligence'],
-    surfaces: ['desktop-rail', 'command-search', 'hub-link'],
-    instrument: false,
-    note: 'the provider-neutral coverage registry (W125) is the derived measurement layer behind the Intelligence workflow; its product-facing surface — what is visible, fresh and missing — arrives with the W126 query plane',
-  },
-  {
     module: 'environment',
     label: 'Environment watch',
     layer: 'L3',
@@ -662,7 +653,7 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     routes: [],
     surfaces: [],
     instrument: true,
-    note: 'domain infrastructure, not yet a product capability: the provider-neutral, tenant-scoped coverage vocabulary and (with W125) the derived measurement registry — CoverageSurface/CoverageSource/CoverageClaim/CoverageGap/CoverageSnapshot semantics per the approved company-coverage architecture — that lets Aurum state what portion of the company it can see, how reliable that visibility is, what is missing and whether the missing visibility matters to current goals; the types are TL-frozen (W124) so W125 (registry/measurement) and W126 (company query plane) build against one contract surface; coverage is a DERIVED view over existing state, never a second organizational truth store, and never carries credentials; the product surface arrives with W126 (/company); exercised by the coverage module vitest suite plus the tenant-isolation sweep',
+    note: 'domain infrastructure, not yet a product capability: the provider-neutral, tenant-scoped coverage vocabulary and the DELIVERED (W125) derived measurement registry — CoverageSurface/CoverageSource/CoverageClaim/CoverageGap/CoverageSnapshot semantics per the approved company-coverage architecture, ten contract operations over five tenant-scoped append-only tables with a 55-test suite — that lets Aurum state what portion of the company it can see, how reliable that visibility is, what is missing and whether the missing visibility matters to current goals; coverage is a DERIVED view over existing state, never a second organizational truth store, and never carries credentials; the product surface arrives with W126 (/company) — until then the module is exercised as an instrument by its own vitest suite plus the tenant-isolation sweep (upgraded to a real two-tenant service proof at W125 integration)',
   },
   {
     module: 'provider-fabric',

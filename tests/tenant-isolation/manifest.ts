@@ -106,6 +106,14 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   // persistence, no service, no tenant rows); the sweep proves exactly that
   // and must be upgraded to real cross-tenant proofs when W125/W132/W134
   // land their implementations (the manifest's living obligation).
+  //
+  // v8 (W125 integration, 2026-10-04): the obligation is HONORED for
+  // coverage — its registry/measurement service, five tenant-scoped tables
+  // and 001-coverage migration are delivered, and the sweep now drives the
+  // real service for two tenants (empty-list invisibility, uniform
+  // snapshot_not_found/surface_not_found, independent evaluation).
+  // provider-fabric and context stay types-only until W132/W134; their
+  // structural stage-proof remains in the same sweep file.
   coverage: 'contract-vocabulary-sweep.test.ts',
   'provider-fabric': 'contract-vocabulary-sweep.test.ts',
   context: 'contract-vocabulary-sweep.test.ts',

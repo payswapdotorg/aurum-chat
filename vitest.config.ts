@@ -24,5 +24,11 @@ export default defineConfig({
     // real test green without masking genuine hangs (slowest legit test
     // is ~12s).
     testTimeout: 20000,
+    // W125 integration: the same station-hygiene rule for BOOTS —
+    // runMigrations over the full schema (PGlite) can exceed the 10s
+    // hook default under the same memory pressure (the beforeAll class
+    // the baseline recorded as "pass in isolation"); 30s keeps the
+    // coverage/sweep suites green without masking genuine hangs.
+    hookTimeout: 30000,
   },
 });
