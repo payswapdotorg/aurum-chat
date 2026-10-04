@@ -18,6 +18,10 @@ history.
 - Current continuation DAG: `spec/POST-W106-CONTINUATION-DAG-2026-09-27.md`
 - TL execution prompt: `spec/TECH-LEAD-ORCHESTRATOR-PROMPT-2026-09-27.md`
 - Final takeover handoff: `spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md`
+- Current takeover snapshot: `spec/CURRENT-STATE-2026-10-04.md`
+- Company coverage architecture: `spec/COMPANY-COVERAGE-ARCHITECTURE.md`
+- Company coverage continuation DAG: `spec/POST-W123-COVERAGE-DAG-2026-10-04.md`
+- Company coverage architecture change record: `spec/ARCHITECTURE-CHANGE-REQUEST-0002-COMPANY-COVERAGE.md`
 - Production evidence: `docs/productization-evidence/<program>/`
 - CI definition: `.github/workflows/ci.yml`
 
@@ -36,6 +40,9 @@ history.
 9. Worker context must be reconstructible from repository files.
 10. Every accepted implementation change must update the relevant work-item/evidence record so
     the repository stays internally consistent.
+11. The latest dated current-state snapshot supersedes older takeover instructions for orchestration,
+    while older snapshots remain historical evidence.
+12. Company coverage is a derived observability view, not a second organizational source of truth.
 
 ## State-file law
 
@@ -90,3 +97,10 @@ Use only these statuses unless the governing document defines a stricter vocabul
 - **OPTIONAL** — deliberately non-blocking work.
 
 Never turn BLOCKED into PASS by weakening the assertion.
+
+## Coverage truth law
+
+Coverage claims must distinguish configured connectivity from actual observable evidence. A connected
+provider is not proof of complete coverage. Coverage must expose freshness, authorization, provenance and
+material blind spots, and those blind spots may enter the existing Unknown/LearningMission loop when
+information value warrants investigation.
