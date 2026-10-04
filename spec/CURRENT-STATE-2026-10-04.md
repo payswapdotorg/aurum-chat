@@ -102,3 +102,13 @@ Coverage is therefore not a dashboard add-on. It is a measurable property of the
 8. Treat production evidence as exact-deployment/SHA evidence.
 9. Never convert missing credentials or disconnected providers into successful coverage.
 10. Update this state record or a newer dated snapshot whenever the continuation frontier changes.
+
+## Approved unified frontier after company coverage
+
+The company-coverage program W124-W130 is now explicitly joined to W131-W141. The master roadmap is the latest orchestration record: spec/MASTER-ROADMAP-2026-10-04.md
+
+The next conceptual product is: Aurum Agent Body + user-selected Model + Company Coverage/Query + goal/context-conditioned Organizational Lab + governed specialist Agent Exchange + replaceable execution environment + Web/Desktop/Mobile shared experience.
+
+The Lab must treat organization choice as contextual. Same subject may yield different organizations under different season, duration, staffing, staff experience, workload, capability, environmental or constraint conditions. These are hypotheses to measure, not hardcoded industry rules.
+
+Production remains not recertified for current main until a new exact-deployment certification is run.
