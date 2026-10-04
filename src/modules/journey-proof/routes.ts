@@ -191,6 +191,15 @@ export const ROUTE_CATALOG: readonly RouteSpec[] = [
     mobileArea: null,
   },
   {
+    path: '/company',
+    kind: 'page',
+    area: 'product',
+    auth: 'required',
+    title: 'Company — the query plane over authorized evidence (W126)',
+    file: 'src/app/(product)/company/page.tsx',
+    mobileArea: null,
+  },
+  {
     path: '/cellular',
     kind: 'page',
     area: 'product',

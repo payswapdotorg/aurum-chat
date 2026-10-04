@@ -539,6 +539,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'W104 gave the capture gateway its user-visible path: the read-only meetings surface (/meetings + one meeting) composes the registry reads (meetings, sessions, participants, transcripts, artifacts, connections, access events), and the v1 public API mirrors the same contract reads under the meetings:read scope family (GET /api/v1/meetings…). The realtime companion UX (W086) builds on the same contract.',
   },
   {
+    module: 'company-query',
+    label: 'The company query plane (W126)',
+    layer: 'platform',
+    routes: ['/company'],
+    surfaces: ['hub-link', 'command-search'],
+    instrument: false,
+    note: 'W126 gave the provider-independent query plane its user-visible path: the /company surface (the query box, claim-level provenance chips, the coverage-context panel with material blind spots, contradictions and unknowns) and the capability-shaped product API (POST /api/product/company/query) compose the world/epistemics/memory/observations/sources/channels/freshness/goals contracts; the optional LLM paragraph is presentation only and never authoritative.',
+  },
+  {
     module: 'realtime',
     label: 'The realtime voice and meeting companion gateway (W086)',
     layer: 'platform',

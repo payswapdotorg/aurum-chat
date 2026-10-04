@@ -518,6 +518,56 @@ export const CELLULAR_DESTINATIONS: readonly {
   },
 ];
 
+/**
+ * W126 — the company query plane's keyboard destination: the
+ * provider-independent question surface over authorized evidence. Task
+ * language first ("ask the company", "what can you see", "how much of
+ * our support history"); "coverage", "blind spots" and "provenance"
+ * are the honest-answer terms the surface owns. Keyboard-reachable
+ * exactly once, sharing the intent source with the More hub's card
+ * (lib/capability-hub.ts).
+ */
+export const COMPANY_DESTINATIONS: readonly {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  keywords: string[];
+}[] = [
+  {
+    id: 'company-query',
+    title: 'Ask a question about the company',
+    subtitle:
+      'Provider-independent answers over authorized evidence — provenance and freshness on every claim, contradictions kept visible, honest coverage and blind spots',
+    href: '/company',
+    keywords: [
+      'company',
+      'query',
+      'question',
+      'ask',
+      'ask aurum',
+      'ask the company',
+      'answer',
+      'answers',
+      'evidence',
+      'provenance',
+      'freshness',
+      'coverage',
+      'blind',
+      'spot',
+      'spots',
+      'visible',
+      'see',
+      'how much',
+      'can you see',
+      'contradiction',
+      'contradictions',
+      'unknowns',
+      'what do you know',
+    ],
+  },
+];
+
 /** What a command does: navigate somewhere, or run a shell action. */
 export type ShellCommandTarget =
   | { kind: 'navigate'; href: string }
@@ -569,6 +619,7 @@ export function buildShellCommands(): ShellCommand[] {
     ...DEVELOPER_DESTINATIONS.map((destination) => destination.href),
     ...MEETINGS_DESTINATIONS.map((destination) => destination.href),
     ...CELLULAR_DESTINATIONS.map((destination) => destination.href),
+    ...COMPANY_DESTINATIONS.map((destination) => destination.href),
     ...towerSurfaceLinks().map((link) => link.href),
     capabilityEntry('company').href,
     capabilityEntry('password').href,
@@ -752,6 +803,24 @@ export function buildShellCommands(): ShellCommand[] {
       icon: password.icon,
       keywords: password.keywords,
       target: { kind: 'navigate', href: password.href },
+    });
+  }
+
+  // W126 — the company query plane's destination (the provider-independent
+  // question surface; keyboard-reachable by task language: "ask a
+  // question", "what can you see", "coverage", "blind spots"). Registered
+  // AFTER the account destinations on purpose: the bare word "company"
+  // keeps finding company setup (the W075 task-language ruling), while the
+  // query plane's own task phrases find it uniquely.
+  for (const destination of COMPANY_DESTINATIONS) {
+    commands.push({
+      id: `company:${destination.id}`,
+      title: destination.title,
+      subtitle: destination.subtitle,
+      group: 'Navigate',
+      icon: 'intelligence',
+      keywords: destination.keywords,
+      target: { kind: 'navigate', href: destination.href },
     });
   }
 
