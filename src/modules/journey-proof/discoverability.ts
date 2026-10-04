@@ -219,6 +219,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
   },
   // --- L3 Organizational Intelligence ----------------------------------------
   {
+    module: 'coverage',
+    label: 'Company coverage registry & measurement',
+    layer: 'L3',
+    routes: ['/intelligence'],
+    surfaces: ['desktop-rail', 'command-search', 'hub-link'],
+    instrument: false,
+    note: 'the provider-neutral coverage registry (W125) is the derived measurement layer behind the Intelligence workflow; its product-facing surface — what is visible, fresh and missing — arrives with the W126 query plane',
+  },
+  {
     module: 'environment',
     label: 'Environment watch',
     layer: 'L3',
