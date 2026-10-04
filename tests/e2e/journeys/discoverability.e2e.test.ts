@@ -319,6 +319,7 @@ describe('capability coverage', () => {
       'demo',
       'deployment-smoke',
       'edge-connector',
+      'execution',
       'journey-proof',
       'migration',
       'provider-billing',

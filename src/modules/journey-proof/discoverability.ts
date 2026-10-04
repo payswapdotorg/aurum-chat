@@ -530,6 +530,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     note: 'domain infrastructure, not a product capability: the Aurum-owned durable orchestration port (W080 — event triggers, schedules, waits, retries, human approvals, resumptions, idempotency, cancellation, long-running cognition) behind which orchestration providers sit; it owns no user-facing route and is exercised by its own vitest suite',
   },
   {
+    module: 'execution',
+    label: 'The execution platform contract surface (W131)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not a product capability: the W131 frozen contract vocabulary for interchangeable execution environments, durable task workers, browser/computer sessions, the shared client/runtime surface and cross-device continuity (types only — no service, no tables, no routes; environments are adapters, never authorities); W137/W139 build against it and it is exercised by its own vitest suite',
+  },
+  {
     module: 'meetings',
     label: 'The meeting intelligence gateway (W085)',
     layer: 'platform',

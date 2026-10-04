@@ -34,6 +34,11 @@
 // identifier map, the identity-collision conflicts, the dual-run
 // comparison rounds and the retirement-checkpoint migrations the
 // migration module owns.
+//
+// v7 (W131): 'execution' joins with its own sweep file — the W131 frozen
+// contract vocabulary (types only: no tables, no service, no routes) the
+// execution module owns; the sweep proves the module stays a pure contract
+// surface, per the journey-proof precedent.
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -65,6 +70,7 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   environment: 'evidence-sweep.test.ts',
   epistemics: 'evidence-sweep.test.ts',
   events: 'foundation-sweep.test.ts',
+  execution: 'execution-sweep.test.ts',
   extensions: 'capability-sweep.test.ts',
   freshness: 'evidence-sweep.test.ts',
   goals: 'evidence-sweep.test.ts',
