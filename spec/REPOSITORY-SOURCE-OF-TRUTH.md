@@ -104,3 +104,15 @@ Coverage claims must distinguish configured connectivity from actual observable 
 provider is not proof of complete coverage. Coverage must expose freshness, authorization, provenance and
 material blind spots, and those blind spots may enter the existing Unknown/LearningMission loop when
 information value warrants investigation.
+
+## Unified roadmap contract
+
+The approved continuation is unified under the master roadmap and additive architecture/reference records:
+spec/MASTER-ROADMAP-2026-10-04.md
+spec/AGENT-BODY-LAB-CROSS-PLATFORM-ARCHITECTURE.md
+spec/EXECUTION-PLATFORM-REFERENCE-REVIEW-2026-10-04.md
+spec/ARCHITECTURE-CHANGE-REQUEST-0003-AGENT-BODY-LAB-CROSS-PLATFORM.md
+
+W124-W130 are the company coverage/query/closed-loop foundation. W131-W141 extend the same program into the agent body, provider/model fabric, context-conditioned Lab, governed agent exchange, execution environment and cross-platform product.
+
+A later dated roadmap/state snapshot supersedes older orchestration instructions while historical evidence remains immutable.
