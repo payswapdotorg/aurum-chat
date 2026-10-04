@@ -101,6 +101,6 @@ honest UNKNOWN dimensions say exactly what is not yet measurable.
 
 ## Exact commit
 
-See `git log -1` on branch `work/w125-company-coverage` (the commit that
+Exact commit: `3ebb231c72e94df9095d51c4dd16692efdd94215` (the commit that
 adds this file). Pushed to origin and verified by `git ls-remote` ref
 match.
