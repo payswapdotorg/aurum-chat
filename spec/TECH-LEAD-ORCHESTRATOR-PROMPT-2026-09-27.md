@@ -164,3 +164,22 @@ Aim for:
 → exact deployment certification → repository state updated so another TL can take over without this chat.**
 
 At each wave, leave the repository in a coherent, buildable, independently understandable state.
+
+## Unified 2026-10-04 roadmap
+
+The prior company-coverage handoff and the subsequent Agent Body/Provider/Lab handoff are now one implementation program. Read spec/MASTER-ROADMAP-2026-10-04.md before dispatch.
+
+New canonical design records:
+- spec/EXECUTION-PLATFORM-REFERENCE-REVIEW-2026-10-04.md
+- spec/AGENT-BODY-LAB-CROSS-PLATFORM-ARCHITECTURE.md
+- spec/ARCHITECTURE-CHANGE-REQUEST-0003-AGENT-BODY-LAB-CROSS-PLATFORM.md
+
+The full frontier is W124-W141. Do not skip W124. After W124, use the declared three-worker waves in the master roadmap. W131 is the execution-platform/cross-platform architecture study. W132-W134 establish Provider Fabric, Aurum Body and Information Strategy. W135-W138 build the contextual Lab, agent exchange and execution environment. W139-W140 productize the shared clients and closed loop. W141 is final integration/certification.
+
+Critical semantic rule: the Lab is context-sensitive. Same task subject does not imply same organization. Season, duration, staffing, staff experience, workload, capabilities, environment, constraints and evidence freshness can legitimately change the best organization when experiments show that they do.
+
+Critical authority rule: Aurum gathers/transmits information and coordinates; specialist agents execute; the Lab recommends and learns; Marketplace/Action/Agent authorities govern activation and execution.
+
+Critical model rule: Aurum Agent Body is model-agnostic. Provider/model selection belongs to the existing LLM Gateway and its canonical provider/model registry. The Lab may recommend model occupancy but may not become a second model router.
+
+Critical execution-platform rule: browser/computer/sandbox/workspace implementations are adapters. Evaluate E2B, local containers, Playwright/Chromium, OpenMuse patterns, Meta Muse patterns, ZCode patterns and Epoch's cross-platform architecture without making any one vendor an authority.
