@@ -259,6 +259,8 @@ const PAGE_MODULES: Record<string, RouteModule> = {
     area: 'product',
     load: () => import('../../../src/app/(product)/cellular/reach/[reachId]/page'),
   },
+  // W126 — the company query plane surface.
+  '/company': { area: 'product', load: () => import('../../../src/app/(product)/company/page') },
   '/marketplace': { area: 'product', load: () => import('../../../src/app/(product)/marketplace/page') },
   '/marketplace/installed': {
     area: 'product',

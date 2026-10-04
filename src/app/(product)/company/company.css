@@ -1,0 +1,391 @@
+/* ============================================================================
+   Company query plane (W126) — the /company surface's stylesheet.
+
+   Scope: the classes below (aurum-company-*) only ever render from this
+   surface's components; the shared shell classes (aurum-panel,
+   aurum-page-head, aurum-pill, aurum-tag) come from product.css and are
+   never redefined here. This file loads after product.css (imported by
+   the page), so the scoped styles win the cascade at equal specificity
+   without touching any global style.
+
+   Design language: the shell's warm family only — flat surfaces,
+   hairlines, no gradients, no blue/indigo, no glass. The query surface
+   reads as a calm working instrument: the answer first, provenance on
+   every claim, and the coverage context as a steady sidebar-style panel
+   (grid on wide screens, stacked on narrow ones).
+   ========================================================================== */
+
+/* ---- the page frame ---------------------------------------------------- */
+
+.aurum-company {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---- the query form ---------------------------------------------------- */
+
+.aurum-company-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aurum-company-form textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  padding: 12px 14px;
+  font: inherit;
+  color: inherit;
+  background: var(--canvas, #faf7f2);
+  border: 1px solid #d8d2c7;
+  border-radius: 12px;
+}
+
+.aurum-company-form textarea:focus-visible {
+  outline: 2px solid var(--aurum, #d9952a);
+  outline-offset: 1px;
+}
+
+.aurum-company-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.aurum-company-submit {
+  min-height: 44px;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 650;
+  color: #241c0c;
+  background: var(--aurum, #d9952a);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.aurum-company-submit:hover:not(:disabled) {
+  background: #c07f1c;
+}
+
+.aurum-company-submit:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.aurum-company-surfaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+
+.aurum-company-surface-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #4a443d;
+  background: transparent;
+  border: 1px solid #d8d2c7;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.aurum-company-surface-chip[aria-pressed='true'] {
+  color: #241c0c;
+  background: var(--aurum-soft, #ffeccd);
+  border-color: var(--aurum, #d9952a);
+}
+
+/* ---- the answer -------------------------------------------------------- */
+
+.aurum-company-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+@media (min-width: 960px) {
+  .aurum-company-grid {
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+    align-items: start;
+  }
+}
+
+.aurum-company-summary {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #332c22;
+  background: var(--aurum-soft, #ffeccd);
+  border: 1px solid #ecd9ae;
+  border-radius: 12px;
+}
+
+.aurum-company-llm {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #332c22;
+  background: #fbf9f4;
+  border: 1px dashed #d8d2c7;
+  border-radius: 12px;
+}
+
+.aurum-company-llm-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8a8272;
+}
+
+/* ---- claims + provenance chips ------------------------------------------ */
+
+.aurum-company-claims {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aurum-company-claim {
+  padding: 12px 14px;
+  background: #fbf9f4;
+  border: 1px solid #e6e0d3;
+  border-radius: 12px;
+}
+
+.aurum-company-claim-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.aurum-company-claim-kind {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8a8272;
+}
+
+.aurum-company-claim-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.aurum-company-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.aurum-company-provenance li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  font-size: 11.5px;
+  color: #4a443d;
+  background: transparent;
+  border: 1px solid #ddd6c8;
+  border-radius: 999px;
+}
+
+.aurum-company-provenance .aurum-company-freshness {
+  font-weight: 650;
+}
+
+.aurum-company-freshness[data-freshness='current'] {
+  color: #3f6b3f;
+}
+
+.aurum-company-freshness[data-freshness='aging'] {
+  color: #8a6d1c;
+}
+
+.aurum-company-freshness[data-freshness='stale'] {
+  color: #8a3f2c;
+}
+
+.aurum-company-freshness[data-freshness='unknown'] {
+  color: #8a8272;
+}
+
+/* ---- contradictions + unknowns ------------------------------------------ */
+
+.aurum-company-contradictions,
+.aurum-company-unknowns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aurum-company-contradiction {
+  padding: 12px 14px;
+  background: #fdf6ee;
+  border: 1px solid #e8c9a8;
+  border-left: 3px solid var(--aurum, #d9952a);
+  border-radius: 10px;
+}
+
+.aurum-company-contradiction-note {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: #6b5a35;
+}
+
+.aurum-company-contradiction-side {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  background: #fbf9f4;
+  border: 1px solid #e6e0d3;
+  border-radius: 8px;
+}
+
+.aurum-company-contradiction-side strong {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8a8272;
+}
+
+.aurum-company-unknown {
+  padding: 12px 14px;
+  background: #fbf9f4;
+  border: 1px solid #e6e0d3;
+  border-left: 3px solid #b0a68e;
+  border-radius: 10px;
+}
+
+.aurum-company-unknown-question {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.aurum-company-unknown-consequence {
+  margin: 0;
+  font-size: 12.5px;
+  color: #6b6353;
+}
+
+/* ---- the coverage context panel ----------------------------------------- */
+
+.aurum-company-coverage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aurum-company-honesty {
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #332c22;
+  background: var(--aurum-soft, #ffeccd);
+  border: 1px solid #ecd9ae;
+  border-radius: 12px;
+}
+
+.aurum-company-honesty em {
+  font-style: normal;
+  font-weight: 650;
+}
+
+.aurum-company-gap {
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  background: #fdf3ee;
+  border: 1px solid #ecc5b8;
+  border-radius: 10px;
+}
+
+.aurum-company-gap-kind {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8a3f2c;
+}
+
+.aurum-company-caveats {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #6b6353;
+}
+
+.aurum-company-surfaces-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.aurum-company-surface-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: #fbf9f4;
+  border: 1px solid #e6e0d3;
+  border-radius: 10px;
+}
+
+.aurum-company-surface-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.aurum-company-surface-name {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.aurum-company-surface-meta {
+  font-size: 12px;
+  color: #6b6353;
+}
+
+.aurum-company-surface-explanation {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #8a8272;
+}

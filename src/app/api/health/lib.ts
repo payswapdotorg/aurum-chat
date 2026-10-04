@@ -36,7 +36,7 @@ import { getWorkerMetrics } from '@/infra/worker';
  * health suite, which re-migrates a fresh embedded database and asserts
  * the census — extend it whenever a migration adds a table.
  */
-export const EXPECTED_TABLE_CENSUS = 264; // W125: coverage registry (+5 tables)
+export const EXPECTED_TABLE_CENSUS = 265; // W125: coverage registry (+5), W126: company_query_log
 
 /**
  * The full expected public-BASE-TABLE name set (W118 diagnostic): every
@@ -71,8 +71,9 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'cellular_reach_requests', 'cellular_replies', 'channel_connections', 'channel_threads',
   'claims', 'cognitive_execution_steps', 'cognitive_executions', 'company_learning_versions',
   'company_learnings', 'company_model_assertions', 'company_model_updates',
+  'company_query_log',
   'coverage_claims', 'coverage_gaps', 'coverage_snapshots', 'coverage_sources',
-  'coverage_surfaces', // W125 — the company coverage registry (derived view)
+  'coverage_surfaces', // W125 coverage registry (derived view); W126 company_query_log
   'contradictions',
   'contribution_impacts', 'contribution_validations', 'contributions',
   'conversation_execution_links', 'conversation_messages', 'conversations',

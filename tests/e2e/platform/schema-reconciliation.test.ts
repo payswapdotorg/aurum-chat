@@ -500,7 +500,9 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // 001-coverage.sql (the five tenant-scoped coverage registry tables:
     // surfaces/sources/claims/snapshots/gaps, append-only triggers on
     // claims/snapshots/gaps).
-    expect(repair.applied).toHaveLength(137);
+    // INTEGRATION (W126, deliberate): 137 → 138 — the company-query module
+    // gained 001-company-query-audit.sql (the append-only query audit).
+    expect(repair.applied).toHaveLength(138);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -520,7 +522,9 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // platform-admins migration (deliberate count-pin extension).
     // INTEGRATION (W125): 139 → 140 — the coverage module's 001 registry
     // migration joins the discovered set (deliberate count-pin extension).
-    expect(names).toHaveLength(140);
+    // INTEGRATION (W126): 140 → 141 — the company-query module's 001
+    // query-audit migration (deliberate count-pin extension).
+    expect(names).toHaveLength(141);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -630,7 +634,9 @@ describe('W102 — the reconciliation is idempotent', () => {
     // platform-admins migration (deliberate count-pin extension).
     // INTEGRATION (W125): 140 — plus the coverage module's 001 registry
     // migration (deliberate count-pin extension).
-    expect(report.skipped).toHaveLength(140);
+    // INTEGRATION (W126): 141 — plus the company-query module's 001
+    // query-audit migration (deliberate count-pin extension).
+    expect(report.skipped).toHaveLength(141);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });
