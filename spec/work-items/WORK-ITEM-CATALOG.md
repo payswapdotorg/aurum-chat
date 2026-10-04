@@ -535,3 +535,36 @@ Dependencies: W107, W108, W109, W110, W111. Certify the exact deployed revision'
 matrix. Acceptance: every capability is classified as LIVE-PROVEN, FIXTURE-PROVEN, or
 ENVIRONMENT-BLOCKED with machine-checkable evidence; no fixture is presented as live; required
 release certification uses the exact deployment ID/SHA and its governing two-run rule.
+
+## Post-W123 company coverage and closed-loop intelligence
+
+The following additive work items formalize the “company is queriable / open loop → closed loop” product frontier. They do not modify frozen Architecture v2.1.
+
+### W124 — Repository Truth Reconciliation
+
+Dependencies: none. Reconcile the current-state/continuation records with the actual main head and current production deployment, and supersede stale orchestration instructions without rewriting historical evidence. Acceptance: current main SHA and production identity are recorded; W113–W123 history is represented coherently; new coverage architecture/DAG are canonical; dispatchable frontier is unambiguous.
+
+### W125 — Company Coverage Registry and Measurement Model
+
+Dependencies: W081, W082, W085, W095, W096. Introduce provider-neutral, tenant-scoped CoverageSurface, CoverageSource, CoverageClaim, CoverageGap and CoverageSnapshot semantics. Measure breadth, depth, freshness, identity continuity, provenance completeness, temporal completeness, outcome completeness, permission completeness and goal sufficiency. Acceptance: coverage is derived from real connection/evidence state; no second organization truth store; no credentials in coverage state; architecture and tenant-isolation gates pass.
+
+### W126 — Company Query Plane
+
+Dependencies: W125, W007, W010, W013, W036, W037. Create a provider-neutral company query/read surface over existing world-model, evidence, observation, memory, source and capability contracts. Acceptance: tenant/principal scope; material claims retain provenance and freshness; contradictions and consequential unknowns remain visible; responses include structured coverage context; LLM generation never becomes authoritative; API/MCP expose capability-shaped query operations.
+
+### W127 — Coverage-to-Goal Attention Loop
+
+Dependencies: W125, W126, W051, W052, W061. Connect material coverage gaps to existing Unknown/LearningMission machinery. Acceptance: only material gaps become attention candidates; prioritization uses goal/decision impact and information value; stale/missing evidence can create knowledge-gap findings; policy and authority remain unchanged; evidence explains why the gap matters.
+
+### W128 — Closed-Loop Deviation Monitor
+
+Dependencies: W126, W127, W040, W054. Connect observed reality and knowledge completeness to desired-state comparison and authorized adjustment. Acceptance: reality deviation and knowledge deviation are distinguished; material deviations can initiate investigate/recommend/authorized-act paths; verification/reconciliation and outcome measurement remain mandatory; learning feeds the existing recorded-learning path; longitudinal proof demonstrates reduced uncertainty or improved outcome quality.
+
+### W129 — Business Interaction Coverage Adapters
+
+Dependencies: W125, W126. Normalize coverage semantics across customer interactions, support tickets, projects/tasks, meetings and operational workflows using existing source/channel/meeting adapters. Acceptance: at least three existing provider families contribute to a common semantic category; provider objects stay inside adapters; cross-source identity remains governed; missing sources produce honest PARTIAL/UNKNOWN state; a single connected provider never implies universal capture.
+
+### W130 — Coverage Benchmark and Certification
+
+Dependencies: W124–W129. Create machine-checkable coverage/query/closed-loop certification. Acceptance: tenant isolation; query correctness; provenance/freshness; contradiction handling; coverage-gap → unknown/mission; provider failure/staleness; closed-loop deviation/outcome; at least one live connected-source certification where credentials permit; exact deployment/SHA binding; reproducible longitudinal metrics.
+
