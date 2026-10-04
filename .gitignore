@@ -3,7 +3,7 @@ node_modules
 .data
 .env
 .env*.local
-coverage
+/coverage
 *.tsbuildinfo
 
 # W076 browser-suite runtime state (the harness pid file)
