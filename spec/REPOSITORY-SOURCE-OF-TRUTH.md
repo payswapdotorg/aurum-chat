@@ -18,6 +18,10 @@ history.
 - Current continuation DAG: `spec/POST-W106-CONTINUATION-DAG-2026-09-27.md`
 - TL execution prompt: `spec/TECH-LEAD-ORCHESTRATOR-PROMPT-2026-09-27.md`
 - Final takeover handoff: `spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md`
+- Current takeover snapshot: `spec/CURRENT-STATE-2026-10-04.md`
+- Company coverage architecture: `spec/COMPANY-COVERAGE-ARCHITECTURE.md`
+- Company coverage continuation DAG: `spec/POST-W123-COVERAGE-DAG-2026-10-04.md`
+- Company coverage architecture change record: `spec/ARCHITECTURE-CHANGE-REQUEST-0002-COMPANY-COVERAGE.md`
 - Production evidence: `docs/productization-evidence/<program>/`
 - CI definition: `.github/workflows/ci.yml`
 
@@ -36,6 +40,9 @@ history.
 9. Worker context must be reconstructible from repository files.
 10. Every accepted implementation change must update the relevant work-item/evidence record so
     the repository stays internally consistent.
+11. The latest dated current-state snapshot supersedes older takeover instructions for orchestration,
+    while older snapshots remain historical evidence.
+12. Company coverage is a derived observability view, not a second organizational source of truth.
 
 ## State-file law
 
@@ -90,3 +97,22 @@ Use only these statuses unless the governing document defines a stricter vocabul
 - **OPTIONAL** — deliberately non-blocking work.
 
 Never turn BLOCKED into PASS by weakening the assertion.
+
+## Coverage truth law
+
+Coverage claims must distinguish configured connectivity from actual observable evidence. A connected
+provider is not proof of complete coverage. Coverage must expose freshness, authorization, provenance and
+material blind spots, and those blind spots may enter the existing Unknown/LearningMission loop when
+information value warrants investigation.
+
+## Unified roadmap contract
+
+The approved continuation is unified under the master roadmap and additive architecture/reference records:
+spec/MASTER-ROADMAP-2026-10-04.md
+spec/AGENT-BODY-LAB-CROSS-PLATFORM-ARCHITECTURE.md
+spec/EXECUTION-PLATFORM-REFERENCE-REVIEW-2026-10-04.md
+spec/ARCHITECTURE-CHANGE-REQUEST-0003-AGENT-BODY-LAB-CROSS-PLATFORM.md
+
+W124-W130 are the company coverage/query/closed-loop foundation. W131-W141 extend the same program into the agent body, provider/model fabric, context-conditioned Lab, governed agent exchange, execution environment and cross-platform product.
+
+A later dated roadmap/state snapshot supersedes older orchestration instructions while historical evidence remains immutable.
