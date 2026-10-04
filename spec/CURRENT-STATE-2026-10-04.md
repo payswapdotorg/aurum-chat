@@ -1,12 +1,60 @@
-# Aurum Current State — 2026-10-04
+# Aurum Current State — 2026-10-04 (W124 reconciliation, second revision)
 
 ## Snapshot identity
 
 - Repository: payswapdotorg/aurum-chat
 - Canonical branch: main
-- Main SHA at snapshot: 8836c080a4381771615fdbfafc46dde997b2569c
-- This snapshot supersedes the dated 2026-09-27 takeover snapshot for future orchestration.
+- Main SHA at the first 2026-10-04 snapshot: 8836c080a4381771615fdbfafc46dde997b2569c
+- W124 reconciliation revision: main now includes PR #134 (coverage/closed-loop
+  frontier docs) merged as c162365 plus this reconciliation commit.
+- This snapshot supersedes the dated 2026-09-27 takeover snapshot and the
+  first 2026-10-04 snapshot for future orchestration.
 - Historical certification/evidence remains immutable historical evidence.
+
+## W124 — Repository truth reconciliation (TL ruling, 2026-10-04 ~03:20Z)
+
+1. PR #134 (arch/company-coverage-2026-10-04) is MERGED into main. The
+   company-coverage architecture, POST-W123 coverage DAG and the unified
+   MASTER-ROADMAP-2026-10-04.md are now canonical on main.
+2. Stale "next wave" instructions in earlier dated handoffs are SUPERSEDED by
+   the master roadmap. Nothing in this reconciliation rewrites historical
+   evidence.
+3. The dispatchable frontier is now UNAMBIGUOUS (see "Dispatch frontier"
+   below).
+4. TL-frozen shared contract: src/modules/coverage/{types,contract}.ts holds
+   the provider-neutral coverage type vocabulary derived 1:1 from
+   COMPANY-COVERAGE-ARCHITECTURE.md §3–§5, so W125 and W126 can proceed in
+   parallel against one frozen interface. W125 owns the coverage module and
+   may only extend these types additively.
+5. Operator deadline directive (2026-10-04): the unified frontier W124→W141
+   must complete by midnight Africa/Accra. Wave allocation below follows the
+   operator's endorsed sequence from the master roadmap's worker-wave plan.
+
+## Dispatch frontier (operator-endorsed wave plan)
+
+- Wave 1 (3 workers): W125 Company Coverage Registry · W126 Company Query
+  Plane · W131 Execution Platform / Cross-Platform Architecture Study.
+- Wave 2: W132 Provider Fabric · W133 Agent Body + Model Binding ·
+  W134 Goal/Context-conditioned Information Strategy (interface-first
+  parallelization; binding/strategy interfaces are frozen in the worker
+  packets by the TL and reconciled at integration).
+- Wave 3: W135 Contextual Organizational Lab · W136 Agent Exchange +
+  Execution Plan + Cross-Agent Relay · W137 Execution Environment Fabric.
+- Wave 4: W138 Emergent Roles · W139 Cross-Platform Product · W140 Unified
+  Closed-Loop Learning.
+- Wave 5 (TL-owned): W141 End-to-End + Cross-Platform Certification; workers
+  provide fixes/evidence only.
+
+Coverage-loop folding ruling (deadline-driven, recorded honestly):
+- W127 (coverage-to-goal attention) and W128 (closed-loop deviation) are
+  formally prerequisites of W134/W140 in the catalog. Under the deadline,
+  their substance is folded forward: W134's packet carries the
+  goal/context-conditioning semantics and W140's packet carries the unified
+  closed-loop (reality vs knowledge deviation) semantics. If wave capacity
+  allows, W127/W128/W129 are dispatched as gap-filler items; W130's
+  certification substance folds into W141. The catalog dependency edges are
+  respected in substance, not in item bookkeeping, and this deviation is
+  recorded here rather than hidden.
 
 ## Production identity observed at takeover
 
