@@ -282,3 +282,32 @@ Wave 3:
 Independent dependency-ready items must be dispatched concurrently up to three workers.
 A new wave may begin only after the TL reconciles the prior wave at an exact base SHA and
 updates the repository state/evidence. W099 never blocks the closure program.
+
+## Unified 2026-10-04 Agent Body / Lab / Execution / Cross-Platform DAG
+
+W124 → W125, W126, W131
+
+W125 + W126 + existing W034/W048/W091 → W132 Provider Fabric
+W021 + W034 + W063 + W132 → W133 Aurum Agent Body
+W012 + W041 + W052 + W053 + W125-W128 + W133 → W134 Information Strategy
+W022-W024 + W034 + W040 + W041 + W052-W055 + W133 + W134 → W135 Contextual Organizational Lab
+W021-W028 + W035 + W063 + W125-W135 → W136 Agent Exchange / Execution Plan / Relay
+W093 + W110 + W131 + W136 → W137 Execution Environment
+W028 + W035 + W040 + W054 + W135 + W136 → W138 Emergent Roles / Marketplace Publication
+W057 + W060 + W076 + W131-W137 → W139 Cross-Platform Product
+W128-W139 → W140 Unified Closed-Loop Learning
+W130 + W135-W140 → W141 End-to-End / Cross-Platform Certification
+
+### Contextual Lab rule
+
+Organization selection is a function of goal + task + context, not task subject alone. Context may include season/time window, duration, staffing, staff experience, workload, capabilities, environment, budget, quality, risk, verification and evidence freshness. A change in these inputs may change the best organization and must never be treated as an architecture inconsistency.
+
+### Three-worker waves
+
+Wave A: TL W124; Worker A W125; Worker B W126; Worker C W131.
+Wave B: Worker A W132; Worker B W133; Worker C W134.
+Wave C: Worker A W135; Worker B W136; Worker C W137.
+Wave D: Worker A W138; Worker B W139; Worker C W140.
+Wave E: TL integration/certification W141.
+
+No two workers may modify the same public contract concurrently. Root manifests, lockfiles and governance-state files remain TL-controlled.
