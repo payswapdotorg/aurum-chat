@@ -311,10 +311,16 @@ describe('capability coverage', () => {
     // W104 (deliberate update): 'meetings' and 'cellular' left this list —
     // they now own user-facing routes (/meetings, /cellular + drill-downs)
     // and are verified as discoverable capabilities above, not instruments.
+    // W124 (deliberate update): 'coverage', 'provider-fabric' and 'context'
+    // join this list — TL-frozen contract-vocabulary modules (types-only at
+    // the freeze stage; their product surfaces arrive with W125/W126, W132
+    // and W134, at which point they leave this list like meetings/cellular).
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'agent-supervision',
       'capability-grants',
       'computer-use',
+      'context',
+      'coverage',
       'deep-actions',
       'demo',
       'deployment-smoke',
@@ -322,6 +328,7 @@ describe('capability coverage', () => {
       'journey-proof',
       'migration',
       'provider-billing',
+      'provider-fabric',
       'quality',
       'realtime',
       'release-certification',

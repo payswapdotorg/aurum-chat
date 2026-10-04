@@ -646,6 +646,33 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not a product capability: the migration and dual-run continuity layer (W094 — import history, preserve identifiers, synchronize during migration, compare legacy/Aurum results, support rollback and progressive retirement) composed over the integration-intelligence/connection-broker/deep-actions/vertical-kits contracts: the staged import rounds (snapshot → transform → staged → review → commit, every imported record an evidence-shaped row with full provenance and storage-level payload immutability), the external↔Aurum identifier map per source system with explicit cross-system-collision and ambiguous-match conflict records that are never auto-merged, the dual-run delta rounds and structured comparison reports that surface divergences using the W084 reconciliation semantics (never a second action pipeline — the module holds no write path to the incumbent), commit-time verification reads that compose the W084 DeepActionTransport port (edge-backed for private/on-prem incumbents through the edge-connector), sequestration rollback that quarantines without deleting, and the evidence-linked retirement checkpoints (dual-running → compare-clean → incumbent-read-only → incumbent-retired); it owns no user-facing route yet — the migration surface arrives with the customer-journey work — and is exercised by its own vitest suite plus the tenant-isolation sweep',
   },
+  {
+    module: 'coverage',
+    label: 'Company coverage registry and measurement (W124/W125)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not yet a product capability: the provider-neutral, tenant-scoped coverage vocabulary and (with W125) the derived measurement registry — CoverageSurface/CoverageSource/CoverageClaim/CoverageGap/CoverageSnapshot semantics per the approved company-coverage architecture — that lets Aurum state what portion of the company it can see, how reliable that visibility is, what is missing and whether the missing visibility matters to current goals; the types are TL-frozen (W124) so W125 (registry/measurement) and W126 (company query plane) build against one contract surface; coverage is a DERIVED view over existing state, never a second organizational truth store, and never carries credentials; the product surface arrives with W126 (/company); exercised by the coverage module vitest suite plus the tenant-isolation sweep',
+  },
+  {
+    module: 'provider-fabric',
+    label: 'Provider fabric and user-selectable models (W124b/W132)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not yet a product capability: the canonical ProviderDefinition/ModelCatalogEntry/ModelDiscoveryState/ModelBinding/ProviderHealthState vocabulary (W124b TL-frozen, W132 implements) that lets users add providers — including custom providers over an existing supported wire protocol — discover or manually register models, and select/swap models without replacing the Aurum Agent Body; the fabric feeds the W034 LLM Gateway (which remains the only owner of provider/model execution and routing) and never carries credentials; the product surface extends /ai with W132; exercised by the provider-fabric module vitest suite plus the tenant-isolation sweep',
+  },
+  {
+    module: 'context',
+    label: 'Context fingerprints for conditioned strategy and organization (W124b/W134)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not yet a product capability: the ContextFingerprint vocabulary (W124b TL-frozen, W134 implements derivation) — season/time window, duration, staffing, staff experience, workload, capability availability, environment, budget/SLA/quality/risk/verification constraints and evidence-freshness expectations — that conditions information strategy (W134) and organizational selection (W135) on the CURRENT context rather than hardcoded industry rules; the product surface arrives with the W134 intelligence/learning view; exercised by the context module vitest suite plus the tenant-isolation sweep',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(

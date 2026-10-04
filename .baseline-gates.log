@@ -1,0 +1,1096 @@
+$ vitest run
+
+ RUN  v5.0.0 /home/z/aurum-chat
+
+ ✓ tests/longitudinal/s003-conversion.benchmark.test.ts (31 tests) 63549ms
+   ✓ W100 attribution — EXPERIENCED vs CONTROL vs COLD-START (4)
+     ✓ every mature tenant holds the full recorded adoption (kits/connections/migration/channels/supervision) 1293ms
+   ✓ W100 failure conditions — policy compliance (4)
+     ✓ every W009 action request carries its canonical level, one decision, separation of duties 576ms
+   ✓ W100 failure conditions — tenant isolation (4)
+     ✓ one firm's hidden markers never appear in ANY benchmark tenant's records 499ms
+   ✓ W100 failure conditions — no hidden-ground-truth leakage (2)
+     ✓ the hidden markers never appear on any cognition surface of the deep experienced tenants 500ms
+ ❯ src/modules/connection-broker/tests/connection-broker-service.test.ts (30 tests | 30 skipped) 10026ms
+   ↓ connection-broker service — lifecycle (8)
+     ↓ refuses every operation explicitly when no broker is wired
+     ↓ initiate → pending connection with the authorization hand-off, audited
+     ↓ complete → connected with the opaque grant; refresh rotates it; the state machine refuses wrong transitions
+     ↓ an expired authorization hand-off marks the connection failed and demands re-initiation
+     ↓ revoke destroys the grant broker-side FIRST, parks the connection and audits it
+     ↓ re-initiating a revoked or failed key re-issues the hand-off on the same row identity
+     ↓ a second connection for the same provider account is an explicit conflict
+     ↓ lists connections with filters and validates inputs loudly
+   ↓ connection-broker service — gateway bindings (3)
+     ↓ validates bindings through the owning contracts BEFORE any broker interaction
+     ↓ completion drives the sources re-authorization path; refresh moves it; revoke disables the connector
+     ↓ re-enabling a disabled bound connector stays the gateways' own lifecycle decision
+   ↓ connection-broker service — sync checkpoints (2)
+     ↓ claims records, advances the checkpoint after the claim, dedupes re-pulls and replays
+     ↓ rejects syncs on non-connected connections and validates inputs
+   ↓ connection-broker service — webhook checkpoints (3)
+     ↓ parses envelopes, claims on the ledger, dedupes redeliveries and moves the watermark forward-only
+     ↓ refuses malformed envelopes, unknown connections and non-connected grants; honors the broker pin
+     ↓ webhook replay rewinds the watermark to a recorded entry (gap re-processing under dedupe)
+   ↓ connection-broker service — provider outages are localized (5)
+     ↓ a broker failure becomes a canonical broker_failure + health evidence for ONE pair; other providers keep syncing
+     ↓ the cooldown gate fast-fails sync WITHOUT touching the broker, the checkpoint or the ledger
+     ↓ refresh is the ungated healing path: a successful refresh records the recovery and unblocks sync
+     ↓ an expired cooldown resolves back to available; operator-recovery outages are indefinite until overridden
+     ↓ lists current health per (provider, broker) pair
+   ↓ connection-broker service — credential values never enter domain state (1)
+     ↓ token fragments inside broker responses never reach rows, results or bound connectors
+   ↓ connection-broker service — tenant isolation (1)
+     ↓ another tenant's connections, checkpoints, health and evidence are indistinguishable from missing
+   ↓ connection-broker service — storage discipline (1)
+     ↓ the audit, ledger, health and verification tables are append-only; checkpoints move only their cursor
+   ↓ connection-broker service — the sources composition bridge (2)
+     ↓ broker-backed pulls become observations through W036's own polling contract
+     ↓ the bridge refuses sources without a live broker connection and localizes broker failures
+   ↓ connection-broker service — broker replacement does not change domain contracts (4)
+     ↓ connections route through their RECORDED broker; unwiring it is explicit; new connections follow the active one
+     ↓ the same canonical request through two brokers: equivalent outcome + canonical evidence + persisted verification
+     ↓ divergent results and failed targets are honest outcomes
+     ↓ validates its targets loudly
+ ✓ tests/tenant-isolation/evidence-sweep.test.ts (24 tests) 7970ms
+   ✓ W044 repository boundary — row partition integrity (1)
+     ✓ stores every row of every tenant-scoped table under a sweep tenant only 370ms
+ ✓ src/modules/deep-actions/tests/deep-actions-service.test.ts (16 tests) 7629ms
+   ✓ W084 acceptance path: multi-system task executes, verifies and reconciles (2)
+     ✓ walks discover→inspect→propose→authorize→execute→verify→reconcile across two systems 310ms
+ ✓ src/modules/extensions/tests/extensions-runtime.test.ts (24 tests) 6167ms
+ ✓ src/modules/marketplace/tests/marketplace-service.test.ts (29 tests) 6264ms
+ ✓ src/modules/migration/tests/migration-service.test.ts (11 tests) 6407ms
+ ✓ src/modules/realtime/tests/realtime-service.test.ts (31 tests) 6353ms
+ ✓ tests/e2e/intelligence/company-intelligence-loop.test.ts (30 tests) 6175ms
+ ✓ src/modules/epistemics/tests/epistemics-service.test.ts (27 tests) 5914ms
+ ✓ src/modules/meetings/tests/meetings-service.test.ts (20 tests) 6009ms
+ ✓ src/modules/provider-billing/tests/provider-billing-service.test.ts (22 tests) 6068ms
+ ✓ src/modules/notifications/tests/notifications-service.test.ts (31 tests) 6991ms
+   ✓ digest (3)
+     ✓ digest cycles are keyed per (kind, recipient) and capped per batch 681ms
+ ✓ src/modules/destinations/tests/destinations-service.test.ts (33 tests) 6091ms
+ ✓ src/modules/workforce/tests/workforce-service.test.ts (32 tests) 5920ms
+ ✓ tests/tenant-isolation/capability-sweep.test.ts (29 tests) 6396ms
+   ✓ W044 repository boundary — row partition integrity (1)
+     ✓ stores every row of every tenant-scoped table under a sweep tenant only 360ms
+ ✓ tests/tenant-isolation/cognition-sweep.test.ts (31 tests) 6396ms
+   ✓ W044 repository boundary — row partition integrity (1)
+     ✓ stores every row of every tenant-scoped table under a sweep tenant only 309ms
+ ✓ src/modules/cellular/tests/cellular-service.test.ts (31 tests) 6177ms
+ ✓ src/modules/edge-connector/tests/edge-connector-service.test.ts (19 tests) 6954ms
+ ✓ src/modules/extensions/tests/extensions-unit.test.ts (48 tests) 31ms
+ ✓ src/modules/api/tests/api-service.test.ts (43 tests) 6570ms
+ ✓ tests/tenant-isolation/foundation-sweep.test.ts (29 tests) 7100ms
+   ✓ W044 simulator — synthetic companies and hidden ground truth are tenant-scoped (3)
+     ✓ rejects cross-tenant month advances and keeps month reports per tenant 508ms
+   ✓ W044 repository boundary — row partition integrity (1)
+     ✓ stores every row of every tenant-scoped table under a sweep tenant only 302ms
+ ✓ src/modules/quality/tests/quality-service.test.ts (16 tests) 5617ms
+ ✓ src/modules/auth/tests/auth-service.test.ts (52 tests) 17299ms
+   ✓ onboarding — company creation (3)
+     ✓ propagates the provisioning contract errors (slug taken, invalid names) 300ms
+     ✓ signing back in auto-selects the most recently used company 317ms
+   ✓ company and workspace selection (5)
+     ✓ selects a second membership, and a company change drops the workspace 325ms
+     ✓ silently de-selects when the membership is removed afterwards 639ms
+     ✓ workspace selection verifies inside the active company only 443ms
+   ✓ invitations (10)
+     ✓ full lifecycle: create → preview → redeem → membership + selection 364ms
+   ✓ the access waitlist (W116) (12)
+     ✓ requestAccountAccess for an active account keeps the honest email_taken 316ms
+     ✓ admin accept creates the principal; sign-in works and onboarding is reachable 401ms
+     ✓ decline records the note and shows it on the next sign-in attempt 390ms
+     ✓ a re-request after a decline is a fresh pending row (the trail is append-only) 370ms
+     ✓ accept settles without a duplicate when an invite let the person in first 555ms
+     ✓ the roster ordering: pending first (oldest request first), then the decided history 691ms
+     ✓ non-admins and anonymous tokens cannot reach the admin operations 393ms
+ ✓ tests/e2e/platform/platform-surface.e2e.test.ts (9 tests) 7168ms
+ ✓ src/modules/environment/tests/environment-service.test.ts (26 tests) 5764ms
+ ✓ src/modules/cognition/tests/cognition-service.test.ts (26 tests) 6413ms
+ ✓ tests/tenant-isolation/experience-sweep.test.ts (23 tests) 6238ms
+ ✓ src/modules/contributions/tests/contributions-service.test.ts (26 tests) 6331ms
+ ✓ src/modules/knowledge-acquisition/tests/source-ranking-service.test.ts (18 tests) 5820ms
+ ✓ src/modules/extensions/tests/extensions-service.test.ts (32 tests) 5503ms
+ ✓ src/app/(product)/tests/marketplace-integration.test.ts (36 tests) 6066ms
+ ✓ src/modules/audit/tests/audit-service.test.ts (16 tests) 6025ms
+ ✓ src/modules/integration-intelligence/tests/integration-intelligence-service.test.ts (14 tests) 5673ms
+ ✓ src/app/(product)/interventions/tests/interventions-integration.test.ts (19 tests) 6189ms
+ ✓ src/modules/rewards/tests/rewards-service.test.ts (26 tests) 6388ms
+ ✓ src/modules/llm/tests/llm-service.test.ts (26 tests) 5798ms
+ ✓ src/modules/extensions/tests/extensions-builder.test.ts (22 tests) 6416ms
+ ✓ tests/provider-hotswap/provider-hotswap.test.ts (13 tests) 7620ms
+   ✓ W048 — persisted authoritative state is untouched by provider swaps (2)
+     ✓ an LLM provider swap appends evidence rows and changes nothing else 656ms
+     ✓ an agent runtime swap appends evidence rows and changes nothing else 595ms
+ ✓ src/modules/unified-identity/tests/unified-identity-service.test.ts (40 tests) 5635ms
+ ✓ src/modules/freshness/tests/freshness-service.test.ts (34 tests) 5769ms
+ ✓ src/modules/knowledge-acquisition/tests/knowledge-acquisition-service.test.ts (28 tests) 7091ms
+ ✓ src/modules/capability-grants/tests/capability-grants-service.test.ts (11 tests) 6239ms
+ ✓ src/modules/vertical-kits/tests/vertical-kits-service.test.ts (12 tests) 5619ms
+ ✓ src/modules/workflow/tests/workflow-resumption.test.ts (22 tests) 6042ms
+ ✓ src/modules/computer-use/tests/computer-use-service.test.ts (17 tests) 7576ms
+ ✓ src/modules/channels/tests/channels-unit.test.ts (61 tests) 109ms
+ ❯ src/modules/opportunities/tests/opportunities-service.test.ts (47 tests | 47 skipped) 10027ms
+   ↓ convertSignals — the golden conversion (10)
+     ↓ converts the candidate and records the run counts
+     ↓ records the decided candidate with the created link and no reason
+     ↓ creates the opportunity at version 1, status open, change kind created
+     ↓ derives the confidence from the cited evidence (weakest + corroboration)
+     ↓ snapshots each cited reference and its confidence on the version
+     ↓ carries the goal reference with the title snapshotted as the label
+     ↓ carries the opaque capability and world references verbatim
+     ↓ carries the estimated value and the recommended next action
+     ↓ records the deterministic evidence fingerprint on the version
+     ↓ serves the audit deep-links (run, candidate, version)
+   ↓ convertSignals — the policy gate (3)
+     ↓ decides every candidate deterministically and counts the dispositions
+     ↓ records the proposed judgment on non-converted candidates (the audit of what was considered)
+     ↓ creates exactly one opportunity (the eligible candidate)
+   ↓ convertSignals — duplicate detection (5)
+     ↓ converts the first analysis
+     ↓ records a later conversion of the exact signal set as a duplicate pointing at the live record
+     ↓ detects duplicates WITHIN one run (the second twin points at the first)
+     ↓ re-converts the same signals after the live record was dismissed
+     ↓ still sees exactly the distinct live records it created
+   ↓ reviseOpportunity — versioned understanding (7)
+     ↓ revises the content and re-derives the confidence from the new evidence set
+     ↓ keeps the full append-only history listable and deep-linkable
+     ↓ refuses a stale expectedVersion (optimistic concurrency)
+     ↓ refuses a revision that changes nothing
+     ↓ refuses a content revision on a dismissed opportunity
+     ↓ pursues surgically and makes the record terminal
+     ↓ rejects storage-level mutation of the audit trail outright (triggers)
+   ↓ convertSignals — cross-module reference validation (6)
+     ↓ refuses a missing observation reference
+     ↓ refuses a foreign-tenant observation reference (no leak)
+     ↓ refuses a principal-restricted observation of another principal
+     ↓ refuses a missing claim reference and a foreign-tenant claim
+     ↓ refuses a foreign-tenant goal reference
+     ↓ requires the loop linkage for 'cognitive-execution' triggers and validates it
+   ↓ tenant isolation (4)
+     ↓ reads another tenant's opportunity as missing (deep links included)
+     ↓ reads another tenant's run and candidates as missing
+     ↓ never mixes listings across tenants
+     ↓ reports a revision of a foreign opportunity as missing, not as a transition error
+   ↓ listOpportunities — the management surface (8)
+     ↓ lists current views newest first
+     ↓ filters by status
+     ↓ filters by signal origin
+     ↓ filters by minimum derived confidence
+     ↓ filters by affected goal (jsonb containment)
+     ↓ filters by required capability and world entity
+     ↓ searches titles case-insensitively without wildcard injection
+     ↓ applies the limit
+   ↓ listConversionRuns — the conversion audit feed (4)
+     ↓ lists runs newest first with counts and policy snapshots
+     ↓ filters by trigger kind
+     ↓ filters by originating execution
+     ↓ serves the decided candidate chain with the run deep-link
+ ✓ tests/e2e/platform/schema-reconciliation.test.ts (27 tests) 12391ms
+   ✓ W102 — the diverged production state, faithfully simulated (7)
+     ✓ is caught by the drift guard — the ledger-lies class fails loudly at build time 949ms
+   ✓ W102 — the repair deploy converges the diverged database (10)
+     ✓ the discovered migration set carries both repair generations 307ms
+   ✓ W102 — the reconciliation is idempotent (1)
+     ✓ a second runner pass applies nothing and the schema still verifies 337ms
+   ✓ W102 — the drift guard catches the production failure mode (1)
+     ✓ a converged database with a dropped table fails verification loudly 423ms
+ ✓ src/modules/processes/tests/processes-service.test.ts (31 tests) 8160ms
+ ✓ src/modules/agents/tests/agents-service.test.ts (24 tests) 7841ms
+ ✓ src/modules/channels/tests/channels-service.test.ts (25 tests) 5177ms
+ ✓ src/modules/briefings/tests/briefings-service.test.ts (22 tests) 5750ms
+ ✓ src/modules/learning/tests/company-model-service.test.ts (23 tests) 5667ms
+ ✓ src/modules/actions/tests/actions-service.test.ts (31 tests) 5286ms
+ ✓ src/modules/missions/tests/missions-service.test.ts (31 tests) 5351ms
+ ✓ src/modules/agent-evaluation/tests/agent-evaluation-service.test.ts (12 tests) 5567ms
+fatal: not a git repository (or any of the parent directories): .git
+stdout | src/modules/release-certification/tests/driver.test.ts > the certification driver — one full pass over a canned production target > produces a fully green run with the complete evidence tree on disk
+W078 FAILURES: []
+
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+ ✓ src/modules/release-certification/tests/driver.test.ts (7 tests) 132ms
+ ✓ src/modules/sources/tests/sources-service.test.ts (30 tests) 5590ms
+ ✓ src/modules/migration/tests/migration-readers.test.ts (11 tests) 5526ms
+ ✓ src/app/(product)/connections/tests/connections-integration.test.ts (28 tests) 6256ms
+ ✓ tests/tenant-isolation/platform-sweep.test.ts (14 tests) 5319ms
+ ✓ src/modules/capabilities/tests/capabilities-service.test.ts (29 tests) 5278ms
+ ✓ src/modules/conversations/tests/conversations-service.test.ts (27 tests) 5206ms
+ ✓ src/modules/outcomes/tests/outcomes-service.test.ts (25 tests) 6333ms
+ ✓ src/modules/workforce/tests/workforce-unit.test.ts (70 tests) 20ms
+ ✓ src/modules/automation/tests/automation-service.test.ts (21 tests) 5431ms
+ ✓ src/modules/agent-teams/tests/agent-teams-service.test.ts (26 tests) 5306ms
+ ✓ src/modules/learning/tests/learning-service.test.ts (22 tests) 4922ms
+ ✓ src/modules/attention/tests/attention-service.test.ts (19 tests) 5076ms
+ ✓ src/modules/suppliers/tests/suppliers-service.test.ts (20 tests) 5117ms
+ ✓ src/app/(tower)/tests/tower-integration.test.ts (20 tests) 5817ms
+ ✓ src/app/(product)/learning/tests/learning-chat-integration.test.ts (14 tests) 5571ms
+ ✓ src/modules/migration/tests/migration-readers-real.test.ts (2 tests) 5172ms
+   ✓ the full migration path over the real adapters (W111) (1)
+     ✓ staged import → edge verification → delta → native catch-up → W084 comparison → progressive retirement 386ms
+ ✓ src/modules/agent-supervision/tests/agent-supervision-service.test.ts (22 tests) 5049ms
+ ✓ src/modules/agent-recruitment/tests/agent-recruitment-service.test.ts (15 tests) 5169ms
+ ✓ src/modules/organizations/tests/organizations-service.test.ts (31 tests) 5363ms
+ ✓ src/modules/learning/tests/company-learning-service.test.ts (22 tests) 5554ms
+ ✓ src/app/(product)/chat/tests/chat-integration.test.ts (20 tests) 6959ms
+   ✓ W072 — continuity at the composition level (2)
+     ✓ every card of every composed answer carries evidence/context and a deep link 415ms
+ ✓ tests/longitudinal/benchmark.test.ts (17 tests) 15229ms
+ ✓ src/modules/llm/tests/llm-unit.test.ts (38 tests) 18ms
+ ✓ src/app/(product)/ai/tests/ai-integration.test.ts (19 tests) 5772ms
+ ✓ src/modules/learning/tests/company-model-unit.test.ts (34 tests) 22ms
+ ✓ src/modules/goals/tests/goals-service.test.ts (29 tests) 5462ms
+ ✓ src/modules/memory/tests/memory-service.test.ts (21 tests) 6079ms
+ ✓ src/modules/cellular/tests/cellular-unit.test.ts (40 tests) 16ms
+ ✓ src/app/(product)/interventions/tests/intervention-chat-integration.test.ts (15 tests) 6899ms
+ ✓ src/modules/agents/tests/agents-providers-service.test.ts (15 tests) 5577ms
+ ✓ src/modules/agent-teams/tests/agent-teams-unit.test.ts (58 tests) 18ms
+ ✓ src/app/(product)/chat/tests/chat-unit.test.ts (48 tests) 34ms
+ ✓ src/modules/provider-preferences/tests/provider-preferences-service.test.ts (25 tests) 5285ms
+ ✓ src/modules/agent-supervision/tests/agent-supervision-recovery.test.ts (8 tests) 6110ms
+ ✓ src/modules/meetings/tests/meetings-unit.test.ts (25 tests) 18ms
+ ✓ tests/capability-security/permission-boundaries.test.ts (19 tests) 5720ms
+ ✓ src/modules/rewards/tests/rewards-unit.test.ts (32 tests) 17ms
+ ✓ src/modules/epistemics/tests/epistemics-unit.test.ts (50 tests) 21ms
+ ✓ src/modules/workflow/tests/workflow-service.test.ts (19 tests) 5403ms
+ ❯ src/app/(product)/intelligence/tests/intelligence-integration.test.ts (13 tests | 4 failed) 5850ms
+   ❯ the intelligence workflow over a fully seeded chain (13)
+     × builds the proactive findings feed with severity, why and next on every item 25ms
+     ✓ tenant B has no findings of its own (isolation at the composition boundary) 4ms
+     × builds the intelligence home: findings, attention, goals with chain counts 19ms
+     × composes the goal chain: goal → gap → unknown → mission → evidence → belief, linked 16ms
+     ✓ the unknown view walks the chain from the middle: goal up, missions down, evidence and beliefs 20ms
+     × the mission view walks the chain: goals and unknowns up, acquisitions and beliefs down 19ms
+     ✓ a foreign goal id throws the contract’s uniform not-found (no existence leak) 3ms
+     ✓ tenant B’s chain view of its own (empty) state is honest empties 10ms
+     ✓ delivers the briefing into the persistent intelligence conversation, once per findings state 33ms
+     ✓ tenant B’s delivery is its own thread — no cross-tenant leak 15ms
+     ✓ the delivery API: anonymous is 401; the session cookie scopes the write 16ms
+     ✓ W072 — live open opportunities enter the proactive findings (2)
+       ✓ seeds an opportunity and finds it in the briefing feed with its chain links 52ms
+       ✓ the delivered opportunity card carries evidence/context through the timeline guard 11ms
+ ✓ src/modules/notifications/tests/notifications-unit.test.ts (37 tests) 14ms
+ ✓ src/app/(product)/interventions/tests/intervention-chat-unit.test.ts (46 tests) 30ms
+ ✓ src/modules/environment/tests/environment-unit.test.ts (42 tests) 14ms
+ ✓ src/modules/vertical-kits/tests/vertical-kits-edge-composition.test.ts (5 tests) 5603ms
+ ✓ src/modules/api/tests/api-meetings-cellular.test.ts (18 tests) 5576ms
+ ✓ src/app/(product)/developer/tests/developer-integration.test.ts (28 tests) 5735ms
+ ✓ src/modules/agents/tests/agents-unit.test.ts (36 tests) 22ms
+ ✓ src/app/(product)/explain/tests/explain-integration.test.ts (10 tests) 5714ms
+ ✓ src/modules/api/tests/api-channels.test.ts (25 tests) 6305ms
+ ✓ src/modules/agent-evaluation/tests/agent-evaluation-unit.test.ts (38 tests) 34ms
+ ✓ src/modules/provider-preferences/tests/provider-preferences-unit.test.ts (31 tests) 20ms
+ ✓ src/modules/marketplace/tests/marketplace-unit.test.ts (26 tests) 22ms
+ ✓ src/modules/sources/tests/sources-unit.test.ts (24 tests) 16ms
+ ✓ src/modules/connection-broker/tests/connection-broker-unit.test.ts (30 tests) 22ms
+ ✓ src/modules/destinations/tests/destinations-unit.test.ts (21 tests) 26ms
+ ❯ src/app/(product)/tests/marketplace-kits-integration.test.ts (21 tests | 21 skipped) 10092ms
+   ↓ the catalog kits section (2)
+     ↓ lists the two signed starter kits for an anonymous visitor
+     ↓ a scoped tenant with no registry yet still sees the shipped content
+   ↓ the kit lifecycle through the marketplace surface (14)
+     ↓ refuses an unauthenticated write (401)
+     ↓ refuses a claim-less member (403)
+     ↓ refuses an unknown kit key honestly (404 kit_not_shipped)
+     ↓ registers the SHIPPED starter version in the tenant registry
+     ↓ refuses to register the same version twice (version_not_monotonic)
+     ↓ refuses to install an unverified version (kit_not_verified)
+     ↓ records an append-only verification run (the shipped checks, over the stored bytes)
+     ↓ installs through the vertical-kits lifecycle and lands pending-review (the human gate)
+     ↓ refuses a second install while a lifecycle is live (kit_already_installed)
+     ↓ enforces separation of duties on the grant review (the requester never decides)
+     ↓ another authorized principal decides the review — approval mints exactly the declared capabilities
+     ↓ activates, serves a capability invocation, and the ledger counts it
+     ↓ suspends and resumes through the surface
+     ↓ removes terminally — grants revoked, audit retained, reinstallable
+   ↓ the kit detail view (3)
+     ↓ renders the signed manifest, the recorded runs and the registry for a scoped caller
+     ↓ is the honest not-found for an unknown kit key
+     ↓ an anonymous visitor sees the shipped content with no tenant sections
+   ↓ kit tenant isolation (2)
+     ↓ a second tenant sees none of the first tenant’s registry or installations
+     ↓ a second tenant cannot govern the first tenant’s installation (404, no existence leak)
+ ✓ src/app/(auth)/tests/auth-surface.test.ts (40 tests) 7959ms
+ ✓ src/modules/capabilities/tests/capabilities-unit.test.ts (27 tests) 17ms
+ ✓ src/modules/world/tests/world-service.test.ts (20 tests) 5534ms
+ ✓ src/modules/release-certification/tests/verdict.test.ts (50 tests) 20ms
+ ✓ src/modules/goals/tests/goals-unit.test.ts (33 tests) 25ms
+ ✓ src/modules/knowledge-acquisition/tests/knowledge-acquisition-unit.test.ts (29 tests) 13ms
+ ✓ src/modules/missions/tests/missions-unit.test.ts (28 tests) 17ms
+ ✓ src/modules/learning/tests/learning-unit.test.ts (33 tests) 17ms
+ ✓ src/modules/quality/tests/quality-unit.test.ts (31 tests) 20ms
+ ✓ src/modules/observations/tests/observations-service.test.ts (24 tests) 5517ms
+ ✓ tests/e2e/journeys/journeys.e2e.test.ts (42 tests) 8129ms
+   ✓ Journey B — manager chat (5)
+     ✓ opens the conversation area from the shell navigation 309ms
+ ✓ src/modules/contributions/tests/contributions-unit.test.ts (37 tests) 16ms
+ ✓ src/app/(product)/ai/tests/ai-unit.test.ts (33 tests) 28ms
+ ✓ src/app/(product)/learning/tests/learning-integration.test.ts (12 tests) 5863ms
+ ✓ src/modules/briefings/tests/briefings-unit.test.ts (36 tests) 25ms
+ ✓ src/modules/cellular/tests/cellular-transports.test.ts (20 tests) 120ms
+ ✓ tests/e2e/intelligence/chain-links.test.ts (13 tests) 5324ms
+ ✓ src/modules/events/tests/events-service.test.ts (29 tests) 5109ms
+ ✓ src/modules/processes/tests/processes-unit.test.ts (18 tests) 22ms
+ ✓ src/modules/extensions/tests/extensions-builder-unit.test.ts (31 tests) 16ms
+ ✓ src/modules/computer-use/tests/computer-use-unit.test.ts (21 tests) 16ms
+ ✓ src/modules/learning/tests/company-model-longitudinal.test.ts (5 tests) 5494ms
+ ✓ src/modules/freshness/tests/freshness-unit.test.ts (46 tests) 17ms
+ ✓ src/app/(product)/developer/tests/developer-unit.test.ts (39 tests) 31ms
+ ✓ src/modules/suppliers/tests/suppliers-unit.test.ts (30 tests) 16ms
+ ✓ src/modules/conversations/tests/conversations-unit.test.ts (33 tests) 21ms
+ ✓ src/modules/cellular/tests/cellular-authority.test.ts (11 tests) 5474ms
+ ✓ src/modules/agent-recruitment/tests/agent-recruitment-unit.test.ts (23 tests) 12ms
+ ✓ src/modules/outcomes/tests/outcomes-unit.test.ts (25 tests) 17ms
+ ✓ src/app/(product)/interventions/tests/interventions-unit.test.ts (42 tests) 33ms
+ ✓ src/modules/actions/tests/actions-unit.test.ts (34 tests) 20ms
+ ✓ src/modules/realtime/tests/realtime-unit.test.ts (26 tests) 16ms
+ ✓ src/app/(product)/chat/tests/chat-continuity.test.ts (23 tests) 95ms
+ ✓ tests/capability-security/tenant-boundaries.test.ts (10 tests) 5107ms
+ ✓ src/modules/automation/tests/automation-unit.test.ts (32 tests) 17ms
+ ✓ src/app/(product)/tests/marketplace-unit.test.ts (35 tests) 17ms
+ ✓ tests/capability-security/install-boundaries.test.ts (12 tests) 6310ms
+ ✓ src/modules/deployment-smoke/tests/expectations.test.ts (29 tests) 13ms
+ ✓ src/app/(product)/tests/marketplace-kits-unit.test.ts (27 tests) 26ms
+ ✓ src/app/(product)/connections/tests/connections-unit.test.ts (32 tests) 12ms
+ ✓ src/modules/computer-use/tests/computer-use-playwright-composition.test.ts (5 tests) 5568ms
+ ✓ tests/identity-channel/permission-consistency.test.ts (8 tests) 5109ms
+ ✓ src/modules/integration-intelligence/tests/integration-intelligence-unit.test.ts (31 tests) 32ms
+ ✓ src/app/api/webhooks/cellular/[provider]/tests/cellular-carrier-webhook.test.ts (14 tests) 4922ms
+ ✓ src/modules/migration/tests/migration-unit.test.ts (31 tests) 18ms
+ ✓ src/modules/workflow/tests/workflow-unit.test.ts (24 tests) 147ms
+ ✓ src/modules/observations/tests/observations-unit.test.ts (34 tests) 20ms
+ ✓ tests/e2e/journeys/integration-intelligence.e2e.test.ts (11 tests) 7812ms
+   ✓ W096 — the happy path: discover→…→outcome on the demo company tenant, with admin-UX browser evidence (4)
+     ✓ executes the whole chain against the real module services and every durable expectation holds 702ms
+   ✓ W096 — the tenant-isolation case: the full chain for two tenants, zero leakage (2)
+     ✓ runs the whole chain for both tenants and every isolation probe holds 353ms
+ ✓ src/modules/computer-use/tests/computer-use-playwright.test.ts (15 tests) 15ms
+ ✓ tests/capability-security/sandbox-boundaries.test.ts (12 tests) 5244ms
+ ✓ src/modules/agents/tests/agents-providers-unit.test.ts (22 tests) 13ms
+ ✓ src/modules/cellular/tests/cellular-live-composition.test.ts (7 tests) 5363ms
+ ✓ src/modules/attention/tests/goal-gap-discovery-unit.test.ts (19 tests) 10ms
+ ✓ src/mcp/tests/approvals.integration.test.ts (12 tests) 5687ms
+ ✓ src/app/(product)/ai/preferences/tests/preferences-integration.test.ts (10 tests) 5465ms
+ ✓ src/mcp/tests/server.integration.test.ts (18 tests) 5421ms
+ ✓ src/modules/memory/tests/memory-unit.test.ts (19 tests) 24ms
+ ✓ src/modules/simulator/tests/simulator-service.test.ts (11 tests) 13761ms
+   ✓ advanceMonth — the intelligence loop over the synthetic company (4)
+     ✓ exhausts the timeline after 24 months 7050ms
+ ❯ src/modules/connection-broker/tests/connection-broker-conformance.test.ts (35 tests | 35 skipped) 10018ms
+   ↓ provider-sdk conformance — connection-broker/nango (16)
+     ↓ definition connection-broker/nango carries the canonical adapter-definition shape and targets the current SDK version
+     ↓ definition connection-broker/nango declares the owning gateway 'connection-broker'
+     ↓ provider connection-broker/nango reports a well-formed canonical capability set
+     ↓ provider connection-broker/nango reports its capability set deterministically
+     ↓ provider connection-broker/nango serves exactly the capabilities the owning gateway expects
+     ↓ provider connection-broker/nango walks the canonical lifecycle (registered → … → retired) with an append-only history
+     ↓ provider connection-broker/nango lifecycle rejects illegal dispatches without state or history changes
+     ↓ provider connection-broker/nango lifecycle treats retired as terminal (any state may retire)
+     ↓ provider connection-broker/nango normalizes 'broker throttling response' to 'rate_limited'
+     ↓ provider connection-broker/nango normalizes 'broker outage response' to 'provider_unavailable'
+     ↓ provider connection-broker/nango normalizes 'rejected instance secret' to 'auth_failure'
+     ↓ provider connection-broker/nango normalizes 'transport connection timeout' to 'timeout'
+     ↓ provider connection-broker/nango normalizes 'an adapter-normalized malformed response' to 'malformed_response'
+     ↓ provider connection-broker/nango maps unrecognized failures to 'unknown_failure' (never a crash, never a fake success)
+     ↓ provider connection-broker/nango error normalization is consistent with the canonical semantics table
+     ↓ provider connection-broker/nango emits canonical hot-swap evidence (differing providers, digest, structural comparison)
+   ↓ provider-sdk conformance — connection-broker/embedded (15)
+     ↓ definition connection-broker/embedded carries the canonical adapter-definition shape and targets the current SDK version
+     ↓ definition connection-broker/embedded declares the owning gateway 'connection-broker'
+     ↓ provider connection-broker/embedded reports a well-formed canonical capability set
+     ↓ provider connection-broker/embedded reports its capability set deterministically
+     ↓ provider connection-broker/embedded serves exactly the capabilities the owning gateway expects
+     ↓ provider connection-broker/embedded walks the canonical lifecycle (registered → … → retired) with an append-only history
+     ↓ provider connection-broker/embedded lifecycle rejects illegal dispatches without state or history changes
+     ↓ provider connection-broker/embedded lifecycle treats retired as terminal (any state may retire)
+     ↓ provider connection-broker/embedded normalizes 'expired authorization session wording' to 'auth_failure'
+     ↓ provider connection-broker/embedded normalizes 'declined authorization wording' to 'permission_denied'
+     ↓ provider connection-broker/embedded normalizes 'broker outage response' to 'provider_unavailable'
+     ↓ provider connection-broker/embedded normalizes 'transport connection refused' to 'provider_unavailable'
+     ↓ provider connection-broker/embedded maps unrecognized failures to 'unknown_failure' (never a crash, never a fake success)
+     ↓ provider connection-broker/embedded error normalization is consistent with the canonical semantics table
+     ↓ provider connection-broker/embedded emits canonical hot-swap evidence (differing providers, digest, structural comparison)
+   ↓ connection-broker adapter SDK conformance — hot-swap evidence from the real verification flow (2)
+     ↓ carries the canonical record for the nango ↔ embedded swap
+     ↓ proves the backend actually spoke both native dialects (adapter isolation, not an echo)
+   ↓ connection-broker adapter SDK conformance — behavior unchanged (2)
+     ↓ both adapters serve the identical canonical capability set (equivalent alternatives by definition)
+     ↓ the definitions expose only the canonical SDK surface (no selection, no wire types)
+ ✓ src/modules/learning/tests/company-learning-unit.test.ts (23 tests) 29ms
+ ✓ src/modules/events/tests/events-unit.test.ts (36 tests) 21ms
+ ✓ src/app/(product)/tests/product-unit.test.ts (30 tests) 16ms
+ ✓ src/modules/outcomes/tests/intervention-learning-fixture.test.ts (1 test) 7654ms
+ ✓ src/modules/identity/tests/identity-service.test.ts (14 tests) 5366ms
+ ✓ src/modules/vertical-kits/tests/vertical-kits-unit.test.ts (21 tests) 18ms
+ ✓ src/modules/provider-billing/tests/provider-billing-unit.test.ts (17 tests) 13ms
+ ✓ src/modules/agent-supervision/tests/agent-supervision-unit.test.ts (28 tests) 10ms
+ ✓ src/modules/realtime/tests/realtime-livekit-transport.test.ts (16 tests) 67ms
+ ✓ src/modules/realtime/tests/realtime-provider-failure.test.ts (5 tests) 5316ms
+ ❯ tests/e2e/journeys/discoverability.e2e.test.ts (12 tests | 1 failed) 10528ms
+   ✓ no dead-end pages (5)
+     ✓ renders every page and collects its link graph 2197ms
+     ✓ no link points at a route that does not exist (no broken links anywhere) 1ms
+     ✓ every page carries at least one onward in-app link (the documented exception aside) 0ms
+     ✓ the documented dead-end exception is still live (a fix updates this list deliberately) 0ms
+     ✓ the shell navigation is present on every product and management page (the permanent way out) 1ms
+   ❯ capability coverage (4)
+     ✓ collects the REAL discovery surfaces of this base 957ms
+     × every module under src/modules is mapped in the capability map 7ms
+     ✓ every non-instrument capability is discoverable through at least one of its declared surfaces 0ms
+     ✓ the instrument modules are exactly the declared verification harnesses 0ms
+   ✓ the assembled proof report (3)
+     ✓ maps every acceptance journey to its proof suite (the delivery’s coverage registry) 1ms
+     ✓ the report is complete: every acceptance journey proven, none failed 0ms
+     ✓ the module’s own README-grade documentation lives in its contract (self-description) 0ms
+ ✓ src/modules/knowledge-acquisition/tests/source-ranking-unit.test.ts (30 tests) 11ms
+ ✓ src/modules/opportunities/tests/opportunities-unit.test.ts (36 tests) 13ms
+ ✓ tests/tenant-isolation/connection-broker-sweep.test.ts (4 tests) 5337ms
+ ✓ src/app/(product)/tests/product-integration.test.ts (10 tests) 5403ms
+ ✓ src/app/(product)/learning/tests/learning-chat-unit.test.ts (17 tests) 28ms
+ ✓ src/modules/deployment-smoke/tests/driver-production.test.ts (2 tests) 34ms
+ ✓ src/modules/demo/tests/demo-service.test.ts (20 tests) 6052ms
+ ✓ src/modules/api/tests/api-unit.test.ts (27 tests) 15ms
+ ❯ src/modules/journey-proof/tests/journey-proof-unit.test.ts (29 tests | 1 failed) 44ms
+   ✓ the W070 journey matrix (4)
+     ✓ is internally consistent (routes exist, actors declared, one entry per acceptance bullet) 2ms
+     ✓ covers every acceptance bullet of the work item exactly once 0ms
+     ✓ declares both viewports for every product journey (desktop and mobile) 2ms
+     ✓ walks every step through routes that exist in the catalog 1ms
+   ✓ the route catalog (5)
+     ✓ has unique paths 0ms
+     ✓ declares well-formed patterns (absolute, no empty segments) 2ms
+     ✓ points at files that exist in the repository (route reality) 16ms
+     ✓ matches concrete paths, literals before parameterized 3ms
+     ✓ every page route is auth-classified and mobile-classified or explicitly drill-down 1ms
+   ❯ the capability discoverability map (3)
+     ✓ references only routes that exist in the catalog 0ms
+     ✓ has no route-less product capabilities (instruments are explicit) 1ms
+     × covers every module folder of src/modules (the architecture capability set) 6ms
+   ✓ auditHtml (10)
+     ✓ passes a well-formed page 2ms
+     ✓ flags a missing document language 1ms
+     ✓ flags missing landmarks and skip link for chrome pages 0ms
+     ✓ does not demand chrome when the page renders bare 0ms
+     ✓ flags multiple or missing h1 and skipped heading order 0ms
+     ✓ flags images without alt, unnamed buttons and unnamed links 0ms
+     ✓ accepts icon-only controls that carry aria-label 0ms
+     ✓ flags unlabeled inputs and positive tabindex 0ms
+     ✓ flags tables without captions and th without scope 0ms
+     ✓ ignores hidden controls (aria-hidden decorations) 0ms
+   ✓ auditSources (2)
+     ✓ accepts the shipped touch-target and aria-current treatment 1ms
+     ✓ flags undersized touch targets and missing aria-current 0ms
+   ✓ the rule catalog (1)
+     ✓ has unique ids 1ms
+   ✓ extractPageLinks (1)
+     ✓ extracts in-app links with resolved paths and names, skipping hashes and externals 1ms
+   ✓ the report evaluators (2)
+     ✓ deadEndViolations lists broken links and link-less pages 0ms
+     ✓ reportComplete demands every journey proven and none failed 0ms
+   ✓ evaluateMobileReachability (1)
+     ✓ marks routes reachable via nav, command search or hub, and flags the rest 0ms
+ ✓ src/modules/audit/tests/audit-unit.test.ts (19 tests) 18ms
+ ✓ src/app/(product)/interventions/tests/intervention-chat-dom.test.ts (7 tests) 64ms
+ ✓ src/modules/world/tests/world-unit.test.ts (26 tests) 17ms
+ ✓ src/modules/people/tests/people-service.test.ts (11 tests) 5277ms
+ ✓ src/app/(product)/tests/capability-discovery-unit.test.ts (18 tests) 17ms
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > starts a cycle and advances exactly ONE bounded stage per job
+{"ts":"2026-10-04T05:17:07.901Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"observation","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > starts a cycle and advances exactly ONE bounded stage per job
+{"ts":"2026-10-04T05:17:07.916Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"observation","completedStages":1,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > a queued execution resumes from its persisted position
+{"ts":"2026-10-04T05:17:07.920Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"evidence-memory","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > a queued execution resumes from its persisted position
+{"ts":"2026-10-04T05:17:07.929Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"evidence-memory","completedStages":2,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > duplicate delivery is idempotent — no second step, no retry storm
+{"ts":"2026-10-04T05:17:07.934Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"evidence-memory","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > duplicate delivery is idempotent — no second step, no retry storm
+{"ts":"2026-10-04T05:17:07.935Z","component":"aurum-worker","event":"duplicate","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"evidence-memory","attempt":1,"reason":"stage already advanced — persisted execution state is the idempotency authority"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > an unknown execution is consumed, never retried
+{"ts":"2026-10-04T05:17:07.938Z","component":"aurum-worker","event":"enqueued","executionId":"d3a04afc-4086-4582-a8e7-c585bef7a3e8","stage":"outcome","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > an unknown execution is consumed, never retried
+{"ts":"2026-10-04T05:17:07.939Z","component":"aurum-worker","event":"not_found","executionId":"d3a04afc-4086-4582-a8e7-c585bef7a3e8","stage":"outcome","attempt":1,"reason":"execution unknown in this tenant"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > deterministic rejections dead-letter immediately (no useless retries)
+{"ts":"2026-10-04T05:17:07.941Z","component":"aurum-worker","event":"enqueued","executionId":"412e80e5-6730-4642-99fc-d157e5463737","stage":"observation","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > deterministic rejections dead-letter immediately (no useless retries)
+{"ts":"2026-10-04T05:17:07.943Z","component":"aurum-worker","event":"dead_letter","executionId":"412e80e5-6730-4642-99fc-d157e5463737","stage":"observation","attempt":1,"reason":"deterministic rejection (invalid_stage_input)"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > invalid job envelopes are dead-lettered without ever reaching the contract
+{"ts":"2026-10-04T05:17:07.944Z","component":"aurum-worker","event":"dead_letter","reason":"invalid job envelope: job kind must be 'cognition-stage'"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.949Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"world-update","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.954Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"world-update","completedStages":3,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.955Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"epistemic-evaluation","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.959Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"epistemic-evaluation","completedStages":4,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.959Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"goal-evaluation","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.969Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"goal-evaluation","completedStages":5,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.970Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"unknown-mission-evaluation","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.974Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"unknown-mission-evaluation","completedStages":6,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.975Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"knowledge-acquisition","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.980Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"knowledge-acquisition","completedStages":7,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.980Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"model-update","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.984Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"model-update","completedStages":8,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.985Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"risk-opportunity-capability-analysis","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.989Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"risk-opportunity-capability-analysis","completedStages":9,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:07.991Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"recommendation-ask-proposal-action","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:08.004Z","component":"aurum-worker","event":"suspended","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"recommendation-ask-proposal-action","state":"awaiting_approval","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0","note":"suspension is persisted domain state — the next job resumes it"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:08.011Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"recommendation-ask-proposal-action","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:08.017Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"recommendation-ask-proposal-action","completedStages":10,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:08.017Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"outcome","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:08.022Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"outcome","completedStages":11,"state":"running","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:08.023Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"learning","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > approval suspension survives between jobs — the human decision resumes the cycle
+{"ts":"2026-10-04T05:17:08.027Z","component":"aurum-worker","event":"processed","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"learning","completedStages":12,"state":"completed","attempt":1,"correlationId":"ffe23c01-7d83-455d-9f88-55ec3019eaf0"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > stale jobs for a completed execution are acknowledged (terminal, not retried)
+{"ts":"2026-10-04T05:17:08.030Z","component":"aurum-worker","event":"enqueued","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"outcome","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > stale jobs for a completed execution are acknowledged (terminal, not retried)
+{"ts":"2026-10-04T05:17:08.031Z","component":"aurum-worker","event":"duplicate","executionId":"a40269a5-228b-4697-9ea3-98c20bb6e995","stage":"outcome","attempt":1,"reason":"execution is terminal — stale job acknowledged"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > runWorkerBatch drains the queue and stops on idle
+{"ts":"2026-10-04T05:17:08.033Z","component":"aurum-worker","event":"enqueued","executionId":"0c953631-6fa8-46e3-bb6d-aa2e2cb02f3b","stage":"observation","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > runWorkerBatch drains the queue and stops on idle
+{"ts":"2026-10-04T05:17:08.033Z","component":"aurum-worker","event":"enqueued","executionId":"0c953631-6fa8-46e3-bb6d-aa2e2cb02f3b","stage":"evidence-memory","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > runWorkerBatch drains the queue and stops on idle
+{"ts":"2026-10-04T05:17:08.033Z","component":"aurum-worker","event":"enqueued","executionId":"0c953631-6fa8-46e3-bb6d-aa2e2cb02f3b","stage":"world-update","attempt":1}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > runWorkerBatch drains the queue and stops on idle
+{"ts":"2026-10-04T05:17:08.039Z","component":"aurum-worker","event":"processed","executionId":"0c953631-6fa8-46e3-bb6d-aa2e2cb02f3b","stage":"observation","completedStages":1,"state":"running","attempt":1,"correlationId":"fb8dfa00-9611-488d-aa44-9a47073840be"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > runWorkerBatch drains the queue and stops on idle
+{"ts":"2026-10-04T05:17:08.045Z","component":"aurum-worker","event":"processed","executionId":"0c953631-6fa8-46e3-bb6d-aa2e2cb02f3b","stage":"evidence-memory","completedStages":2,"state":"running","attempt":1,"correlationId":"fb8dfa00-9611-488d-aa44-9a47073840be"}
+
+stdout | src/infra/worker.test.ts > worker execution seam (real contracts, embedded PostgreSQL) > runWorkerBatch drains the queue and stops on idle
+{"ts":"2026-10-04T05:17:08.049Z","component":"aurum-worker","event":"processed","executionId":"0c953631-6fa8-46e3-bb6d-aa2e2cb02f3b","stage":"world-update","completedStages":3,"state":"running","attempt":1,"correlationId":"fb8dfa00-9611-488d-aa44-9a47073840be"}
+
+ ✓ src/infra/worker.test.ts (10 tests) 5054ms
+ ✓ src/modules/deep-actions/tests/deep-actions-unit.test.ts (26 tests) 12ms
+ ✓ tests/tenant-isolation/agent-supervision-sweep.test.ts (8 tests) 5468ms
+   ✓ W044 sweep — agent-supervision (W098 persistent supervision) (8)
+     ✓ holds the row partition across every tenant-scoped table after the fixtures ran 313ms
+ ✓ tests/identity-channel/employee-across-providers.test.ts (16 tests) 5500ms
+ ✓ src/modules/llm/tests/llm-adapter-sdk-conformance.test.ts (35 tests) 4870ms
+ ✓ src/modules/capability-grants/tests/capability-grants-unit.test.ts (22 tests) 10ms
+ ✓ src/infra/redis-rest.test.ts (20 tests | 1 skipped) 36ms
+ ✓ tests/tenant-isolation/workflow-sweep.test.ts (8 tests) 5714ms
+   ✓ W044 sweep — workflow (W080 durable runtime) (8)
+     ✓ holds the row partition across every tenant-scoped table after the fixtures ran 308ms
+ ✓ src/modules/attention/tests/attention-end-to-end.test.ts (1 test) 5056ms
+ ✓ src/modules/simulator/tests/simulator-unit.test.ts (16 tests) 27ms
+ ✓ tests/tenant-isolation/schema-boundary-sweep.test.ts (5 tests) 5680ms
+ ✓ tests/tenant-isolation/deep-actions-sweep.test.ts (2 tests) 5307ms
+ ✓ tests/tenant-isolation/migration-sweep.test.ts (1 test) 5918ms
+ ✓ src/modules/provider-sdk/tests/sdk-integration.test.ts (4 tests) 10ms
+stderr | tests/e2e/deployment-smoke/smoke.e2e.test.ts > W078 deployment smoke — the full matrix over real HTTP > runs the full W078 matrix green over real HTTP (auth, onboarding, chat, seeded journeys, durable execution, observability, repo surface)
+Error: NEXT_REDIRECT
+    at getRedirectError (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:43:41)
+    at redirect (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:53:11)
+    at ProductRootPage (/home/z/aurum-chat/src/app/(product)/page.tsx:18:3)
+    at Object.react_stack_bottom_frame (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:10940:18)
+    at renderWithHooks (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:5622:19)
+    at renderElement (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:6057:23)
+    at retryNode (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:7099:21)
+    at renderNodeDestructive (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:7033:11)
+    at renderNode (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:7584:18)
+    at renderElement (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:6176:18) {
+  digest: 'NEXT_REDIRECT;replace;/chat;307;'
+}
+
+stdout | tests/e2e/deployment-smoke/smoke.e2e.test.ts > W078 deployment smoke — the full matrix over real HTTP > runs the full W078 matrix green over real HTTP (auth, onboarding, chat, seeded journeys, durable execution, observability, repo surface)
+{"ts":"2026-10-04T05:18:02.139Z","component":"aurum-worker","event":"duplicate","executionId":"08257e28-0062-4dcd-b4fb-2e98de93ca52","stage":"observation","attempt":1,"reason":"execution is terminal — stale job acknowledged"}
+
+stdout | tests/e2e/deployment-smoke/smoke.e2e.test.ts > W078 deployment smoke — the full matrix over real HTTP > runs the full W078 matrix green over real HTTP (auth, onboarding, chat, seeded journeys, durable execution, observability, repo surface)
+{"ts":"2026-10-04T05:18:02.142Z","component":"aurum-worker","event":"not_found","executionId":"bc2f207c-b148-42ee-9000-c28653b87f7d","stage":"observation","attempt":1,"reason":"execution unknown in this tenant"}
+
+ ✓ tests/e2e/deployment-smoke/smoke.e2e.test.ts (1 test) 6881ms
+   ✓ W078 deployment smoke — the full matrix over real HTTP (1)
+     ✓ runs the full W078 matrix green over real HTTP (auth, onboarding, chat, seeded journeys, durable execution, observability, repo surface) 788ms
+ ✓ src/app/(product)/ai/preferences/tests/preferences-unit.test.ts (21 tests) 26ms
+ ✓ tests/tenant-isolation/vertical-kits-sweep.test.ts (3 tests) 5510ms
+ ✓ src/modules/release-certification/tests/identity-report.test.ts (14 tests) 9ms
+ ✓ src/app/(product)/chat/tests/chat-surface-dom.test.ts (19 tests) 144ms
+ ✓ tests/tenant-isolation/capability-grants-sweep.test.ts (3 tests) 5616ms
+ ✓ tests/e2e/journeys/accessibility.e2e.test.ts (8 tests) 8149ms
+   ✓ the accessibility audit over every rendered page (8)
+     ✓ audits every page route of the catalog 1598ms
+ ✓ src/modules/provider-billing/tests/provider-billing-conformance.test.ts (29 tests) 11ms
+ ✓ src/modules/unified-identity/tests/unified-identity-unit.test.ts (22 tests) 10ms
+ ✓ src/modules/edge-connector/tests/edge-connector-unit.test.ts (19 tests) 11ms
+ ✓ src/modules/provider-sdk/tests/sdk-conformance-kit.test.ts (15 tests) 20ms
+ ✓ src/app/(product)/intelligence/tests/intelligence-unit.test.ts (18 tests) 19ms
+ ✓ src/modules/demo/tests/demo-roles.test.ts (16 tests) 6752ms
+ ✓ src/app/(product)/explain/tests/explain-unit.test.ts (29 tests) 26ms
+ ✓ tests/tenant-isolation/unified-identity-sweep.test.ts (4 tests) 5449ms
+   ✓ W044 sweep — unified-identity (W095) (4)
+     ✓ holds the row partition across every tenant-scoped table after the fixtures ran 310ms
+ ✓ tests/scaffold.test.ts (14 tests) 3148ms
+   ✓ infra db (embedded PGlite, :memory:) (4)
+     ✓ round-trips a throwaway migration with parameterized SQL 2903ms
+ ↓ src/modules/migration/tests/migration-readers-hosted.test.ts (1 test | 1 skipped)
+ ✓ src/app/(product)/learning/tests/learning-unit.test.ts (24 tests) 24ms
+stderr | tests/e2e/journeys/onboarding.e2e.test.ts > Journey A — first-run onboarding > an anonymous visitor cannot reach the product (no tenant surface renders)
+Error: NEXT_REDIRECT
+    at getRedirectError (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:43:41)
+    at redirect (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:53:11)
+    at requireAuthenticatedPage (/home/z/aurum-chat/src/app/lib/page-session.ts:34:42)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at ChatPage (/home/z/aurum-chat/src/app/(product)/chat/page.tsx:40:19) {
+  digest: 'NEXT_REDIRECT;replace;/signin;307;'
+}
+
+stderr | tests/e2e/journeys/onboarding.e2e.test.ts > Journey A — first-run onboarding > the root URL forwards to the conversation-first product
+Error: NEXT_REDIRECT
+    at getRedirectError (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:43:41)
+    at redirect (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:53:11)
+    at ProductRootPage (/home/z/aurum-chat/src/app/(product)/page.tsx:18:3)
+    at Object.react_stack_bottom_frame (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:10940:18)
+    at renderWithHooks (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:5622:19)
+    at renderElement (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:6057:23)
+    at retryNode (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:7099:21)
+    at renderNodeDestructive (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:7033:11)
+    at renderNode (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:7584:18)
+    at renderElement (/home/z/aurum-chat/node_modules/react-dom/cjs/react-dom-server.node.development.js:6176:18) {
+  digest: 'NEXT_REDIRECT;replace;/chat;307;'
+}
+
+stderr | tests/e2e/journeys/onboarding.e2e.test.ts > Journey A — first-run onboarding > a company-less session is routed to onboarding (never an empty shell)
+Error: NEXT_REDIRECT
+    at getRedirectError (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:43:41)
+    at redirect (/home/z/aurum-chat/node_modules/next/dist/client/components/redirect.js:53:11)
+    at requireAuthenticatedPage (/home/z/aurum-chat/src/app/lib/page-session.ts:35:43)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at ChatPage (/home/z/aurum-chat/src/app/(product)/chat/page.tsx:40:19) {
+  digest: 'NEXT_REDIRECT;replace;/onboarding;307;'
+}
+
+ ✓ tests/e2e/journeys/onboarding.e2e.test.ts (17 tests) 6232ms
+ ✓ tests/tenant-isolation/realtime-sweep.test.ts (3 tests) 6173ms
+   ✓ W044 sweep — realtime (W086) (3)
+     ✓ holds the row partition across every tenant-scoped table after the fixtures ran 329ms
+ ✓ tests/e2e/journeys/mobile.e2e.test.ts (12 tests) 11954ms
+   ✓ mobile reachability of every page route (7)
+     ✓ walks the mobile horizon breadth-first until the route graph closes 2843ms
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam POST — pull mode (real contracts) > drains one guarded batch and advances a real execution
+{"ts":"2026-10-04T05:19:17.484Z","component":"aurum-worker","event":"enqueued","executionId":"4b7920c9-829b-46fa-9575-24c04e642718","stage":"observation","attempt":1}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam POST — pull mode (real contracts) > drains one guarded batch and advances a real execution
+{"ts":"2026-10-04T05:19:17.499Z","component":"aurum-worker","event":"processed","executionId":"4b7920c9-829b-46fa-9575-24c04e642718","stage":"observation","completedStages":1,"state":"running","attempt":1,"correlationId":"30efe41d-42c4-4f16-8438-b1a06edc15f0"}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam POST — pull mode (real contracts) > respects the batch limit query parameter within the guardrail
+{"ts":"2026-10-04T05:19:17.504Z","component":"aurum-worker","event":"enqueued","executionId":"1b01bb57-1d4b-4904-a435-b36ff484d568","stage":"observation","attempt":1}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam POST — pull mode (real contracts) > respects the batch limit query parameter within the guardrail
+{"ts":"2026-10-04T05:19:17.504Z","component":"aurum-worker","event":"enqueued","executionId":"1b01bb57-1d4b-4904-a435-b36ff484d568","stage":"evidence-memory","attempt":1}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam POST — pull mode (real contracts) > respects the batch limit query parameter within the guardrail
+{"ts":"2026-10-04T05:19:17.511Z","component":"aurum-worker","event":"processed","executionId":"1b01bb57-1d4b-4904-a435-b36ff484d568","stage":"observation","completedStages":1,"state":"running","attempt":1,"correlationId":"248d2326-fa13-4632-baf4-3ed87170744f"}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam POST — push mode (platform queue deliveries) > processes pushed jobs through the identical core path
+{"ts":"2026-10-04T05:19:17.521Z","component":"aurum-worker","event":"processed","executionId":"c589fe57-c5d1-461d-93e8-70106d0116d3","stage":"observation","completedStages":1,"state":"running","attempt":1,"correlationId":"d1adac8b-e144-4266-8276-68a0840ddf5b"}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam GET — observability snapshot > reports profile, metrics and queue depth without tenant content
+{"ts":"2026-10-04T05:19:17.523Z","component":"aurum-worker","event":"enqueued","executionId":"94dc4f1d-08e8-4d80-b554-9ffbb9efb302","stage":"outcome","attempt":1}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam GET — observability snapshot > ?sweep=1 drains one batch before answering
+{"ts":"2026-10-04T05:19:17.525Z","component":"aurum-worker","event":"enqueued","executionId":"f92148f6-fdcd-4597-a80e-41ba1b03bbcd","stage":"observation","attempt":1}
+
+stdout | src/app/api/worker/tests/worker-seam.test.ts > worker seam GET — observability snapshot > ?sweep=1 drains one batch before answering
+{"ts":"2026-10-04T05:19:17.532Z","component":"aurum-worker","event":"processed","executionId":"f92148f6-fdcd-4597-a80e-41ba1b03bbcd","stage":"observation","completedStages":1,"state":"running","attempt":1,"correlationId":"960bf7cb-6f1e-4c4e-9de2-c1d37cab1616"}
+
+ ✓ src/app/api/worker/tests/worker-seam.test.ts (12 tests) 9009ms
+ ✓ tests/tenant-isolation/cellular-sweep.test.ts (4 tests) 5694ms
+   ✓ W044 sweep — cellular (W087) (4)
+     ✓ holds the row partition across every tenant-scoped table after the fixtures ran 307ms
+ ✓ src/modules/provider-sdk/tests/sdk-registry.test.ts (15 tests) 14ms
+ ✓ src/modules/demo/tests/demo-unit.test.ts (28 tests) 11ms
+ ✓ src/modules/provider-sdk/tests/sdk-lifecycle.test.ts (14 tests) 9ms
+ ✓ src/modules/provider-sdk/tests/sdk-normalization.test.ts (13 tests) 11ms
+ ✓ tests/tenant-isolation/computer-use-sweep.test.ts (3 tests) 5865ms
+ ✓ tests/tenant-isolation/provider-preferences-sweep.test.ts (2 tests) 5706ms
+ ✓ src/modules/organizations/tests/organizations-unit.test.ts (15 tests) 10ms
+ ✓ src/app/(tower)/tests/tower-back-navigation.test.ts (3 tests) 4939ms
+ ✓ src/app/(product)/meetings/tests/meetings-integration.test.ts (5 tests) 5354ms
+ ✓ src/modules/realtime/tests/realtime-livekit-live.test.ts (17 tests | 16 skipped) 3ms
+ ✓ tests/e2e/journeys/conversational-continuity.e2e.test.ts (9 tests) 7625ms
+ ✓ src/app/api/health/tests/health.test.ts (6 tests) 15466ms
+   ✓ health/readiness — error (fail closed) (3)
+     ✓ 503 when the domain-truth database is unreachable 3693ms
+     ✓ 503 when the database answers but the schema isn't applied 5028ms
+stdout | src/infra/worker-retry.test.ts > transient failure retry (fail-safe default for unknown errors) > re-enqueues with attempt+1, then dead-letters when attempts are exhausted
+{"ts":"2026-10-04T05:20:13.096Z","component":"aurum-worker","event":"retry_scheduled","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"nextAttempt":2,"reason":"connection reset by peer"}
+
+stdout | src/infra/worker-retry.test.ts > transient failure retry (fail-safe default for unknown errors) > re-enqueues with attempt+1, then dead-letters when attempts are exhausted
+{"ts":"2026-10-04T05:20:13.097Z","component":"aurum-worker","event":"dead_letter","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":2,"reason":"transient failure exhausted delivery attempts"}
+
+stdout | src/infra/worker-retry.test.ts > transient failure retry (fail-safe default for unknown errors) > one successful retry heals the delivery
+{"ts":"2026-10-04T05:20:13.098Z","component":"aurum-worker","event":"retry_scheduled","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"nextAttempt":2,"reason":"db restarting"}
+
+stdout | src/infra/worker-retry.test.ts > transient failure retry (fail-safe default for unknown errors) > one successful retry heals the delivery
+{"ts":"2026-10-04T05:20:13.099Z","component":"aurum-worker","event":"processed","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","completedStages":3,"state":"running","attempt":2,"correlationId":"corr-1"}
+
+stdout | src/infra/worker-retry.test.ts > deterministic contract rejections dead-letter immediately > code invalid_stage_input never re-enqueues
+{"ts":"2026-10-04T05:20:13.099Z","component":"aurum-worker","event":"dead_letter","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"deterministic rejection (invalid_stage_input)"}
+
+stdout | src/infra/worker-retry.test.ts > deterministic contract rejections dead-letter immediately > code invalid_reference never re-enqueues
+{"ts":"2026-10-04T05:20:13.100Z","component":"aurum-worker","event":"dead_letter","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"deterministic rejection (invalid_reference)"}
+
+stdout | src/infra/worker-retry.test.ts > deterministic contract rejections dead-letter immediately > code observation_rejected never re-enqueues
+{"ts":"2026-10-04T05:20:13.101Z","component":"aurum-worker","event":"dead_letter","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"deterministic rejection (observation_rejected)"}
+
+stdout | src/infra/worker-retry.test.ts > deterministic contract rejections dead-letter immediately > code stage_write_rejected never re-enqueues
+{"ts":"2026-10-04T05:20:13.101Z","component":"aurum-worker","event":"dead_letter","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"deterministic rejection (stage_write_rejected)"}
+
+stdout | src/infra/worker-retry.test.ts > deterministic contract rejections dead-letter immediately > code invalid_context never re-enqueues
+{"ts":"2026-10-04T05:20:13.101Z","component":"aurum-worker","event":"dead_letter","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"deterministic rejection (invalid_context)"}
+
+stdout | src/infra/worker-retry.test.ts > idempotent / benign dispositions > stage_mismatch (already advanced) is acknowledged as a duplicate
+{"ts":"2026-10-04T05:20:13.102Z","component":"aurum-worker","event":"duplicate","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"stage already advanced — persisted execution state is the idempotency authority"}
+
+stdout | src/infra/worker-retry.test.ts > idempotent / benign dispositions > invalid_transition (terminal execution) is acknowledged as a stale duplicate
+{"ts":"2026-10-04T05:20:13.103Z","component":"aurum-worker","event":"duplicate","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"execution is terminal — stale job acknowledged"}
+
+stdout | src/infra/worker-retry.test.ts > idempotent / benign dispositions > execution_conflict (concurrent pump won) is acknowledged, not retried
+{"ts":"2026-10-04T05:20:13.103Z","component":"aurum-worker","event":"conflict","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"a concurrent pump won this stage"}
+
+stdout | src/infra/worker-retry.test.ts > idempotent / benign dispositions > execution_not_found is consumed and never retried
+{"ts":"2026-10-04T05:20:13.104Z","component":"aurum-worker","event":"not_found","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","attempt":1,"reason":"execution unknown in this tenant"}
+
+stdout | src/infra/worker-retry.test.ts > idempotent / benign dispositions > a suspended trace (awaiting_approval / awaiting_input) consumes the job
+{"ts":"2026-10-04T05:20:13.104Z","component":"aurum-worker","event":"suspended","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","state":"awaiting_approval","attempt":1,"correlationId":"corr-2","note":"suspension is persisted domain state — the next job resumes it"}
+
+stdout | src/infra/worker-retry.test.ts > idempotent / benign dispositions > a suspended trace (awaiting_approval / awaiting_input) consumes the job
+{"ts":"2026-10-04T05:20:13.105Z","component":"aurum-worker","event":"suspended","executionId":"11111111-2222-3333-4444-555555555555","stage":"observation","state":"awaiting_input","attempt":1,"correlationId":"corr-2","note":"suspension is persisted domain state — the next job resumes it"}
+
+ ✓ src/infra/worker-retry.test.ts (13 tests) 14ms
+ ✓ src/app/(product)/learning/tests/learning-chat-dom.test.ts (5 tests) 51ms
+ ✓ src/modules/auth/tests/auth-unit.test.ts (24 tests) 209ms
+ ✓ tests/tenant-isolation/edge-connector-sweep.test.ts (2 tests) 5360ms
+ ✓ src/infra/deployment.test.ts (14 tests) 10ms
+ ✓ src/mcp/tests/validation.unit.test.ts (16 tests) 9ms
+ ✓ src/modules/cognition/tests/cognition-unit.test.ts (16 tests) 8ms
+ ✓ src/infra/cellular.test.ts (14 tests) 10ms
+ ✓ tests/tenant-isolation/meetings-sweep.test.ts (1 test) 5232ms
+ ↓ src/infra/worker-realpostgres.test.ts (2 tests | 2 skipped)
+ ✓ tests/e2e/journeys/capability-discovery.e2e.test.ts (9 tests) 7585ms
+ ✓ src/app/(tower)/tests/tower-unit.test.ts (17 tests) 36ms
+ ✓ tests/tenant-isolation/integration-intelligence-sweep.test.ts (2 tests) 5428ms
+ ✓ tests/tenant-isolation/provider-billing-sweep.test.ts (1 test) 8122ms
+ ❯ src/app/(product)/cellular/tests/cellular-integration.test.ts (6 tests | 6 skipped) 10049ms
+   ↓ buildCellularHomeView (3)
+     ↓ composes the reach feed, the connection and the policy rows
+     ↓ THE ENVIRONMENT LIMIT rides the feed row exactly as the module recorded it
+     ↓ an empty tenant sees honest empty families (never fake emptiness)
+   ↓ buildReachDetailView (3)
+     ↓ composes the intent, its policy snapshot, the attempt audit and the replies
+     ↓ a foreign or malformed reach id throws the contract not-found (the honest 404 path)
+     ↓ another tenant sees tenant A's reach as missing (no existence leak)
+ ✓ src/modules/provider-sdk/tests/sdk-evidence.test.ts (11 tests) 38ms
+ ✓ src/app/(platform)/tests/platform-waitlist-integration.test.ts (5 tests) 7850ms
+ ✓ src/mcp/tests/registry.unit.test.ts (15 tests) 13ms
+ ✓ src/app/(platform)/tests/platform-waitlist-unit.test.ts (6 tests) 20ms
+ ↓ src/infra/worker-realredis.test.ts (3 tests | 3 skipped)
+ ✓ tests/tenant-isolation/provider-sdk-sweep.test.ts (4 tests) 9ms
+ ✓ src/infra/email.test.ts (9 tests) 28ms
+ ✓ src/modules/realtime/tests/realtime-wiring.test.ts (6 tests) 7ms
+ ✓ tests/e2e/journeys/meeting-cellular.e2e.test.ts (6 tests) 6070ms
+   ✓ W097 — Meeting and Cellular End-to-End Fixture (6)
+     ✓ scenario 'golden-journey' executes end-to-end against the real module services 428ms
+ ✓ src/modules/release-certification/tests/matrix.test.ts (11 tests) 8ms
+ ✓ src/modules/computer-use/tests/computer-use-wiring.test.ts (9 tests) 6ms
+ ✓ src/app/(product)/meetings/tests/meetings-unit.test.ts (9 tests) 23ms
+ ✓ tests/tenant-isolation/release-certification-sweep.test.ts (3 tests) 5200ms
+   ✓ W044 sweep — release-certification (W079 verification harness) (3)
+     ✓ creates no tables (a fresh migrated schema has none from this module) 5192ms
+ ✓ src/modules/identity/tests/identity-unit.test.ts (10 tests) 8ms
+ ✓ src/app/(product)/cellular/tests/cellular-unit.test.ts (8 tests) 25ms
+ ✓ src/infra/blob.test.ts (7 tests) 11ms
+ ✓ tests/tenant-isolation/deployment-smoke-sweep.test.ts (3 tests) 5085ms
+   ✓ W044 sweep — deployment-smoke (W078 verification harness) (3)
+     ✓ creates no tables (a fresh migrated schema has none from this module) 5077ms
+ ✓ src/modules/deployment-smoke/tests/http.test.ts (5 tests) 41ms
+ ✓ tests/tenant-isolation/journey-proof-sweep.test.ts (3 tests) 4770ms
+   ✓ W044 sweep — journey-proof (W070 verification harness) (3)
+     ✓ creates no tables (a fresh migrated schema has none from this module) 4763ms
+ ✓ src/mcp/tests/config.unit.test.ts (10 tests) 5ms
+ ✓ src/modules/deployment-smoke/tests/catalog.test.ts (6 tests) 6ms
+ ✓ src/modules/deployment-smoke/tests/report.test.ts (4 tests) 4ms
+ ✓ src/mcp/tests/audit.unit.test.ts (5 tests) 4ms
+ ✓ src/app/(auth)/tests/signup-dom.test.ts (3 tests) 29ms
+ ❯ tests/tenant-isolation/coverage-manifest.test.ts (2 tests | 1 failed) 10ms
+   ❯ W044 coverage — every module is claimed by a tenant-isolation sweep (2)
+     × claims every existing module exactly once 7ms
+     ✓ points every claim at a sweep file that exists 2ms
+ ✓ src/modules/people/tests/employee-status.test.ts (3 tests) 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/(product)/tests/marketplace-kits-integration.test.ts [ src/app/(product)/tests/marketplace-kits-integration.test.ts ]
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ src/app/(product)/tests/marketplace-kits-integration.test.ts:102:1
+    100| const ACCOUNTING = 'accounting-ledger-erp';
+    101|
+    102| beforeAll(async () => {
+       | ^
+    103|   await runMigrations(db);
+    104|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/modules/connection-broker/tests/connection-broker-conformance.test.ts [ src/modules/connection-broker/tests/connection-broker-conformance.test.ts ]
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ src/modules/connection-broker/tests/connection-broker-conformance.test.ts:210:1
+    208| }
+    209|
+    210| beforeAll(async () => {
+       | ^
+    211|   vi.spyOn(systemClock, 'now').mockImplementation(() => new Date(clock…
+    212|   await runMigrations(getDb());
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/modules/connection-broker/tests/connection-broker-service.test.ts [ src/modules/connection-broker/tests/connection-broker-service.test.ts ]
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ src/modules/connection-broker/tests/connection-broker-service.test.ts:425:1
+    423| }
+    424|
+    425| beforeAll(async () => {
+       | ^
+    426|   await runMigrations(getDb());
+    427| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/modules/opportunities/tests/opportunities-service.test.ts [ src/modules/opportunities/tests/opportunities-service.test.ts ]
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ src/modules/opportunities/tests/opportunities-service.test.ts:172:1
+    170| }
+    171|
+    172| beforeAll(async () => {
+       | ^
+    173|   await runMigrations(getDb());
+    174| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  src/app/(product)/cellular/tests/cellular-integration.test.ts [ src/app/(product)/cellular/tests/cellular-integration.test.ts ]
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ src/app/(product)/cellular/tests/cellular-integration.test.ts:58:1
+     56| }
+     57|
+     58| beforeAll(async () => {
+       | ^
+     59|   await runMigrations(getDb());
+     60|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/tenant-isolation/coverage-manifest.test.ts > W044 coverage — every module is claimed by a tenant-isolation sweep > claims every existing module exactly once
+AssertionError: modules without a tenant-isolation sweep: context, coverage, provider-fabric: expected [ 'context', 'coverage', …(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "context",
++   "coverage",
++   "provider-fabric",
++ ]
+
+ ❯ tests/tenant-isolation/coverage-manifest.test.ts:26:92
+     24|     const stale = claimed.filter((module) => !modules.includes(module)…
+     25|
+     26|     expect(unclaimed, `modules without a tenant-isolation sweep: ${unc…
+       |                                                                                            ^
+     27|       [],
+     28|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  tests/e2e/journeys/discoverability.e2e.test.ts > capability coverage > every module under src/modules is mapped in the capability map
+AssertionError: expected [ 'context', 'coverage', …(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "context",
++   "coverage",
++   "provider-fabric",
++ ]
+
+ ❯ tests/e2e/journeys/discoverability.e2e.test.ts:253:21
+    251|     const mapped = new Set(CAPABILITY_ROUTES.map((capability) => capab…
+    252|     const missing = JOURNEY_PROOF_MODULE_SCAN.filter((module) => !mapp…
+    253|     expect(missing).toEqual([]);
+       |                     ^
+    254|   });
+    255|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  src/modules/journey-proof/tests/journey-proof-unit.test.ts > the capability discoverability map > covers every module folder of src/modules (the architecture capability set)
+AssertionError: expected [ 'context', 'coverage', …(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "context",
++   "coverage",
++   "provider-fabric",
++ ]
+
+ ❯ src/modules/journey-proof/tests/journey-proof-unit.test.ts:153:21
+    151|     expect(mapped.size).toBe(CAPABILITY_ROUTES.length); // no duplicat…
+    152|     const missing = modules.filter((module) => !mapped.has(module));
+    153|     expect(missing).toEqual([]);
+       |                     ^
+    154|   });
+    155| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  src/app/(product)/intelligence/tests/intelligence-integration.test.ts > the intelligence workflow over a fully seeded chain > builds the proactive findings feed with severity, why and next on every item
+AssertionError: expected 'critical' to be 'high' // Object.is equality
+
+Expected: "high"
+Received: "critical"
+
+ ❯ src/app/(product)/intelligence/tests/intelligence-integration.test.ts:280:40
+    278|     expect(promoted).toBeDefined();
+    279|     expect(promoted?.kind).toBe('unknown');
+    280|     expect(promoted?.severity.urgency).toBe('high');
+       |                                        ^
+    281|     expect(promoted?.whyThisMatters.length).toBeGreaterThan(0);
+    282|     expect(promoted?.whatNext).toContain('confidence gap');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+ FAIL  src/app/(product)/intelligence/tests/intelligence-integration.test.ts > the intelligence workflow over a fully seeded chain > builds the intelligence home: findings, attention, goals with chain counts
+AssertionError: expected 'critical' to be 'high' // Object.is equality
+
+Expected: "high"
+Received: "critical"
+
+ ❯ src/app/(product)/intelligence/tests/intelligence-integration.test.ts:338:55
+    336|     // The goal-gap promotion feeds the attention few (mission urgency…
+    337|     expect(view.attention.urgentMissions).toHaveLength(1);
+    338|     expect(view.attention.urgentMissions[0]?.urgency).toBe('high');
+       |                                                       ^
+    339|   });
+    340|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/12]⎯
+
+ FAIL  src/app/(product)/intelligence/tests/intelligence-integration.test.ts > the intelligence workflow over a fully seeded chain > composes the goal chain: goal → gap → unknown → mission → evidence → belief, linked
+AssertionError: expected 'critical' to be 'high' // Object.is equality
+
+Expected: "high"
+Received: "critical"
+
+ ❯ src/app/(product)/intelligence/tests/intelligence-integration.test.ts:357:32
+    355|     const candidate = chain.gaps[0]?.candidates[0];
+    356|     expect(candidate?.disposition).toBe('promoted');
+    357|     expect(candidate?.urgency).toBe('high');
+       |                                ^
+    358|     expect(candidate?.decisionImpact).toBeGreaterThan(0.3);
+    359|     expect(candidate?.unknownId).not.toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/12]⎯
+
+ FAIL  src/app/(product)/intelligence/tests/intelligence-integration.test.ts > the intelligence workflow over a fully seeded chain > the mission view walks the chain: goals and unknowns up, acquisitions and beliefs down
+AssertionError: expected 'critical' to be 'high' // Object.is equality
+
+Expected: "high"
+Received: "critical"
+
+ ❯ src/app/(product)/intelligence/tests/intelligence-integration.test.ts:420:34
+    418|     const view = await buildMissionView(acme.owner, missionId);
+    419|     expect(view.mission.knowledgeObjective).toContain('driving');
+    420|     expect(view.mission.urgency).toBe('high');
+       |                                  ^
+    421|     expect(view.mission.currentConfidence).toBeLessThan(view.mission.t…
+    422|     expect(view.goals).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/12]⎯
+
+
+ Test Files  9 failed | 276 passed | 3 skipped (288)
+      Tests  7 failed | 5646 passed | 162 skipped (5815)
+   Start at  05:01:49
+   Duration  1185.08s (tests 95%, import 4%, transform 1%)
+
+    Isolate  288 workers spawned · ~113ms startup each (spawn + environment, per file)
+             at least ~32.44s faster with isolate: false — reuses workers across files instead of one per file
+
+error: script "test" exited with code 1

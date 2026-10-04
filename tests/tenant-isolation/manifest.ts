@@ -101,4 +101,12 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   workforce: 'cognition-sweep.test.ts',
   workflow: 'workflow-sweep.test.ts',
   world: 'foundation-sweep.test.ts',
+  // v7 (W124/W124b): the TL-frozen contract-vocabulary modules join with a
+  // dedicated structural sweep — they are types-only at this stage (no
+  // persistence, no service, no tenant rows); the sweep proves exactly that
+  // and must be upgraded to real cross-tenant proofs when W125/W132/W134
+  // land their implementations (the manifest's living obligation).
+  coverage: 'contract-vocabulary-sweep.test.ts',
+  'provider-fabric': 'contract-vocabulary-sweep.test.ts',
+  context: 'contract-vocabulary-sweep.test.ts',
 };
