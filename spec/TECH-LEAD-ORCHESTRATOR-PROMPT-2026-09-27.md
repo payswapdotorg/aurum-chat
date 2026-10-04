@@ -9,37 +9,43 @@ Do not depend on this chat. The repository is your durable operating context.
 Start by reading:
 
 1. `spec/REPOSITORY-SOURCE-OF-TRUTH.md`
-2. `spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md`
-3. `spec/CURRENT-STATE-2026-09-27.md`
-4. `spec/POST-W106-CONTINUATION-DAG-2026-09-27.md`
-5. `spec/ARCHITECTURE.md`
-6. `spec/ARCHITECTURE-LOCK.md`
-7. `spec/GOVERNANCE.md`
-8. `spec/work-items/WORK-ITEM-CATALOG.md`
-9. `spec/WORK-ITEM-DEPENDENCY-GRAPH.md`
-10. `docs/productization-evidence/W106/`
+2. `spec/CURRENT-STATE-2026-10-04.md`
+3. `spec/COMPANY-COVERAGE-ARCHITECTURE.md`
+4. `spec/POST-W123-COVERAGE-DAG-2026-10-04.md`
+5. `spec/ARCHITECTURE-CHANGE-REQUEST-0002-COMPANY-COVERAGE.md`
+6. `spec/FINAL-TECH-LEAD-HANDOFF-2026-09-27.md`
+7. `spec/CURRENT-STATE-2026-09-27.md` (historical; use only as history)
+8. `spec/POST-W106-CONTINUATION-DAG-2026-09-27.md` (historical; use only as history)
+9. `spec/ARCHITECTURE.md`
+10. `spec/ARCHITECTURE-LOCK.md`
+11. `spec/GOVERNANCE.md`
+12. `spec/work-items/WORK-ITEM-CATALOG.md`
+13. `spec/WORK-ITEM-DEPENDENCY-GRAPH.md`
+14. `docs/productization-evidence/W106/`
 
 Then fetch current `main` yourself and verify the repository head. Do not trust the SHA in the
 handoff if the branch has moved.
 
 ## Mission
 
-The W080–W101 mandatory roadmap is complete. Your mission is now to close the environment-dependent
-composition gaps found by adversarial review and to certify what is genuinely live.
+The W080–W112 mandatory implementation/proof program is complete and later productization work has
+advanced through W123. Your next mission is to make the company itself a measurable, queryable surface:
+Company Coverage → Company Query → Goal-aware blind-spot detection → Closed-loop adjustment.
 
-Do not expand architecture merely because a provider is missing.
+Treat `spec/COMPANY-COVERAGE-ARCHITECTURE.md` as the additive architecture contract. Do not expand the
+frozen core architecture merely because a provider is missing or a source is unavailable.
 
 ## Orchestration requirement
 
 Use up to **3 workers concurrently** whenever dependency and ownership boundaries permit.
 
-The default first wave is:
+The immediate repository closure is W124. After W124, the default implementation wave is:
 
-- Worker A — W107
-- Worker B — W108
-- Worker C — W109
+- Worker A — W125 Company Coverage Registry
+- Worker B — W126 Company Query Plane
+- Worker C — contract/integration review without overlapping their owned primitives
 
-Do not serialize these three.
+Then dispatch W127 + W129, followed by W128 + W130.
 
 Before dispatching each worker:
 
@@ -135,15 +141,18 @@ For every release claim, record exact:
 
 Never inherit an older certification onto a new revision.
 
-## Known gaps to resolve
+## Current architecture frontier
 
-1. W092 VerticalKitEdge still reports `deferred-on-w088` until W107 genuinely binds W088.
-2. W087 live carrier wiring and the manager-inbound W009 authority record need closure in W108.
-3. W085/W086 live provider evidence remains environment-dependent; W109 is responsible for wiring and
-   proving it where credentials exist.
-4. W093 has no default real browser driver; W110 closes the adapter composition.
-5. W094 uses explicit incumbent/native reader ports; W111 closes at least one real production adapter path.
-6. Migration runner name-keying was the root class behind W102; investigate before changing architecture.
+1. W107–W112 are complete as repository work/evidence, but several real-provider capabilities remain
+   environment-dependent by design; preserve the live/fixture/blocked distinction.
+2. W113–W123 are later productization/re-audit work recorded in git history; the 2026-10-04 current-state
+   snapshot supersedes the older continuation frontier.
+3. Current production is behind current `main`; never inherit historical certification onto current main.
+4. W124 reconciles repository truth. W125/W126 establish the coverage/query foundation.
+5. W127 connects material coverage gaps to Unknown/LearningMission. W129 normalizes business-interaction
+   coverage. W128 closes the observe→compare→adjust→measure→learn loop. W130 certifies the whole property.
+6. Do not introduce a second company database, a coverage-specific authority system, indiscriminate
+   crawling, or universal-capture semantics.
 
 ## Definition of success
 
