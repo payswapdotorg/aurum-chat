@@ -594,7 +594,7 @@ Dependencies: W022-W024, W034, W040, W041, W052-W055, W133, W134. Implement a Fl
 Acceptance: organization search includes season/time window, duration, staffing, staff experience, workload, capability, environment, budget, quality, risk, verification and evidence freshness where relevant; rejected candidates are retained; recommendations are outcome-calibrated; same subject under materially different contexts may yield different best organizations.
 
 ### W136 — Agent Exchange + Execution Plan + Cross-Agent Relay
-Dependencies: W021-W028, W035, W063, W125-W136. Make Aurum a governed interface to specialist execution agents. Persist a durable orchestration projection linking goal, tasks, agent organization, handoffs, approvals, execution runs, results and outcomes.
+Dependencies: W021-W028, W035, W063, W125-W135. Make Aurum a governed interface to specialist execution agents. Persist a durable orchestration projection linking goal, tasks, agent organization, handoffs, approvals, execution runs, results and outcomes.
 Acceptance: recruitment uses Marketplace/Agent Recruitment; context routing is minimal and evidence-linked; progress/results return through normalized agent contracts; no second execution authority.
 
 ### W137 — Execution Environment / Agent Computer Fabric
