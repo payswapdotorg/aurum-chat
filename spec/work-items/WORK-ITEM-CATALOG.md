@@ -568,3 +568,51 @@ Dependencies: W125, W126. Normalize coverage semantics across customer interacti
 
 Dependencies: W124–W129. Create machine-checkable coverage/query/closed-loop certification. Acceptance: tenant isolation; query correctness; provenance/freshness; contradiction handling; coverage-gap → unknown/mission; provider failure/staleness; closed-loop deviation/outcome; at least one live connected-source certification where credentials permit; exact deployment/SHA binding; reproducible longitudinal metrics.
 
+
+## Unified Agent Body / Lab / Execution / Cross-Platform frontier
+
+These work items extend the existing W124-W130 company-coverage program. Frozen Architecture v2.1 remains authoritative. See the master roadmap and additive architecture records in spec/.
+
+### W131 — Execution Platform and Cross-Platform Architecture Study
+Dependencies: W124. Freeze Aurum-owned contracts for interchangeable execution environments, durable task workers, browser/computer sessions, takeover/recovery, shared client/runtime contracts and cross-device continuity. Review ZCode, OpenMuse, Meta Muse, Epoch and Flauz as external design references only.
+Acceptance: adopted/rejected patterns recorded; execution environment is an adapter; client authority boundary is explicit; Web/Desktop/Mobile share semantic contracts.
+
+### W132 — Provider Fabric and User-Selectable Models
+Dependencies: W034, W048, W091, W124. Implement canonical provider/account/model discovery/binding behavior. Support known providers, custom providers over existing wire protocols, model discovery/manual entry, verification/availability states and model switching.
+Acceptance: one registry drives UX/backend/runtime; same semantic capability works through at least two provider/model paths; provider credentials remain isolated.
+
+### W133 — Aurum Agent Body + Model Binding
+Dependencies: W021, W034, W063, W132. Separate persistent Aurum Agent Body from the LLM that possesses it. Body owns role, information behavior, communication, permissions, evidence and learning hooks; model owns provider/model runtime characteristics.
+Acceptance: model swap preserves tenant/company/evidence/memory identity; bindings are explicit, auditable and policy compatible.
+
+### W134 — Goal/Context-conditioned Information Strategy
+Dependencies: W012, W041, W052, W053, W125-W128, W133. Make information acquisition itself learnable and conditioned on a goal and ContextFingerprint.
+Acceptance: what to know, source choice, freshness/confidence, cost and escalation are represented and outcome-tunable; existing Unknown/LearningMission/KnowledgeAcquisition authorities remain canonical.
+
+### W135 — Contextual Organizational Lab
+Dependencies: W022-W024, W034, W040, W041, W052-W055, W133, W134. Implement a Flauz-inspired Aurum Lab for organization candidates, marketplace-agent selection, model occupancy, robust evaluation and calibration.
+Acceptance: organization search includes season/time window, duration, staffing, staff experience, workload, capability, environment, budget, quality, risk, verification and evidence freshness where relevant; rejected candidates are retained; recommendations are outcome-calibrated; same subject under materially different contexts may yield different best organizations.
+
+### W136 — Agent Exchange + Execution Plan + Cross-Agent Relay
+Dependencies: W021-W028, W035, W063, W125-W136. Make Aurum a governed interface to specialist execution agents. Persist a durable orchestration projection linking goal, tasks, agent organization, handoffs, approvals, execution runs, results and outcomes.
+Acceptance: recruitment uses Marketplace/Agent Recruitment; context routing is minimal and evidence-linked; progress/results return through normalized agent contracts; no second execution authority.
+
+### W137 — Execution Environment / Agent Computer Fabric
+Dependencies: W093, W110, W131, W136. Implement interchangeable isolated workspace/browser/computer adapters. Evaluate local container, Playwright/Chromium and E2B/equivalent remote sandbox paths.
+Acceptance: isolation, persistence where required, artifact handoff, takeover, cancellation, recovery and evidence are tested; vendor removal does not change domain contracts.
+
+### W138 — Emergent Roles + Marketplace Publication
+Dependencies: W135, W136, W028, W040, W054. Allow recurring capability gaps to produce evidence-backed RoleProposals and marketplace submissions.
+Acceptance: role proposals carry evidence, capability demands, alternatives and evaluation; publication/install/activation remain governed; Lab cannot self-publish or self-activate.
+
+### W139 — Cross-Platform Aurum Product
+Dependencies: W131-W137, W057, W060, W076. Productize Aurum with Web as canonical, Desktop as Tauri 2 power client and Mobile as Expo/React Native field client, unless an architecture-reviewed replacement is proven better.
+Acceptance: same authoritative conversation/company state across clients; background work is inspectable everywhere; platform-native capabilities are adapters; cross-device handoff is evidenced.
+
+### W140 — Unified Closed-Loop Learning
+Dependencies: W128-W139. Connect coverage/query, goal deviation, information strategy, organization selection, execution outcomes and CompanyModel learning into one longitudinal loop.
+Acceptance: reality deviation and knowledge deviation remain distinct; learning changes future ranking without silently overriding policy; longitudinal evidence shows measurable improvement.
+
+### W141 — End-to-End + Cross-Platform Certification
+Dependencies: W130, W135-W140. Certify provider/model selection, company query, contextual Lab choice, marketplace recruitment, cross-agent relay, execution environment, outcome calibration and cross-platform continuity.
+Mandatory scenarios: ride→Ride Agent→PaySwap Agent→payment; construction goal→contextual Lab→recruitment→site information relay→execution organization→evidence→deviation→Aurum; provider swap; context variation.
