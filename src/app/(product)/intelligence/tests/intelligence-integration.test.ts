@@ -143,7 +143,14 @@ describe('the intelligence workflow over a fully seeded chain', () => {
       desiredState: 'Every wholesale delivery scores at least 92% freshness on arrival.',
       metrics: [{ name: 'wholesale-freshness', unit: 'percent', direction: 'at_least', threshold: 92 }],
       horizonStart: T0,
-      horizonEnd: '2026-12-31T00:00:00.000Z',
+      // Root cause of the 2026-10-02+ red main: a FIXED horizonEnd drifts across
+      // the 90-day urgency-bump threshold as wall-clock time passes (the discovery
+      // pass evaluates urgencyFromPriority against the REAL clock, not T0),
+      // silently promoting this 'high' goal to 'critical' and breaking every
+      // downstream assertion. Seed the horizon relative to the real clock instead
+      // (+400 days: the 'high' band maps to itself on any future run date, clear
+      // of both the 90- and 30-day thresholds).
+      horizonEnd: new Date(Date.now() + 400 * 86_400_000).toISOString(),
       owner: { kind: 'person', label: 'Ops Lead' },
       priority: 'high',
       evidenceSources: [{ kind: 'source', label: 'Roastery WMS' }],
