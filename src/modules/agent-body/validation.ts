@@ -44,13 +44,8 @@ import type {
   AgentBodyHookRef,
   AgentBodyStatus,
   BodyBindingStatus,
-  CreateAgentBodyInput,
-  GetActiveBindingQuery,
-  GetBodyBindingsQuery,
-  ListAgentBodiesQuery,
   PolicyCheckOutcome,
   PolicyCheckPayload,
-  UpdateAgentBodyInput,
 } from './types';
 import type { ModelBindingPurpose } from '@/modules/provider-fabric/contract';
 

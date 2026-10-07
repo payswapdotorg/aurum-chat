@@ -178,6 +178,16 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 /**
+ * A §1 descriptor as a jsonb parameter: SQL NULL when "not stated" (the
+ * honest absence — never a JSON 'null' literal, which the schema's CHECK
+ * correctly refuses as neither object nor absent), the serialized object
+ * otherwise.
+ */
+function descriptorParam(value: Record<string, unknown> | null): string | null {
+  return value === null ? null : JSON.stringify(value);
+}
+
+/**
  * The tenant-scoped body lookup with the uniform not-found discipline:
  * a foreign id and a missing id are indistinguishable (`body_not_found`).
  * `FOR UPDATE` when the caller is about to mutate (the concurrency
@@ -238,11 +248,11 @@ export async function createAgentBody(
         valid.role,
         valid.label,
         valid.description,
-        JSON.stringify(valid.communicationBehavior),
-        JSON.stringify(valid.informationAcquisitionBehavior),
-        JSON.stringify(valid.companyContextAccess),
-        JSON.stringify(valid.memoryPolicy),
-        JSON.stringify(valid.escalationBehavior),
+        descriptorParam(valid.communicationBehavior),
+        descriptorParam(valid.informationAcquisitionBehavior),
+        descriptorParam(valid.companyContextAccess),
+        descriptorParam(valid.memoryPolicy),
+        descriptorParam(valid.escalationBehavior),
         valid.permittedCapabilities,
         JSON.stringify(valid.evidenceHooks),
         JSON.stringify(valid.learningHooks),
@@ -336,19 +346,19 @@ export async function updateAgentBody(
     if (valid.label !== undefined) add('label = $#', valid.label);
     if (valid.description !== undefined) add('description = $#', valid.description);
     if (valid.communicationBehavior !== undefined) {
-      add('communication_behavior = $#::jsonb', JSON.stringify(valid.communicationBehavior));
+      add('communication_behavior = $#::jsonb', descriptorParam(valid.communicationBehavior));
     }
     if (valid.informationAcquisitionBehavior !== undefined) {
-      add('information_acquisition_behavior = $#::jsonb', JSON.stringify(valid.informationAcquisitionBehavior));
+      add('information_acquisition_behavior = $#::jsonb', descriptorParam(valid.informationAcquisitionBehavior));
     }
     if (valid.companyContextAccess !== undefined) {
-      add('company_context_access = $#::jsonb', JSON.stringify(valid.companyContextAccess));
+      add('company_context_access = $#::jsonb', descriptorParam(valid.companyContextAccess));
     }
     if (valid.memoryPolicy !== undefined) {
-      add('memory_policy = $#::jsonb', JSON.stringify(valid.memoryPolicy));
+      add('memory_policy = $#::jsonb', descriptorParam(valid.memoryPolicy));
     }
     if (valid.escalationBehavior !== undefined) {
-      add('escalation_behavior = $#::jsonb', JSON.stringify(valid.escalationBehavior));
+      add('escalation_behavior = $#::jsonb', descriptorParam(valid.escalationBehavior));
     }
     if (valid.permittedCapabilities !== undefined) {
       add('permitted_capabilities = $#', valid.permittedCapabilities);
