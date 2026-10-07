@@ -274,7 +274,13 @@ function requireBoundedInteger(
 
 function requireLimit(value: unknown): number {
   if (value === undefined || value === null) return DEFAULT_LIST_LIMIT;
-  return requireBoundedInteger(value, 'limit', 1, MAX_LIST_LIMIT);
+  if (typeof value !== 'number' || !Number.isSafeInteger(value)) {
+    throw queryError(`limit must be an integer (got ${String(value)})`);
+  }
+  if (value < 1 || value > MAX_LIST_LIMIT) {
+    throw queryError(`limit must be between 1 and ${MAX_LIST_LIMIT} (got ${String(value)})`);
+  }
+  return value;
 }
 
 /** Rejects unknown keys — ALWAYS the first check of every validator (lesson 1). */
