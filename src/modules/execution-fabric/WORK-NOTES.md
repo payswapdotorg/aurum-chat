@@ -376,3 +376,87 @@ integration battery. All W137 commits live on
 `work/w137-execution-env` (dfcf161 → 67505a4 → 7d270fb → 378e2a4 →
 ecb0476 → daee371 → f9ac1c8 → this note's commit); pushed to origin by
 this finisher.
+
+---
+
+## Wave C integration pass (2026-10-08, task WC-INT on work/wc-integration)
+
+This section is APPENDED by the integration-pass finisher (append-only;
+the record above is history). It records what THIS pass closed against
+the honest-limitations register, following the W136-INT precedent (the
+dated append in agent-exchange WORK-NOTES, commits 45c829a → d5a8934 →
+f226654 on work/w136-integration).
+
+**Limitation #4 — CLOSED.** The deferred integration-tier registrations
+for the six tables (`environment_definitions`, `fabric_leases`,
+`fabric_lease_events`, `fabric_lease_artifacts`, `fabric_lease_evidence`,
+`fabric_lease_checkpoints`) are delivered:
+
+1. **Tenant-isolation sweep** — `tests/tenant-isolation/execution-fabric-sweep.test.ts`
+   (manifest v10 → v11): a REAL two-tenant service proof in the
+   WB2/W136 house style. Tenant A builds fabric state through the public
+   contract (an immutable environment definition; a lease acquired and
+   prepared LIVE over a REAL W136 plan/run chain — goal → plan → agent
+   execution → recorded run, all through the consumed seams; the human
+   takeover + explicit hand-back; the artifact/evidence/checkpoint
+   tails); tenant B sees none of it — empty-list invisibility on
+   `listEnvironmentDefinitions` / `listFabricLeases` and the lease-scoped
+   evidence lists, uniform `definition_not_found` / `lease_not_found` on
+   the read, the one-way retirement, every lifecycle transition and
+   every append (foreign ≡ missing), the mapped
+   `exchange_plan_not_found` / `execution_run_not_found` composition
+   refusals (B cannot even acquire over A's plan or run — the
+   stolen-body precedent), and the same defKey + lease shape coexisting
+   per tenant with fully isolated evidence tails.
+2. **Discoverability registration** — the module joined
+   `src/modules/journey-proof/discoverability.ts` as a platform
+   instrument (domain infrastructure with a delivered service + six
+   tables, no user-facing routes yet; it leaves the instrument list when
+   W139/W140 land the composition surfaces — the meetings/cellular
+   precedent). The e2e instrument-list pin moved 24 → 26 declared
+   harnesses.
+3. **Health census** — `EXPECTED_TABLE_CENSUS` 287 → 298 with the six
+   table names added to `EXPECTED_TABLE_NAMES`, verified against the
+   health suite's fresh fully-migrated embedded db (the census test
+   re-migrates and asserts).
+4. **Schema-reconciliation pins** — 144 → 146 applied / 147 → 149
+   discovered / 147 → 149 skipped (`execution-fabric/001`, the six-table
+   first migration).
+5. **Schema-boundary sweep — no allowlist additions required**: every new
+   UNIQUE constraint carries tenant_id ((tenant_id, def_key) on
+   environment_definitions), there are no FKs at all (opaque forward
+   references are the house discipline), and the tables carry NOT NULL
+   uuid tenant_id — the sweep passed unchanged.
+
+**Honest new table counts at the pass tip:** the arch gate reads
+**780 module files / 337 app/mcp files / 289 tables checked** on the
+integrated branch (the module's own six tables moved the count 278 → 284
+pre-merge; the W138 merge's five complete 284 → 289); the health census
+287 → 298; the schema-reconciliation pins 144/147/147 → 146/149/149.
+
+**Still open after this pass** (unchanged from the register above): #1
+(the local-container adapter is a deterministic simulation), #2 (the
+browser + remote-sandbox adapters run on fake transports — real
+playwright/E2B evaluation at composition/W139), #3 (the FOR UPDATE
+staleness re-checks not concurrently provable on single-connection
+PGlite), #5 (the W136 run gate bounded to the plan's first 500 runs),
+#6 (the in-memory adapter registry), #7 (lease expiry detection-driven,
+not swept), #8 (the frozen 'local' kind has no serving adapter), #9 (no
+authority-claim gating), #10 (no app-layer UX — W139/W140), and #11
+(the TL-owned full-repository battery; this pass ran the four gates plus
+the tenant-isolation directory, all green).
+
+**Pass gates (worktree /home/z/aurum-wcint, branch work/wc-integration,
+base e53ab66 — the post-W137/W138 merge point off main 256d5bb; run at
+the tip 1227aa2 and re-run with these notes in place, identical):**
+`timeout 300 bun run typecheck` → exit 0, zero errors · `timeout 120
+bun run arch` → exit 0, "architecture check passed — module files: 780,
+app/mcp files: 337, tables checked: 289" · `timeout 240 bun run lint` →
+exit 0, zero errors · `timeout 590 bunx vitest run tests/tenant-isolation`
+→ exit 0, 37 files / **242/242 tests green** (this module's sweep
+included), duration ~229s.
+
+**Pass commits (work/wc-integration):** 3a95814 (the sweep + manifest
+v11) → c95e6e5 (discoverability + the e2e pin) → b25cfcc (the census +
+schema pins) → 1227aa2 (the W138 errors.ts cosmetic fix — recorded in
+the emergent-roles notes) → this note's commit.

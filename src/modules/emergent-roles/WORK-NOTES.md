@@ -341,3 +341,98 @@ The full repository suite is deliberately NOT run — the TL owns the
 integration battery. The W138 chain is `7a93439` (D1, TL-banked) →
 `ad77939` (D2 Layer A) → `4e5da9d` (D2 Layer B+C) → this note's commit
 on `work/w138-emergent-roles`.
+
+---
+
+## Wave C integration pass (2026-10-08, task WC-INT on work/wc-integration)
+
+This section is APPENDED by the integration-pass finisher (append-only;
+the record above is history). It records what THIS pass closed against
+the honest-limitations register, following the W136-INT precedent (the
+dated append in agent-exchange WORK-NOTES, commits 45c829a → d5a8934 →
+f226654 on work/w136-integration).
+
+**Limitation #2 — CLOSED.** The deferred integration-tier registrations
+for the five tables (`role_gap_evidence`, `role_proposals`,
+`role_proposal_reviews`, `role_marketplace_submissions`,
+`role_activations`) are delivered:
+
+1. **Tenant-isolation sweep** — `tests/tenant-isolation/emergent-roles-sweep.test.ts`
+   (manifest v10 → v11): a REAL two-tenant service proof in the
+   WB2/W136 house style. Tenant A builds emergence state through the
+   public contract (gap evidence over a REAL settled-MISSED W040
+   outcome and a REAL FAILED W136 execution run — goal → plan → failed
+   agent execution → recorded run, all through the consumed seams; the
+   evidence-backed proposal citing them; the one-way lifecycle through
+   a REAL decided W009 review; the marketplace submission REQUEST
+   against a REAL W028 agent package walked to INSTALLABLE through the
+   governed chain; the activation RECORD citing a REAL APPROVED W022
+   acquisition); tenant B sees none of it — empty-list invisibility on
+   `listRoleProposals` / `listGapEvidence` and the proposal-scoped
+   submission/activation lists, uniform `proposal_not_found` on the
+   read, the lifecycle transitions, the review, the submission and the
+   activation, `gap_evidence_not_found` on the gap read and on citing a
+   foreign gap, the mapped `capability_ref_not_found` /
+   `outcome_ref_not_found` / `plan_ref_not_found` source refusals (B
+   cannot even source gap evidence from A's capability, outcome or
+   failed run — the stolen-body precedent), and the same slug +
+   capability name coexisting per tenant with each tenant walking its
+   own full lifecycle.
+2. **Discoverability registration** — the module joined
+   `src/modules/journey-proof/discoverability.ts` as a platform
+   instrument (domain infrastructure with a delivered service + five
+   tables, no user-facing routes yet; it leaves the instrument list
+   when W139/W140 land the composition surfaces — the meetings/cellular
+   precedent). The e2e instrument-list pin moved 24 → 26 declared
+   harnesses.
+3. **Health census** — `EXPECTED_TABLE_CENSUS` 287 → 298 with the five
+   table names added to `EXPECTED_TABLE_NAMES`, verified against the
+   health suite's fresh fully-migrated embedded db (the census test
+   re-migrates and asserts).
+4. **Schema-reconciliation pins** — 144 → 146 applied / 147 → 149
+   discovered / 147 → 149 skipped (`emergent-roles/001`, the five-table
+   first migration).
+5. **Schema-boundary sweep — no allowlist additions required**: every
+   new UNIQUE constraint and partial unique index carries tenant_id
+   ((tenant_id, slug) on role_proposals, (tenant_id, proposal_id) on
+   role_proposal_reviews, the three tenant_id-leading partial indexes on
+   role_gap_evidence), there are no FKs at all (opaque forward
+   references are the house discipline) — the sweep passed unchanged.
+
+**Limitation #8 — CLOSED.** The cosmetic `errors.ts` header
+inconsistency is fixed: the header block now reads "(33 codes)",
+matching the closing line and the actual union (commit 1227aa2, the
+one-word TL-banked fix whose worker died pre-commit).
+
+**Honest new table counts at the pass tip:** the arch gate reads
+**780 module files / 337 app/mcp files / 289 tables checked** on the
+integrated branch (the module's own five tables moved the count 278 →
+283 pre-merge; the W137 merge's six complete 283 → 289); the health
+census 287 → 298; the schema-reconciliation pins 144/147/147 →
+146/149/149.
+
+**Still open after this pass** (unchanged from the register above): #1
+(the FOR UPDATE staleness re-checks not concurrently provable on
+single-connection PGlite), #3 (recurrence detection caller-driven —
+W140 composition), #4 (the Lab separation compares principal ids, no
+authority-claim gating), #5 (the frozen package snapshot never
+updates), #6 (multiple submissions per approved proposal legal —
+deliberate), #7 (the decidedAt defensive fallback), #9 (no app-layer
+UX — W139/W140), and #10 (the TL-owned full-repository battery; this
+pass ran the four gates plus the tenant-isolation directory, all
+green).
+
+**Pass gates (worktree /home/z/aurum-wcint, branch work/wc-integration,
+base e53ab66 — the post-W137/W138 merge point off main 256d5bb; run at
+the tip 1227aa2 and re-run with these notes in place, identical):**
+`timeout 300 bun run typecheck` → exit 0, zero errors · `timeout 120
+bun run arch` → exit 0, "architecture check passed — module files: 780,
+app/mcp files: 337, tables checked: 289" · `timeout 240 bun run lint` →
+exit 0, zero errors · `timeout 590 bunx vitest run tests/tenant-isolation`
+→ exit 0, 37 files / **242/242 tests green** (this module's sweep
+included), duration ~229s.
+
+**Pass commits (work/wc-integration):** 3a95814 (the sweeps + manifest
+v11) → c95e6e5 (discoverability + the e2e pin) → b25cfcc (the census +
+schema pins) → 1227aa2 (this module's errors.ts cosmetic fix) → this
+note's commit.
