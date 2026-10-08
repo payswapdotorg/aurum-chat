@@ -39,6 +39,14 @@
 // contract vocabulary (types only: no tables, no service, no routes) the
 // execution module owns; the sweep proves the module stays a pure contract
 // surface, per the journey-proof precedent.
+//
+// v9 (WB2 integration, 2026-10-07): the Wave B + W135 modules join with
+// REAL two-tenant service proofs — provider-fabric (W132) and context
+// (W134) have landed their implementations, so the contract-vocabulary
+// sweep's living obligation upgrades their sections from types-only
+// structural proofs to driving the real services for two tenants; the
+// three new modules get dedicated sweep files in the same style:
+// agent-body (W133), info-strategy (W134) and org-lab (W135).
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -119,9 +127,19 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   // and 001-coverage migration are delivered, and the sweep now drives the
   // real service for two tenants (empty-list invisibility, uniform
   // snapshot_not_found/surface_not_found, independent evaluation).
-  // provider-fabric and context stay types-only until W132/W134; their
-  // structural stage-proof remains in the same sweep file.
+  // v9 (WB2 integration, 2026-10-07): the same obligation is HONORED for
+  // provider-fabric (W132) and context (W134) — both landed their services
+  // and migrations, and the contract-vocabulary sweep now drives BOTH real
+  // services for two tenants (the types-only structural stage-proof is
+  // retired, replaced by a delivered-persistence pin like coverage's).
   coverage: 'contract-vocabulary-sweep.test.ts',
   'provider-fabric': 'contract-vocabulary-sweep.test.ts',
   context: 'contract-vocabulary-sweep.test.ts',
+  // v9 (WB2 integration, 2026-10-07): the Wave B + W135 modules join with
+  // their own dedicated sweep files — real two-tenant service proofs in
+  // the established style (empty-list invisibility, uniform typed
+  // not-founds, same natural keys coexisting per tenant).
+  'agent-body': 'agent-body-sweep.test.ts',
+  'info-strategy': 'info-strategy-sweep.test.ts',
+  'org-lab': 'org-lab-sweep.test.ts',
 };
