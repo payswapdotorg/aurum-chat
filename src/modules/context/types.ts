@@ -93,6 +93,11 @@ export interface ContextFingerprint {
   readonly tenantId: string;
   /** The goal this context was fingerprinted for (opaque goals-module ref). */
   readonly goalId: string;
+  /**
+   * The task the fingerprint was derived for (W134 additive field). Absent
+   * (null) when the task was unknown at derivation time — never faked.
+   */
+  readonly task: ContextTask | null;
   readonly season: SeasonalContext | null;
   readonly duration: DurationContext | null;
   readonly staffing: StaffingContext | null;
@@ -114,4 +119,95 @@ export interface ContextFingerprintSummary {
   readonly headline: string; // e.g. 'spring · 6-week build · novice-heavy crew'
   readonly knownDimensions: readonly string[];
   readonly absentDimensions: readonly string[];
+}
+
+// ----------------------------------------------------------------------------
+// W134 additive extension — fingerprint DERIVATION over the frozen vocabulary
+// ----------------------------------------------------------------------------
+//
+// Everything below this marker is the W134 implementation surface added ON
+// TOP of the frozen stage above. The frozen types and their semantics are
+// unchanged; the derivation layer only ADDS input/read shapes for turning a
+// goal + task + observable context input into a stored ContextFingerprint.
+
+/**
+ * The eight typed context dimensions of a fingerprint, in canonical order —
+ * the vocabulary `knownDimensions` / `absentDimensions` report against (the
+ * null signal made visible: every key is either known or honestly absent).
+ * `task` and `additionalSignals` are deliberately NOT in this list: the task
+ * is the derivation subject's work descriptor, not a context dimension, and
+ * additionalSignals is the free-form catch-all (a non-empty map is surfaced
+ * in the headline as '+N signals').
+ */
+export const CONTEXT_DIMENSIONS = [
+  'season',
+  'duration',
+  'staffing',
+  'workload',
+  'capabilities',
+  'environment',
+  'constraints',
+  'evidenceFreshness',
+] as const;
+
+export type ContextDimensionKey = (typeof CONTEXT_DIMENSIONS)[number];
+
+/**
+ * The task descriptor a fingerprint was derived for. The architecture
+ * conditions strategy on goal + task + CURRENT CONTEXT ("not only a task
+ * type"), so the derivation records the task it was told about — absent
+ * (null) when unknown, never faked. Both fields are optional; at least one
+ * must be present when the task itself is known.
+ */
+export interface ContextTask {
+  readonly title: string | null;
+  readonly kind: string | null;
+}
+
+/** Input shape of `ContextTask` (either field, at least one). */
+export interface ContextTaskInput {
+  title?: string | null;
+  kind?: string | null;
+}
+
+/**
+ * The observable context input of a derivation — every dimension OPTIONAL.
+ * THE NULL-SIGNAL LAW: an absent dimension is ABSENT in the derived
+ * fingerprint, never defaulted or guessed; the fingerprint records what is
+ * known. Callers assert only what their evidence actually shows.
+ */
+export interface ContextObservationsInput {
+  season?: SeasonalContext | null;
+  duration?: DurationContext | null;
+  staffing?: StaffingContext | null;
+  workload?: WorkloadLevel | null;
+  capabilities?: CapabilityAvailabilityContext | null;
+  environment?: EnvironmentContext | null;
+  constraints?: ConstraintContext | null;
+  evidenceFreshness?: EvidenceFreshnessContext | null;
+  additionalSignals?: Readonly<Record<string, string>>;
+}
+
+/** Input shape of `deriveFingerprint`. */
+export interface DeriveFingerprintInput {
+  /** The goal this context is fingerprinted for (validated ACTIVE, W008). */
+  goalId: string;
+  /** What the goal's work is, when known. */
+  task?: ContextTaskInput | null;
+  /** The observable context (every dimension optional — null-signal law). */
+  observations?: ContextObservationsInput;
+  /** Opaque evidence refs the derivation is based on. */
+  derivedFrom?: string[];
+}
+
+/** Query shape of `getFingerprint`. */
+export interface GetFingerprintQuery {
+  fingerprintId: string;
+}
+
+/** Query shape of `listFingerprints`. */
+export interface ListFingerprintsQuery {
+  /** Only fingerprints derived for this goal. */
+  goalId?: string;
+  limit?: number;
 }
