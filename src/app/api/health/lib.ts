@@ -36,7 +36,7 @@ import { getWorkerMetrics } from '@/infra/worker';
  * health suite, which re-migrates a fresh embedded database and asserts
  * the census — extend it whenever a migration adds a table.
  */
-export const EXPECTED_TABLE_CENSUS = 281; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6)
+export const EXPECTED_TABLE_CENSUS = 298; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6), W136: agent-exchange (+6), Wave C: execution-fabric (+6), emergent-roles (+5)
 
 /**
  * The full expected public-BASE-TABLE name set (W118 diagnostic): every
@@ -83,11 +83,18 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'deep_action_surface', 'deep_action_tasks', 'demo_journey_anchors', 'destination_deliveries',
   'destination_delivery_attempts', 'destinations', 'discovery_candidates', 'discovery_runs',
   'edge_auth_nonces', 'edge_capability_allowlist', 'edge_events', 'edge_heartbeats',
-  'edge_jobs', 'edge_runtimes', 'employees', 'event_sequences', 'events',
+  'edge_jobs', 'edge_runtimes', 'employees',
+  'environment_definitions', // Wave C (W137) — the execution fabric's vendor-neutral registry
+  'event_sequences', 'events',
+  'execution_plan_approvals', 'execution_plan_handoffs',
+  'execution_plan_members', 'execution_plan_runs', 'execution_plan_tasks',
+  'execution_plans', // W136 — the orchestration projection (plans + immutable tasks/members + append-only handoffs/approvals/runs)
   'extension_build_artifacts', 'extension_builds', 'extension_deployments',
   'extension_event_deliveries', 'extension_external_calls', 'extension_lifecycle_events',
   'extension_manifest_verifications', 'extension_manifests', 'extension_schedule_runs',
   'extension_state', 'extension_telemetry_events', 'extension_ui', 'extensions',
+  'fabric_leases', 'fabric_lease_artifacts', 'fabric_lease_checkpoints',
+  'fabric_lease_events', 'fabric_lease_evidence', // Wave C (W137) — the execution fabric's lease state machine + append-only evidence tails
   'freshness_policies', 'goal_versions', 'goals', 'hypotheses', 'identities',
   'identity_challenges',
   'info_strategies', 'info_strategy_versions', // W134 — the conditioned information strategies
@@ -120,6 +127,8 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'quality_judgments', 'quality_metric_results', 'quality_snapshots', 'realtime_artifacts',
   'realtime_connections', 'realtime_events', 'realtime_participants', 'realtime_responses',
   'realtime_sessions', 'realtime_turns', 'reward_policies', 'reward_settlements', 'rewards',
+  'role_activations', 'role_gap_evidence', 'role_marketplace_submissions',
+  'role_proposal_reviews', 'role_proposals', // Wave C (W138) — the emergence projection (gap evidence + proposals + reviews + submissions + activations)
   'role_assignment_versions', 'role_assignments', 'role_expectation_versions',
   'role_expectations', 'sim_companies', 'sim_hidden_facts', 'sim_month_reports',
   'source_checkpoint_history', 'source_checkpoints', 'source_rankings', 'source_records',

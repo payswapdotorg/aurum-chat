@@ -47,6 +47,28 @@
 // structural proofs to driving the real services for two tenants; the
 // three new modules get dedicated sweep files in the same style:
 // agent-body (W133), info-strategy (W134) and org-lab (W135).
+//
+// v10 (W136 integration, 2026-10-08): 'agent-exchange' (W136) joins with
+// its own dedicated sweep file — a REAL two-tenant service proof over the
+// orchestration projection (plans, tasks, members, handoffs, approvals,
+// runs): empty-list invisibility, uniform plan_not_found on reads,
+// lifecycle transitions and appends, the mapped goal_not_found /
+// agent_ref_not_found composition refusals, and the same plan shape +
+// tenant-unique agent slug coexisting per tenant.
+//
+// v11 (Wave C integration, 2026-10-08): 'execution-fabric' (W137) and
+// 'emergent-roles' (W138) join with their own dedicated sweep files —
+// REAL two-tenant service proofs over the execution environment fabric
+// (definitions, leases, events, artifacts, evidence, checkpoints:
+// uniform definition_not_found/lease_not_found on every read, transition
+// and append, the mapped exchange_plan_not_found/execution_run_not_found
+// composition refusals, the same defKey + lease shape coexisting per
+// tenant) and over the emergence projection (gap evidence, proposals,
+// reviews, submissions, activations: uniform proposal_not_found /
+// gap_evidence_not_found on reads, lifecycle, review, submission and
+// activation, the mapped capability_ref_not_found / outcome_ref_not_found
+// / plan_ref_not_found source refusals, the same slug + capability name
+// coexisting per tenant).
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -142,4 +164,18 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   'agent-body': 'agent-body-sweep.test.ts',
   'info-strategy': 'info-strategy-sweep.test.ts',
   'org-lab': 'org-lab-sweep.test.ts',
+  // v10 (W136 integration, 2026-10-08): the agent-exchange module joins
+  // with its own dedicated sweep file — the same real two-tenant service
+  // proof discipline over the orchestration projection's six tables
+  // (execution_plans/_tasks/_members/_handoffs/_approvals/_runs).
+  'agent-exchange': 'agent-exchange-sweep.test.ts',
+  // v11 (Wave C integration, 2026-10-08): the W137/W138 modules join with
+  // their own dedicated sweep files — the same real two-tenant service
+  // proof discipline over the execution fabric's six tables
+  // (environment_definitions + fabric_leases + the four append-only
+  // evidence tails) and the emergence projection's five tables
+  // (role_gap_evidence, role_proposals, role_proposal_reviews,
+  // role_marketplace_submissions, role_activations).
+  'execution-fabric': 'execution-fabric-sweep.test.ts',
+  'emergent-roles': 'emergent-roles-sweep.test.ts',
 };

@@ -68,7 +68,25 @@ describe('W044 sweep — execution (W131 frozen contract surface)', () => {
           WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
       )
     ).rows.map((row) => row.table_name.toLowerCase());
-    const owned = tables.filter((table) => table.startsWith('execution'));
+    // W136 integration (2026-10-08): the prefix heuristic needs a scoped
+    // exclusion — the agent-exchange module (W136, a DIFFERENT module: the
+    // orchestration projection) legitimately owns the six execution_plan*
+    // tables. The claim proven here is unchanged: the EXECUTION module
+    // (W131, this frozen contract surface) still owns no migrations and no
+    // tables of its own; the six excluded tables belong to agent-exchange
+    // and carry their own REAL two-tenant service proof in
+    // tests/tenant-isolation/agent-exchange-sweep.test.ts (manifest v10).
+    const ownedByAgentExchange = new Set([
+      'execution_plans',
+      'execution_plan_tasks',
+      'execution_plan_members',
+      'execution_plan_handoffs',
+      'execution_plan_approvals',
+      'execution_plan_runs',
+    ]);
+    const owned = tables.filter(
+      (table) => table.startsWith('execution') && !ownedByAgentExchange.has(table),
+    );
     expect(owned).toEqual([]);
     await closeDb();
   });
