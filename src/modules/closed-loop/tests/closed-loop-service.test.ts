@@ -31,7 +31,7 @@
 //     prediction is adjusted by applying the cycle's RECORDED signals
 //     through the exported deterministic fold (the same single
 //     definition the service consumes), and the frozen calibration
-//     errors shrink strictly cycle-over-cycle (0.3 → 0.225 → 0.1688 →
+//     errors shrink strictly cycle-over-cycle (0.3 → 0.225 → 0.1687 →
 //     0.1266) while a CONTROL loop over the same world without signals
 //     stays flat (0.3 throughout) — the trajectory and summary reads
 //     carry the series and the honest verdicts ('improved' vs 'flat');
