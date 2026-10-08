@@ -36,7 +36,7 @@ import { getWorkerMetrics } from '@/infra/worker';
  * health suite, which re-migrates a fresh embedded database and asserts
  * the census — extend it whenever a migration adds a table.
  */
-export const EXPECTED_TABLE_CENSUS = 301; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6), W136: agent-exchange (+6), Wave C: execution-fabric (+6), emergent-roles (+5), Wave D: cross-platform (+3)
+export const EXPECTED_TABLE_CENSUS = 305; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6), W136: agent-exchange (+6), Wave C: execution-fabric (+6), emergent-roles (+5), Wave D: cross-platform (+3), Wave E: closed-loop (+4)
 
 /**
  * The full expected public-BASE-TABLE name set (W118 diagnostic): every
@@ -105,6 +105,8 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'integration_recommendations', 'integration_systems', 'integration_verification_runs',
   'intervention_priors', 'intervention_realizations', 'interventions',
   'llm_availability_events', 'llm_executions', 'llm_hot_swap_verifications',
+  'loop_cycles', 'loop_knowledge_deviations', 'loop_ranking_signals',
+  'loop_reality_deviations', // Wave E (W140) — the unified closed-loop learning spine (loop cycles + the two distinct deviation classes + the append-only ranking signals)
   'marketplace_package_lifecycle_events', 'marketplace_package_reviews',
   'model_bindings', 'model_catalog_entries', 'model_discovery_states', // W132 — the provider fabric
   'org_candidates', 'org_recommendation_calibrations',

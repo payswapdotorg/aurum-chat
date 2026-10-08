@@ -344,11 +344,19 @@ describe('capability coverage', () => {
     // web app remains the canonical renderer and the desktop/mobile
     // renderers are composition; it leaves this list when W140 lands
     // the composition surfaces, like meetings/cellular did.
+    // Wave E integration (deliberate update): 'closed-loop' (W140)
+    // joins this list — the unified closed-loop learning record (the
+    // longitudinal loop-cycle spine, the two structurally distinct
+    // deviation classes and the advisory ranking signals) has its
+    // delivered service and four tables but no user-facing routes of
+    // its own yet; it leaves this list when W141 lands the
+    // certification surfaces, like meetings/cellular did.
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'agent-body',
       'agent-exchange',
       'agent-supervision',
       'capability-grants',
+      'closed-loop',
       'computer-use',
       'context',
       'coverage',
