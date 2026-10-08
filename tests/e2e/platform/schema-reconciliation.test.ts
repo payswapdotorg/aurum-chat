@@ -508,7 +508,11 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // append-only binding attachments), context/001 (W134, context
     // fingerprints), info-strategy/001 (W134, strategies + versions) and
     // org-lab/001 (W135, candidates + the §11 evidence object).
-    expect(repair.applied).toHaveLength(143);
+    // INTEGRATION (W136, deliberate): 143 → 144 — the agent-exchange
+    // module's 001-agent-exchange.sql joins the applied set (the six-table
+    // orchestration projection: execution_plans + immutable tasks/members
+    // + append-only handoffs/approvals/runs with the lifecycle guard).
+    expect(repair.applied).toHaveLength(144);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -534,7 +538,10 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // of the Wave B + W135 modules join the discovered set (provider-fabric,
     // agent-body, context, info-strategy, org-lab — deliberate count-pin
     // extensions).
-    expect(names).toHaveLength(146);
+    // INTEGRATION (W136, deliberate): 146 → 147 — the agent-exchange
+    // module's 001 orchestration-projection migration joins the discovered
+    // set (deliberate count-pin extension).
+    expect(names).toHaveLength(147);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -649,7 +656,10 @@ describe('W102 — the reconciliation is idempotent', () => {
     // INTEGRATION (WB2, deliberate): 146 — plus the five first migrations
     // of the Wave B + W135 modules (provider-fabric, agent-body, context,
     // info-strategy, org-lab — deliberate count-pin extensions).
-    expect(report.skipped).toHaveLength(146);
+    // INTEGRATION (W136, deliberate): 147 — plus the agent-exchange
+    // module's 001 orchestration-projection migration (deliberate
+    // count-pin extension).
+    expect(report.skipped).toHaveLength(147);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });

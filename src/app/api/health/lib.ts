@@ -36,7 +36,7 @@ import { getWorkerMetrics } from '@/infra/worker';
  * health suite, which re-migrates a fresh embedded database and asserts
  * the census — extend it whenever a migration adds a table.
  */
-export const EXPECTED_TABLE_CENSUS = 281; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6)
+export const EXPECTED_TABLE_CENSUS = 287; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6), W136: agent-exchange (+6)
 
 /**
  * The full expected public-BASE-TABLE name set (W118 diagnostic): every
@@ -84,6 +84,9 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'destination_delivery_attempts', 'destinations', 'discovery_candidates', 'discovery_runs',
   'edge_auth_nonces', 'edge_capability_allowlist', 'edge_events', 'edge_heartbeats',
   'edge_jobs', 'edge_runtimes', 'employees', 'event_sequences', 'events',
+  'execution_plan_approvals', 'execution_plan_handoffs',
+  'execution_plan_members', 'execution_plan_runs', 'execution_plan_tasks',
+  'execution_plans', // W136 — the orchestration projection (plans + immutable tasks/members + append-only handoffs/approvals/runs)
   'extension_build_artifacts', 'extension_builds', 'extension_deployments',
   'extension_event_deliveries', 'extension_external_calls', 'extension_lifecycle_events',
   'extension_manifest_verifications', 'extension_manifests', 'extension_schedule_runs',
