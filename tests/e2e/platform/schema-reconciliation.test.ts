@@ -502,7 +502,13 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // claims/snapshots/gaps).
     // INTEGRATION (W126, deliberate): 137 → 138 — the company-query module
     // gained 001-company-query-audit.sql (the append-only query audit).
-    expect(repair.applied).toHaveLength(138);
+    // INTEGRATION (WB2, deliberate): 138 → 143 — the Wave B + W135 modules'
+    // first migrations join the applied set: provider-fabric/001 (W132,
+    // the 5-table provider fabric), agent-body/001 (W133, bodies + the
+    // append-only binding attachments), context/001 (W134, context
+    // fingerprints), info-strategy/001 (W134, strategies + versions) and
+    // org-lab/001 (W135, candidates + the §11 evidence object).
+    expect(repair.applied).toHaveLength(143);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -524,7 +530,11 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // migration joins the discovered set (deliberate count-pin extension).
     // INTEGRATION (W126): 140 → 141 — the company-query module's 001
     // query-audit migration (deliberate count-pin extension).
-    expect(names).toHaveLength(141);
+    // INTEGRATION (WB2, deliberate): 141 → 146 — the five first migrations
+    // of the Wave B + W135 modules join the discovered set (provider-fabric,
+    // agent-body, context, info-strategy, org-lab — deliberate count-pin
+    // extensions).
+    expect(names).toHaveLength(146);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -636,7 +646,10 @@ describe('W102 — the reconciliation is idempotent', () => {
     // migration (deliberate count-pin extension).
     // INTEGRATION (W126): 141 — plus the company-query module's 001
     // query-audit migration (deliberate count-pin extension).
-    expect(report.skipped).toHaveLength(141);
+    // INTEGRATION (WB2, deliberate): 146 — plus the five first migrations
+    // of the Wave B + W135 modules (provider-fabric, agent-body, context,
+    // info-strategy, org-lab — deliberate count-pin extensions).
+    expect(report.skipped).toHaveLength(146);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });
