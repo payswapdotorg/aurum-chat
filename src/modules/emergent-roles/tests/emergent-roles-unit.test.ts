@@ -139,10 +139,10 @@ describe('vocabularies and guards', () => {
     expect(() =>
       assertEmergentRolesTenantContext({ tenantId: 't', principalId: 'p', authority: [] }),
     ).not.toThrow();
-    expect(() => assertEmergentRolesTenantContext({ tenantId: 't', authority: [] })).toThrow(
-      EmergentRolesError,
+    expectCode('invalid_context', () =>
+      assertEmergentRolesTenantContext({ tenantId: 't', authority: [] } as never),
     );
-    expect(() => assertEmergentRolesTenantContext(null)).toThrow(EmergentRolesError);
+    expectCode('invalid_context', () => assertEmergentRolesTenantContext(null as never));
     expectCode('invalid_context', () =>
       assertEmergentRolesTenantContext({ tenantId: '', principalId: 'p', authority: [] }),
     );
