@@ -141,6 +141,16 @@ export {
   magnitudeOf,
   observedScoreOf,
   round4,
+  validateApplyRankingSignalInput,
+  validateCloseLoopCycleInput,
+  validateGetLoopCycleQuery,
+  validateGetLoopTrajectoryQuery,
+  validateKnowledgeDeviationInput,
+  validateListLoopCyclesQuery,
+  validateListRankingSignalsQuery,
+  validateRealityDeviationInput,
+  validateRecordLoopCycleInput,
+  validateSummarizeLoopImprovementQuery,
 } from './validation';
 
 export type {
