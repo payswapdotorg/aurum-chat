@@ -25,6 +25,7 @@
 // dedicated typed code before anything is recorded.
 
 import type { TenantContext } from '@/infra/tenant';
+import { isCompanyModelSubjectKind } from '@/modules/learning/contract';
 import { ClosedLoopError } from './errors';
 import type {
   KnowledgeDeviationInput,
@@ -148,6 +149,24 @@ export function isSignalBasis(value: unknown): value is SignalBasis {
 
 export function isLoopCycleStatus(value: unknown): value is LoopCycleStatus {
   return typeof value === 'string' && (LOOP_CYCLE_STATUSES as readonly string[]).includes(value);
+}
+
+/**
+ * Validates a CompanyModel subject-key shape for a company-model signal
+ * target: 'company', or '<kind>:<key>' where the kind passes the
+ * LEARNING contract's own vocabulary guard (isCompanyModelSubjectKind —
+ * consumed, never re-derived) and the key part is 1..248 chars. A cold
+ * subject (no assertions yet) is a legitimate ranking target: the
+ * CompanyModel ranks candidates with no prior at their base score.
+ */
+export function isCompanyModelSubjectKey(value: string): boolean {
+  if (value === 'company') return true;
+  const separator = value.indexOf(':');
+  if (separator <= 0 || separator === value.length - 1) return false;
+  const kind = value.slice(0, separator);
+  const key = value.slice(separator + 1);
+  if (key.length < 1 || key.length > 248) return false;
+  return isCompanyModelSubjectKind(kind);
 }
 
 export function assertClosedLoopTenantContext(ctx: TenantContext): void {
