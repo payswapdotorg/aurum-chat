@@ -142,3 +142,247 @@ export interface ProviderHealthState {
   /** Sanitized note (no credentials, no raw provider error dumps). */
   readonly note: string | null;
 }
+
+// ============================================================================
+// W132 operational extension (ADDITIVE — every frozen export above stays
+// byte-identical; this block adds the operational vocabulary the service
+// layer, the contract surface and the tests speak).
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// Code-owned wire-protocol knowledge (module-internal reference data).
+//
+// For a 'known' definition (W034 LlmProvider vocabulary) the wire protocol
+// is DERIVED, never stored: it is the dialect the W034 adapter set speaks
+// for that provider (deepseek/groq speak the OpenAI-compatible dialect
+// through the openai-compatible adapter — see llm/adapters/index.ts).
+// ----------------------------------------------------------------------------
+
+/** The wire protocol a W034 known provider speaks (mirrors the W034 adapter set). */
+export type KnownProviderWireProtocol = WireProtocolKind;
+
+// ----------------------------------------------------------------------------
+// Definition management inputs/results
+// ----------------------------------------------------------------------------
+
+/** Connect a KNOWN provider (W034 LlmProvider vocabulary) for the tenant. */
+export interface ConnectKnownProviderInput {
+  /** Must be a W034 registry provider (the closed known-provider vocabulary). */
+  readonly provider: string;
+  /** Optional tenant-chosen label; defaults to the provider slug. */
+  readonly label?: string;
+}
+
+/**
+ * Register a CUSTOM provider: a definition over an EXISTING wire protocol
+ * with a custom base URL. A custom provider never invents a protocol
+ * dialect — wireProtocol must be one the platform already speaks.
+ */
+export interface RegisterCustomProviderInput {
+  /** Tenant-chosen slug; must not collide with the W034 vocabulary. */
+  readonly provider: string;
+  readonly label: string;
+  readonly baseUrl: string;
+  readonly wireProtocol: WireProtocolKind;
+}
+
+export interface UpdateProviderDefinitionInput {
+  readonly definitionId: string;
+  /** Label and status are the only mutable fields — a definition's identity (kind, provider, endpoint, protocol) is immutable. */
+  readonly label?: string;
+  readonly status?: 'active' | 'disabled';
+}
+
+export interface ListProviderDefinitionsQuery {
+  readonly kind?: ProviderDefinitionKind;
+  readonly status?: 'active' | 'disabled';
+  readonly provider?: string;
+  /** 1..500, default 50. */
+  readonly limit?: number;
+}
+
+export interface DefinitionRefQuery {
+  readonly definitionId: string;
+}
+
+// ----------------------------------------------------------------------------
+// Catalog management
+// ----------------------------------------------------------------------------
+
+/**
+ * Manually register a model on a definition (the discovery fallback — a
+ * first-class catalog entry with origin 'manual').
+ */
+export interface RegisterModelManuallyInput {
+  readonly definitionId: string;
+  readonly modelId: string;
+  readonly displayName: string;
+  readonly capabilities?: readonly ('text-generation' | 'embedding')[];
+  readonly contextWindowTokens?: number | null;
+  readonly maxOutputTokens?: number | null;
+  readonly priceInputMinorPerMillion?: number | null;
+  readonly priceOutputMinorPerMillion?: number | null;
+}
+
+export interface ListModelCatalogQuery {
+  /** Optional filter; when absent the WHOLE tenant catalog lists (one canonical registry). */
+  readonly definitionId?: string;
+  readonly origin?: ModelCatalogOrigin;
+  readonly status?: 'available' | 'unavailable';
+  readonly capability?: 'text-generation' | 'embedding';
+  /** 1..500, default 50. */
+  readonly limit?: number;
+}
+
+export interface ModelEntryRefQuery {
+  readonly entryId: string;
+}
+
+// ----------------------------------------------------------------------------
+// Discovery — the transport seam (mirrors the llm gateway's setLlmTransport
+// infra-seam pattern: deterministic doubles in tests, real transports wired
+// at process start, NEVER real network under test).
+// ----------------------------------------------------------------------------
+
+/**
+ * One model a discovery transport reports. Everything except `modelId` may
+ * be unknown (`null`) — many list-models endpoints return bare ids; the
+ * fabric fills display names from the id and enriches capabilities/windows
+ * from the W034 registry for known providers, never by guessing.
+ */
+export interface FabricDiscoveredModelSample {
+  readonly modelId: string;
+  readonly displayName: string | null;
+  readonly capabilities: readonly ('text-generation' | 'embedding')[] | null;
+  readonly contextWindowTokens: number | null;
+  readonly maxOutputTokens: number | null;
+  readonly priceInputMinorPerMillion: number | null;
+  readonly priceOutputMinorPerMillion: number | null;
+}
+
+/** The provider-neutral request handed to the discovery transport. */
+export interface FabricDiscoveryRequest {
+  readonly definitionId: string;
+  readonly tenantId: string;
+  readonly provider: string;
+  readonly wireProtocol: WireProtocolKind;
+  /** null for 'known' definitions — the protocol's canonical endpoint. */
+  readonly baseUrl: string | null;
+}
+
+/**
+ * Provider-neutral outcome of one discovery probe:
+ *  * `succeeded`   — the provider listed its models;
+ *  * `unsupported` — the provider exposes no list-models API (a legitimate
+ *                    provider property, recorded in the discovery state —
+ *                    the manual registration fallback exists for this);
+ *  * `failed`      — the probe failed (transport error); `detail` is
+ *                    sanitized before it is ever persisted.
+ */
+export interface FabricDiscoveryReceipt {
+  readonly status: 'succeeded' | 'unsupported' | 'failed';
+  readonly models: readonly FabricDiscoveredModelSample[];
+  /** Sanitized human detail; null when the transport has nothing to say. */
+  readonly detail: string | null;
+}
+
+/** The discovery port real transports implement (wired via setFabricDiscoveryTransport). */
+export interface FabricDiscoveryTransport {
+  listModels(request: FabricDiscoveryRequest): Promise<FabricDiscoveryReceipt>;
+}
+
+export type ModelDiscoveryOutcome = 'succeeded' | 'unsupported' | 'failed';
+
+export interface RunModelDiscoveryInput {
+  readonly definitionId: string;
+}
+
+/** The result of one discovery run: the outcome, the recorded state, and the (refreshed) entries when succeeded. */
+export interface ModelDiscoveryResult {
+  readonly outcome: ModelDiscoveryOutcome;
+  readonly state: ModelDiscoveryState;
+  /** The definition's catalog entries after the refresh (empty unless succeeded). */
+  readonly entries: readonly ModelCatalogEntry[];
+}
+
+// ----------------------------------------------------------------------------
+// Bindings
+// ----------------------------------------------------------------------------
+
+export interface AttachModelBindingInput {
+  readonly purpose: ModelBindingPurpose;
+  readonly definitionId: string;
+  readonly modelId: string;
+  /** OPAQUE reference to the W034 BYOA account that executes this binding. */
+  readonly accountId: string;
+}
+
+export interface AttachModelBindingResult {
+  readonly binding: ModelBinding;
+  /** The binding this one superseded (null when this is the purpose's first binding). */
+  readonly superseded: ModelBinding | null;
+}
+
+export interface ActiveBindingQuery {
+  readonly purpose: ModelBindingPurpose;
+}
+
+export interface ListModelBindingsQuery {
+  readonly purpose?: ModelBindingPurpose;
+  readonly status?: 'active' | 'superseded';
+  /** 1..500, default 50. */
+  readonly limit?: number;
+}
+
+export interface BindingSwapEvidenceQuery {
+  readonly purpose: ModelBindingPurpose;
+}
+
+/** One distinct (definition, model) path a purpose has been bound through, in first-attachment order. */
+export interface ModelBindingProviderPath {
+  readonly definitionId: string;
+  readonly provider: string;
+  readonly label: string;
+  readonly kind: ProviderDefinitionKind;
+  readonly modelId: string;
+}
+
+/**
+ * The fabric-level provider-swap evidence: which model currently serves a
+ * purpose, the full append-only binding history, and the distinct
+ * provider/model paths that purpose has been served through. (Execution
+ * through both paths is proven by the W034 hot-swap verification at the
+ * composition boundary — the fabric never invokes models.)
+ */
+export interface ModelBindingSwapEvidence {
+  readonly purpose: ModelBindingPurpose;
+  readonly current: ModelBinding | null;
+  /** Chronological (seq ascending) — the audit trail. */
+  readonly history: readonly ModelBinding[];
+  readonly providerPaths: readonly ModelBindingProviderPath[];
+}
+
+// ----------------------------------------------------------------------------
+// Health
+// ----------------------------------------------------------------------------
+
+export interface RecordProviderHealthInput {
+  readonly definitionId: string;
+  /** Callers may only ASSERT a definite state — 'unknown' is the honest default the fabric mints itself. */
+  readonly state: 'available' | 'unavailable';
+  /**
+   * 'manual' (a person says so) or 'execution' (observed through gateway
+   * executions by the composition layer). 'verification' is reserved for
+   * the fabric's own verifyProviderDefinition probe; 'none' is the
+   * initial state minted at connect.
+   */
+  readonly basis: 'manual' | 'execution';
+  /** Sanitized note (credential-shaped content is rejected, never stored). */
+  readonly note?: string | null;
+}
+
+export interface ListProviderHealthStatesQuery {
+  readonly state?: 'available' | 'unavailable' | 'unknown';
+  /** 1..500, default 50. */
+  readonly limit?: number;
+}
