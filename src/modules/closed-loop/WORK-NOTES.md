@@ -424,3 +424,110 @@ integration battery. The W140 chain is `6e25802` (D1 layer 1) →
 unit 17/17) → `078cf48` (TL-banked UNVERIFIED service suite) →
 `15df7c3` (D3 verification + repair, 41/41) → this notes commit on
 `work/w140-closed-loop`; pushed to origin by this finisher.
+
+## Wave E integration pass (2026-10-08, task WE-INT on work/we-integration)
+
+This section is APPENDED by the integration-pass worker (append-only;
+the record above is history). It records what THIS pass closed against
+the honest-limitations register, following the WD-INT precedent (the
+dated append in the cross-platform WORK-NOTES, commits 14e22bb →
+033b6ae → 7496e9c → d56e677 on work/wd-integration).
+
+**Limitation #4 — CLOSED.** The deferred integration-tier registrations
+for the four tables (`loop_cycles`, `loop_reality_deviations`,
+`loop_knowledge_deviations`, `loop_ranking_signals`) are delivered:
+
+1. **Tenant-isolation sweep** — `tests/tenant-isolation/closed-loop-sweep.test.ts`
+   (manifest v12 → v13): a REAL two-tenant service proof in the
+   WB2/W136/WC/WD-INT house style. Tenant A walks three cycles around
+   one REAL goal through the public contract — two closed with the
+   frozen longitudinal metrics (0.2375/0.2625 then 0.35/0.15, gap
+   closure 1, recurrence 1) and one still open — each citing REAL
+   evidence from every connected seam (a W136 execution run walked
+   goal → plan → W021 execution → recorded run, a W137 fabric lease, a
+   W135 calibrated recommendation over the two-candidate floor, the
+   goal's own metric; a W125 material coverage gap snapshot-scoped and
+   a W053 CompanyModel learning update with provenance), with signals
+   on all three ranking input channels (info-strategy goal-matched,
+   org-lab candidate, CompanyModel subject key, `authoritative:false`
+   minted). Tenant B sees none of it: empty-list invisibility on every
+   query path (`listLoopCycles` / `listRankingSignals` unfiltered AND
+   filtered by A's goal/cycle ids; empty trajectory + the honest
+   `insufficient_evidence` summary over A's goal), uniform
+   `cycle_not_found` on the deep read, the one-way close and the
+   signal append (foreign ≡ missing over open AND closed cycles
+   alike), the mapped `goal_not_found` / `run_not_found` /
+   `lease_not_found` / `recommendation_not_found` / `gap_not_found` /
+   `learning_update_not_found` stolen-evidence composition refusals
+   (B cannot even open a cycle over A's goal or cite A's evidence),
+   the `strategy_not_found` / `candidate_not_found` signal-target
+   refusals through B's OWN open cycle, and the same goal title +
+   rationale/note strings + frozen metrics coexisting per tenant with
+   INDEPENDENT 1-based cycle numbering (B's first cycle is 1 although
+   A is already at 3). PASSED ON THE FIRST RUN (no repairs).
+2. **Discoverability registration** — the module joined
+   `src/modules/journey-proof/discoverability.ts` as a platform
+   instrument (domain infrastructure with a delivered service + four
+   tables, no user-facing routes of its own yet; it leaves the
+   instrument list when W141 lands the certification surfaces, the
+   meetings/cellular precedent). The e2e instrument-list pin moved
+   27 → 28 declared harnesses (the discoverability e2e had been
+   FAILING on the integrated branch until this registration — the
+   module-scan tripwire demanded the entry).
+3. **Health census** — `EXPECTED_TABLE_CENSUS` 301 → 305 with the
+   four table names added to `EXPECTED_TABLE_NAMES`, verified against
+   the health suite's fresh fully-migrated embedded db (the census
+   test re-migrates and asserts).
+4. **Schema-reconciliation pins** — 147 → 148 applied / 150 → 151
+   discovered / 150 → 151 skipped (`closed-loop/001`, the four-table
+   first migration).
+5. **Schema-boundary sweep — no allowlist additions required**: the
+   migration's only UNIQUE namespace is
+   `loop_cycles_tenant_goal_number_unique` on (tenant_id, goal_id,
+   cycle_number) — tenant-leading by construction; there are no
+   foreign keys at all (opaque forward references are the house
+   discipline), and every table carries NOT NULL uuid tenant_id — the
+   sweep passed unchanged inside the green tenant-isolation directory
+   run.
+
+**Honest new table counts at the pass tip:** the arch gate reads
+**797 module files / 337 app/mcp files / 296 tables checked** on the
+integrated branch (W140's four tables moved the count 292 → 296
+pre-merge; unchanged by this pass — it adds no tables); the health
+census 301 → 305; the schema-reconciliation pins
+147/150/150 → 148/151/151. The arch-count-vs-census difference is the
+migrations-ledger convention (the census counts the `_migrations`
+ledger and any non-module tables the arch script does not).
+
+**Still open after this pass** (unchanged from the register above):
+#1 (the FOR UPDATE staleness re-checks not concurrently provable on
+single-connection PGlite), #2 (the deterministic fixture-vs-control
+improvement form — live-world calibration is W141's), #3 (the loop
+records learning, does not apply it to the seams — composition owns
+the wiring), #5 (goal-metric and deviation scores are
+caller-normalized; only the citations are gated), #6 (the bounded
+200-read evidence windows), #7 (no authority-claim gating), #8 (the
+deliberately narrow three-channel signal-target vocabulary), and #9
+(the in-process fixture wiring seams).
+
+**Pass gates (worktree /home/z/aurum-weint, branch work/we-integration,
+base integration/wave-e @ 632b061 — the post-W140 merge point):**
+`timeout 300 bun run typecheck` → exit 0, zero errors · `timeout 120
+bun run arch` → exit 0, "architecture check passed — module files:
+797, app/mcp files: 337, tables checked: 296" · `timeout 240 bun run
+lint` → exit 0, zero errors · `timeout 590 bunx vitest run
+tests/tenant-isolation` → exit 0, 39 files, **244/244 passed**
+(234.41s; was 38/243 at the pass base) · `timeout 300 bunx vitest run
+tests/e2e/journeys/discoverability.e2e.test.ts
+tests/e2e/platform/schema-reconciliation.test.ts src/app/api/health`
+→ exit 0, 3 files, **45/45 passed** (discoverability 12 + schema-
+reconciliation 27 + health 6) · `timeout 590 bunx vitest run
+src/modules/closed-loop` → exit 0, 2 files, **41/41 passed** (24
+service, 5687ms + 17 unit, 10ms). The pass chain is a9d9546 (the
+sweep + manifest v13) → 88ea659 (the discoverability registration +
+pin) → 5dfe244 (the census + schema pins) → this notes commit, all
+pushed to origin/work/we-integration. One transient infra note: the
+first `bun run typecheck` attempt of the pass was SIGKILLed ~30s in
+by the box's memory pressure (the resident next-server holds ~1.3GB
+of the 4GB) — a clean re-run and every later run exited 0 with zero
+errors; no code change was involved.
