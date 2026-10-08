@@ -313,3 +313,96 @@ The full repository suite is deliberately NOT run — the TL owns the
 integration battery. All W136 commits are local to
 `work/w136-agent-exchange` (cfe0b38 → c204903 → 757255c → 78c3a75 →
 this note's commit); the push waits on the operator's PAT re-provision.
+
+---
+
+## W136 integration pass (2026-10-08, task W136-INT on work/w136-integration)
+
+This section is APPENDED by the integration-pass worker (append-only; the
+record above is history). It records what THIS pass closed against the
+honest-limitations register, following the WB2 precedent (commits 14a34ae,
+7e614cf, 9a51eb0 on main).
+
+**Limitation #2 — CLOSED.** The deferred integration-tier registrations
+for the six tables (`execution_plans`, `execution_plan_tasks`,
+`execution_plan_members`, `execution_plan_handoffs`,
+`execution_plan_approvals`, `execution_plan_runs`) are delivered:
+
+1. **Tenant-isolation sweep** — `tests/tenant-isolation/agent-exchange-sweep.test.ts`
+   (manifest v9 → v10): a REAL two-tenant service proof in the WB2 house
+   style. Tenant A builds exchange state through the public contract (a
+   plan over a real W008 goal with the task graph + a governed
+   tenant-agent member, a relay handoff, a governed approval over a REAL
+   decided W009 request, an execution run over a REAL W021 execution with
+   an OPEN W040 outcome link); tenant B sees none of it — empty-list
+   invisibility on `listExecutionPlans` + the plan-scoped run/handoff/
+   approval lists + the goal-filtered plan list, uniform `plan_not_found`
+   on the read and both lifecycle transitions and all three appends
+   (foreign ≡ missing), `goal_not_found` on cross-tenant composition,
+   `agent_ref_not_found` when B staffs its own organization with A's
+   agent (the stolen-body precedent), the same plan shape (task keys,
+   member keys, objective) and the tenant-unique agent slug coexisting
+   per tenant with fully isolated evidence tails, and B's own relay
+   surface serving normally (isolation is not breakage).
+2. **Discoverability registration** — the agent-exchange module joined
+   `src/modules/journey-proof/discoverability.ts` as a platform
+   instrument (domain infrastructure with a delivered service + six
+   tables, no user-facing routes yet; it leaves the instrument list when
+   W138/W139/W140 land the composition surfaces — the meetings/cellular
+   precedent). The e2e instrument-list pin moved 23 → 24 declared
+   harnesses.
+3. **Health census** — `EXPECTED_TABLE_CENSUS` 281 → 287 with the six
+   table names added to `EXPECTED_TABLE_NAMES`, verified against the
+   health suite's fresh fully-migrated embedded db (the census test
+   re-migrates and asserts).
+4. **Schema-reconciliation pins** — 143 → 144 applied / 146 → 147
+   discovered / 146 → 147 skipped (`agent-exchange/001`, the six-table
+   first migration).
+5. **Schema-boundary sweep — no allowlist additions required**: every new
+   UNIQUE constraint carries tenant_id ((tenant_id, plan_id, task_key) /
+   (tenant_id, plan_id, position) / (tenant_id, plan_id, member_key)),
+   there are no FKs at all (opaque forward references are the house
+   discipline), and all six tables carry NOT NULL uuid tenant_id — the
+   sweep passed unchanged.
+
+**One adjacent heuristic update, recorded for transparency:** the W131
+execution module's structural sweep
+(`tests/tenant-isolation/execution-sweep.test.ts`) proxied "the execution
+module owns no tables" with a `startsWith('execution')` prefix match over
+the migrated schema; the six `execution_plan*` tables (owned by
+agent-exchange, a DIFFERENT module) tripped it. The fix scopes the prefix
+check with an explicit six-name exclusion plus a dated comment — the
+execution module's own claim (no migrations, no tables) is unchanged, and
+the excluded tables now carry the dedicated two-tenant proof above. This
+file lives under the integration worker's declared
+`tests/tenant-isolation/**` ownership; it is flagged here because it
+touches an ASSERTION, not a fixture (the WB3 ruling's letter), and the
+gate law — the tenant-isolation directory must stay green — outweighed
+leaving it red.
+
+**Still open after this pass** (unchanged from the register above, now
+with the pass's additions): limitation #1 (FOR UPDATE staleness re-checks
+not concurrently provable on single-connection PGlite), #3 (assignee
+governance for marketplace-package/agent-body slots — W138/W141), #4
+(run freezes never update; W140 must list-and-fold), #5 (opaque
+human-capability/external-specialist refs), #6 (vocabulary mirrors in
+validation.ts), #7 (no authority-claim gating), #8 (no app-layer UX —
+W138/W139/W140), and the TL-owned full-repository battery (#9; this pass
+ran the four read-only gates plus the tenant-isolation directory, the
+touched e2e files and the health census, all green).
+
+**Pass gates (worktree /home/z/aurum-w136int, branch
+work/w136-integration, base main 256d5bb):**
+`timeout 300 bun run typecheck` → exit 0 · `timeout 120 bun run arch` →
+exit 0 ("module files: 763, app/mcp files: 337, tables checked: 278") ·
+`timeout 240 bun run lint` → exit 0 · `bunx vitest run
+tests/tenant-isolation/agent-exchange-sweep.test.ts` → 1/1 · `bunx
+vitest run tests/tenant-isolation` → 35 files / 240 tests green · `bunx
+vitest run src/modules/journey-proof
+tests/e2e/journeys/discoverability.e2e.test.ts` → 29/29 + 12/12 · `bunx
+vitest run tests/e2e/platform/schema-reconciliation.test.ts` → 27/27 ·
+`bunx vitest run src/app/api/health` → 6/6.
+
+**Pass commits (work/w136-integration):** 45c829a (sweep + manifest v10
++ execution-sweep scoping) → d5a8934 (discoverability + e2e pin) →
+f226654 (census + schema pins) → this note's commit.
