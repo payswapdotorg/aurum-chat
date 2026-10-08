@@ -78,6 +78,17 @@
 // conversation_not_found / mission_not_found / work_item_not_found
 // stolen-focus composition refusals, the same device labels + frozen
 // context shape coexisting per tenant).
+//
+// v13 (Wave E integration, 2026-10-08): 'closed-loop' (W140) joins with
+// its own dedicated sweep file — a REAL two-tenant service proof over the
+// longitudinal loop-cycle spine, both deviation classes and the advisory
+// ranking signals (uniform cycle_not_found on the read, the close and the
+// signal append — foreign ≡ missing over open AND closed cycles, the
+// mapped goal_not_found / run_not_found / lease_not_found /
+// recommendation_not_found / gap_not_found / learning_update_not_found /
+// strategy_not_found / candidate_not_found stolen-focus composition and
+// signal-target refusals, the same goal title + rationale + frozen metrics
+// coexisting per tenant with independent cycle numbering).
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -192,4 +203,10 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   // proof discipline over the module's three tables (client_sessions +
   // handoff_sessions + the append-only handoff_evidence trail).
   'cross-platform': 'cross-platform-sweep.test.ts',
+  // v13 (Wave E integration, 2026-10-08): the closed-loop module joins
+  // with its own dedicated sweep file — the same real two-tenant service
+  // proof discipline over the module's four tables (loop_cycles + the two
+  // structurally distinct deviation classes + the append-only ranking
+  // signals).
+  'closed-loop': 'closed-loop-sweep.test.ts',
 };
