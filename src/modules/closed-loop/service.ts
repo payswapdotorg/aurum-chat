@@ -511,8 +511,9 @@ export async function recordLoopCycle(
     await tx.query(
       `INSERT INTO loop_cycles (
          id, tenant_id, goal_id, goal_version, cycle_number, status,
-         predicted_score, rationale, recorded_by, recorded_at
-       ) VALUES ($1, $2, $3, $4, $5, 'open', $6, $7, $8, $9)`,
+         predicted_score, reality_count, knowledge_count,
+         rationale, recorded_by, recorded_at
+       ) VALUES ($1, $2, $3, $4, $5, 'open', $6, 0, 0, $7, $8, $9)`,
       [
         cycleId,
         ctx.tenantId,

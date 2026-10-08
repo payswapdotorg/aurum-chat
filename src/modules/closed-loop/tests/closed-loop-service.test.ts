@@ -360,6 +360,15 @@ async function worldFixture(
     label: 'Solo crew',
     composition: soloComposition(),
   });
+  // A second evaluated candidate: org-lab records CALIBRATION only over
+  // two or more evaluations (the honest no-winner floor), so the loop's
+  // org_calibration evidence is always a real comparison — never a
+  // single-option rubber stamp.
+  const alternative = await registerCandidate(ctx, {
+    slug: `alt-crew-${key}`,
+    label: 'Alternative crew',
+    composition: soloComposition(),
+  });
   const outcome = await defineOutcome(ctx, {
     subject: { kind: 'recommendation', id: newId(), label: `w140 ${key} recommendation` },
     metricName: `surveys-${key}`,
@@ -380,6 +389,12 @@ async function worldFixture(
     evaluationConfig: { criteria: [{ name: 'fit', weight: 1 }] },
     candidates: [
       { candidateId: candidate.id, disposition: 'recommended', summary: 'Fits the observed context.' },
+      {
+        candidateId: alternative.id,
+        disposition: 'rejected',
+        rejectionReasons: ['The solo composition duplicates the recommended crew.'],
+        summary: 'A real second evaluation, rejected on composition.',
+      },
     ],
     expectedOutcomeIds: [outcome.id],
   });
@@ -395,7 +410,9 @@ async function worldFixture(
   expect(materialOne.length, 'the fixture must produce exactly one material gap').toBe(1);
   const gapOne = materialOne[0] as CoverageGap;
 
-  // The CompanyModel learning event: one recorded prior on the source.
+  // The CompanyModel learning event: one recorded prior on the source,
+  // citing the stale claim's observation as its provenance (ADR-0016:
+  // an assertion that cites nothing is not learnable).
   const updateOne = await recordLearningUpdate(ctx, {
     changes: [
       {
@@ -407,7 +424,9 @@ async function worldFixture(
         disposition: 'asserted',
         validFrom: null,
         validUntil: null,
-        evidence: [],
+        evidence: [
+          { kind: 'observation', id: snapshotOne.id, label: 'the ops-tickets freshness observation' },
+        ],
         outcomeId: null,
       },
     ],
@@ -460,10 +479,15 @@ const WORLD_OBSERVED = 0.2;
 const BASE_PREDICTION = 0.5;
 const CYCLE_COUNT = 4;
 
-/** The frozen predictions of the learning loop (fold-verified below). */
-const EXPECTED_LEARN_PREDICTIONS = [0.5, 0.425, 0.3688, 0.3266];
-/** The frozen calibration errors of the learning loop. */
-const EXPECTED_LEARN_ERRORS = [0.3, 0.225, 0.1688, 0.1266];
+/** The frozen predictions of the learning loop (fold-verified: each
+ * value is the ACTUAL output of the exported applyRankingSignals fold
+ * over the recorded signal sequence — IEEE-754 reality, not idealized
+ * decimal arithmetic: 0.425 − 0.05625 is 0.36874999…, which round4
+ * freezes as 0.3687, not the pencil-and-paper 0.3688). */
+const EXPECTED_LEARN_PREDICTIONS = [0.5, 0.425, 0.3687, 0.3266];
+/** The frozen calibration errors of the learning loop (|prediction −
+ * observed| over the ACTUAL fold outputs above). */
+const EXPECTED_LEARN_ERRORS = [0.3, 0.225, 0.1687, 0.1266];
 
 /** The learning loop's recorded signals, in fold order. */
 const learnSignals: RankingSignal[] = [];
@@ -1146,7 +1170,9 @@ describe('applyRankingSignal — the policy-safe learning application', () => {
             disposition: 'asserted',
             validFrom: null,
             validUntil: null,
-            evidence: [],
+            evidence: [
+              { kind: 'observation', id: worldLearn.snapshotOne.id, label: 'the ops-tickets freshness observation' },
+            ],
             outcomeId: null,
           },
         ],
@@ -1365,7 +1391,6 @@ describe('the longitudinal measurable improvement (learning loop vs control)', (
                 : [],
         }),
       );
-      learningCycles.push(cycle);
       expect(cycle.predictedScore).toBe(EXPECTED_LEARN_PREDICTIONS[index]);
 
       // THE RECORDED LEARNING APPLICATION: the signal derived from this
@@ -1398,9 +1423,13 @@ describe('the longitudinal measurable improvement (learning loop vs control)', (
         expect(signal.authoritative).toBe(false);
       }
 
-      await at(plusMinutes(cycleAt, 2), () =>
+      // Close the cycle and retain the CLOSED read (with the frozen
+      // metrics) — the longitudinal assertions below consume the frozen
+      // state, not the open snapshot.
+      const closed = await at(plusMinutes(cycleAt, 2), () =>
         loop.closeLoopCycle(learn, { cycleId: cycle.id, note: `learning cycle ${index + 1} closed` }),
       );
+      learningCycles.push(closed);
 
       // THE NEXT PREDICTION: the recorded signals applied to the base
       // through the exported single deterministic fold — never a
@@ -1437,10 +1466,12 @@ describe('the longitudinal measurable improvement (learning loop vs control)', (
           ],
         }),
       );
-      controlCycles.push(cycle);
-      await at(plusMinutes(cycleAt, 1), () =>
+      // Retain the CLOSED read — the flat-errors assertion consumes the
+      // frozen metrics, not the open snapshot.
+      const closed = await at(plusMinutes(cycleAt, 1), () =>
         loop.closeLoopCycle(control, { cycleId: cycle.id, note: `control cycle ${index + 1} closed` }),
       );
+      controlCycles.push(closed);
     }
     // No signal was ever recorded; every error stays at 0.3.
     const errors = controlCycles.map((one) => one.metrics!.calibrationError!);
@@ -1475,7 +1506,7 @@ describe('the longitudinal measurable improvement (learning loop vs control)', (
     expect(improved.closedCycleCount).toBe(5);
     expect(improved.firstCalibrationError).toBe(0.3);
     expect(improved.lastCalibrationError).toBe(EXPECTED_LEARN_ERRORS[3]!);
-    expect(improved.calibrationDelta).toBe(0.3 - EXPECTED_LEARN_ERRORS[3]!);
+    expect(improved.calibrationDelta).toBe(0.1734); // round4(0.3 − 0.1266)
     expect(improved.signalCount).toBe(6); // 3 probe + 3 loop signals
     expect(improved.recurrenceFirst).toBeNull();
     expect(improved.recurrenceLast).toBe(1);
