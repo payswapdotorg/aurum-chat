@@ -69,6 +69,15 @@
 // activation, the mapped capability_ref_not_found / outcome_ref_not_found
 // / plan_ref_not_found source refusals, the same slug + capability name
 // coexisting per tenant).
+//
+// v12 (Wave D integration, 2026-10-08): 'cross-platform' (W139) joins
+// with its own dedicated sweep file — a REAL two-tenant service proof
+// over the client-session registry and the handoff spine + append-only
+// evidence trail (uniform session_not_found / handoff_not_found on reads,
+// revocation, the evidence trail and every lifecycle move, the mapped
+// conversation_not_found / mission_not_found / work_item_not_found
+// stolen-focus composition refusals, the same device labels + frozen
+// context shape coexisting per tenant).
 
 export const SWEEP_COVERAGE: Record<string, string> = {
   actions: 'capability-sweep.test.ts',
@@ -178,4 +187,9 @@ export const SWEEP_COVERAGE: Record<string, string> = {
   // role_marketplace_submissions, role_activations).
   'execution-fabric': 'execution-fabric-sweep.test.ts',
   'emergent-roles': 'emergent-roles-sweep.test.ts',
+  // v12 (Wave D integration, 2026-10-08): the cross-platform module joins
+  // with its own dedicated sweep file — the same real two-tenant service
+  // proof discipline over the module's three tables (client_sessions +
+  // handoff_sessions + the append-only handoff_evidence trail).
+  'cross-platform': 'cross-platform-sweep.test.ts',
 };
