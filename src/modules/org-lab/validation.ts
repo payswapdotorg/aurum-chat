@@ -16,18 +16,14 @@ import type { CoverageSourceRegistry } from '@/modules/coverage/contract';
 import type { DurationClass, WorkloadLevel } from '@/modules/context/contract';
 import type { ModelBindingPurpose } from '@/modules/provider-fabric/contract';
 import { OrgLabError } from './errors';
+// Only the RETAINED shapes are imported: the validators take `unknown` and
+// return the Validated* shapes (the agent-body discipline — the input
+// interfaces live in types.ts and are re-exported through contract.ts).
 import type {
   CandidateApplicability,
-  CandidateApplicabilityInput,
   CandidateDisposition,
-  CandidateEvaluationInput,
   EvaluationConfig,
   EvaluationScore,
-  GetCandidateCalibrationQuery,
-  GetCandidateQuery,
-  GetRecommendationQuery,
-  ListCandidatesQuery,
-  ListRecommendationsQuery,
   OrgCandidateStatus,
   OrgComposition,
   OrgEdge,
@@ -36,13 +32,8 @@ import type {
   OrgNode,
   OrgNodeKind,
   OrgRecommendationStatus,
-  RecordCalibrationInput,
-  RecordRecommendationInput,
-  RegisterCandidateInput,
-  RetireCandidateInput,
-  SearchOrganizationsQuery,
-  StaffingProfile,
   RiskTolerance,
+  StaffingProfile,
 } from './types';
 
 // ---------------------------------------------------------------------------
@@ -247,7 +238,7 @@ function requireString(
   field: string,
   min: number,
   max: number,
-  code: 'invalid_candidate_input' | 'invalid_recommendation_input' = 'invalid_candidate_input',
+  code: 'invalid_candidate_input' | 'invalid_recommendation_input' | 'invalid_calibration_input' = 'invalid_candidate_input',
 ): string {
   if (typeof value !== 'string') {
     throw new OrgLabError(code, `${field} must be a string`);
@@ -267,7 +258,7 @@ function optionalString(
   field: string,
   min: number,
   max: number,
-  code: 'invalid_candidate_input' | 'invalid_recommendation_input',
+  code: 'invalid_candidate_input' | 'invalid_recommendation_input' | 'invalid_calibration_input',
 ): string | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== 'string') {
@@ -291,7 +282,7 @@ function stringList(
   value: unknown,
   field: string,
   max: number,
-  code: 'invalid_candidate_input' | 'invalid_recommendation_input',
+  code: 'invalid_candidate_input' | 'invalid_recommendation_input' | 'invalid_calibration_input',
   maxItemChars: number,
 ): string[] {
   if (value === undefined || value === null) return [];
