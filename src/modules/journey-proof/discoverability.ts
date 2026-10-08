@@ -718,6 +718,15 @@ export const CAPABILITY_ROUTES: readonly CapabilityRoute[] = [
     instrument: true,
     note: 'domain infrastructure, not yet a product capability: the contextual organizational selection layer (W135) — the candidate registry (§4 compositions + §5 comparison sets with declared contextual applicability), the MECHANICAL contextually-conditioned search (twelve-axis fit report over a real W134 fingerprint; the same candidates under materially different contexts may rank a different candidate first — THE CONTEXTUAL RULE, divergence is data never code) and the §11 evidence object (recommendations retaining EVERY evaluated candidate incl. rejected ones with reasons, model-occupancy snapshots through the W133/W132 seams, outcome-calibration that modulates the live search). The Lab RECOMMENDS — nothing on this surface installs, recruits, executes or grants (W136/W137 own the follow-through, W141 the certification); exercised by the org-lab module vitest suite plus the tenant-isolation sweep (registered at WB2 integration)',
   },
+  {
+    module: 'agent-exchange',
+    label: 'Agent exchange, execution plans and the cross-agent relay (W136)',
+    layer: 'platform',
+    routes: [],
+    surfaces: [],
+    instrument: true,
+    note: 'domain infrastructure, not yet a product capability: the durable ORCHESTRATION PROJECTION (W136) linking goal → tasks → agent organization → handoffs → approvals → execution runs → results/outcomes — the execution plan spine (one atomic append per plan: the W008 goal link with version pin, the optional W134 fingerprint/strategy + W135 recommendation + W023 team conditioning links, the 1..64-task acyclic decomposition and the governed member references — agent-body refs readable+active (W133), tenant-agent refs readable+active (W021), marketplace package refs visible+INSTALLABLE (W028), recruitment provenance APPROVED (W022); tasks and members immutable from creation), the one-way active → completed | abandoned lifecycle, the append-only cross-agent relay handoffs carrying only the STRUCTURALLY MINIMAL context package (at most one goal-matched fingerprint reference + explicit evidence refs — acceptance law 2), the governed approvals freezing the W009 authority decision VERBATIM (the exchange records, never decides — a pending request refuses), and the append-only execution runs freezing the W021 execution\'s normalized status/result/cost VERBATIM (progress from a live execution, the result from a terminal one — acceptance law 3) with optional OPEN W040 outcome commitments. NO SECOND EXECUTION AUTHORITY (acceptance law 4, structural): nothing on this surface submits, dispatches, retries, cancels, installs, recruits or decides — the agents module stays the one execution authority, W137 owns execution environments, W138/W139/W140 compose the product surfaces and W141 certifies the end-to-end journey; exercised by the agent-exchange module vitest suite plus the tenant-isolation sweep (registered at W136 integration)',
+  },
 ];
 
 const BY_MODULE: ReadonlyMap<string, CapabilityRoute> = new Map(
