@@ -105,6 +105,15 @@ const TECHNICAL_UNIQUE_COLUMNS = new Set([
   'agent_runtime_availability_events.seq', // W035 copied the llm discipline; same rationale.
   'broker_provider_health_events.seq', // W082 copied the llm availability discipline; same rationale.
   'provider_settlement_events.seq', // W090 copied the llm availability discipline; same rationale.
+  // WB2 integration (W132): the provider fabric's own monotonic append-only
+  // ledgers — model_bindings.seq (the binding history's chronological
+  // audit order) and provider_health_states.seq (the health observation
+  // order). Same rationale as the llm discipline: global serials minted
+  // per ROW by the database (never caller-supplied natural keys), so two
+  // tenants can never collide on them and they carry no cross-tenant
+  // business meaning.
+  'model_bindings.seq',
+  'provider_health_states.seq',
 ]);
 
 /**

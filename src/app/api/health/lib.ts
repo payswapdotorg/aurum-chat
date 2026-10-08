@@ -36,7 +36,7 @@ import { getWorkerMetrics } from '@/infra/worker';
  * health suite, which re-migrates a fresh embedded database and asserts
  * the census — extend it whenever a migration adds a table.
  */
-export const EXPECTED_TABLE_CENSUS = 265; // W125: coverage registry (+5), W126: company_query_log
+export const EXPECTED_TABLE_CENSUS = 281; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6)
 
 /**
  * The full expected public-BASE-TABLE name set (W118 diagnostic): every
@@ -52,6 +52,7 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'agent_evaluation_replacement_options', 'agent_evaluations', 'agent_execution_attempts',
   'agent_executions', 'agent_lifecycle_decisions', 'agent_recruitment_alternatives',
   'agent_recruitment_proposals', 'agent_runtime_accounts', 'agent_runtime_availability_events',
+  'agent_bodies', 'agent_body_model_bindings', // W133 — the persistent body + append-only bindings
   'agent_supervision_budget_entries', 'agent_supervision_events', 'agent_supervision_records',
   'agent_supervision_reviews', 'agent_supervisor_sessions', 'agent_team_outcomes',
   'agent_team_versions', 'agent_teams', 'ai_provider_accounts', 'api_keys',
@@ -75,6 +76,7 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'coverage_claims', 'coverage_gaps', 'coverage_snapshots', 'coverage_sources',
   'coverage_surfaces', // W125 coverage registry (derived view); W126 company_query_log
   'contradictions',
+  'context_fingerprints', // W134 — the derived context-fingerprint history
   'contribution_impacts', 'contribution_validations', 'contributions',
   'conversation_execution_links', 'conversation_messages', 'conversations',
   'deep_action_events', 'deep_action_idempotency', 'deep_action_operations',
@@ -87,11 +89,17 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'extension_manifest_verifications', 'extension_manifests', 'extension_schedule_runs',
   'extension_state', 'extension_telemetry_events', 'extension_ui', 'extensions',
   'freshness_policies', 'goal_versions', 'goals', 'hypotheses', 'identities',
-  'identity_challenges', 'integration_discovery_grants', 'integration_recommendation_batches',
+  'identity_challenges',
+  'info_strategies', 'info_strategy_versions', // W134 — the conditioned information strategies
+  'integration_discovery_grants', 'integration_recommendation_batches',
   'integration_recommendations', 'integration_systems', 'integration_verification_runs',
   'intervention_priors', 'intervention_realizations', 'interventions',
   'llm_availability_events', 'llm_executions', 'llm_hot_swap_verifications',
   'marketplace_package_lifecycle_events', 'marketplace_package_reviews',
+  'model_bindings', 'model_catalog_entries', 'model_discovery_states', // W132 — the provider fabric
+  'org_candidates', 'org_recommendation_calibrations',
+  'org_recommendation_candidates', 'org_recommendation_occupancy',
+  'org_recommendation_outcomes', 'org_recommendations', // W135 — the contextual organizational lab
   'marketplace_package_verifications', 'marketplace_packages', 'meeting_access_events',
   'meeting_artifacts', 'meeting_connections', 'meeting_ingestion', 'meeting_ingestion_cursors',
   'meeting_participants', 'meeting_sessions', 'meeting_transcripts', 'meetings',
@@ -104,6 +112,7 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'opportunity_conversion_candidates', 'opportunity_conversion_runs', 'opportunity_versions',
   'outcome_measurements', 'outcome_realizations', 'outcomes', 'persons', 'process_findings',
   'process_versions', 'processes', 'provider_budget_events', 'provider_budgets',
+  'provider_definitions', 'provider_health_states', // W132 — the provider fabric
   'provider_payment_arrangements', 'provider_personal_preferences',
   'provider_preference_events', 'provider_preference_settings',
   'provider_selection_explanations', 'provider_settlement_events', 'provider_settlement_lines',

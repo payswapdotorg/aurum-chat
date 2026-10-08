@@ -315,7 +315,14 @@ describe('capability coverage', () => {
     // join this list — TL-frozen contract-vocabulary modules (types-only at
     // the freeze stage; their product surfaces arrive with W125/W126, W132
     // and W134, at which point they leave this list like meetings/cellular).
+    // WB2 integration (deliberate update): 'agent-body' (W133),
+    // 'info-strategy' (W134) and 'org-lab' (W135) join this list —
+    // domain-infrastructure modules with delivered services and storage but
+    // no user-facing routes yet; their product surfaces arrive with the
+    // W136 agent exchange / intelligence views, at which point they leave
+    // this list like meetings/cellular did.
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
+      'agent-body',
       'agent-supervision',
       'capability-grants',
       'computer-use',
@@ -326,8 +333,10 @@ describe('capability coverage', () => {
       'deployment-smoke',
       'edge-connector',
       'execution',
+      'info-strategy',
       'journey-proof',
       'migration',
+      'org-lab',
       'provider-billing',
       'provider-fabric',
       'quality',
