@@ -528,6 +528,12 @@ export function validateCreateExecutionPlanInput(input: unknown): ValidatedCreat
   });
 
   const memberKeys = new Set(members.map((member) => member.memberKey));
+  if (memberKeys.size !== members.length) {
+    throw new AgentExchangeError(
+      'invalid_plan_input',
+      'member keys must be distinct within the plan',
+    );
+  }
   for (const task of tasks) {
     if (
       task.assigneeMemberKey !== null &&
