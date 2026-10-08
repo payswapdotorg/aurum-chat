@@ -121,6 +121,12 @@ CREATE TABLE fabric_leases (
   -- the durable truth).
   session_id text
     CHECK (session_id IS NULL OR (char_length(session_id) >= 1 AND char_length(session_id) <= 256)),
+  -- The OPAQUE credential reference the session materializes from at
+  -- prepare (W082 discipline: opaque refs are persisted, secret VALUES
+  -- are inexpressible — validated 1..256 chars at acquisition, handed
+  -- verbatim to the adapter's open, immutable after).
+  credential_ref text
+    CHECK (credential_ref IS NULL OR (char_length(credential_ref) >= 1 AND char_length(credential_ref) <= 256)),
   lease_minutes integer NOT NULL CHECK (lease_minutes >= 1 AND lease_minutes <= 1440),
   lease_until timestamptz,
   last_heartbeat_at timestamptz,
@@ -390,6 +396,7 @@ BEGIN
      OR NEW.task_key IS DISTINCT FROM OLD.task_key
      OR NEW.agent_id IS DISTINCT FROM OLD.agent_id
      OR NEW.adapter_id IS DISTINCT FROM OLD.adapter_id
+     OR NEW.credential_ref IS DISTINCT FROM OLD.credential_ref
      OR NEW.lease_minutes IS DISTINCT FROM OLD.lease_minutes
      OR NEW.acquired_by IS DISTINCT FROM OLD.acquired_by
      OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN

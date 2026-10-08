@@ -267,6 +267,12 @@ export interface FabricLease {
   taskKey: string;
   /** The run's agent, denormalized from the run at acquisition. */
   agentId: string;
+  /**
+   * The OPAQUE credential reference the session materializes from at
+   * prepare (W082 discipline: the ref is persisted, a secret VALUE is
+   * inexpressible — handed verbatim to the adapter's open request).
+   */
+  credentialRef: string | null;
   status: FabricLeaseStatus;
   /** The resolved adapter's opaque instance id (the descriptor's adapterId), stamped at acquisition. */
   adapterId: string | null;
