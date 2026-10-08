@@ -71,7 +71,6 @@ import {
   validateListModelCatalogQuery,
   validateListProviderDefinitionsQuery,
   validateListProviderHealthStatesQuery,
-  validateModelSample,
   validateRecordProviderHealthInput,
   validateRegisterCustomProviderInput,
   validateRegisterModelInput,

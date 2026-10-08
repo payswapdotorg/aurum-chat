@@ -257,21 +257,6 @@ function boundedLabel(value: unknown, field: string): string {
   return requirePrintable(value, field, MAX_LABEL_LENGTH);
 }
 
-function requireBoundedInteger(
-  value: unknown,
-  field: string,
-  min: number,
-  max: number,
-): number {
-  if (typeof value !== 'number' || !Number.isSafeInteger(value)) {
-    throw inputError(`${field} must be an integer (got ${String(value)})`);
-  }
-  if (value < min || value > max) {
-    throw inputError(`${field} must be between ${min} and ${max} (got ${String(value)})`);
-  }
-  return value;
-}
-
 function requireLimit(value: unknown): number {
   if (value === undefined || value === null) return DEFAULT_LIST_LIMIT;
   if (typeof value !== 'number' || !Number.isSafeInteger(value)) {
@@ -302,11 +287,7 @@ function rejectUnknownKeys(
 // TenantContext
 // ---------------------------------------------------------------------------
 
-export function assertProviderFabricTenantContext(context: {
-  tenantId: string;
-  principalId: string;
-  authority: string[];
-}): void {
+export function assertProviderFabricTenantContext(context: TenantContext): void {
   if (
     typeof context.tenantId !== 'string' ||
     context.tenantId === '' ||
