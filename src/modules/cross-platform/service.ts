@@ -977,18 +977,31 @@ async function appendEvidence(
   return id;
 }
 
-/** The stored jsonb shape of a working context (round-trips through contextOf). */
+/**
+ * The stored jsonb shape of a working context (round-trips through
+ * snapshotOf — the EVIDENCE context_snapshot column's shape).
+ */
 function contextJsonOf(context: HandoffWorkingContext): Record<string, unknown> {
   return {
     focusKind: context.focusKind,
     focusRef: context.focusRef,
     ...(context.focusSeam === undefined ? {} : { focusSeam: context.focusSeam }),
     draft: context.draft,
-    navigation: {
-      area: context.navigation.area,
-      towerSurface: context.navigation.towerSurface ?? null,
-      focusRef: context.navigation.focusRef ?? null,
-    },
+    navigation: navigationJsonOf(context.navigation),
+  };
+}
+
+/**
+ * The stored jsonb shape of ONE navigation state (round-trips through
+ * navigationOf — the SPINE's navigation_state column carries exactly the
+ * navigation, never the whole context: the spine's focus/draft live in
+ * their own columns, and freezing them twice would invite drift).
+ */
+function navigationJsonOf(navigation: ShellNavigationState): Record<string, unknown> {
+  return {
+    area: navigation.area,
+    towerSurface: navigation.towerSurface ?? null,
+    focusRef: navigation.focusRef ?? null,
   };
 }
 
@@ -1032,7 +1045,7 @@ export async function openHandoffSession(
         valid.context.focusRef,
         valid.context.focusSeam ?? null,
         valid.context.draft,
-        JSON.stringify(contextJsonOf(valid.context)),
+        JSON.stringify(navigationJsonOf(valid.context.navigation)),
         valid.clientSessionId,
         sessionRow.platform,
         timestamp,
