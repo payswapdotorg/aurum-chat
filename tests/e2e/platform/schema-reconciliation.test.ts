@@ -525,7 +525,13 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // three-table semantic core: client_sessions + handoff_sessions +
     // the append-only handoff_evidence trail with the identity-guard /
     // context-guard / append-only triggers).
-    expect(repair.applied).toHaveLength(147);
+    // INTEGRATION (Wave E, deliberate): 147 → 148 — the closed-loop
+    // module's 001-closed-loop.sql joins the applied set (the four-table
+    // unified learning spine: loop_cycles append-and-close with the
+    // close guard + the two structurally distinct deviation tables and
+    // the ranking signals, all three append-only with reject-any-change
+    // triggers).
+    expect(repair.applied).toHaveLength(148);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -561,7 +567,10 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // INTEGRATION (Wave D, deliberate): 149 → 150 — the cross-platform
     // module's 001 semantic-core migration joins the discovered set
     // (deliberate count-pin extension).
-    expect(names).toHaveLength(150);
+    // INTEGRATION (Wave E, deliberate): 150 → 151 — the closed-loop
+    // module's 001 unified-learning migration joins the discovered set
+    // (deliberate count-pin extension).
+    expect(names).toHaveLength(151);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -686,7 +695,10 @@ describe('W102 — the reconciliation is idempotent', () => {
     // INTEGRATION (Wave D, deliberate): 150 — plus the cross-platform
     // module's 001 semantic-core migration (deliberate count-pin
     // extension).
-    expect(report.skipped).toHaveLength(150);
+    // INTEGRATION (Wave E, deliberate): 151 — plus the closed-loop
+    // module's 001 unified-learning migration (deliberate count-pin
+    // extension).
+    expect(report.skipped).toHaveLength(151);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });
