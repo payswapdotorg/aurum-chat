@@ -512,7 +512,15 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // module's 001-agent-exchange.sql joins the applied set (the six-table
     // orchestration projection: execution_plans + immutable tasks/members
     // + append-only handoffs/approvals/runs with the lifecycle guard).
-    expect(repair.applied).toHaveLength(144);
+    // INTEGRATION (Wave C, deliberate): 144 → 146 — the two new modules'
+    // first migrations join the applied set: execution-fabric/001 (W137,
+    // the six-table environment/lease fabric: environment_definitions +
+    // fabric_leases with the lifecycle guards + the four append-only
+    // evidence tables) and emergent-roles/001 (W138, the five-table
+    // emergence projection: role_gap_evidence + role_proposals + the
+    // append-only reviews/submissions/activations with the Lab-separation
+    // triggers).
+    expect(repair.applied).toHaveLength(146);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -541,7 +549,11 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // INTEGRATION (W136, deliberate): 146 → 147 — the agent-exchange
     // module's 001 orchestration-projection migration joins the discovered
     // set (deliberate count-pin extension).
-    expect(names).toHaveLength(147);
+    // INTEGRATION (Wave C, deliberate): 147 → 149 — the execution-fabric
+    // module's 001 environment/lease-fabric migration and the
+    // emergent-roles module's 001 emergence-projection migration join the
+    // discovered set (deliberate count-pin extensions).
+    expect(names).toHaveLength(149);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -659,7 +671,11 @@ describe('W102 — the reconciliation is idempotent', () => {
     // INTEGRATION (W136, deliberate): 147 — plus the agent-exchange
     // module's 001 orchestration-projection migration (deliberate
     // count-pin extension).
-    expect(report.skipped).toHaveLength(147);
+    // INTEGRATION (Wave C, deliberate): 149 — plus the execution-fabric
+    // module's 001 environment/lease-fabric migration and the
+    // emergent-roles module's 001 emergence-projection migration
+    // (deliberate count-pin extensions).
+    expect(report.skipped).toHaveLength(149);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });
