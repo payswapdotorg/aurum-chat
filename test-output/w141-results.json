@@ -1,0 +1,155 @@
+{
+  "suite": "W141-SUITE",
+  "baseCommit": "e4f4258",
+  "runId": "2026-10-08T14:51:26.963Z",
+  "hermetic": true,
+  "harness": "embedded PostgreSQL (PGlite, :memory:) — no network, no browsers, no harness transactions",
+  "demonstrations": [
+    {
+      "id": "D1",
+      "title": "Provider/model swap — the same body continues across provider A → provider B",
+      "classification": "FIXTURE (two-path: known provider + custom openai-compatible provider)",
+      "status": "delivered",
+      "checks": [
+        "provider A connected; models appeared through the REAL discovery seam (catalog lists them)",
+        "model selected: cognition binding active; the body attached it (policy-compatible)",
+        "work continued under provider A (REAL agents-contract execution, succeeded)",
+        "switched to provider B: custom openai-compatible definition superseded A in one auditable step",
+        "the SAME body continued: byte-for-byte preserved across the swap (updatedAt included)",
+        "work continued under provider B; domain outcomes IDENTICAL across the swap; no execution authority lost"
+      ],
+      "evidence": {
+        "providerA": {
+          "provider": "openai",
+          "kind": "known",
+          "model": "gpt-4o-mini"
+        },
+        "providerB": {
+          "provider": "w141-openrouter-fixture",
+          "kind": "custom",
+          "wireProtocol": "openai-compatible",
+          "model": "w141/fixture-large"
+        },
+        "bodyId": "fd57fbb8-75c3-4c91-a263-8adab2bc70bd",
+        "executionAId": "2b6d5a50-38db-46fe-b5cf-dcb672d8bdd2",
+        "executionBId": "1c013f44-3119-4585-acd5-9fccf0e95347"
+      },
+      "completedAt": "2026-10-08T14:51:26.602Z"
+    },
+    {
+      "id": "D2",
+      "title": "Ride journey — request → plan → Ride Agent → completion → PaySwap Agent → payment → result",
+      "classification": "FIXTURE (end-to-end machinery; live ride/pay providers out of scope, no credentials)",
+      "status": "delivered",
+      "checks": [
+        "\"Book me a ride\" → goal + ride context fingerprint (the W134 seam)",
+        "governed plan with marketplace member refs: Ride Agent + PaySwap Agent packages walked to INSTALLABLE through the real W028 chain",
+        "ride completion: handoff → REAL agents-contract execution → run freeze VERBATIM → outcome linked",
+        "payment: handoff → execution → run freeze VERBATIM → result returned to the rider",
+        "outcome realized (measured + settled) and the plan completed with the retained note"
+      ],
+      "evidence": {
+        "goalId": "51ea5048-1ab9-4c97-b6d5-5bbc6b3b9127",
+        "planId": "7cf2a138-0fca-40e3-b2cb-fe5c3098ba61",
+        "ridePackageId": "cba09015-5876-4f4c-b4e9-e54973c74e5b",
+        "payPackageId": "5a3d5292-4605-422b-9325-537677dbcdeb",
+        "runRideId": "7f90a4ea-1356-4c73-bf0b-72077e6a319b",
+        "runPayId": "903febc4-3c48-4f10-b178-56dd833a884b",
+        "outcomeId": "98e6f571-d179-4acf-b08f-f4ffb030a9fd"
+      },
+      "completedAt": "2026-10-08T14:51:26.704Z"
+    },
+    {
+      "id": "D3",
+      "title": "Construction journey — goal → fingerprint → strategy → Lab selection → recruitment → execution → relay → evidence → deviation → learning record",
+      "classification": "FIXTURE context + REAL Lab selection (the org-lab search is the real deterministic rule)",
+      "status": "delivered",
+      "checks": [
+        "construction goal → context fingerprint → information strategy (REAL contracts at every hop)",
+        "REAL Lab selection: searchOrganizations ranked the spring construction crew FIRST (fit 1) under the site A fingerprint",
+        "recommendation recorded with the retained rejected alternative and the committed OPEN outcome",
+        "recruitment through the REAL W022 approved path; execution plan with the site/person/system organization",
+        "site/person/system relay: three evidence-linked handoffs between every member kind",
+        "agent execution with evidence: run freeze VERBATIM, outcome linked",
+        "deviation detection: the W140 cycle cites the execution run as a REALITY deviation (expected 0.9, observed 0.4)",
+        "learning record: a policy-safe ranking signal (authoritative:false) citing the deviation, then the cycle closed"
+      ],
+      "evidence": {
+        "goalId": "12867f28-3746-46e6-8ab2-c3fe66a23129",
+        "fingerprintId": "4cebb1f8-f04e-4537-ae74-e45d8afcf3d4",
+        "strategyId": "90ef92a7-63f3-4713-b5ed-a77bc112c136",
+        "selectedCandidateId": "dea74d00-a07a-4cfa-820a-5f8fe4b72440",
+        "recommendationId": "e3f290c5-01d0-4ee8-9f3f-983e6a14a10b",
+        "planId": "512f630e-40c4-4af9-a09f-f5ca5e08db6a",
+        "runId": "937e4a00-463a-4de8-bab8-e23cb3809019",
+        "loopCycleId": "1a9c83b2-3078-4611-8b15-b0cb116e86a9"
+      },
+      "completedAt": "2026-10-08T14:51:26.810Z"
+    },
+    {
+      "id": "D4",
+      "title": "Context variation — the same construction subject under altered season/duration/staffing/experience fixtures selects DIFFERENT organizations",
+      "classification": "FIXTURE (context-diversity proof shapes; the selection rule is real)",
+      "status": "delivered",
+      "checks": [
+        "the SAME construction subject (one goal) under two materially different fingerprints: season/duration/staffing/experience all altered",
+        "the Lab selected DIFFERENT organizations: spring crew first under spring fixtures, fall crew first under fall fixtures",
+        "the evidence trail explains why: the twelve-axis fit reports flip match/misfit (fit 1 vs 0)",
+        "two recommendations selected the different organizations, each retaining its rejected alternative"
+      ],
+      "evidence": {
+        "goalId": "ee837068-4946-4d2f-9f61-d27798fd54e5",
+        "springFingerprintId": "54316612-d364-41b5-af6c-179882f0613b",
+        "fallFingerprintId": "267d9264-ebca-4f41-bc56-ef5febb73eab",
+        "selectedUnderSpring": "d1311499-61b7-4852-bcbf-43b8cbe0445a",
+        "selectedUnderFall": "0435c2f8-ea8a-4fc2-bc6e-2312ca33c012",
+        "springRecommendationId": "3b304d48-20b4-434a-ae5d-e13f22cc33cd",
+        "fallRecommendationId": "2ecc3001-fafd-4ff5-a384-e320b5c3b4ff"
+      },
+      "completedAt": "2026-10-08T14:51:26.842Z"
+    },
+    {
+      "id": "D5",
+      "title": "Emergent role proposal → marketplace submission boundary — publication/install/activation stay governed",
+      "classification": "FIXTURE (both Lab refusal paths exercised with typed errors)",
+      "status": "delivered",
+      "checks": [
+        "recurring gap evidence: two settled-MISSED windows → two REAL gap-evidence records (the recurrence floor)",
+        "the LAB-origin RoleProposal carried evidence citations, typed capability demands, alternatives and evaluation",
+        "the governed review: submit → under_review → the W009 APPROVED decision recorded verbatim",
+        "THE BOUNDARY HELDS (publication): the Lab principal was refused with typed lab_cannot_self_publish; the governed principal recorded the submission REQUEST against the INSTALLABLE package, state UNMOVED",
+        "THE BOUNDARY HELDS (activation): the Lab principal was refused with typed lab_cannot_self_activate; the governed principal recorded the activation against the APPROVED W022 acquisition, fulfilling the proposal once"
+      ],
+      "evidence": {
+        "proposalId": "70147240-3d46-46f5-88fc-bd14c5e0d222",
+        "packageId": "4ed4351d-8a8b-47ea-8502-0840cbb59be7",
+        "recruitmentProposalId": "91967a76-90bd-4e22-817b-ef662d37d002",
+        "refusalCodes": [
+          "lab_cannot_self_publish",
+          "lab_cannot_self_activate"
+        ]
+      },
+      "completedAt": "2026-10-08T14:51:26.880Z"
+    },
+    {
+      "id": "D6",
+      "title": "Cross-platform continuity — the same active work across web/desktop/mobile client sessions",
+      "classification": "FIXTURE clients (identical authoritative state, evidenced handoff)",
+      "status": "delivered",
+      "checks": [
+        "three client sessions registered as server-issued identity (web canonical, desktop power, mobile field)",
+        "the SAME active work read byte-identically across all three clients (conversation state + company overview)",
+        "background work inspectable everywhere: the identical feed on every client kind",
+        "the evidenced handoff: web → desktop (EXACT-state resumption) → mobile (EXACT-state resumption) → close, with the full append-only evidence trail"
+      ],
+      "evidence": {
+        "tenantId": "72abb2fa-2813-4810-93c9-4e8d75af03ce",
+        "conversationId": "8caf773d-389f-4f0a-afaf-afc10e015803",
+        "webSessionId": "ddb24624-c87d-4d36-b179-20d9b409c52e",
+        "desktopSessionId": "e8e1c25e-4173-4ba8-8b1d-3248a7bc7817",
+        "mobileSessionId": "2bee4753-9afd-497a-9e81-95e1eef9466a"
+      },
+      "completedAt": "2026-10-08T14:51:26.962Z"
+    }
+  ]
+}
