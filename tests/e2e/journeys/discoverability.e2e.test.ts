@@ -321,8 +321,15 @@ describe('capability coverage', () => {
     // no user-facing routes yet; their product surfaces arrive with the
     // W136 agent exchange / intelligence views, at which point they leave
     // this list like meetings/cellular did.
+    // W136 integration (deliberate update): 'agent-exchange' (W136) joins
+    // this list — the orchestration projection (plans, tasks, members,
+    // handoffs, approvals, runs) has its delivered service and six tables
+    // but no user-facing routes yet; its product surface arrives with the
+    // W138/W139/W140 composition work, at which point it leaves this list
+    // like meetings/cellular did.
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'agent-body',
+      'agent-exchange',
       'agent-supervision',
       'capability-grants',
       'computer-use',
