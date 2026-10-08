@@ -520,7 +520,12 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // emergence projection: role_gap_evidence + role_proposals + the
     // append-only reviews/submissions/activations with the Lab-separation
     // triggers).
-    expect(repair.applied).toHaveLength(146);
+    // INTEGRATION (Wave D, deliberate): 146 → 147 — the cross-platform
+    // module's 001-cross-platform.sql joins the applied set (the
+    // three-table semantic core: client_sessions + handoff_sessions +
+    // the append-only handoff_evidence trail with the identity-guard /
+    // context-guard / append-only triggers).
+    expect(repair.applied).toHaveLength(147);
   });
 
   it('the discovered migration set carries both repair generations', async () => {
@@ -553,7 +558,10 @@ describe('W102 — the repair deploy converges the diverged database', () => {
     // module's 001 environment/lease-fabric migration and the
     // emergent-roles module's 001 emergence-projection migration join the
     // discovered set (deliberate count-pin extensions).
-    expect(names).toHaveLength(149);
+    // INTEGRATION (Wave D, deliberate): 149 → 150 — the cross-platform
+    // module's 001 semantic-core migration joins the discovered set
+    // (deliberate count-pin extension).
+    expect(names).toHaveLength(150);
   });
 
   it('created the 14 tables production was missing', async () => {
@@ -675,7 +683,10 @@ describe('W102 — the reconciliation is idempotent', () => {
     // module's 001 environment/lease-fabric migration and the
     // emergent-roles module's 001 emergence-projection migration
     // (deliberate count-pin extensions).
-    expect(report.skipped).toHaveLength(149);
+    // INTEGRATION (Wave D, deliberate): 150 — plus the cross-platform
+    // module's 001 semantic-core migration (deliberate count-pin
+    // extension).
+    expect(report.skipped).toHaveLength(150);
     const verification = await verifyMigratedSchema(getDb());
     expect(verification.missingTables).toEqual([]);
   });

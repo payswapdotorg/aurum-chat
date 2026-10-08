@@ -36,7 +36,7 @@ import { getWorkerMetrics } from '@/infra/worker';
  * health suite, which re-migrates a fresh embedded database and asserts
  * the census — extend it whenever a migration adds a table.
  */
-export const EXPECTED_TABLE_CENSUS = 298; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6), W136: agent-exchange (+6), Wave C: execution-fabric (+6), emergent-roles (+5)
+export const EXPECTED_TABLE_CENSUS = 301; // W125: coverage registry (+5), W126: company_query_log, WB2: provider-fabric (+5), agent-body (+2), context (+1), info-strategy (+2), org-lab (+6), W136: agent-exchange (+6), Wave C: execution-fabric (+6), emergent-roles (+5), Wave D: cross-platform (+3)
 
 /**
  * The full expected public-BASE-TABLE name set (W118 diagnostic): every
@@ -70,7 +70,8 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'capability_supply_versions', 'capability_versions', 'cellular_attempts',
   'cellular_connections', 'cellular_events', 'cellular_inbound_authority', 'cellular_policies',
   'cellular_reach_requests', 'cellular_replies', 'channel_connections', 'channel_threads',
-  'claims', 'cognitive_execution_steps', 'cognitive_executions', 'company_learning_versions',
+  'claims', 'client_sessions', 'cognitive_execution_steps', 'cognitive_executions',
+  'company_learning_versions', // Wave D (W139) — client_sessions: the cross-platform client-session registry
   'company_learnings', 'company_model_assertions', 'company_model_updates',
   'company_query_log',
   'coverage_claims', 'coverage_gaps', 'coverage_snapshots', 'coverage_sources',
@@ -95,7 +96,9 @@ export const EXPECTED_TABLE_NAMES = new Set([
   'extension_state', 'extension_telemetry_events', 'extension_ui', 'extensions',
   'fabric_leases', 'fabric_lease_artifacts', 'fabric_lease_checkpoints',
   'fabric_lease_events', 'fabric_lease_evidence', // Wave C (W137) — the execution fabric's lease state machine + append-only evidence tails
-  'freshness_policies', 'goal_versions', 'goals', 'hypotheses', 'identities',
+  'freshness_policies', 'goal_versions', 'goals',
+  'handoff_evidence', 'handoff_sessions', // Wave D (W139) — the cross-device handoff spine + its append-only evidence trail
+  'hypotheses', 'identities',
   'identity_challenges',
   'info_strategies', 'info_strategy_versions', // W134 — the conditioned information strategies
   'integration_discovery_grants', 'integration_recommendation_batches',
