@@ -314,13 +314,14 @@ CREATE TRIGGER role_activations_immutable_truncate
 
 CREATE OR REPLACE FUNCTION emergent_roles_lab_no_self_publish() RETURNS trigger AS $$
 DECLARE
-  origin_kind text;
-  origin_principal text;
+  v_origin_kind text;
+  v_origin_principal text;
 BEGIN
-  SELECT origin_kind, origin_principal_id INTO origin_kind, origin_principal
+  SELECT role_proposals.origin_kind, role_proposals.origin_principal_id
+    INTO v_origin_kind, v_origin_principal
     FROM role_proposals
-   WHERE tenant_id = NEW.tenant_id AND id = NEW.proposal_id;
-  IF origin_kind = 'org-lab' AND NEW.recorded_by = origin_principal THEN
+   WHERE role_proposals.tenant_id = NEW.tenant_id AND role_proposals.id = NEW.proposal_id;
+  IF v_origin_kind = 'org-lab' AND NEW.recorded_by = v_origin_principal THEN
     RAISE EXCEPTION 'Lab authority separation (W138): the Lab cannot self-publish its own role proposal';
   END IF;
   RETURN NEW;
@@ -333,13 +334,14 @@ CREATE TRIGGER role_marketplace_submissions_lab_separation
 
 CREATE OR REPLACE FUNCTION emergent_roles_lab_no_self_activate() RETURNS trigger AS $$
 DECLARE
-  origin_kind text;
-  origin_principal text;
+  v_origin_kind text;
+  v_origin_principal text;
 BEGIN
-  SELECT origin_kind, origin_principal_id INTO origin_kind, origin_principal
+  SELECT role_proposals.origin_kind, role_proposals.origin_principal_id
+    INTO v_origin_kind, v_origin_principal
     FROM role_proposals
-   WHERE tenant_id = NEW.tenant_id AND id = NEW.proposal_id;
-  IF origin_kind = 'org-lab' AND NEW.recorded_by = origin_principal THEN
+   WHERE role_proposals.tenant_id = NEW.tenant_id AND role_proposals.id = NEW.proposal_id;
+  IF v_origin_kind = 'org-lab' AND NEW.recorded_by = v_origin_principal THEN
     RAISE EXCEPTION 'Lab authority separation (W138): the Lab cannot self-activate its own role proposal';
   END IF;
   RETURN NEW;
