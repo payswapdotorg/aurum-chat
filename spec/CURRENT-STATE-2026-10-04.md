@@ -160,3 +160,12 @@ The next conceptual product is: Aurum Agent Body + user-selected Model + Company
 The Lab must treat organization choice as contextual. Same subject may yield different organizations under different season, duration, staffing, staff experience, workload, capability, environmental or constraint conditions. These are hypotheses to measure, not hardcoded industry rules.
 
 Production remains not recertified for current main until a new exact-deployment certification is run.
+---
+
+## UPDATE 2026-10-08 — W141 CERTIFIED (the roadmap completes)
+
+- **Roadmap complete**: W000–W140 all delivered, promoted and pushed through main `cf25d83` (Waves A–E: the W132/W133/W134 core, W135 org-lab, W136 agent-exchange, W137 execution-fabric, W138 emergent-roles, W139 cross-platform, W140 closed-loop, every module's integration-tier registrations).
+- **W141 certified**: the six mandatory demonstrations DELIVERED (38/38 hermetic proofs, machine-readable results), full battery 6155/17/0 + 38, tenant-isolation 244/244, production build clean.
+- **Production**: `aurum-chat-livid.vercel.app` @ deployment `dpl_4mFvfntmAE4UwFvopH6cUR3tMdeW`, SHA `cf25d834`, health census 305/305, migrations 151. First deploy attempt was drift-refused (emergent-roles ledger row vs the W138-D2 repaired file); deliberate reconciliation performed and recorded (five empty tables dropped, ledger row deleted, re-applied clean).
+- **Evidence**: spec/evidence/W141-CERTIFICATION-2026-10-08.md (the binding record — per-demo classification table, honest deviations, environment-blocked register).
+- **Known follow-ups** (documented, not blocking): D1 LIVE two-provider upgrade; real Tauri/Expo binaries; real-driver evaluation of the W137 adapters; the J01–J22 browser matrix re-run.
