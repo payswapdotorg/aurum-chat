@@ -335,6 +335,15 @@ describe('capability coverage', () => {
     // tables but no user-facing routes yet; their product surfaces arrive
     // with the W139/W140 composition work, at which point they leave this
     // list like meetings/cellular did.
+    // Wave D integration (deliberate update): 'cross-platform' (W139)
+    // joins this list — the cross-platform semantic core (the
+    // client-session registry, the client-agnostic state projections,
+    // the background-work feed, the platform adapter SPI and the
+    // evidenced cross-device handoff spine) has its delivered service
+    // and three tables but no user-facing routes of its own yet — the
+    // web app remains the canonical renderer and the desktop/mobile
+    // renderers are composition; it leaves this list when W140 lands
+    // the composition surfaces, like meetings/cellular did.
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'agent-body',
       'agent-exchange',
@@ -343,6 +352,7 @@ describe('capability coverage', () => {
       'computer-use',
       'context',
       'coverage',
+      'cross-platform',
       'deep-actions',
       'demo',
       'deployment-smoke',
