@@ -393,13 +393,13 @@ describe('closed-loop unit — the structural no-mutation tripwire', () => {
     const seamImports = new Map<string, Set<string>>();
     for (const match of source.matchAll(importRe)) {
       if (match[1]) continue; // `import type { … }` — compile-time only.
-      const names = match[2]
+      const names = (match[2] as string)
         .split(',')
         .map((one) => one.trim().split(/\s+as\s+/)[0].trim())
         .filter((one) => one.length > 0);
-      const module = match[3];
+      const module = match[3] as string;
       if (!seamImports.has(module)) seamImports.set(module, new Set());
-      for (const name of names) seamImports.get(module)!.add(name);
+      for (const name of names) (seamImports.get(module) as Set<string>).add(name);
     }
 
     // The consumed seams (the loop's connection map).
@@ -426,11 +426,11 @@ describe('closed-loop unit — the structural no-mutation tripwire', () => {
       'org-lab': ['getCandidate', 'getRecommendation', 'OrgLabError'],
     };
     for (const [module, names] of seamImports) {
-      const allowed = readOnly[module];
+      const allowed = readOnly[module] as readonly string[] | undefined;
       expect(allowed, `unexpected seam import: ${module}`).toBeDefined();
       for (const name of names) {
         expect(
-          allowed.includes(name),
+          (allowed as readonly string[]).includes(name),
           `${module}/${name} is not a read operation — the closed loop never mutates a seam`,
         ).toBe(true);
       }
