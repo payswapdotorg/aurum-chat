@@ -1,0 +1,98 @@
+{
+  "suite": "W141-SUITE",
+  "baseCommit": "e4f4258",
+  "runId": "<the run's exact timestamp — produced by the run>",
+  "hermetic": true,
+  "harness": "embedded PostgreSQL (PGlite, :memory:) — no network, no browsers, no harness transactions",
+  "demonstrations": [
+    {
+      "id": "D1",
+      "title": "Provider/model swap — the same body continues across provider A → provider B",
+      "classification": "FIXTURE (two-path: known provider + custom openai-compatible provider)",
+      "status": "delivered",
+      "checks": [
+        "provider A connected; models appeared through the REAL discovery seam (catalog lists them)",
+        "model selected: cognition binding active; the body attached it (policy-compatible)",
+        "work continued under provider A (REAL agents-contract execution, succeeded)",
+        "switched to provider B: custom openai-compatible definition superseded A in one auditable step",
+        "the SAME body continued: byte-for-byte preserved across the swap (updatedAt included)",
+        "work continued under provider B; domain outcomes IDENTICAL across the swap; no execution authority lost"
+      ],
+      "evidence": {
+        "providerA": { "provider": "openai", "kind": "known", "model": "gpt-4o-mini" },
+        "providerB": {
+          "provider": "w141-openrouter-fixture",
+          "kind": "custom",
+          "wireProtocol": "openai-compatible",
+          "model": "w141/fixture-large"
+        }
+      }
+    },
+    {
+      "id": "D2",
+      "title": "Ride journey — request → plan → Ride Agent → completion → PaySwap Agent → payment → result",
+      "classification": "FIXTURE (end-to-end machinery; live ride/pay providers out of scope, no credentials)",
+      "status": "delivered",
+      "checks": [
+        "\"Book me a ride\" → goal + ride context fingerprint (the W134 seam)",
+        "governed plan with marketplace member refs: Ride Agent + PaySwap Agent packages walked to INSTALLABLE through the real W028 chain",
+        "ride completion: handoff → REAL agents-contract execution → run freeze VERBATIM → outcome linked",
+        "payment: handoff → execution → run freeze VERBATIM → result returned to the rider",
+        "outcome realized (measured + settled) and the plan completed with the retained note"
+      ]
+    },
+    {
+      "id": "D3",
+      "title": "Construction journey — goal → fingerprint → strategy → Lab selection → recruitment → execution → relay → evidence → deviation → learning record",
+      "classification": "FIXTURE context + REAL Lab selection (the org-lab search is the real deterministic rule)",
+      "status": "delivered",
+      "checks": [
+        "construction goal → context fingerprint → information strategy (REAL contracts at every hop)",
+        "REAL Lab selection: searchOrganizations ranked the spring construction crew FIRST (fit 1) under the site A fingerprint",
+        "recommendation recorded with the retained rejected alternative and the committed OPEN outcome",
+        "recruitment through the REAL W022 approved path; execution plan with the site/person/system organization",
+        "site/person/system relay: three evidence-linked handoffs between every member kind",
+        "agent execution with evidence: run freeze VERBATIM, outcome linked",
+        "deviation detection: the W140 cycle cites the execution run as a REALITY deviation (expected 0.9, observed 0.4)",
+        "learning record: a policy-safe ranking signal (authoritative:false) citing the deviation, then the cycle closed"
+      ]
+    },
+    {
+      "id": "D4",
+      "title": "Context variation — the same construction subject under altered season/duration/staffing/experience fixtures selects DIFFERENT organizations",
+      "classification": "FIXTURE (context-diversity proof shapes; the selection rule is real)",
+      "status": "delivered",
+      "checks": [
+        "the SAME construction subject (one goal) under two materially different fingerprints: season/duration/staffing/experience all altered",
+        "the Lab selected DIFFERENT organizations: spring crew first under spring fixtures, fall crew first under fall fixtures",
+        "the evidence trail explains why: the twelve-axis fit reports flip match/misfit (fit 1 vs 0)",
+        "two recommendations selected the different organizations, each retaining its rejected alternative"
+      ]
+    },
+    {
+      "id": "D5",
+      "title": "Emergent role proposal → marketplace submission boundary — publication/install/activation stay governed",
+      "classification": "FIXTURE (both Lab refusal paths exercised with typed errors)",
+      "status": "delivered",
+      "checks": [
+        "recurring gap evidence: two settled-MISSED windows → two REAL gap-evidence records (the recurrence floor)",
+        "the LAB-origin RoleProposal carried evidence citations, typed capability demands, alternatives and evaluation",
+        "the governed review: submit → under_review → the W009 APPROVED decision recorded verbatim",
+        "THE BOUNDARY HOLDS (publication): the Lab principal was refused with typed lab_cannot_self_publish; the governed principal recorded the submission REQUEST against the INSTALLABLE package, state UNMOVED",
+        "THE BOUNDARY HOLDS (activation): the Lab principal was refused with typed lab_cannot_self_activate; the governed principal recorded the activation against the APPROVED W022 acquisition, fulfilling the proposal once"
+      ]
+    },
+    {
+      "id": "D6",
+      "title": "Cross-platform continuity — the same active work across web/desktop/mobile client sessions",
+      "classification": "FIXTURE clients (identical authoritative state, evidenced handoff)",
+      "status": "delivered",
+      "checks": [
+        "three client sessions registered as server-issued identity (web canonical, desktop power, mobile field)",
+        "the SAME active work read byte-identically across all three clients (conversation state + company overview)",
+        "background work inspectable everywhere: the identical feed on every client kind",
+        "the evidenced handoff: web → desktop (EXACT-state resumption) → mobile (EXACT-state resumption) → close, with the full append-only evidence trail"
+      ]
+    }
+  ]
+}
