@@ -339,7 +339,7 @@ describe('retire + query validation (pure)', () => {
       limit: 5,
     });
     expectInvalid('invalid_query', () => validateListStrategiesQuery({ limit: 0 }));
-    expectInvalid('invalid_query', () => validateListStrategiesQuery({ status: 'draft' }));
+    expectInvalid('invalid_query', () => validateListStrategiesQuery({ status: 'draft' as never }));
     expectInvalid('invalid_query', () => validateListStrategiesQuery({ goalId: 'nope' }));
   });
 });

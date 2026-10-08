@@ -31,6 +31,7 @@ delete process.env.REDIS_URL;
 
 import * as infoStrategyContract from '../contract';
 import { InfoStrategyError } from '../errors';
+import type { DefineStrategyInput } from '../types';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { closeDb, getDb } from '@/infra/db';
 import { newId } from '@/infra/ids';
@@ -117,7 +118,11 @@ async function seedUnknown(
 }
 
 /** A ready-to-define strategy body against real fixture refs. */
-async function strategyBody(ctx: TenantContext, goalId: string, unknownId: string) {
+async function strategyBody(
+  ctx: TenantContext,
+  goalId: string,
+  unknownId: string,
+): Promise<DefineStrategyInput> {
   return {
     goalId,
     fingerprintId: await seedFingerprint(ctx, goalId, 'spring'),

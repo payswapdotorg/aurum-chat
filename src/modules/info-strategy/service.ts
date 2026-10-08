@@ -221,6 +221,24 @@ async function validateUnknownRefs(
 // Loaders (transaction-scoped)
 // ---------------------------------------------------------------------------
 
+async function loadStrategyRow(
+  db: Queryable,
+  ctx: TenantContext,
+  strategyId: string,
+): Promise<StrategyRow> {
+  const result = await db.query<StrategyRow>(
+    `SELECT * FROM info_strategies WHERE tenant_id = $1 AND id = $2`,
+    [ctx.tenantId, strategyId],
+  );
+  if (result.rows.length === 0) {
+    throw new InfoStrategyError(
+      'strategy_not_found',
+      `no strategy '${strategyId}' exists in this tenant`,
+    );
+  }
+  return result.rows[0]!;
+}
+
 async function loadStrategyRowForUpdate(
   tx: Queryable,
   ctx: TenantContext,
@@ -383,23 +401,47 @@ export async function defineStrategy(
 // adjustStrategy
 // ---------------------------------------------------------------------------
 
+/**
+ * TRANSACTION DISCIPLINE (the house law over the embedded database): a
+ * base-connection read issued while a transaction is open starves PGlite's
+ * single connection (the deadlock the agents dispatch precedent documents).
+ * Cross-module contract reads — the unknown refs below go through the
+ * epistemics contract — therefore happen BEFORE the transaction opens, the
+ * "evidence gate before any write" discipline (epistemics' recordClaim /
+ * reviseBelief precedent). That gate is safe exactly because unknowns are
+ * immutable, always-readable records (resolution is a one-way annotation,
+ * never a delete), so a validated ref cannot dangle afterwards.
+ *
+ * The atomicity law is preserved: the version append and the
+ * current_version pointer bump stay ONE transaction, minted under the
+ * strategy row lock. Because versions are immutable (trigger-enforced), an
+ * unchanged version number under the lock proves the locked current
+ * content IS the content the pre-transaction gate validated — a number
+ * that moved means a concurrent adjustment landed first, and the whole
+ * operation re-derives and re-validates instead of recording a version
+ * merged from outdated content.
+ */
+const MAX_ADJUSTMENT_ATTEMPTS = 3;
+
 export async function adjustStrategy(
   ctx: TenantContext,
   input: AdjustStrategyInput,
 ): Promise<InfoStrategy> {
   assertInfoStrategyTenantContext(ctx);
   const valid: ValidatedAdjustStrategyInput = validateAdjustStrategyInput(input);
+  const db = getDb();
 
-  return getDb().transaction(async (tx) => {
-    const row = await loadStrategyRowForUpdate(tx, ctx, valid.strategyId);
-    if (row.status === 'retired') {
+  for (let attempt = 1; ; attempt += 1) {
+    // --- Phase 1 (base connection, NO transaction open): the basis and ---
+    // --- the evidence gate over the MERGED content's unknown refs.     ---
+    const basis = await loadStrategyRow(db, ctx, valid.strategyId);
+    if (basis.status === 'retired') {
       throw new InfoStrategyError(
         'strategy_retired',
         `strategy '${valid.strategyId}' is retired — the returning need is a new strategy definition`,
       );
     }
-
-    const current = mapVersion(await loadVersionRow(tx, ctx, valid.strategyId, row.current_version));
+    const current = mapVersion(await loadVersionRow(db, ctx, valid.strategyId, basis.current_version));
     const merged: ValidatedStrategyContent = {
       knowledgeRequirements: valid.changes?.knowledgeRequirements ?? current.content.knowledgeRequirements,
       preferredSources: valid.changes?.preferredSources ?? current.content.preferredSources,
@@ -408,32 +450,60 @@ export async function adjustStrategy(
     };
 
     // Refs in the MERGED content must be readable now — including the
-    // carried-over ones (an unknown may have been resolved/removed since
-    // the previous version; recording a version that tracks a dead ref
-    // would silently corrupt the learning loop).
+    // carried-over ones (an unknown recorded against a foreign tenant or
+    // a missing one would silently corrupt the learning loop).
     await validateUnknownRefs(ctx, merged);
 
-    const nextVersion = row.current_version + 1;
-    const recordedAt = now();
-    const version = await insertVersion(
-      tx,
-      ctx,
-      valid.strategyId,
-      nextVersion,
-      merged,
-      valid.outcomeEvidence,
-      valid.note,
-      valid.derivedFrom,
-      recordedAt,
-    );
-    await tx.query(
-      `UPDATE info_strategies SET current_version = $3, updated_at = $4
-         WHERE tenant_id = $1 AND id = $2`,
-      [ctx.tenantId, valid.strategyId, nextVersion, recordedAt],
-    );
+    // --- Phase 2 (the ONE transaction): append + pointer bump.        ---
+    const outcome = await db.transaction(async (tx) => {
+      const row = await loadStrategyRowForUpdate(tx, ctx, valid.strategyId);
+      if (row.status === 'retired') {
+        throw new InfoStrategyError(
+          'strategy_retired',
+          `strategy '${valid.strategyId}' is retired — the returning need is a new strategy definition`,
+        );
+      }
+      // Versions are immutable, so an unchanged number under the lock
+      // means the locked current content is exactly the validated basis.
+      // A moved number means a concurrent adjustment won the race.
+      if (row.current_version !== basis.current_version) {
+        return { kind: 'stale' as const };
+      }
 
-    return assembleStrategy({ ...row, current_version: nextVersion, updated_at: recordedAt }, version);
-  });
+      const nextVersion = row.current_version + 1;
+      const recordedAt = now();
+      const version = await insertVersion(
+        tx,
+        ctx,
+        valid.strategyId,
+        nextVersion,
+        merged,
+        valid.outcomeEvidence,
+        valid.note,
+        valid.derivedFrom,
+        recordedAt,
+      );
+      await tx.query(
+        `UPDATE info_strategies SET current_version = $3, updated_at = $4
+           WHERE tenant_id = $1 AND id = $2`,
+        [ctx.tenantId, valid.strategyId, nextVersion, recordedAt],
+      );
+
+      return {
+        kind: 'adjusted' as const,
+        strategy: assembleStrategy({ ...row, current_version: nextVersion, updated_at: recordedAt }, version),
+      };
+    });
+    if (outcome.kind === 'stale') {
+      if (attempt >= MAX_ADJUSTMENT_ATTEMPTS) {
+        throw new Error(
+          `strategy '${valid.strategyId}' kept moving under adjustment (${MAX_ADJUSTMENT_ATTEMPTS} attempts) — retry the adjustment`,
+        );
+      }
+      continue;
+    }
+    return outcome.strategy;
+  }
 }
 
 // ---------------------------------------------------------------------------

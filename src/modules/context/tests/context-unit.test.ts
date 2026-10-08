@@ -276,16 +276,16 @@ describe('derivation input validation (pure)', () => {
     expectInvalid(() =>
       validateDerivationInput({
         goalId: SEED.goalId,
-        observations: { duration: { durationClass: 'tiny', estimatedSpan: null } },
+        observations: { duration: { durationClass: 'tiny' as never, estimatedSpan: null } },
       }),
     );
     expectInvalid(() =>
-      validateDerivationInput({ goalId: SEED.goalId, observations: { workload: 'brutal' } }),
+      validateDerivationInput({ goalId: SEED.goalId, observations: { workload: 'brutal' as never } }),
     );
     expectInvalid(() =>
       validateDerivationInput({
         goalId: SEED.goalId,
-        observations: { constraints: { riskTolerance: 'yolo' } },
+        observations: { constraints: { riskTolerance: 'yolo' } as never },
       }),
     );
   });
@@ -309,7 +309,7 @@ describe('derivation input validation (pure)', () => {
       validateDerivationInput({
         goalId: SEED.goalId,
         observations: {
-          staffing: { headcount: null, experienceMix: { senior: 3 }, note: null },
+          staffing: { headcount: null, experienceMix: { senior: 3 } as never, note: null },
         },
       }),
     );

@@ -98,6 +98,7 @@ export type {
   ValidatedListStrategyVersionsQuery,
   ValidatedRetireStrategyInput,
   ValidatedStrategyContent,
+  ValidatedStrategyContentPatch,
 } from './validation';
 
 export type {

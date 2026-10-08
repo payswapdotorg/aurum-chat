@@ -22,7 +22,6 @@ import {
 } from './types';
 import type {
   ContextObservationsInput,
-  ContextTask,
   DeriveFingerprintInput,
   DurationClass,
   GetFingerprintQuery,

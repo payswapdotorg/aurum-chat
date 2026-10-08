@@ -22,23 +22,17 @@ import { COVERAGE_SOURCE_REGISTRIES } from '@/modules/coverage/contract';
 import { InfoStrategyError } from './errors';
 import type {
   CostCeiling,
-  CostCeilingInput,
   CostCeilingScope,
   EscalationThreshold,
-  EscalationThresholdInput,
   EscalationTrigger,
   GetStrategyQuery,
   GetStrategyVersionQuery,
   KnowledgeRequirement,
-  KnowledgeRequirementInput,
   ListStrategiesQuery,
   ListStrategyVersionsQuery,
   OutcomeEvidence,
   OutcomeEvidenceInput,
   PreferredSource,
-  PreferredSourceInput,
-  StrategyContent,
-  StrategyContentPatch,
 } from './types';
 import { OUTCOME_EVIDENCE_KINDS } from './types';
 
@@ -420,6 +414,20 @@ export interface ValidatedStrategyContent {
   escalationThresholds: EscalationThreshold[];
 }
 
+/**
+ * The VALIDATED patch shape: every present field holds the normalized
+ * (stored-shape) arrays the content validators produce — `maxEvidenceAgeSeconds`
+ * and `afterAttempts` are already resolved to `number | null`, never left
+ * optional. (The INPUT-facing `StrategyContentPatch` keeps its optional
+ * input shapes; this is what the service merges.)
+ */
+export interface ValidatedStrategyContentPatch {
+  knowledgeRequirements?: KnowledgeRequirement[];
+  preferredSources?: PreferredSource[];
+  costCeilings?: CostCeiling[];
+  escalationThresholds?: EscalationThreshold[];
+}
+
 export interface ValidatedDefineStrategyInput {
   goalId: string;
   fingerprintId: string;
@@ -463,7 +471,7 @@ export function validateDefineStrategyInput(input: unknown): ValidatedDefineStra
 
 export interface ValidatedAdjustStrategyInput {
   strategyId: string;
-  changes: StrategyContentPatch | null;
+  changes: ValidatedStrategyContentPatch | null;
   outcomeEvidence: OutcomeEvidence[];
   note: string;
   derivedFrom: string[];
@@ -475,7 +483,7 @@ export function validateAdjustStrategyInput(input: unknown): ValidatedAdjustStra
   if (!isUuid(object.strategyId)) {
     badInput(code, 'strategyId', 'must be a uuid');
   }
-  let changes: StrategyContentPatch | null = null;
+  let changes: ValidatedStrategyContentPatch | null = null;
   if (object.changes !== undefined && object.changes !== null) {
     const patchObject = requirePlainObject(object.changes, code, 'changes');
     const keys = ['knowledgeRequirements', 'preferredSources', 'costCeilings', 'escalationThresholds'] as const;
