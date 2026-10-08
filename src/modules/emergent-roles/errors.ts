@@ -3,7 +3,7 @@
 // humans/logs, never for control flow — the same discipline every
 // module applies.
 //
-// Error vocabulary (31 codes):
+// Error vocabulary (33 codes):
 //   invalid_context       — a caller forgot/malformed the explicit
 //                           TenantContext (ADR-0001: the context is
 //                           asserted, never ambient);
