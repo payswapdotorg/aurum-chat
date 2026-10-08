@@ -1549,7 +1549,7 @@ export async function listEnvironmentDefinitions(
   query?: ListEnvironmentDefinitionsQuery,
 ): Promise<EnvironmentDefinition[]> {
   assertExecutionFabricTenantContext(ctx);
-  const valid = validateListEnvironmentDefinitionsQuery(query);
+  const valid = validateListEnvironmentDefinitionsQuery(query ?? {});
   const db = getDb();
   const params: unknown[] = [ctx.tenantId];
   let sql = `SELECT * FROM environment_definitions WHERE tenant_id = $1`;
@@ -1583,7 +1583,7 @@ export async function listFabricLeases(
   query?: ListFabricLeasesQuery,
 ): Promise<FabricLease[]> {
   assertExecutionFabricTenantContext(ctx);
-  const valid = validateListFabricLeasesQuery(query);
+  const valid = validateListFabricLeasesQuery(query ?? {});
   const db = getDb();
   const params: unknown[] = [ctx.tenantId];
   let sql = `SELECT * FROM fabric_leases WHERE tenant_id = $1`;
