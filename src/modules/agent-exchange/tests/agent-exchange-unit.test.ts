@@ -62,7 +62,7 @@ function expectCode(code: AgentExchangeError['code'], fn: () => unknown): AgentE
 const UUID = '0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d';
 const UUID2 = '12345678-1234-4123-8123-123456789abc';
 
-function validPlanInput(): unknown {
+function validPlanInput(): Record<string, unknown> {
   return {
     goalId: UUID,
     objective: 'Dispatch the spring ride window',

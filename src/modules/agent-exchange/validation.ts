@@ -19,7 +19,6 @@ import { AgentExchangeError } from './errors';
 // and return the Validated* shapes (the org-lab discipline — the input
 // interfaces live in types.ts and are re-exported through contract.ts).
 import type {
-  ContextPackage,
   ExecutionPlanStatus,
   ExchangeMemberKind,
 } from './types';
