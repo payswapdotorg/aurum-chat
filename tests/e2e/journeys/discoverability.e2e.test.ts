@@ -327,6 +327,14 @@ describe('capability coverage', () => {
     // but no user-facing routes yet; its product surface arrives with the
     // W138/W139/W140 composition work, at which point it leaves this list
     // like meetings/cellular did.
+    // Wave C integration (deliberate update): 'execution-fabric' (W137)
+    // and 'emergent-roles' (W138) join this list — the execution
+    // environment fabric (definitions, leases, evidence tails) and the
+    // emergence projection (gap evidence, proposals, reviews,
+    // submissions, activations) have their delivered services and eleven
+    // tables but no user-facing routes yet; their product surfaces arrive
+    // with the W139/W140 composition work, at which point they leave this
+    // list like meetings/cellular did.
     expect(instruments.map((capability) => capability.module).sort()).toEqual([
       'agent-body',
       'agent-exchange',
@@ -339,7 +347,9 @@ describe('capability coverage', () => {
       'demo',
       'deployment-smoke',
       'edge-connector',
+      'emergent-roles',
       'execution',
+      'execution-fabric',
       'info-strategy',
       'journey-proof',
       'migration',
