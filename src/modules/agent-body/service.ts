@@ -19,6 +19,17 @@
 // body byte-for-byte, including `updatedAt`: it must not even LOOK like a
 // body edit (test-locked).
 //
+// THE WB3 COMPOSITION WIRING (the recorded TL ruling, delivered): the
+// storage layer keeps `bindingId` OPAQUE — append-only audit evidence that
+// must survive fabric-side supersession — but the SERVICE composition
+// boundary existence-gates every FRESH attachment against the
+// provider-fabric (W132) operational read API, on the BASE connection
+// BEFORE the append transaction opens (the W134 transaction law: never
+// query inside an open transaction). The gate is EXISTENCE, not activity:
+// a since-superseded fabric binding is exactly the audit evidence a fresh
+// attachment may legitimately reference; historical rows are never
+// re-validated.
+//
 // Conventions (IMPLEMENTATION-STACK §3/§8): all SQL goes through the db
 // port with `$n` placeholders; ids are uuids minted by PostgreSQL
 // (`gen_random_uuid()`); semantic timestamps come from the injectable
@@ -81,6 +92,7 @@ import type {
   UpdateAgentBodyInput,
 } from './types';
 import type { ModelBindingPurpose } from '@/modules/provider-fabric/contract';
+import { listModelBindings, MAX_LIST_LIMIT } from '@/modules/provider-fabric/contract';
 
 // ---------------------------------------------------------------------------
 // Rows and mappers
@@ -204,6 +216,40 @@ async function findBodyRow(
     [ctx.tenantId, bodyId],
   );
   return result.rows[0] ?? null;
+}
+
+/**
+ * The WB3 composition gate: a FRESH attachment's `bindingId` must EXIST in
+ * the tenant's provider-fabric registry. Checked through the fabric's
+ * operational read API (its contract — the only legal cross-module import)
+ * on the BASE connection, before the caller opens its append transaction.
+ *
+ * EXISTENCE, not activity: the registry read spans BOTH statuses, so a
+ * since-superseded fabric binding passes (the opacity ruling — attachments
+ * are audit evidence that survives fabric-side supersession). And
+ * existence only: which fabric purpose the binding was minted under is the
+ * fabric's own semantics; this layer records the reference verbatim either
+ * way (a recorded open design question for the TL, not silently tightened
+ * here).
+ *
+ * Read-window honesty: the fabric's operational API has no by-id read; its
+ * list surface is bounded (MAX_LIST_LIMIT, newest first). A tenant holding
+ * more fabric bindings than that bound makes older ids unresolvable through
+ * the operational API — such an attachment is refused conservatively,
+ * never fabricated (noted in WORK-NOTES.md; a fabric-side by-id read would
+ * close it).
+ */
+async function requireFabricBindingExists(
+  ctx: TenantContext,
+  bindingId: string,
+): Promise<void> {
+  const registry = await listModelBindings(ctx, { limit: MAX_LIST_LIMIT });
+  if (!registry.some((binding) => binding.bindingId === bindingId)) {
+    throw new AgentBodyError(
+      'fabric_binding_not_found',
+      `binding '${bindingId}' does not exist in this tenant's provider-fabric registry — attach the binding through the provider-fabric service first (a fresh body attachment must reference an existing fabric binding; superseded fabric bindings qualify — historical attachments are never re-validated)`,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -428,6 +474,27 @@ export async function attachModelBinding(
   assertAgentBodyTenantContext(ctx);
   const valid: ValidatedAttachModelBindingInput = validateAttachModelBindingInput(input);
   const db = getDb();
+
+  // (0) The composition gates, BOTH on the BASE connection BEFORE the
+  // append transaction opens (the W134 transaction law — never query
+  // inside an open transaction):
+  //   (a) a friendly tenant-scoped body pre-check so a foreign or missing
+  //       body rejects with the uniform `body_not_found` FIRST — before
+  //       any fabric query can say anything (ADR-0001: no existence leak;
+  //       the authoritative re-check under the FOR UPDATE lock below is
+  //       unchanged);
+  //   (b) the WB3 fabric-registry existence gate — a FRESH attachment
+  //       must reference a binding that exists in the tenant's
+  //       provider-fabric registry (EXISTENCE, not activity — a
+  //       since-superseded fabric binding qualifies).
+  const bodyRow = await findBodyRow(db, ctx, valid.bodyId, false);
+  if (bodyRow === null) {
+    throw new AgentBodyError(
+      'body_not_found',
+      `no body '${valid.bodyId}' exists in this tenant`,
+    );
+  }
+  await requireFabricBindingExists(ctx, valid.bindingId);
 
   return db.transaction(async (tx) => {
     // (1) Serialize on the body row. The lock orders concurrent swaps and

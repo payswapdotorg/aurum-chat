@@ -2,7 +2,7 @@
 // and branch on `code`; messages are for humans/logs, never for control
 // flow — the same discipline every module applies.
 //
-// Error vocabulary (10 codes):
+// Error vocabulary (11 codes):
 //   invalid_context    — a caller forgot/malformed the explicit
 //                        TenantContext (ADR-0001: the context is asserted,
 //                        never ambient);
@@ -25,6 +25,16 @@
 //                        (body, purpose) at all;
 //   binding_inactive   — attachments exist for the (body, purpose) but
 //                        none is active (superseded/detached history only);
+//   fabric_binding_not_found — the bindingId a FRESH attachment references
+//                        does not exist in the tenant's provider-fabric
+//                        registry (the WB3 composition wiring: the
+//                        existence gate at the service boundary, checked
+//                        through the W132 operational read API on the base
+//                        connection BEFORE the append transaction).
+//                        EXISTENCE, not activity: a since-superseded fabric
+//                        binding passes the gate — and historical
+//                        attachments already in the audit log are never
+//                        re-validated (the recorded opacity ruling);
 //   policy_check_failed— the attachment's verbatim policy-check verdict is
 //                        not 'compatible' (incompatible OR unknown): the
 //                        attachment is REFUSED and NOTHING is appended —
@@ -42,6 +52,7 @@ export type AgentBodyErrorCode =
   | 'body_retired'
   | 'binding_not_found'
   | 'binding_inactive'
+  | 'fabric_binding_not_found'
   | 'policy_check_failed';
 
 export class AgentBodyError extends Error {

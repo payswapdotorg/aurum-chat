@@ -14,6 +14,14 @@
 //     monotonic per-body positions, one active attachment per
 //     (tenant, body, purpose), verbatim policy-check payloads, and the
 //     one-way active → superseded | detached lifecycle;
+//   * THE WB3 COMPOSITION WIRING — a FRESH attachment must reference a
+//     binding that EXISTS in the tenant's provider-fabric registry
+//     (typed `fabric_binding_not_found`, nothing appended; the registry
+//     read is tenant-scoped, and the uniform `body_not_found` still
+//     fires FIRST for a foreign/missing body). Existence, NOT activity:
+//     the fixtures register REAL fabric bindings whose earlier ones are
+//     already superseded at attach time — exactly the audit evidence the
+//     opacity ruling protects;
 //   * POLICY COMPATIBLE — an 'incompatible' verdict REFUSES the
 //     attachment (typed policy_check_failed, nothing appended), and so
 //     does an 'unknown' verdict (the honesty ruling: an unverified
@@ -41,6 +49,12 @@ import type { TenantContext } from '@/infra/tenant';
 import { runMigrations } from '../../../../scripts/migrate';
 
 import {
+  attachModelBinding as attachFabricBinding,
+  connectKnownProvider,
+  listModelBindings as listFabricBindings,
+  registerModelManually,
+} from '@/modules/provider-fabric/contract';
+import {
   AgentBodyError,
   attachModelBinding,
   createAgentBody,
@@ -55,6 +69,7 @@ import {
 import type {
   AgentBody,
   AgentBodyErrorCode,
+  ModelBindingPurpose,
   PolicyCheckOutcome,
   PolicyCheckPayload,
 } from '../contract';
@@ -126,14 +141,22 @@ const tenantB = newId();
 const principalA = newId();
 const principalB = newId();
 
-// Fabric binding ids — OPAQUE references by design: these tests never
-// parse them, only store and compare them verbatim.
-const FABRIC_COGNITION_1 = `fabric-binding-${newId()}`;
-const FABRIC_COGNITION_2 = `fabric-binding-${newId()}`;
-const FABRIC_COGNITION_3 = `fabric-binding-${newId()}`;
-const FABRIC_CONVERSATION_1 = `fabric-binding-${newId()}`;
-const FABRIC_CONVERSATION_2 = `fabric-binding-${newId()}`;
-const FABRIC_B_COGNITION = `fabric-binding-${newId()}`;
+// Fabric binding ids — REAL provider-fabric-registered references (the
+// WB3 composition wiring: every binding id a body attaches is gated on
+// existence in the tenant's fabric registry). Registered in beforeAll
+// through the fabric's public contract (connectKnownProvider →
+// registerModelManually → attachModelBinding); minted by the fabric, so
+// these tests never fabricate them — only store and compare verbatim.
+let FABRIC_COGNITION_1: string;
+let FABRIC_COGNITION_2: string;
+let FABRIC_COGNITION_3: string;
+let FABRIC_CONVERSATION_1: string;
+let FABRIC_CONVERSATION_2: string;
+let FABRIC_B_COGNITION: string;
+let FABRIC_H_1: string;
+let FABRIC_H_2: string;
+let FABRIC_H_3: string;
+let FABRIC_H_4: string;
 
 let bodyA1: AgentBody; // the full-payload body — the core-acceptance body
 let bodyA2: AgentBody; // the lifecycle body
@@ -142,6 +165,60 @@ let bodyB1: AgentBody; // tenant B's body (same role as A's — tenant-scoped)
 
 beforeAll(async () => {
   await runMigrations(getDb());
+
+  // ----------------------------------------------------------------
+  // The W132 fabric fixtures — REAL registered bindings per tenant
+  // (the WB3 composition wiring: fresh body attachments are gated on
+  // fabric-registry existence). The chains matter: each later attach
+  // supersedes the earlier one FABRIC-side (one active binding per
+  // purpose per tenant), so cognition 1 and 2 arrive already SUPERSEDED
+  // and cognition 3 is tenant A's ACTIVE cognition binding — the exact
+  // audit-evidence shape the opacity ruling protects (existence, not
+  // activity). The bodies below attach 1 and 2 anyway, deliberately.
+  // ----------------------------------------------------------------
+  const ownerA = member(tenantA, principalA);
+  const definitionA = await connectKnownProvider(ownerA, { provider: 'openai' });
+  await registerModelManually(ownerA, {
+    definitionId: definitionA.definitionId,
+    modelId: 'gpt-4o-mini',
+    displayName: 'GPT-4o mini',
+  });
+  const attachFabric = async (purpose: ModelBindingPurpose): Promise<string> =>
+    (
+      await attachFabricBinding(ownerA, {
+        purpose,
+        definitionId: definitionA.definitionId,
+        modelId: 'gpt-4o-mini',
+        accountId: newId(), // opaque W034 BYOA account reference
+      })
+    ).binding.bindingId;
+  FABRIC_COGNITION_1 = await attachFabric('cognition');
+  FABRIC_COGNITION_2 = await attachFabric('cognition'); // supersedes 1
+  FABRIC_COGNITION_3 = await attachFabric('cognition'); // supersedes 2 — the ACTIVE one
+  FABRIC_CONVERSATION_1 = await attachFabric('conversation');
+  FABRIC_CONVERSATION_2 = await attachFabric('conversation'); // supersedes 1
+  FABRIC_H_1 = await attachFabric('background');
+  FABRIC_H_2 = await attachFabric('background'); // supersedes 1
+  FABRIC_H_3 = await attachFabric('background'); // supersedes 2
+  FABRIC_H_4 = await attachFabric('background'); // supersedes 3 — the ACTIVE one
+
+  // Tenant B connects its OWN definition (the same provider slug
+  // coexists per tenant in the fabric) and registers its own binding.
+  const ownerB = member(tenantB, principalB);
+  const definitionB = await connectKnownProvider(ownerB, { provider: 'openai' });
+  await registerModelManually(ownerB, {
+    definitionId: definitionB.definitionId,
+    modelId: 'gpt-4o-mini',
+    displayName: 'GPT-4o mini',
+  });
+  FABRIC_B_COGNITION = (
+    await attachFabricBinding(ownerB, {
+      purpose: 'cognition',
+      definitionId: definitionB.definitionId,
+      modelId: 'gpt-4o-mini',
+      accountId: newId(),
+    })
+  ).binding.bindingId;
 
   const restore = pinClock(T0);
   try {
@@ -323,7 +400,74 @@ describe('W133 agent-body — the persistent body', () => {
 describe('W133 agent-body — model binding attachments', () => {
   const ownerA = member(tenantA, principalA);
 
-  it('attaches the first binding as the active attachment (position 1, verbatim policy check)', async () => {
+  it('gates a fresh attachment on the FABRIC registry — an unregistered binding id is refused (typed fabric_binding_not_found, nothing appended)', async () => {
+    const beforeA = await getBodyBindings(ownerA, { bodyId: bodyA1.id });
+    // A well-formed uuid that was NEVER registered in the tenant's
+    // fabric — refused by the WB3 composition gate before anything is
+    // appended (the gate also fires before the policy verdict: the
+    // ordering is documented by refusing with an incompatible verdict
+    // attached, which would otherwise be policy_check_failed).
+    await expectErrorCode('fabric_binding_not_found', () =>
+      attachModelBinding(ownerA, {
+        bodyId: bodyA1.id,
+        bindingId: newId(),
+        purpose: 'cognition',
+        policyCheck: policyCheck('incompatible', {
+          basis: 'the gate must speak before the verdict — this refusal is fabric_binding_not_found, not policy_check_failed',
+        }),
+      }),
+    );
+    expect(await getBodyBindings(ownerA, { bodyId: bodyA1.id })).toEqual(beforeA);
+
+    // The registry read is TENANT-SCOPED (ADR-0001): tenant B cannot
+    // attach tenant A's REAL binding id to its own body — a foreign
+    // binding is indistinguishable from an unregistered one.
+    const ownerB = member(tenantB, principalB);
+    const beforeB = await getBodyBindings(ownerB, { bodyId: bodyB1.id });
+    await expectErrorCode('fabric_binding_not_found', () =>
+      attachModelBinding(ownerB, {
+        bodyId: bodyB1.id,
+        bindingId: FABRIC_COGNITION_1, // tenant A's REAL binding
+        purpose: 'cognition',
+        policyCheck: policyCheck('compatible'),
+      }),
+    );
+    expect(await getBodyBindings(ownerB, { bodyId: bodyB1.id })).toEqual(beforeB);
+
+    // The uniform body_not_found still fires FIRST — a foreign or missing
+    // body is indistinguishable and rejected before any fabric query can
+    // say anything (even with an unregistered binding in the same call).
+    await expectErrorCode('body_not_found', () =>
+      attachModelBinding(ownerB, {
+        bodyId: bodyA1.id, // foreign body
+        bindingId: newId(), // also unregistered — the body gate speaks first
+        purpose: 'cognition',
+        policyCheck: policyCheck('compatible'),
+      }),
+    );
+    await expectErrorCode('body_not_found', () =>
+      attachModelBinding(ownerA, {
+        bodyId: newId(), // missing body
+        bindingId: newId(),
+        purpose: 'cognition',
+        policyCheck: policyCheck('compatible'),
+      }),
+    );
+  });
+
+  it('attaches the first binding as the active attachment (position 1, verbatim policy check) — a since-SUPERSEDED fabric binding qualifies (existence, not activity)', async () => {
+    // The fixture chain superseded cognition 1 and 2 fabric-side; the
+    // tenant's ACTIVE cognition binding is 3. The registry — read
+    // through the fabric's public contract — proves the shape the
+    // opacity ruling protects: attaching the SUPERSEDED 1 below is
+    // legal because the composition gate checks EXISTENCE, never
+    // activity.
+    const registry = await listFabricBindings(ownerA, { purpose: 'cognition' });
+    const statusOf = new Map(registry.map((binding) => [binding.bindingId, binding.status]));
+    expect(statusOf.get(FABRIC_COGNITION_1)).toBe('superseded');
+    expect(statusOf.get(FABRIC_COGNITION_2)).toBe('superseded');
+    expect(statusOf.get(FABRIC_COGNITION_3)).toBe('active');
+
     const restore = pinClock(T1);
     try {
       const attached = await attachModelBinding(ownerA, {
@@ -627,19 +771,19 @@ describe('W133 agent-body — model binding attachments', () => {
     try {
       await attachModelBinding(ownerA, {
         bodyId: bodyA3.id,
-        bindingId: 'fabric-h-1',
+        bindingId: FABRIC_H_1,
         purpose: 'background',
         policyCheck: policyCheck('compatible'),
       });
       await attachModelBinding(ownerA, {
         bodyId: bodyA3.id,
-        bindingId: 'fabric-h-2',
+        bindingId: FABRIC_H_2,
         purpose: 'background',
         policyCheck: policyCheck('compatible'),
       });
       await attachModelBinding(ownerA, {
         bodyId: bodyA3.id,
-        bindingId: 'fabric-h-3',
+        bindingId: FABRIC_H_3,
         purpose: 'background',
         policyCheck: policyCheck('compatible'),
       });
@@ -650,7 +794,7 @@ describe('W133 agent-body — model binding attachments', () => {
       });
       const final = await attachModelBinding(ownerA, {
         bodyId: bodyA3.id,
-        bindingId: 'fabric-h-4',
+        bindingId: FABRIC_H_4,
         purpose: 'background',
         policyCheck: policyCheck('compatible'),
       });
@@ -665,10 +809,10 @@ describe('W133 agent-body — model binding attachments', () => {
         'active',
       ]);
       expect(history.map((binding) => binding.bindingId)).toEqual([
-        'fabric-h-1',
-        'fabric-h-2',
-        'fabric-h-3',
-        'fabric-h-4',
+        FABRIC_H_1,
+        FABRIC_H_2,
+        FABRIC_H_3,
+        FABRIC_H_4,
       ]);
       // The body itself was never touched by any of it.
       const body = await getAgentBody(ownerA, { bodyId: bodyA3.id });

@@ -360,11 +360,19 @@ let measurementMissed: Awaited<ReturnType<typeof recordMeasurement>>;
 let retiredB: Awaited<ReturnType<typeof retireCandidate>>;
 let outcomeExceededSettled: Outcome;
 
-// Fabric + body binding ids — OPAQUE references by design: these tests
-// never parse them, only store and compare them verbatim (the W133/W132
-// seam ruling).
-const AB_COGNITION = `fabric-binding-${newId()}`;
-const AB_ANALYSIS = `fabric-binding-${newId()}`;
+// Fabric + body binding ids — REAL fabric-registered references (the
+// WB3 composition wiring: a fresh agent-body attachment is existence-
+// gated against the tenant's provider-fabric registry at the service
+// boundary). These tests never parse the ids, only store and compare
+// them verbatim (the W133/W132 seam ruling — opacity survives the gate).
+// AB_COGNITION is the tenant's since-SUPERSEDED first cognition binding
+// (existence, not activity — and it deliberately differs from the ACTIVE
+// one, so the occupancy snapshot keeps proving the body attachment and
+// the tenant binding are independent references); AB_ANALYSIS references
+// the ACTIVE cognition binding from the body's analysis slot — the
+// fabric's analysis purpose stays honestly unoccupied.
+let AB_COGNITION: string;
+let AB_ANALYSIS: string;
 let fabricCognition: ModelBinding;
 let fabricDefinition: ProviderDefinition;
 let bodyE: AgentBody;
@@ -487,6 +495,39 @@ beforeAll(async () => {
     derivedFrom: ['obs-evidence-1'],
   });
 
+  // The W132 provider-fabric seam: known provider + manual catalog entry +
+  // TWO tenant cognition bindings (the second supersedes the first). The
+  // WB3 composition wiring requires the body's attachments below to
+  // reference REAL fabric-registered bindings; the superseded first
+  // binding is deliberate (existence, not activity) and keeps
+  // bodyBindingId ≠ fabricBindingId — the two sides stay independent
+  // references. Only cognition is bound at the tenant level; analysis
+  // stays honestly unoccupied at the fabric level.
+  fabricDefinition = await connectKnownProvider(owner, { provider: 'openai' });
+  await registerModelManually(owner, {
+    definitionId: fabricDefinition.definitionId,
+    modelId: 'gpt-4o-mini',
+    displayName: 'GPT-4o mini',
+  });
+  const fabricCognitionSuperseded = (
+    await attachFabricBinding(owner, {
+      purpose: 'cognition',
+      definitionId: fabricDefinition.definitionId,
+      modelId: 'gpt-4o-mini',
+      accountId: newId(), // opaque W034 BYOA account reference
+    })
+  ).binding;
+  fabricCognition = (
+    await attachFabricBinding(owner, {
+      purpose: 'cognition',
+      definitionId: fabricDefinition.definitionId,
+      modelId: 'gpt-4o-mini',
+      accountId: newId(),
+    })
+  ).binding;
+  AB_COGNITION = fabricCognitionSuperseded.bindingId;
+  AB_ANALYSIS = fabricCognition.bindingId;
+
   // The W133 agent-body seam: one body, active attachments for two purposes.
   bodyE = await createAgentBody(owner, { role: 'dispatch-body', label: 'Dispatch body' });
   await attachBodyBinding(owner, {
@@ -501,24 +542,6 @@ beforeAll(async () => {
     purpose: 'analysis',
     policyCheck: compatiblePolicy(),
   });
-
-  // The W132 provider-fabric seam: known provider + manual catalog entry +
-  // ONE active tenant binding (cognition only — analysis stays honestly
-  // unoccupied at the fabric level).
-  fabricDefinition = await connectKnownProvider(owner, { provider: 'openai' });
-  await registerModelManually(owner, {
-    definitionId: fabricDefinition.definitionId,
-    modelId: 'gpt-4o-mini',
-    displayName: 'GPT-4o mini',
-  });
-  fabricCognition = (
-    await attachFabricBinding(owner, {
-      purpose: 'cognition',
-      definitionId: fabricDefinition.definitionId,
-      modelId: 'gpt-4o-mini',
-      accountId: newId(), // opaque W034 BYOA account reference
-    })
-  ).binding;
 
   // The W024 agent-evaluation seam: a real measured evaluation to cite.
   agentE = (await registerAgent(owner, TRIAGE_AGENT)).agent;

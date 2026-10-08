@@ -58,14 +58,20 @@
 //      or null when none is active.
 //
 // OPAQUE-SEAM DESIGN (the recorded TL ruling): `bindingId` is stored
-// VERBATIM and never validated for existence at this layer — attachments
-// are append-only audit evidence that must survive fabric-side
+// VERBATIM and never validated for existence at the STORAGE layer —
+// attachments are append-only audit evidence that must survive fabric-side
 // supersession, and a historical attachment referencing a since-superseded
-// fabric binding is exactly the evidence the audit must retain.
-// Cross-module existence validation and the live-swap composition land at
-// TL integration (W141's certification owns the live-swap proof). The
-// runtime purpose list is mirrored in validation.ts because the frozen W132
-// contract exports types only.
+// fabric binding is exactly the evidence the audit must retain. The WB3
+// composition wiring (delivered) adds the SERVICE-boundary existence gate:
+// a FRESH attachment's `bindingId` must exist in the tenant's
+// provider-fabric registry, checked through the W132 operational read API
+// (`listModelBindings`, imported from '@/modules/provider-fabric/contract'
+// — the only legal cross-module import) on the base connection BEFORE the
+// append transaction, refusing with the typed `fabric_binding_not_found`.
+// The gate is EXISTENCE, not activity (superseded fabric bindings qualify)
+// and never re-validates historical rows. W141's certification still owns
+// the live-swap proof. The runtime purpose list is mirrored in
+// validation.ts because the frozen W132 contract exports types only.
 //
 // The body NEVER invokes models: the LLM Gateway stays the execution
 // authority (§10). No app-layer UX and no authority-claim gating ship on
@@ -166,6 +172,8 @@ export type {
 
 // The frozen W132 seam, re-exported so consumers of the body/binding
 // surface never need to know where the purpose vocabulary was frozen.
-// TYPE-ONLY, imported through '@/modules/provider-fabric/contract' — the
-// single legal cross-module import (enforced by the architecture gate).
+// Imported through '@/modules/provider-fabric/contract' — the single
+// legal cross-module import (enforced by the architecture gate); since
+// the WB3 composition wiring that import is a VALUE import too (the
+// operational binding-registry read the existence gate uses).
 export type { ModelBindingPurpose } from '@/modules/provider-fabric/contract';
