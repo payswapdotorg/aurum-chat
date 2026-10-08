@@ -421,3 +421,94 @@ integration battery. The W139 chain is `8011ca9` (D1 layers 1-3) →
 `4fd7637` (unit proofs) → `5495664` (service proofs + the
 navigation_state round-trip repair) → this note's commit on
 `work/w139-cross-platform`; pushed to origin by this finisher.
+
+## Wave D integration pass (2026-10-08, task WD-INT on work/wd-integration)
+
+This section is APPENDED by the integration-pass worker (append-only;
+the record above is history). It records what THIS pass closed against
+the honest-limitations register, following the WC-INT precedent (the
+dated append in execution-fabric/emergent-roles WORK-NOTES, commits
+3a95814 → c95e6e5 → b25cfcc → b1e39af on work/wc-integration).
+
+**Limitation #4 — CLOSED.** The deferred integration-tier registrations
+for the three tables (`client_sessions`, `handoff_sessions`,
+`handoff_evidence`) are delivered:
+
+1. **Tenant-isolation sweep** — `tests/tenant-isolation/cross-platform-sweep.test.ts`
+   (manifest v11 → v12): a REAL two-tenant service proof in the
+   WB2/W136/WC-INT house style. Tenant A builds cross-platform state
+   through the public contract (client sessions of all three platform
+   kinds; a handoff opened over a REAL conversations-seam thread with
+   the context frozen at open, moved web → mobile and resumed EXACTLY
+   on desktop with anchorRevision ≡ the evidence count; a one-way
+   session revocation); tenant B sees none of it — empty-list
+   invisibility on `listClientSessions` / `listHandoffSessions` and the
+   background-work feed / company overview projections, uniform
+   `session_not_found` / `handoff_not_found` on the reads, the
+   revocation, the evidence trail and every lifecycle move (foreign ≡
+   missing), the mapped `conversation_not_found` / `mission_not_found` /
+   `work_item_not_found` stolen-focus composition refusals (B cannot
+   even open a handoff over A's conversation or mission, nor target
+   A's session as a receiver through B's own spine), and the same
+   device labels + frozen context shape + conversation title coexisting
+   per tenant with each tenant walking its own full lifecycle.
+2. **Discoverability registration** — the module joined
+   `src/modules/journey-proof/discoverability.ts` as a platform
+   instrument (domain infrastructure with a delivered service + three
+   tables, no user-facing routes of its own yet — the web app remains
+   the canonical renderer, the desktop/mobile renderers are
+   composition; it leaves the instrument list when W140 lands the
+   composition surfaces, the meetings/cellular precedent). The e2e
+   instrument-list pin moved 26 → 27 declared harnesses.
+3. **Health census** — `EXPECTED_TABLE_CENSUS` 298 → 301 with the
+   three table names added to `EXPECTED_TABLE_NAMES`, verified against
+   the health suite's fresh fully-migrated embedded db (the census test
+   re-migrates and asserts).
+4. **Schema-reconciliation pins** — 146 → 147 applied / 149 → 150
+   discovered / 149 → 150 skipped (`cross-platform/001`, the
+   three-table first migration).
+5. **Schema-boundary sweep — no allowlist additions required**: the
+   migration's only UNIQUE namespace is the partial unique index
+   `handoff_sessions_focus_seam_unique` on (tenant_id, focus_seam,
+   focus_ref) — tenant-leading by construction; there are no foreign
+   keys at all (opaque forward references are the house discipline),
+   and every table carries NOT NULL uuid tenant_id — the sweep passed
+   unchanged inside the green tenant-isolation directory run.
+
+**Honest new table counts at the pass tip:** the arch gate reads
+**790 module files / 337 app/mcp files / 292 tables checked** on the
+integrated branch (the module's own three tables moved the count
+289 → 292 pre-merge; unchanged by this pass — it adds no tables); the
+health census 298 → 301; the schema-reconciliation pins
+146/149/149 → 147/150/150.
+
+**Still open after this pass** (unchanged from the register above):
+#1 (no real Tauri 2 / Expo builds — the semantic core + adapter SPI is
+the deliverable; the client binaries are documented next steps), #2
+(the adapters are deterministic doubles), #3 (the FOR UPDATE staleness
+re-checks not concurrently provable on single-connection PGlite), #5
+(the in-memory adapter registry), #6 (the bounded background-work feed
+windows), #7 (the background-work focus's reprojection revision is
+structurally 1), #8 (no authority-claim gating — principal-id-based
+separation only), #9 (`readShellModel` requires a provisioned tenant),
+#10 (no app-layer UX — the renderers are composition), and #11 (the
+TL-owned full-repository battery; this pass ran the four gates plus
+the tenant-isolation directory, the cross-platform suite and the
+e2e/health trio, all green).
+
+**Pass gates (worktree /home/z/aurum-wdint, branch work/wd-integration,
+base integration/wave-d @ 18fde3b — the post-W139 merge point off main
+86300c9):** `timeout 300 bun run typecheck` → exit 0, zero errors ·
+`timeout 120 bun run arch` → exit 0, "architecture check passed —
+module files: 790, app/mcp files: 337, tables checked: 292" ·
+`timeout 240 bun run lint` → exit 0, zero errors · `timeout 590 bunx
+vitest run tests/tenant-isolation` → exit 0, 38 files / **243/243
+tests green** (this module's sweep included), duration ~247s · the e2e
+trio (discoverability 12/12 + schema-reconciliation 27/27 + health
+6/6 = 45/45) · `timeout 590 bunx vitest run src/modules/cross-platform`
+→ exit 0, 2 files / **49/49 tests green** (28 service + 21 unit), 0
+unhandled errors.
+
+**Pass commits (work/wd-integration):** 14e22bb (the sweep + manifest
+v12) → 033b6ae (discoverability + the e2e pin 26 → 27) → 7496e9c (the
+census 298 → 301 + schema pins 147/150/150) → this note's commit.
