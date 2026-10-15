@@ -27,14 +27,20 @@
 //   - FabricDiscoveryTransport (W132): the REAL transport in
 //     d1-live-transports.ts — GET {baseUrl}/models per provider, mapped
 //     into the fabric's provider-neutral samples.
-//   - AgentRuntimeTransport (W021): the REAL transport that resolves the
-//     ACTIVE cognition binding through the fabric contract (the
-//     composition boundary's duty — the fabric never invokes models) and
-//     POSTs {baseUrl}/chat/completions, adapting the OpenAI-compatible
-//     response into the openai-assistants dialect the module's own adapter
-//     normalizes. Because the transport resolves the binding per dispatch,
-//     the SWAP is real at the execution level: execution A is served by
-//     OpenRouter's model, execution B by DashScope's.
+//   - AgentRuntimeTransport (W021): the REAL PURE-ROUTER transport in
+//     d1-live-transports.ts. The agents service invokes transport.send
+//     INSIDE its open dispatch transaction, and its own law is explicit —
+//     a base-connection read inside an open transaction would starve the
+//     embedded database's single connection — so the router NEVER queries
+//     the DB inside send. The composition boundary (this suite, between
+//     submit and pump) resolves the ACTIVE cognition binding through the
+//     fabric contract ON THE BASE CONNECTION via refreshRoute(ctx) and
+//     hands {endpoint, modelId} to the transport; send() then POSTs
+//     {baseUrl}/chat/completions, adapting the OpenAI-compatible response
+//     into the openai-assistants dialect the module's own adapter
+//     normalizes. Because the route is refreshed per submit, the SWAP is
+//     real at the execution level: execution A is served by OpenRouter's
+//     model, execution B by DashScope's.
 //
 // ENV-GATED (the hermetic default battery skips this suite cleanly — the
 // 18th legitimate skip class): runs only when OPENROUTER_API_KEY and
@@ -51,13 +57,15 @@
 // normalization (d1-live-transports.ts) parses the completion — tolerating
 // surrounding prose via a JSON-substring scan — and the normalized domain
 // outcomes of execution A and execution B must be EQUAL. Inference
-// non-determinism is handled by ONE bounded retry per execution on
-// non-compliance; a model that still fails to comply fails the test
-// honestly.
+// non-determinism is handled by ONE bounded compliance resubmit per path
+// (each submitted execution is pumped through the real W021 machinery,
+// which retries transient dispatch failures on its own); a model that
+// still fails to comply fails the test honestly.
 //
 // THE RESULTS ARTIFACT: test-output/d1-live-results.json, written at run
 // time (runId, per-provider endpoint/fingerprint/model/discovery/usage/
-// latency/outcome, the bodyHash both sides of the swap, the verdicts).
+// latency/outcome — including per-path REAL-network dispatch totals — the
+// bodyHash both sides of the swap, the verdicts).
 // THE ARTIFACT CARRIES NO SECRETS — key fingerprints (last four chars)
 // only; the final proof re-reads the written file and asserts the raw key
 // values are absent.
@@ -104,7 +112,7 @@ import type {
 } from '@/modules/agents/contract';
 import * as exchange from '@/modules/agent-exchange/contract';
 import {
-  buildLiveAgentTransport,
+  buildLiveAgentRouter,
   buildLiveDiscoveryTransport,
   dashscopeIntlEndpoint,
   keyFingerprint,
@@ -183,29 +191,45 @@ describe.skipIf(liveCredentials() === null)(
     let executionB: AgentExecution;
     let outcomeA: D1LiveDomainOutcome;
     let outcomeB: D1LiveDomainOutcome;
-    let attemptsA = 0;
-    let attemptsB = 0;
+    let submitsA = 0;
+    let submitsB = 0;
+    let pumpsA = 0;
+    let pumpsB = 0;
     let attemptEvidenceA: AgentExecutionAttempt[] = [];
     let attemptEvidenceB: AgentExecutionAttempt[] = [];
 
     const discoveryObservations: LiveDiscoveryObservation[] = [];
     const executionObservations: LiveExecutionObservation[] = [];
+    // The LIVE router: send() is a PURE ROUTER (the agents service invokes
+    // it INSIDE its open dispatch transaction — a base-connection read
+    // there would starve the embedded database's single connection, the
+    // service's own documented law); the route is resolved on the base
+    // connection OUTSIDE every dispatch via refreshRoute(ctx).
+    let router: ReturnType<typeof buildLiveAgentRouter> | null = null;
 
     /**
-     * One LIVE execution with ONE bounded retry on non-compliance: the
-     * task demands the exact canonical marker; a dispatch that fails or
-     * does not carry it is retried exactly once; a second failure is an
-     * honest test failure.
+     * One LIVE path execution with ONE bounded compliance retry: the task
+     * demands the exact canonical marker; a submit whose reply does not
+     * carry it is resubmitted exactly once; a second non-compliance is an
+     * honest test failure. Each submitted execution is pumped through the
+     * REAL W021 machinery (ONE bounded dispatch attempt per pump call); a
+     * retryable transport failure re-pumps the SAME execution once — the
+     * module's own append-only attempt evidence records every pump, and
+     * the returned counters keep submits and pumps apart.
      */
     async function executeWithComplianceRetry(pathLabel: string): Promise<{
       execution: AgentExecution;
       outcome: D1LiveDomainOutcome | null;
-      attempts: number;
+      /** How many executions this path submitted (1 = complied first time). */
+      executionsSubmitted: number;
+      /** How many dispatch attempts the RETURNED (deciding) execution pumped. */
+      pumpsOnFinalExecution: number;
     }> {
       let last: AgentExecution | null = null;
-      for (let dispatch = 1; dispatch <= 2; dispatch += 1) {
+      let pumps = 0;
+      for (let submit = 1; submit <= 2; submit += 1) {
         const context =
-          dispatch === 1
+          submit === 1
             ? `${pathLabel} — live dispatch`
             : `${pathLabel} — compliance retry (the previous reply did not carry the canonical marker)`;
         try {
@@ -214,11 +238,26 @@ describe.skipIf(liveCredentials() === null)(
             task: { instruction: TASK_INSTRUCTION, context },
             requestedPermissions: ['observe'],
           });
-          last = await runAgentExecution(d1, { executionId: submitted.id });
+          last = submitted;
+          pumps = 0;
+          // THE COMPOSITION BOUNDARY'S DUTY (outside every dispatch
+          // transaction): resolve the tenant's ACTIVE cognition binding
+          // on the base connection and hand the route to the transport —
+          // send() is a pure router over this cached route.
+          await router!.refreshRoute(d1);
+          // The W021 pump: ONE bounded dispatch attempt per call. A
+          // retryable transport failure leaves the execution queued, so
+          // re-pump the SAME execution once (its own retry machinery);
+          // a completed or terminal state ends the pumping.
+          for (let pump = 1; pump <= 2; pump += 1) {
+            pumps = pump;
+            last = await runAgentExecution(d1, { executionId: submitted.id });
+            if (last.status !== 'queued') break;
+          }
         } catch (error) {
           // A dispatch that fails loudly is still a dispatch — record it
           // and let the bounded retry decide the verdict.
-          if (dispatch === 2) {
+          if (submit === 2) {
             throw error;
           }
           continue;
@@ -226,11 +265,11 @@ describe.skipIf(liveCredentials() === null)(
         if (last.status === 'succeeded') {
           const outcome = normalizeDomainOutcome(last.result?.output);
           if (outcome !== null) {
-            return { execution: last, outcome, attempts: dispatch };
+            return { execution: last, outcome, executionsSubmitted: submit, pumpsOnFinalExecution: pumps };
           }
         }
       }
-      return { execution: last!, outcome: null, attempts: 2 };
+      return { execution: last!, outcome: null, executionsSubmitted: 2, pumpsOnFinalExecution: pumps };
     }
 
     beforeAll(async () => {
@@ -245,7 +284,8 @@ describe.skipIf(liveCredentials() === null)(
       );
       d1 = member(tenantD1Live);
       d1Admin = member(tenantD1Live, ['agents:administer']);
-      setAgentTransport(buildLiveAgentTransport(d1, [providerA, providerB], executionObservations));
+      router = buildLiveAgentRouter([providerA, providerB], executionObservations);
+      setAgentTransport(router.transport);
 
       agent = (
         await registerAgent(d1Admin, {
@@ -332,7 +372,8 @@ describe.skipIf(liveCredentials() === null)(
       async () => {
         const record = await executeWithComplianceRetry('provider path A (openrouter)');
         executionA = record.execution;
-        attemptsA = record.attempts;
+        submitsA = record.executionsSubmitted;
+        pumpsA = record.pumpsOnFinalExecution;
         outcomeA = record.outcome!;
         expect(executionA.status).toBe('succeeded');
         expect(outcomeA).toEqual({ delivered: true, marker: CANONICAL_MARKER });
@@ -346,10 +387,13 @@ describe.skipIf(liveCredentials() === null)(
         expect(liveDispatch!.providerTaskId).not.toBeNull();
         expect(liveDispatch!.usage?.inputTokens ?? 0).toBeGreaterThan(0);
 
-        // The canonical W021 evidence carries the real usage/latency.
+        // The canonical W021 evidence: every pump of the deciding
+        // execution left its append-only attempt row, and the deciding
+        // attempt completed with a real provider task id.
         attemptEvidenceA = await listAgentExecutionAttempts(d1, { executionId: executionA.id });
-        expect(attemptEvidenceA.length).toBe(attemptsA);
-        expect(attemptEvidenceA.every((attempt) => attempt.status === 'completed')).toBe(true);
+        expect(attemptEvidenceA.length).toBe(pumpsA);
+        expect(attemptEvidenceA[attemptEvidenceA.length - 1]?.status).toBe('completed');
+        expect(attemptEvidenceA[attemptEvidenceA.length - 1]?.providerTaskId).not.toBeNull();
       },
       120_000,
     );
@@ -436,7 +480,8 @@ describe.skipIf(liveCredentials() === null)(
       async () => {
         const record = await executeWithComplianceRetry('provider path B (dashscope-intl)');
         executionB = record.execution;
-        attemptsB = record.attempts;
+        submitsB = record.executionsSubmitted;
+        pumpsB = record.pumpsOnFinalExecution;
         outcomeB = record.outcome!;
         expect(executionB.status).toBe('succeeded');
         // IDENTICAL domain outcomes: two REAL providers, one canonical
@@ -452,8 +497,9 @@ describe.skipIf(liveCredentials() === null)(
         expect(liveDispatch!.usage?.inputTokens ?? 0).toBeGreaterThan(0);
 
         attemptEvidenceB = await listAgentExecutionAttempts(d1, { executionId: executionB.id });
-        expect(attemptEvidenceB.length).toBe(attemptsB);
-        expect(attemptEvidenceB.every((attempt) => attempt.status === 'completed')).toBe(true);
+        expect(attemptEvidenceB.length).toBe(pumpsB);
+        expect(attemptEvidenceB[attemptEvidenceB.length - 1]?.status).toBe('completed');
+        expect(attemptEvidenceB[attemptEvidenceB.length - 1]?.providerTaskId).not.toBeNull();
 
         // No execution authority lost: both dispatches traveled the REAL
         // agents contract, and the exchange surface still owns no
@@ -481,6 +527,19 @@ describe.skipIf(liveCredentials() === null)(
             baseUrl: (await getProviderDefinition(d1, { definitionId: p.definitionId })).baseUrl,
           })),
         );
+        // Per-path REAL-network totals (the honest cost record: every
+        // dispatch the transport observed for this endpoint, tokens summed
+        // over the succeeded ones — not just the deciding attempt).
+        const networkTotalsFor = (baseUrl: string) => {
+          const dispatched = executionObservations.filter((o) => o.endpointBaseUrl === baseUrl);
+          const succeeded = dispatched.filter((o) => o.error === null);
+          return {
+            realNetworkDispatches: dispatched.length,
+            succeededDispatches: succeeded.length,
+            totalInputTokens: succeeded.reduce((sum, o) => sum + (o.usage?.inputTokens ?? 0), 0),
+            totalOutputTokens: succeeded.reduce((sum, o) => sum + (o.usage?.outputTokens ?? 0), 0),
+          };
+        };
         const record = {
           suite: 'D1-LIVE',
           baseCommit: D1_LIVE_BASE_COMMIT,
@@ -508,14 +567,16 @@ describe.skipIf(liveCredentials() === null)(
               })(),
               execution: {
                 status: executionA.status,
-                executionsSubmitted: attemptsA,
-                compliedOnFirstDispatch: attemptsA === 1,
+                executionsSubmitted: submitsA,
+                compliedOnFirstSubmit: submitsA === 1,
+                decidingExecutionPumps: pumpsA,
+                realNetwork: networkTotalsFor(providerA.baseUrl),
                 providerTaskId: lastAttemptA?.providerTaskId ?? null,
-                usage: {
+                decidingAttemptUsage: {
                   inputTokens: lastAttemptA?.usage.inputTokens ?? null,
                   outputTokens: lastAttemptA?.usage.outputTokens ?? null,
                 },
-                latencyMs: lastAttemptA?.latencyMs ?? null,
+                decidingAttemptLatencyMs: lastAttemptA?.latencyMs ?? null,
                 outcomeNormalized: outcomeA,
               },
             },
@@ -536,14 +597,16 @@ describe.skipIf(liveCredentials() === null)(
               })(),
               execution: {
                 status: executionB.status,
-                executionsSubmitted: attemptsB,
-                compliedOnFirstDispatch: attemptsB === 1,
+                executionsSubmitted: submitsB,
+                compliedOnFirstSubmit: submitsB === 1,
+                decidingExecutionPumps: pumpsB,
+                realNetwork: networkTotalsFor(providerB.baseUrl),
                 providerTaskId: lastAttemptB?.providerTaskId ?? null,
-                usage: {
+                decidingAttemptUsage: {
                   inputTokens: lastAttemptB?.usage.inputTokens ?? null,
                   outputTokens: lastAttemptB?.usage.outputTokens ?? null,
                 },
-                latencyMs: lastAttemptB?.latencyMs ?? null,
+                decidingAttemptLatencyMs: lastAttemptB?.latencyMs ?? null,
                 outcomeNormalized: outcomeB,
               },
             },

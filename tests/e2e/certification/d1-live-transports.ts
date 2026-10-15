@@ -17,11 +17,20 @@
 //      not cataloged row by row).
 //
 //   2. AgentRuntimeTransport (the W021 execution port, setAgentTransport):
-//      resolves the tenant's ACTIVE cognition binding through the
-//      provider-fabric contract — the composition boundary's duty (the
-//      fabric supplies definitions/catalogs/bindings and never invokes
-//      models; whoever executes resolves the binding and routes) — then
-//      POSTs {baseUrl}/chat/completions with the bound model and adapts the
+//      a PURE ROUTER over the route the composition boundary resolved
+//      OUTSIDE the dispatch — the agents service invokes transport.send
+//      INSIDE its open dispatch transaction, and its own law is explicit
+//      ("a base-connection read inside an open transaction would starve
+//      the embedded database's single connection"). The router therefore
+//      NEVER queries the DB inside send: buildLiveAgentRouter exposes
+//      refreshRoute(ctx), which resolves the tenant's ACTIVE cognition
+//      binding through the provider-fabric contract on the base
+//      connection (outside any dispatch) and caches {endpoint, modelId};
+//      the executor refreshes the route before each dispatch (the
+//      composition boundary's duty — the fabric supplies definitions/
+//      catalogs/bindings and never invokes models; whoever executes
+//      resolves the binding and routes). send() then POSTs
+//      {baseUrl}/chat/completions with the cached route and adapts the
 //      OpenAI-compatible response into the openai-assistants dialect the
 //      agents module's own adapter normalizes (id, status 'completed',
 //      output[0] message with output_text, summary, usage{input_tokens,
@@ -241,49 +250,60 @@ export interface LiveExecutionObservation {
 /** The max_tokens bound per call — the cost discipline (tiny completions only). */
 export const LIVE_MAX_TOKENS = 64;
 
-export function buildLiveAgentTransport(
-  ctx: TenantContext,
+export interface LiveAgentRouter {
+  /** The W021 seam wiring (a PURE ROUTER — no DB access inside send). */
+  readonly transport: AgentRuntimeTransport;
+  /**
+   * Resolves the tenant's ACTIVE cognition binding through the fabric
+   * contract ON THE BASE CONNECTION — the composition boundary's duty,
+   * OUTSIDE any dispatch transaction (the agents service invokes
+   * transport.send inside its open dispatch transaction; a base-connection
+   * read there would starve the embedded database's single connection).
+   * The executor calls this before each dispatch; send() routes on the
+   * cached result.
+   */
+  refreshRoute(ctx: TenantContext): Promise<void>;
+}
+
+export function buildLiveAgentRouter(
   endpoints: readonly LiveProviderEndpoint[],
   observations: LiveExecutionObservation[],
-): AgentRuntimeTransport {
+): LiveAgentRouter {
   const byBaseUrl = new Map(endpoints.map((endpoint) => [endpoint.baseUrl, endpoint]));
+  let route: { endpoint: LiveProviderEndpoint; modelId: string } | null = null;
   return {
-    send: async (request: AgentRuntimeTransportRequest): Promise<AgentRuntimeTransportReceipt> => {
-      const startedAt = Date.now();
-      const observe = (
-        partial: Omit<LiveExecutionObservation, 'latencyMs'>,
-      ): LiveExecutionObservation => ({
-        ...partial,
-        latencyMs: Date.now() - startedAt,
-      });
-      // The composition boundary's duty: resolve the ACTIVE fabric binding
-      // for the cognition purpose and route the dispatch to that provider
-      // and model (the fabric never invokes models — this is the seam).
-      let endpointBaseUrl: string | null = null;
-      let modelId: string | null = null;
-      try {
-        const binding = await getActiveModelBinding(ctx, { purpose: 'cognition' });
-        if (binding === null) {
-          const detail = 'no ACTIVE cognition binding — attach a fabric binding before dispatching (the composition boundary resolves the binding)';
+    refreshRoute: async (ctx: TenantContext) => {
+      const binding = await getActiveModelBinding(ctx, { purpose: 'cognition' });
+      if (binding === null) {
+        route = null;
+        return;
+      }
+      const definition = await getProviderDefinition(ctx, { definitionId: binding.definitionId });
+      const endpoint = definition.baseUrl === null ? null : byBaseUrl.get(definition.baseUrl) ?? null;
+      route = endpoint === null ? null : { endpoint, modelId: binding.modelId };
+    },
+    transport: {
+      send: async (request: AgentRuntimeTransportRequest): Promise<AgentRuntimeTransportReceipt> => {
+        const startedAt = Date.now();
+        const observe = (
+          partial: Omit<LiveExecutionObservation, 'latencyMs'>,
+        ): LiveExecutionObservation => ({
+          ...partial,
+          latencyMs: Date.now() - startedAt,
+        });
+        if (route === null) {
+          const detail =
+            'no LIVE route cached — the executor must refreshRoute(ctx) on the base connection before each dispatch (the composition boundary resolves the binding; the transport never queries the DB inside the dispatch transaction)';
           observations.push(observe({
             endpointBaseUrl: null, modelId: null, httpStatus: null, providerTaskId: null,
             usage: null, completionChars: null, error: detail,
           }));
           return { status: 'failed', payload: null, providerTaskId: null, detail };
         }
-        const definition = await getProviderDefinition(ctx, { definitionId: binding.definitionId });
-        const endpoint = definition.baseUrl === null ? null : byBaseUrl.get(definition.baseUrl) ?? null;
-        if (endpoint === null) {
-          const detail = `the active cognition binding points at provider '${definition.provider}' (base url ${definition.baseUrl ?? '(none)'}) which this LIVE transport does not serve`;
-          observations.push(observe({
-            endpointBaseUrl: definition.baseUrl, modelId: binding.modelId, httpStatus: null,
-            providerTaskId: null, usage: null, completionChars: null, error: detail,
-          }));
-          return { status: 'failed', payload: null, providerTaskId: null, detail };
-        }
-        endpointBaseUrl = endpoint.baseUrl;
-        modelId = binding.modelId;
-        const instruction = extractUserInstruction(request);
+        const { endpoint, modelId } = route;
+        const endpointBaseUrl: string | null = endpoint.baseUrl;
+        try {
+          const instruction = extractUserInstruction(request);
         const response = await fetch(`${endpoint.baseUrl}/chat/completions`, {
           method: 'POST',
           headers: {
@@ -291,7 +311,7 @@ export function buildLiveAgentTransport(
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: binding.modelId,
+            model: modelId,
             max_tokens: LIVE_MAX_TOKENS,
             messages: [{ role: 'user', content: instruction }],
           }),
@@ -338,7 +358,7 @@ export function buildLiveAgentTransport(
               content: [{ type: 'output_text', text: content }],
             },
           ],
-          summary: `LIVE completion via ${definition.provider}/${binding.modelId} at ${endpoint.baseUrl} (chat/completions adapted at the transport edge)`,
+          summary: `LIVE completion via ${endpoint.providerSlug}/${modelId} at ${endpoint.baseUrl} (chat/completions adapted at the transport edge)`,
           usage: {
             input_tokens: usage?.inputTokens ?? undefined,
             output_tokens: usage?.outputTokens ?? undefined,
@@ -349,14 +369,15 @@ export function buildLiveAgentTransport(
           usage, completionChars: content.length, error: null,
         }));
         return { status: 'delivered', payload, providerTaskId, detail: null };
-      } catch (error) {
-        const detail = `the LIVE dispatch failed: ${(error as Error).message}`;
-        observations.push(observe({
-          endpointBaseUrl, modelId, httpStatus: null, providerTaskId: null,
-          usage: null, completionChars: null, error: detail,
-        }));
-        return { status: 'failed', payload: null, providerTaskId: null, detail };
-      }
+        } catch (error) {
+          const detail = `the LIVE dispatch failed: ${(error as Error).message}`;
+          observations.push(observe({
+            endpointBaseUrl, modelId, httpStatus: null, providerTaskId: null,
+            usage: null, completionChars: null, error: detail,
+          }));
+          return { status: 'failed', payload: null, providerTaskId: null, detail };
+        }
+      },
     },
   };
 }

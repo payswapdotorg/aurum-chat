@@ -1,0 +1,122 @@
+{
+  "suite": "D1-LIVE",
+  "baseCommit": "6a55b04",
+  "runId": "2026-10-15T11:18:29.182Z",
+  "classification": "LIVE — two REAL provider accounts, REAL network (model discovery + chat/completions); no provider fixtures",
+  "upgrades": "W141 demonstration D1 — FIXTURE (two-path) → LIVE",
+  "harness": "embedded PostgreSQL (PGlite, :memory:) + REAL provider network through the two sanctioned wiring seams (W132 FabricDiscoveryTransport, W021 AgentRuntimeTransport)",
+  "providers": {
+    "A": {
+      "name": "OpenRouter",
+      "providerSlug": "openrouter",
+      "definition": "custom openai-compatible (the W141 \"OpenRouter LIVE shape\")",
+      "endpoint": "https://openrouter.ai/api/v1",
+      "keyFingerprint": "…5b1a",
+      "modelId": "meta-llama/llama-3.1-8b-instruct",
+      "discovery": {
+        "httpStatus": 200,
+        "rawListedModelCount": 462,
+        "verifiedModelsFound": [
+          "qwen/qwen-2.5-7b-instruct",
+          "meta-llama/llama-3.1-8b-instruct"
+        ]
+      },
+      "execution": {
+        "status": "succeeded",
+        "executionsSubmitted": 1,
+        "compliedOnFirstSubmit": true,
+        "decidingExecutionPumps": 1,
+        "realNetwork": {
+          "realNetworkDispatches": 1,
+          "succeededDispatches": 1,
+          "totalInputTokens": 64,
+          "totalOutputTokens": 17
+        },
+        "providerTaskId": "gen-1792063105-49YJwr8IypIp7jDS5Mhl",
+        "decidingAttemptUsage": {
+          "inputTokens": 64,
+          "outputTokens": 17
+        },
+        "decidingAttemptLatencyMs": 1595,
+        "outcomeNormalized": {
+          "delivered": true,
+          "marker": "D1-LIVE-COMPLETE"
+        }
+      }
+    },
+    "B": {
+      "name": "Alibaba DashScope International",
+      "providerSlug": "dashscope-intl",
+      "definition": "custom openai-compatible",
+      "endpoint": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+      "keyFingerprint": "…y01y",
+      "modelId": "qwen3.8-omni-flash",
+      "discovery": {
+        "httpStatus": 200,
+        "rawListedModelCount": 99,
+        "verifiedModelsFound": [
+          "qwen3.8-omni-flash"
+        ]
+      },
+      "execution": {
+        "status": "succeeded",
+        "executionsSubmitted": 1,
+        "compliedOnFirstSubmit": true,
+        "decidingExecutionPumps": 1,
+        "realNetwork": {
+          "realNetworkDispatches": 1,
+          "succeededDispatches": 1,
+          "totalInputTokens": 109,
+          "totalOutputTokens": 90
+        },
+        "providerTaskId": "chatcmpl-b77a43ef-c0c8-9f5a-a9ca-608a2960932c",
+        "decidingAttemptUsage": {
+          "inputTokens": 109,
+          "outputTokens": 90
+        },
+        "decidingAttemptLatencyMs": 2016,
+        "outcomeNormalized": {
+          "delivered": true,
+          "marker": "D1-LIVE-COMPLETE"
+        }
+      }
+    }
+  },
+  "body": {
+    "bodyId": "00606a2f-b00f-4234-b100-42b7388295d2",
+    "role": "d1-live-body",
+    "hashAlgorithm": "sha256 (JSON.stringify of the getAgentBody record)",
+    "hashBeforeSwap": "136fa2af03041033ba1b3b36a3d1774c6f10ac56f17eb0a8c45e0c6b83983efe",
+    "hashAfterSwap": "136fa2af03041033ba1b3b36a3d1774c6f10ac56f17eb0a8c45e0c6b83983efe",
+    "byteForByteIdentical": true
+  },
+  "bindingSupersession": {
+    "supersededFrom": "openrouter",
+    "supersededTo": "dashscope-intl",
+    "historyLength": 2,
+    "providerPaths": [
+      {
+        "provider": "openrouter",
+        "kind": "custom",
+        "modelId": "meta-llama/llama-3.1-8b-instruct",
+        "baseUrl": "https://openrouter.ai/api/v1"
+      },
+      {
+        "provider": "dashscope-intl",
+        "kind": "custom",
+        "modelId": "qwen3.8-omni-flash",
+        "baseUrl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      }
+    ]
+  },
+  "verdicts": {
+    "realDiscoveryA": true,
+    "realDiscoveryB": true,
+    "bindingSupersessionAuditable": true,
+    "distinctProviderPathsWithRealBaseUrls": true,
+    "bodyUnchangedAcrossSwap": true,
+    "identicalDomainOutcomes": true,
+    "noSecretsInArtifact": true
+  },
+  "completedAt": "2026-10-15T11:18:29.185Z"
+}
