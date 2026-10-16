@@ -66,11 +66,16 @@ jobs:
           echo "--- deb info ---"
           dpkg-deb --info "$DEB_DIR/$ARTIFACT"
           echo "--- deb contents ---"
-          dpkg-deb --contents "$DEB_DIR/$ARTIFACT"
+          # Capture once: piping `dpkg-deb --contents` into `grep -q` breaks the
+          # tar subprocess with SIGPIPE ("tar: stdout: write error") the moment
+          # grep exits early — pipefail then fails the step on a perfectly good
+          # package. Grep the captured string instead.
+          CONTENTS="$(dpkg-deb --contents "$DEB_DIR/$ARTIFACT")"
+          echo "$CONTENTS"
           echo "--- assertions ---"
-          dpkg-deb --contents "$DEB_DIR/$ARTIFACT" | grep -q 'usr/bin/aurum-chat'
-          dpkg-deb --contents "$DEB_DIR/$ARTIFACT" | grep -q 'share/applications/'
-          dpkg-deb --contents "$DEB_DIR/$ARTIFACT" | grep -q 'share/icons/'
+          grep -q 'usr/bin/aurum-chat' <<<"$CONTENTS"
+          grep -q 'share/applications/' <<<"$CONTENTS"
+          grep -q 'share/icons/' <<<"$CONTENTS"
           echo "all assertions passed"
 
       - name: Upload build artifact
