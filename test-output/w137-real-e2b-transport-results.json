@@ -1,0 +1,78 @@
+{
+  "suite": "W137-REAL/B (real E2B remote-sandbox transport)",
+  "baseCommit": "55206bf",
+  "runId": "2026-10-16T01:10:51.294Z",
+  "classification": "LIVE — the REAL E2B REST API (api.e2b.app) behind the adapter's injectable transport port, through the real fabric lease lifecycle; no fake transport",
+  "wiring": "createE2BRemoteSandboxTransport (src/modules/execution-fabric/wiring.ts) — additive production wiring, adapter contracts + generic wire untouched",
+  "vendor": {
+    "name": "E2B",
+    "apiBaseUrl": "https://api.e2b.app",
+    "keyFingerprint": "…9b35",
+    "envdProtocol": "Connect (POST sandbox.e2b.app/process.Process/Start)"
+  },
+  "sandbox": {
+    "sandboxId": "ie2aduy88n3fyx4rm65r2",
+    "profileKey": "remote:tenant:5bd25726-dfec-402b-bcba-4dbb159b0694:subject:1633d9f7-6b1b-4cfe-95b5-1b1a4cb5895a",
+    "status": "destroyed"
+  },
+  "echoRoundTrip": {
+    "cmd": "/bin/echo",
+    "exitCode": 0,
+    "exited": true,
+    "stdout": "W137-E2B-LIVE-COMPLETE",
+    "latencyMs": 231
+  },
+  "realRoundTrips": [
+    {
+      "purpose": "health",
+      "method": "GET",
+      "url": "https://api.e2b.app/v2/sandboxes",
+      "status": 200,
+      "latencyMs": 319
+    },
+    {
+      "purpose": "create",
+      "method": "POST",
+      "url": "https://api.e2b.app/sandboxes",
+      "status": 201,
+      "latencyMs": 886
+    },
+    {
+      "purpose": "run-command",
+      "method": "POST",
+      "url": "https://sandbox.e2b.app/process.Process/Start",
+      "status": 200,
+      "latencyMs": 231
+    },
+    {
+      "purpose": "destroy",
+      "method": "DELETE",
+      "url": "https://api.e2b.app/sandboxes/ie2aduy88n3fyx4rm65r2",
+      "status": 204,
+      "latencyMs": 195
+    }
+  ],
+  "lease": {
+    "leaseId": "1633d9f7-6b1b-4cfe-95b5-1b1a4cb5895a",
+    "definitionKey": "w137-real-e2b",
+    "status": "released"
+  },
+  "eventTailKinds": [
+    "acquired",
+    "prepared",
+    "evidence",
+    "artifact",
+    "checkpoint",
+    "release"
+  ],
+  "verdicts": {
+    "vendorHealthProbed": true,
+    "realSandboxOpened": true,
+    "realCommandRoundTrip": true,
+    "sandboxDestroyed": true,
+    "leaseTerminal": true,
+    "evidenceRowsAppended": true,
+    "noSecretsInArtifact": true
+  },
+  "completedAt": "2026-10-16T01:10:51.294Z"
+}

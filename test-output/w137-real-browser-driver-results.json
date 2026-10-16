@@ -1,0 +1,49 @@
+{
+  "suite": "W137-REAL/A (real Playwright/Chromium browser driver)",
+  "baseCommit": "55206bf",
+  "runId": "2026-10-16T01:10:43.735Z",
+  "classification": "LIVE — REAL Playwright OSS driving REAL headless Chromium behind the W093/W110 BrowserDriver port, through the real fabric lease lifecycle; no browser fixture",
+  "wiring": "wirePlaywrightBrowserAdapter (src/modules/execution-fabric/wiring.ts) — additive production wiring, adapter contracts untouched",
+  "engine": {
+    "driver": "W110 createPlaywrightBrowserDriver (Playwright OSS)",
+    "chromiumVersion": "143.0.7499.4",
+    "headless": true
+  },
+  "lease": {
+    "leaseId": "d892fab3-cf68-40c2-bf74-1819596ef64b",
+    "definitionKey": "w137-real-browser",
+    "firstSessionId": "playwright-session-0001",
+    "resumedSessionId": "playwright-session-0002",
+    "directClosedSessionId": "playwright-session-0003",
+    "profileKey": "browser:tenant:57dbf177-e29c-4c0f-8a4d-fd6f4f5d23fb:subject:d892fab3-cf68-40c2-bf74-1819596ef64b",
+    "status": "released",
+    "closeObservation": "the release of a RECOVERED lease refuses the best-effort close of the RESUMED session (the certified browser adapter tracks only open()-minted sessions — the service swallows the refusal; the resumed context is reaped at engine close); the DIRECT open→close lease below proves the port-level session end"
+  },
+  "latenciesMs": {
+    "open": 175,
+    "resume": 38,
+    "close": 8,
+    "directClose": 14
+  },
+  "eventTailKinds": [
+    "acquired",
+    "prepared",
+    "evidence",
+    "artifact",
+    "checkpoint",
+    "loss",
+    "recovery",
+    "release"
+  ],
+  "verdicts": {
+    "realChromiumLaunched": true,
+    "realSessionIdFormat": true,
+    "freshSessionOnSameProfileKey": true,
+    "honestDescriptor": true,
+    "leaseTerminal": true,
+    "directSessionEndedOnDriver": true,
+    "evidenceRowsAppended": true,
+    "noSecretsInArtifact": true
+  },
+  "completedAt": "2026-10-16T01:10:43.735Z"
+}
