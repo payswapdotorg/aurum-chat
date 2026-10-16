@@ -297,6 +297,22 @@ export type {
   RemoteSandboxTransport,
 } from './adapters/remote-sandbox';
 
+// The production wiring closures (the W137 real-drivers opt-in, additive):
+// REAL drivers behind the two remote-seam adapter paths, constructed only
+// where a caller invokes them — nothing is wired by default, and the
+// adapter contracts above are untouched.
+export {
+  createE2BRemoteSandboxTransport,
+  wirePlaywrightBrowserAdapter,
+} from './wiring';
+export type {
+  E2BCommandResult,
+  E2BTransportLogEntry,
+  E2BTransportOptions,
+  PlaywrightBrowserFabricWiring,
+  WirePlaywrightBrowserAdapterOptions,
+} from './wiring';
+
 // The frozen cross-module vocabularies this surface speaks, re-exported
 // TYPE-ONLY through their owning contracts (the single legal
 // cross-module imports, enforced by the architecture gate) so consumers
