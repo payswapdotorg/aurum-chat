@@ -51,16 +51,27 @@ jobs:
         working-directory: clients/desktop
         run: npx --yes @tauri-apps/cli@^2 build --bundles deb
 
-      - name: Locate and sanity-check the artifact
+      - name: Locate, rename and sanity-check the artifact
         run: |
           set -euo pipefail
-          DEB="$(ls clients/desktop/src-tauri/target/release/bundle/deb/*.deb)"
-          echo "DEB_PATH=$DEB" >> "$GITHUB_ENV"
-          echo "DEB_NAME=$(basename "$DEB")" >> "$GITHUB_ENV"
+          DEB_DIR="clients/desktop/src-tauri/target/release/bundle/deb"
+          BUILT="$(find "$DEB_DIR" -name '*.deb' -print -quit)"
+          # Tauri names the bundle from productName ("Aurum Chat_1.0.0_amd64.deb"
+          # — with a space, hostile to download URLs). Ship a clean asset name;
+          # the package identity inside (Package: aurum-chat) is unaffected.
+          ARTIFACT="aurum-chat_1.0.0_amd64.deb"
+          cp "$BUILT" "$DEB_DIR/$ARTIFACT"
+          echo "DEB_PATH=$DEB_DIR/$ARTIFACT" >> "$GITHUB_ENV"
+          echo "DEB_NAME=$ARTIFACT" >> "$GITHUB_ENV"
           echo "--- deb info ---"
-          dpkg-deb --info "$DEB"
-          echo "--- deb contents (key paths) ---"
-          dpkg-deb --contents "$DEB" | grep -E '/(usr/bin|usr/share/applications|usr/share/icons)/' | head -30
+          dpkg-deb --info "$DEB_DIR/$ARTIFACT"
+          echo "--- deb contents ---"
+          dpkg-deb --contents "$DEB_DIR/$ARTIFACT"
+          echo "--- assertions ---"
+          dpkg-deb --contents "$DEB_DIR/$ARTIFACT" | grep -q 'usr/bin/aurum-chat'
+          dpkg-deb --contents "$DEB_DIR/$ARTIFACT" | grep -q 'share/applications/'
+          dpkg-deb --contents "$DEB_DIR/$ARTIFACT" | grep -q 'share/icons/'
+          echo "all assertions passed"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
