@@ -25,7 +25,7 @@
   "bundle": {
     "active": true,
     "targets": ["deb"],
-    "category": "Chat",
+    "category": "SocialNetworking",
     "shortDescription": "Aurum Chat — the desktop power client",
     "longDescription": "The Aurum Chat desktop power client (Tauri 2). The web app is the canonical renderer; this client wraps it with native window integration for Linux desktops. Same authoritative conversation and company state, background work inspectable, cross-device handoff per the cross-platform contract (W139).",
     "icon": [
