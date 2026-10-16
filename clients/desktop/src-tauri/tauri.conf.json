@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Aurum Chat",
+  "mainBinaryName": "aurum-chat",
+  "version": "1.0.0",
+  "identifier": "chat.aurum.desktop",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Aurum Chat",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 600,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb"],
+    "category": "Chat",
+    "shortDescription": "Aurum Chat — the desktop power client",
+    "longDescription": "The Aurum Chat desktop power client (Tauri 2). The web app is the canonical renderer; this client wraps it with native window integration for Linux desktops. Same authoritative conversation and company state, background work inspectable, cross-device handoff per the cross-platform contract (W139).",
+    "icon": [
+      "icons/32x32.png",
+      "icons/64x64.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
+  }
+}

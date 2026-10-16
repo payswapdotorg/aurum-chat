@@ -1,0 +1,119 @@
+<!doctype html>
+<!--
+  Aurum Chat — desktop power client boot page (clients/desktop/ui).
+
+  The web app is the canonical renderer (W139 ruling: web-canonical,
+  vendor-identity-as-metadata). This page is the client's own surface for
+  exactly two moments: the boot splash and the offline/retry state. Once
+  the production app is reachable it navigates the window there and gets
+  out of the way.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aurum Chat</title>
+  <style>
+    :root {
+      --gold: #d9952a;
+      --gold-deep: #b57a1e;
+      --cream: #fdfaf6;
+      --ink: #1c1814;
+      --paper: #f7f2e9;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Georgia, 'Times New Roman', serif;
+      background: var(--paper); color: var(--ink);
+    }
+    .stage {
+      height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 28px;
+      text-align: center; padding: 32px;
+    }
+    .mark { width: 108px; height: 108px; }
+    .wordmark { font-size: 34px; font-weight: 700; letter-spacing: 0.5px; }
+    .tagline {
+      font-size: 14px; color: #6b5f4d; font-style: italic;
+      margin-top: -18px;
+    }
+    .status {
+      min-height: 22px; font-size: 15px; color: #6b5f4d;
+    }
+    .spinner {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 3px solid #e4d5b7; border-top-color: var(--gold);
+      animation: spin 0.9s linear infinite; margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .retry {
+      display: none; font-family: Georgia, serif; font-size: 15px;
+      padding: 10px 26px; border-radius: 10px; border: none;
+      background: var(--gold); color: var(--cream); cursor: pointer;
+      font-weight: 700;
+    }
+    .retry:hover { background: var(--gold-deep); }
+    .footnote {
+      position: fixed; bottom: 14px; left: 0; right: 0;
+      font-size: 12px; color: #9a8a6e;
+    }
+    .err { color: #a33d2a; }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <!-- The Aurum tower mark (same geometry as src/app/icon.svg) -->
+    <svg class="mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aurum mark">
+      <rect width="64" height="64" rx="14" fill="#d9952a"/>
+      <text x="32" y="45" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="700" fill="#fdfaf6">A</text>
+    </svg>
+
+    <h1 class="wordmark">Aurum Chat</h1>
+    <p class="tagline">the desktop power client</p>
+
+    <div id="status" class="status"><div class="spinner" aria-label="connecting"></div></div>
+    <button id="retry" class="retry" type="button">Try again</button>
+
+    <p class="footnote" id="footnote">Aurum Chat &middot; desktop client 1.0.0</p>
+  </main>
+
+  <script>
+    // The canonical product deployment (web-canonical ruling, W139).
+    var APP_URL = "https://aurum-chat-livid.vercel.app";
+    var HEALTH_URL = APP_URL + "/api/health";
+
+    var statusEl = document.getElementById("status");
+    var retryEl = document.getElementById("retry");
+
+    function setStatus(html, isError) {
+      statusEl.className = "status" + (isError ? " err" : "");
+      statusEl.innerHTML = html;
+    }
+
+    function boot() {
+      retryEl.style.display = "none";
+      setStatus('<div class="spinner" aria-label="connecting"></div>');
+      // Probe the deployment health endpoint, then hand the window to the
+      // canonical web app. A timeout budget keeps hangs from feeling dead.
+      var controller = new AbortController();
+      var budget = setTimeout(function () { controller.abort(); }, 15000);
+      fetch(HEALTH_URL, { signal: controller.signal, cache: "no-store" })
+        .then(function (res) {
+          clearTimeout(budget);
+          if (!res.ok) throw new Error("health " + res.status);
+          setStatus("Connecting&hellip;");
+          window.location.replace(APP_URL + "/");
+        })
+        .catch(function () {
+          clearTimeout(budget);
+          setStatus("Can&rsquo;t reach Aurum Chat right now.<br/>Check your connection, then try again.", true);
+          retryEl.style.display = "inline-block";
+        });
+    }
+
+    retryEl.addEventListener("click", boot);
+    boot();
+  </script>
+</body>
+</html>

@@ -9,3 +9,7 @@ node_modules
 # W076 browser-suite runtime state (the harness pid file)
 tests/browser/.server.pid
 test-results
+
+# Desktop client (clients/desktop) — Rust build output
+clients/desktop/src-tauri/target/
+clients/desktop/src-tauri/gen/
