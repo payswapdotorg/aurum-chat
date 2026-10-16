@@ -1242,8 +1242,14 @@ describe('beliefs are versioned through the freshness machinery (lock 11)', () =
     const staleEvidence = await seedObservation(ctx, T0); // yesterday
     const belief = await formBelief(ctx, beliefInput([staleEvidence.id], T0));
 
+    // Every evaluation pins its instant (the freshness service's now()
+    // is the real wall clock — the lesson of the intelligence-horizon
+    // timebomb class): "now" is one day after the evidence was observed,
+    // which is what the stale/current assertions below have always meant.
+    const NOW = T0_PLUS(86_400);
+
     // no policy → unknown
-    const unknown = await evaluateBeliefFreshness(ctx, { beliefId: belief.id });
+    const unknown = await evaluateBeliefFreshness(ctx, { beliefId: belief.id, asOf: NOW });
     expect(unknown.status).toBe('unknown');
     expect(unknown.policy).toBeNull();
     expect(unknown.evidenceObservedAt).toBe(T0);
@@ -1256,7 +1262,7 @@ describe('beliefs are versioned through the freshness machinery (lock 11)', () =
       staleAfterSeconds: 3600,
       agingAfterSeconds: 600,
     });
-    const stale = await evaluateBeliefFreshness(ctx, { beliefId: belief.id });
+    const stale = await evaluateBeliefFreshness(ctx, { beliefId: belief.id, asOf: NOW });
     expect(stale.status).toBe('stale');
     expect(stale.policy?.staleAfterSeconds).toBe(3600);
     expect(stale.revision.version).toBe(1);
@@ -1266,7 +1272,7 @@ describe('beliefs are versioned through the freshness machinery (lock 11)', () =
       subjectKind: 'epistemics.belief',
       staleAfterSeconds: 2_592_000, // 30 days
     });
-    const current = await evaluateBeliefFreshness(ctx, { beliefId: belief.id });
+    const current = await evaluateBeliefFreshness(ctx, { beliefId: belief.id, asOf: NOW });
     expect(current.status).toBe('current');
 
     // evaluation surface errors mirror getBelief's

@@ -256,14 +256,25 @@ describe.skipIf(!realDatabaseUrl)('the full migration path on a REAL hosted Post
     expect(commit.mapEntries).toHaveLength(2);
 
     // The native catch-up carrying the map's minted ids, through REAL SQL.
+    // ($1 and $5 are the same value on purpose but are SEPARATE parameters:
+    // world_entities.id is uuid while external_id is text, and a single
+    // parameter used in both column positions makes a real PostgreSQL
+    // server refuse the untyped inference — "inconsistent types deduced
+    // for parameter $1" — even though embedded PGlite accepts it.)
     const db = getDb();
     for (const record of commit.records) {
       await db.query(
         `INSERT INTO world_entities (
            id, tenant_id, kind, category, name, description, attributes,
            external_module, external_id, created_at, updated_at
-         ) VALUES ($1, $2, 'company', 'company', $3, 'W111 hosted catch-up', $4::jsonb, 'migration', $1, now(), now())`,
-        [record.aurumEntityId, tenant, record.externalId, JSON.stringify(record.payload)],
+         ) VALUES ($1, $2, 'company', 'company', $3, 'W111 hosted catch-up', $4::jsonb, 'migration', $5, now(), now())`,
+        [
+          record.aurumEntityId,
+          tenant,
+          record.externalId,
+          JSON.stringify(record.payload),
+          record.aurumEntityId,
+        ],
       );
     }
     migration.setMigrationNativeReader(createWorldEntitiesNativeReader(tenant));
