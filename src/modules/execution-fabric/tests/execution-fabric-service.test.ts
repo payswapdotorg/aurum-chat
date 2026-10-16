@@ -1486,7 +1486,13 @@ describe('the vendor-removal clause (identical domain outcomes, unchanged contra
     expect(bCheckpoints[0]!.coveredEvidenceRefs).toEqual(rCheckpoints[0]!.coveredEvidenceRefs);
 
     // NO vendor name rides in any domain record (metadata lives on the
-    // adapter descriptor only).
+    // adapter descriptor only). UUID-shaped identifiers are stripped
+    // before the scan: they are RANDOM, and a random hex run can contain
+    // a vendor token as a substring (live-caught 2026-10-16 in CI: an
+    // agentid …-d24a084e2b43 tripped the 'e2b' scan — every id Aurum
+    // mints is a UUID v4, so the pattern covers them all). The clause
+    // targets SEMANTIC identifiers — keys, refs, descriptors — not id
+    // noise.
     const serialized = JSON.stringify([
       browserFlow.released,
       remoteFlow.released,
@@ -1498,7 +1504,9 @@ describe('the vendor-removal clause (identical domain outcomes, unchanged contra
       rEvidence,
       bCheckpoints,
       rCheckpoints,
-    ]).toLowerCase();
+    ])
+      .toLowerCase()
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g, 'uuid');
     for (const vendor of ['e2b', 'playwright', 'docker', 'chromium']) {
       expect(serialized).not.toContain(vendor);
     }
